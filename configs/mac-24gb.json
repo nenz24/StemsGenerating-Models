@@ -1,0 +1,9 @@
+{
+  "model": "acestep-v15-base",
+  "device": "mps",
+  "instrument": "bass",
+  "seeds": [0],
+  "offload_to_cpu": true,
+  "duration_seconds": 10.0,
+  "start_seconds": 0.0
+}

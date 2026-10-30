@@ -4,6 +4,35 @@ POC lokal di JupyterLab: rekaman gitar/piano → bass atau drum pengiring memaka
 model pretrained ACE-Step. Mulai dari evaluasi kualitas, kemudian putuskan apakah
 fine-tuning diperlukan. Belum ada model baru yang dilatih atau konversi iPhone.
 
+## Langsung jalan untuk Mac Apple Silicon 24 GB
+
+Buka **[notebooks/02_mac_24gb_full.ipynb](notebooks/02_mac_24gb_full.ipynb)**.
+Profil di `configs/mac-24gb.json` sudah berisi Base, MPS, bass, seed 0 dan CPU
+offload. Memerlukan macOS 14 atau lebih baru untuk dependency MLX pada lockfile
+upstream. Tidak perlu mengubah tiga flag instalasi/unduhan/generasi notebook lama.
+
+1. Pull kode terbaru. Jika notebook lama berubah, simpan lewat Git stash dahulu.
+   Notebook 02 adalah file baru, sehingga notebook 01 beserta konfigurasi lokalnya
+   dapat tetap disimpan dalam stash.
+2. Letakkan satu rekaman gitar/piano minimal 10 detik di `data/`. Folder ini
+   dibuat oleh sel pertama; bisa dibuat sendiri di file browser JupyterLab.
+   Satu file WAV/MP3/M4A dipilih otomatis, atau gunakan WAV bernama `input.wav`.
+3. Jalankan **Restart Kernel → Run All** pada notebook 02.
+4. Notebook memeriksa sumber dan tool, mempersiapkan klip, menginstal runtime
+   Python 3.11 terpisah, memverifikasi MPS, mengunduh/verifikasi aset sekitar
+   14.88 GB, lalu mencoba generasi dan menampilkan stem/mix.
+
+Runtime dan bobot yang sudah ada dipakai kembali setelah diperiksa. Instalasi
+pertama memerlukan jaringan dan ruang tambahan; bukan proses yang sudah selesai
+hanya karena notebook berhasil dibuka. Tidak ada audio sintetis sebagai pengganti
+hasil model. Sumber yang belum tersedia menghentikan notebook sebelum instalasi
+atau unduhan. Parameter SOURCE/START/CONDITIONING tetap bisa diubah jika diperlukan.
+
+`DRY_RUN=False` adalah default penuh. Mode True hanya untuk validasi pipeline dan
+selalu menandai instalasi, unduhan dan inferensi sebagai tidak dijalankan.
+Notebook ini dipersiapkan untuk Mac-mu; inferensi MPS nyata tetap belum diverifikasi
+oleh agen Linux. Kirim traceback jika instalasi atau inferensi gagal.
+
 ## Mulai di komputer JupyterLab
 
 ```bash
@@ -12,7 +41,7 @@ cd StemsGenerating-Models
 jupyter lab
 ```
 
-Buka **[notebooks/01_quality_poc.ipynb](notebooks/01_quality_poc.ipynb)** dan jalankan
+Untuk diagnostik aman/lintas platform, buka **[notebooks/01_quality_poc.ipynb](notebooks/01_quality_poc.ipynb)** dan jalankan
 sel dari atas. Jika sudah mempunyai checkout, jalankan `git pull --ff-only`
 setelah menyimpan perubahan lokal. Jika JupyterLab belum terpasang, instal
 `requirements-notebook.txt` di environment notebook sendiri.
@@ -88,9 +117,12 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-25 pengujian audio/CLI plan, helper, serta kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
-sel kode notebook default juga dieksekusi tanpa error, tanpa mengunduh bobot
-atau menghasilkan stem model. Checkout source upstream pada commit yang dipin
+30 pengujian audio/CLI plan, helper, profil lengkap Mac dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
+sel kode notebook 01 juga dieksekusi tanpa error, tanpa mengunduh bobot
+atau menghasilkan stem model. Ketujuh sel kode notebook 02 diuji dalam mode
+dry-run yang ditandai jelas dengan persiapan audio nyata. Rencana dependency
+macOS 14 arm64/Python 3.11 berhasil diperiksa memakai uv 0.10.0 dan lockfile
+upstream: 125 paket dapat direncanakan, tanpa memasang dependency ML tersebut. Checkout source upstream pada commit yang dipin
 juga berhasil diverifikasi.
 Pemilihan MPS dan pemanggilan API diuji dengan mock. Inferensi MPS/CUDA nyata,
 instalasi dependency ML penuh, dan kualitas model pada rekamanmu belum diverifikasi. Default notebook tidak mengklaim keberhasilan generasi.
