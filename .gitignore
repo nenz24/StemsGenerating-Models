@@ -17,3 +17,6 @@ __pycache__/
 *.mp3
 *.flac
 .DS_Store
+
+# Repository-local managed Python, installer and model download caches
+.runtime-cache/

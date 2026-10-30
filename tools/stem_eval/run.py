@@ -47,6 +47,11 @@ def plan(prepared, backend, instrument, seeds):
 def execute(args, experiment):
     from backends import AceBackend, StageBackend, weight_inventory
     require_audio_tools()
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+    from runtime_environment import runtime_environment
+    environment = runtime_environment()
+    for name in ("HF_HUB_CACHE", "HF_XET_CACHE"):
+        os.environ[name] = environment[name]
     check_upstream(args.upstream, args.backend)
     if args.backend == "stage" and (args.checkpoint is None or args.checkpoint.name != f"stage-{args.instrument}.safetensors"):
         raise ValueError("STAGE requires the matching official instrument checkpoint filename")

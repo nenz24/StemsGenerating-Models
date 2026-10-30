@@ -4,6 +4,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+from runtime_environment import runtime_environment
+
 ROOT = Path(__file__).resolve().parents[1]
 AUDIO_EXTENSIONS = {".wav", ".mp3", ".m4a", ".flac", ".aac", ".aif", ".aiff", ".ogg"}
 
@@ -36,7 +38,7 @@ def check_model_runtime(python):
         "print(json.dumps({'python': list(sys.version_info[:2]), 'torch': torch.__version__, "
         "'mps': hasattr(torch.backends,'mps') and torch.backends.mps.is_available()}))"
     )
-    result = subprocess.run([str(python), "-c", code], capture_output=True, text=True, check=True)
+    result = subprocess.run([str(python), "-c", code], capture_output=True, text=True, env=runtime_environment(ROOT), check=True)
     report = json.loads(result.stdout.strip())
     if report["python"] != [3, 11] or not report["mps"]:
         raise RuntimeError(f"Runtime model belum siap: {report}. Perlu Python 3.11 dengan MPS aktif.")

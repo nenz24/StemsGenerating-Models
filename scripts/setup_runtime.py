@@ -5,6 +5,8 @@ import subprocess
 import sys
 import venv
 
+from runtime_environment import runtime_environment
+
 ROOT = Path(__file__).resolve().parents[1]
 COMMIT = "ca1e85fe9430179831e6bc6be790c332190a3866"
 UPSTREAM = ROOT / "vendor" / "ACE-Step-1.5"
@@ -28,14 +30,16 @@ def checkout():
 
 def install():
     checkout()
+    environment = runtime_environment(ROOT)
+    environment["UV_PROJECT_ENVIRONMENT"] = str(UPSTREAM / ".venv")
     bootstrap = ROOT / ".bootstrap"
     python = bootstrap / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
     if not python.exists():
         venv.EnvBuilder(with_pip=True).create(bootstrap)
-    subprocess.run([str(python), "-m", "pip", "install", "uv==0.10.0"], check=True)
+    subprocess.run([str(python), "-m", "pip", "install", "uv==0.10.0"], env=environment, check=True)
     uv = bootstrap / ("Scripts/uv.exe" if sys.platform == "win32" else "bin/uv")
-    subprocess.run([str(uv), "sync", "--frozen", "--python", "3.11"], cwd=UPSTREAM, check=True)
-    subprocess.run([str(runtime_python()), "-c", "import torch; print('torch:', torch.__version__); print('CUDA available:', torch.cuda.is_available()); print('MPS available:', hasattr(torch.backends, 'mps') and torch.backends.mps.is_available())"], check=True)
+    subprocess.run([str(uv), "sync", "--frozen", "--python", "3.11"], cwd=UPSTREAM, env=environment, check=True)
+    subprocess.run([str(runtime_python()), "-c", "import torch; print('torch:', torch.__version__); print('CUDA available:', torch.cuda.is_available()); print('MPS available:', hasattr(torch.backends, 'mps') and torch.backends.mps.is_available())"], env=environment, check=True)
 
 
 if __name__ == "__main__":

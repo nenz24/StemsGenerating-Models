@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 import shutil
 
+from runtime_environment import runtime_environment
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -38,6 +40,9 @@ def asset_path(root, destination):
 def process(manifest, upstream, download=False):
     manifest = json.loads(manifest.read_text())
     if download:
+        environment = runtime_environment(ROOT)
+        # Set Xet's cache before importing the hub client; token/trust bindings stay inherited.
+        os.environ["HF_XET_CACHE"] = environment["HF_XET_CACHE"]
         from huggingface_hub import hf_hub_download
         # Leave room for download cache/temp files as well as installed components.
         free = shutil.disk_usage(upstream).free
@@ -53,7 +58,8 @@ def process(manifest, upstream, download=False):
             continue
         if download:
             # Download into an isolated ignored cache, then copy only after hash verification.
-            path = Path(hf_hub_download(record["repo_id"], record["filename"], revision=record["revision"]))
+            path = Path(hf_hub_download(record["repo_id"], record["filename"], revision=record["revision"],
+                                         cache_dir=environment["HF_HUB_CACHE"]))
             verify(path, record)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(path, target)

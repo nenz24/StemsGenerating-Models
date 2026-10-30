@@ -84,6 +84,18 @@ PyTorch yang didukung API upstream; MLX DiT belum diaktifkan di adapter ini.
 Metrik MPS mencatat **current** allocator/driver memory, bukan peak atau total
 memori proses. Keberhasilan Mac tidak membuktikan Core AI/iPhone.
 
+## Perbaikan permission uv / folder home
+
+Jika instalasi lama gagal pada `~/.local/share/uv/python`, cukup pull kode terbaru
+lalu jalankan ulang sel instalasi notebook 02. Checkout source dan `.bootstrap`
+yang sudah ada dipakai kembali; tidak perlu sudo, chown, atau reinstall Jupyter.
+
+Python unduhan uv sekarang disimpan di `.runtime-cache/uv/python`, cache uv/pip
+juga di `.runtime-cache/`, dan environment model tetap di
+`vendor/ACE-Step-1.5/.venv`. Cache unduhan model Hugging Face/Xet diarahkan ke
+`.runtime-cache/huggingface/`. Folder cache diabaikan Git. HOME, token, proxy dan
+CA trust yang diwariskan tidak diganti; checksum/TLS tetap diperiksa.
+
 ## Kandidat kualitas
 
 - **XL Base:** dokumentasi upstream menempatkannya sebagai opsi kualitas lebih
@@ -117,7 +129,7 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-30 pengujian audio/CLI plan, helper, profil lengkap Mac dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
+33 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
 sel kode notebook 01 juga dieksekusi tanpa error, tanpa mengunduh bobot
 atau menghasilkan stem model. Ketujuh sel kode notebook 02 diuji dalam mode
 dry-run yang ditandai jelas dengan persiapan audio nyata. Rencana dependency
