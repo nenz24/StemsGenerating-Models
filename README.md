@@ -26,6 +26,35 @@ setelah menyimpan perubahan lokal. Jika JupyterLab belum terpasang, instal
    sakelar notebook. Sel-sel itu hanya berjalan saat kamu mengaktifkannya.
 5. Dengarkan stem/mix dan bandingkan Base dengan XL pada sumber/seed sama.
 
+## Mac Apple Silicon / Jupyter Homebrew
+
+Jika diagnostik menunjukkan `Darwin / arm64`, jalankan di Terminal Mac:
+
+```bash
+brew install ffmpeg
+cd /path/to/StemsGenerating-Models
+git pull --ff-only
+```
+
+Simpan salinan notebook yang sudah diedit sebelum pull jika Git melaporkan
+perubahan lokal. Restart kernel dan buka ulang notebook versi terbaru. Helper
+mencari `ffmpeg`/`ffprobe` di PATH serta `/opt/homebrew/bin` dan `/usr/local/bin`.
+Bila belum terpasang, notebook berhenti dengan petunjuk instalasi sebelum
+persiapan audio, tanpa traceback subprocess yang panjang.
+
+Python 3.15 bawaan JupyterLab tidak perlu diganti. Sel `INSTALL_RUNTIME` memakai
+`uv` untuk menyiapkan **Python 3.11 terpisah** bagi dependency model. `DEVICE="auto"`
+memilih MPS dari Python model pada Mac, CUDA pada NVIDIA, dan menolak fallback
+CPU diam-diam. Diagnostik pada kernel yang belum memiliki PyTorch belum bisa
+memastikan MPS; sel instalasi memeriksanya lagi di environment model.
+
+Pada Mac mulai dengan `MODEL="acestep-v15-base"`, `SEEDS=[0]`, `OFFLOAD=True`.
+Lihat RAM terpadu dalam laporan diagnostik dan ukur satu generasi sebelum XL.
+Ruang disk yang besar tidak memastikan model muat di RAM. Jalur MPS memakai
+PyTorch yang didukung API upstream; MLX DiT belum diaktifkan di adapter ini.
+Metrik MPS mencatat **current** allocator/driver memory, bukan peak atau total
+memori proses. Keberhasilan Mac tidak membuktikan Core AI/iPhone.
+
 ## Kandidat kualitas
 
 - **XL Base:** dokumentasi upstream menempatkannya sebagai opsi kualitas lebih
@@ -59,12 +88,12 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-18 pengujian audio/CLI plan dan helper lulus di Linux tanpa GPU. Seluruh 9
+25 pengujian audio/CLI plan, helper, serta kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
 sel kode notebook default juga dieksekusi tanpa error, tanpa mengunduh bobot
 atau menghasilkan stem model. Checkout source upstream pada commit yang dipin
 juga berhasil diverifikasi.
-Inferensi GPU, instalasi dependency ML penuh, dan kualitas model pada rekamanmu
-belum diverifikasi. Default notebook tidak mengklaim keberhasilan generasi.
+Pemilihan MPS dan pemanggilan API diuji dengan mock. Inferensi MPS/CUDA nyata,
+instalasi dependency ML penuh, dan kualitas model pada rekamanmu belum diverifikasi. Default notebook tidak mengklaim keberhasilan generasi.
 Tidak ada gerbang review lisensi untuk POC sesuai permintaan; catatan singkat ada
 di [docs/model-notes.md](docs/model-notes.md).
 

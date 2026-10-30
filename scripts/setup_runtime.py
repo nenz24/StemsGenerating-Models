@@ -35,7 +35,7 @@ def install():
     subprocess.run([str(python), "-m", "pip", "install", "uv==0.10.0"], check=True)
     uv = bootstrap / ("Scripts/uv.exe" if sys.platform == "win32" else "bin/uv")
     subprocess.run([str(uv), "sync", "--frozen", "--python", "3.11"], cwd=UPSTREAM, check=True)
-    subprocess.run([str(runtime_python()), "-c", "import torch; print('torch:', torch.__version__); print('CUDA available:', torch.cuda.is_available())"], check=True)
+    subprocess.run([str(runtime_python()), "-c", "import torch; print('torch:', torch.__version__); print('CUDA available:', torch.cuda.is_available()); print('MPS available:', hasattr(torch.backends, 'mps') and torch.backends.mps.is_available())"], check=True)
 
 
 if __name__ == "__main__":

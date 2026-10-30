@@ -7,7 +7,8 @@ from pathlib import Path
 
 def summarize(directory):
     fields = ["job", "status", "instrument", "condition", "seed", "inference_seconds",
-              "peak_cuda_allocated_bytes", "peak_cuda_reserved_bytes", "error"]
+              "device", "peak_cuda_allocated_bytes", "peak_cuda_reserved_bytes",
+              "mps_current_allocated_bytes", "mps_driver_allocated_bytes", "error"]
     reports = []
     for file in sorted(directory.glob("*/result.json")):
         record = json.loads(file.read_text())

@@ -30,19 +30,22 @@ def weight_inventory(upstream, backend, checkpoint, model_name="acestep-v15-base
 
 
 class AceBackend:
-    def __init__(self, upstream, checkpoint=None, model_name="acestep-v15-base", offload_to_cpu=False):
+    def __init__(self, upstream, checkpoint=None, model_name="acestep-v15-base", offload_to_cpu=False, device="cuda"):
         sys.path.insert(0, str(upstream))
         from acestep.handler import AceStepHandler
         from acestep.inference import GenerationConfig, GenerationParams, generate_music
         self.params_type, self.config_type, self.generate_music = GenerationParams, GenerationConfig, generate_music
         self.handler = AceStepHandler()
         message, success = self.handler.initialize_service(
-            project_root=str(upstream), config_path=model_name, device="cuda",
+            project_root=str(upstream), config_path=model_name, device=device,
             offload_to_cpu=offload_to_cpu,
             use_flash_attention=False, compile_model=False, use_mlx_dit=False,
         )
         if not success:
             raise RuntimeError(message)
+        actual_device = str(self.handler.device).split(":")[0]
+        if actual_device != device:
+            raise RuntimeError(f"Requested {device}, upstream resolved {actual_device}; refusing silent fallback")
 
     def generate(self, source, duration, instrument, seed, output):
         params = self.params_type(

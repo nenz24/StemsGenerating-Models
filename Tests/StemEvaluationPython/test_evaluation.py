@@ -113,6 +113,7 @@ class ContractTests(unittest.TestCase):
 
     def test_ace_api_selects_base_lego_and_disables_every_planner_flag(self):
         handler = MagicMock()
+        handler.device = "cuda"
         handler.initialize_service.return_value = ("ready", True)
         params, config = MagicMock(), MagicMock()
         with tempfile.TemporaryDirectory() as directory:

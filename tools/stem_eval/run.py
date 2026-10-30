@@ -10,6 +10,8 @@ import subprocess
 import time
 
 from audio import canonicalize, listening_mix
+from accelerator import memory_stats, reset_memory_stats, select_device, synchronize
+from system_tools import require_audio_tools, require_tool
 from provenance import COMMITS, check_upstream, sha256, write_json
 
 
@@ -44,6 +46,7 @@ def plan(prepared, backend, instrument, seeds):
 
 def execute(args, experiment):
     from backends import AceBackend, StageBackend, weight_inventory
+    require_audio_tools()
     check_upstream(args.upstream, args.backend)
     if args.backend == "stage" and (args.checkpoint is None or args.checkpoint.name != f"stage-{args.instrument}.safetensors"):
         raise ValueError("STAGE requires the matching official instrument checkpoint filename")
@@ -51,8 +54,9 @@ def execute(args, experiment):
     os.environ["HF_HUB_OFFLINE"] = "1"
     os.environ["TRANSFORMERS_OFFLINE"] = "1"
     import torch
-    if not torch.cuda.is_available():
-        raise RuntimeError("CUDA GPU is required for this baseline; no CPU benchmark substitute")
+    device = select_device(torch, args.device)
+    if args.backend == "stage" and device != "cuda":
+        raise RuntimeError("The inspected STAGE adapter requires CUDA. Use ACE-Step on Apple Silicon.")
     inventory = weight_inventory(args.upstream, args.backend, args.checkpoint, args.ace_model)
     if args.backend == "ace":
         sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
@@ -61,16 +65,16 @@ def execute(args, experiment):
         runtime = materialize(args.assets_manifest, args.upstream, args.out / "runtime")
         os.environ["ACESTEP_CHECKPOINTS_DIR"] = str(runtime.resolve())
     session = {"weights": inventory, "model": args.ace_model if args.backend == "ace" else str(args.checkpoint), "platform": platform.platform(),
-               "gpu": torch.cuda.get_device_name(), "versions": {}}
+               "device": device, "gpu": torch.cuda.get_device_name() if device == "cuda" else "Apple Silicon / MPS", "versions": {}}
     for package in ("torch", "torchaudio", "transformers", "lightning", "numpy"):
         try:
             session["versions"][package] = importlib.metadata.version(package)
         except importlib.metadata.PackageNotFoundError:
             pass
     started = time.perf_counter()
-    backend = (AceBackend(args.upstream, model_name=args.ace_model, offload_to_cpu=args.offload)
+    backend = (AceBackend(args.upstream, model_name=args.ace_model, offload_to_cpu=args.offload, device=device)
                if args.backend == "ace" else StageBackend(args.upstream, args.checkpoint))
-    torch.cuda.synchronize()
+    synchronize(torch, device)
     session["model_load_seconds"] = time.perf_counter() - started
     if args.backend == "ace":
         session["assets_manifest_sha256"] = sha256(args.assets_manifest)
@@ -85,17 +89,16 @@ def execute(args, experiment):
         report = dict(job, status="running")
         write_json(directory / "result.json", report)
         try:
-            torch.cuda.reset_peak_memory_stats()
+            reset_memory_stats(torch, device)
             started = time.perf_counter()
             with torch.inference_mode():
                 raw, settings = backend.generate(Path(job["source"]), job["duration"],
                                                   job["instrument"], job["seed"], directory)
-            torch.cuda.synchronize()
+            synchronize(torch, device)
             report.update(inference_seconds=time.perf_counter() - started,
-                          peak_cuda_allocated_bytes=torch.cuda.max_memory_allocated(),
-                          peak_cuda_reserved_bytes=torch.cuda.max_memory_reserved(), settings=settings)
+                          device=device, settings=settings, **memory_stats(torch, device))
             info = json.loads(subprocess.check_output([
-                "ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "json", str(raw)
+                require_tool("ffprobe"), "-v", "error", "-show_entries", "format=duration", "-of", "json", str(raw)
             ], text=True))
             if abs(float(info["format"]["duration"]) - job["duration"]) > 0.05:
                 raise ValueError("Generated duration mismatch; raw audio retained for inspection")
@@ -122,6 +125,7 @@ def main():
     parser.add_argument("--checkpoint", type=Path, help="STAGE instrument-specific safetensors file")
     parser.add_argument("--ace-model", choices=("acestep-v15-base", "acestep-v15-xl-base"), default="acestep-v15-base")
     parser.add_argument("--assets-manifest", type=Path, help="Pinned publisher artifact manifest; required for ACE execution")
+    parser.add_argument("--device", choices=("auto", "cuda", "mps"), default="auto")
     parser.add_argument("--offload", action="store_true", help="Use upstream CPU offload to reduce GPU memory")
     args = parser.parse_args()
     if args.execute and args.upstream is None:
@@ -133,6 +137,7 @@ def main():
         if manifest_model != args.ace_model:
             parser.error("Asset manifest must match --ace-model")
     experiment = plan(args.prepared, args.backend, args.instrument, args.seeds)
+    experiment["device_requested"] = args.device
     experiment["ace_model"] = args.ace_model
     experiment["offload_to_cpu"] = args.offload
     args.out.mkdir(parents=True, exist_ok=False)

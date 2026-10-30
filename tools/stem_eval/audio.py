@@ -5,6 +5,8 @@ import subprocess
 import sys
 import wave
 
+from system_tools import require_tool
+
 RATE = 32_000
 
 
@@ -33,7 +35,7 @@ def canonicalize(source, target, start=0, duration=10, gain=0.7):
            for v in (start, duration, gain)) or start < 0 or not 0 < duration <= 10 or not 0 < gain <= 1:
         raise ValueError("Use a finite start >= 0 and duration in (0, 10]")
     subprocess.run([
-        "ffmpeg", "-nostdin", "-v", "error", "-n", "-i", str(source),
+        require_tool("ffmpeg"), "-nostdin", "-v", "error", "-n", "-i", str(source),
         "-ss", str(start), "-t", str(duration), "-af", f"volume={gain}",
         "-ar", str(RATE), "-ac", "2", "-c:a", "pcm_s16le", str(target),
     ], check=True)

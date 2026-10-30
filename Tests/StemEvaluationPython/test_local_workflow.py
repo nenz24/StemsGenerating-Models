@@ -86,6 +86,15 @@ class NotebookTests(unittest.TestCase):
         self.assertEqual(report["suggested_model"], "acestep-v15-xl-base")
         self.assertFalse(report["cuda_available_to_kernel"])
 
+    def test_apple_silicon_without_kernel_torch_suggests_isolated_mps_runtime(self):
+        with patch("diagnose.platform.system", return_value="Darwin"), patch("diagnose.platform.machine", return_value="arm64"), patch("diagnose.shutil.which", return_value=None), patch("diagnose.importlib.util.find_spec", return_value=None), patch("diagnose.subprocess.check_output", return_value="34359738368\n"), patch("system_tools.Path.is_file", return_value=False):
+            report = diagnose(ROOT)
+        self.assertEqual(report["suggested_device"], "mps")
+        self.assertEqual(report["unified_memory_gib"], 32)
+        self.assertEqual(report["suggested_model"], "acestep-v15-base")
+        self.assertIn("Python 3.11", report["note"])
+        self.assertIn("brew install ffmpeg", report["audio_tools_action"])
+
     def test_songmap_clip_cannot_be_trimmed_twice(self):
         with self.assertRaises(ValueError):
             local_clip(Path("source.wav"), Path("out"), start=4, conditioning=Path("conditioning.json"))
