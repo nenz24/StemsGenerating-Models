@@ -84,6 +84,23 @@ PyTorch yang didukung API upstream; MLX DiT belum diaktifkan di adapter ini.
 Metrik MPS mencatat **current** allocator/driver memory, bukan peak atau total
 memori proses. Keberhasilan Mac tidak membuktikan Core AI/iPhone.
 
+## Melihat progress di JupyterLab
+
+Notebook meneruskan stdout/stderr subprocess melalui output Python kernel.
+Unduhan menampilkan nomor file, nama dan ukuran. Progress transfer HF ditampilkan
+jika client memberikannya; baris checksum menunjukkan byte file yang benar-benar
+dibaca dan diverifikasi. Tahap menyalin dan total aset yang selesai diverifikasi
+juga dicatat. Total aset terverifikasi bukan jumlah byte jaringan yang diunduh.
+
+Jika child tidak menulis output selama 15 detik, heartbeat menunjukkan proses
+masih hidup dan durasi tanpa output. Itu tidak membuktikan jaringan bergerak dan
+bukan persentase unduhan. Exit nonzero tetap menjadi error notebook.
+
+Untuk mengambil pembaruan saat notebook sudah dijalankan, simpan perubahan lokal
+ke stash jika pull terhalang. Tunggu sel unduhan aktif selesai sebelum membuka
+ulang notebook yang baru dan memulai proses berikutnya. File lengkap yang lolos
+checksum dipakai kembali. Pemulihan transfer parsial mengikuti cache HF.
+
 ## Perbaikan permission uv / folder home
 
 Jika instalasi lama gagal pada `~/.local/share/uv/python`, cukup pull kode terbaru
@@ -129,7 +146,7 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-33 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
+40 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
 sel kode notebook 01 juga dieksekusi tanpa error, tanpa mengunduh bobot
 atau menghasilkan stem model. Ketujuh sel kode notebook 02 diuji dalam mode
 dry-run yang ditandai jelas dengan persiapan audio nyata. Rencana dependency

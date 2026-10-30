@@ -7,26 +7,31 @@ from pathlib import Path
 import shutil
 
 from runtime_environment import runtime_environment
+from asset_progress import FileProgress, size_text
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def digest(path, algorithm):
+def digest(path, algorithm, progress=None):
     if algorithm not in {"sha256", "git-blob-sha1"}:
         raise ValueError("Unsupported artifact digest algorithm")
     value = hashlib.sha256() if algorithm == "sha256" else hashlib.sha1()
     if algorithm == "git-blob-sha1":
         value.update(f"blob {path.stat().st_size}\0".encode())
+    processed = 0
     with path.open("rb") as stream:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             value.update(chunk)
+            processed += len(chunk)
+            if progress is not None:
+                progress(processed)
     return value.hexdigest()
 
 
-def verify(path, record):
+def verify(path, record, progress=None):
     if not path.is_file() or path.stat().st_size != record["size"]:
         raise ValueError(f"Missing or wrong-size artifact: {path}")
-    if digest(path, record["algorithm"]) != record["digest"]:
+    if digest(path, record["algorithm"], progress) != record["digest"]:
         raise ValueError(f"Artifact checksum mismatch: {path}. Do not use this artifact.")
 
 
@@ -39,6 +44,9 @@ def asset_path(root, destination):
 
 def process(manifest, upstream, download=False):
     manifest = json.loads(manifest.read_text())
+    total_bytes = sum(record["size"] for record in manifest["files"])
+    completed_bytes = 0
+    print(f'Model {manifest["model"]}: {len(manifest["files"])} file, total {size_text(total_bytes)}', flush=True)
     if download:
         environment = runtime_environment(ROOT)
         # Set Xet's cache before importing the hub client; token/trust bindings stay inherited.
@@ -50,21 +58,28 @@ def process(manifest, upstream, download=False):
                       if not asset_path(upstream, record["destination"]).is_file())
         if free < missing * 2 + 5 * 1024**3:
             raise RuntimeError("Not enough disk headroom: reserve twice missing asset bytes plus 5 GiB")
-    for record in manifest["files"]:
+    for index, record in enumerate(manifest["files"], 1):
+        print(f'[{index}/{len(manifest["files"])}] {record["destination"]} | {size_text(record["size"])}', flush=True)
         target = asset_path(upstream, record["destination"])
         if target.is_file():
             # Existing artifacts are checked, never silently trusted or overwritten.
-            verify(target, record)
+            verify(target, record, FileProgress("Verifikasi file yang sudah ada", record["size"]))
+            completed_bytes += record["size"]
+            print(f"  Aset terverifikasi: {size_text(completed_bytes)}/{size_text(total_bytes)}", flush=True)
             continue
         if download:
             # Download into an isolated ignored cache, then copy only after hash verification.
+            print("  Mengunduh/mengambil dari cache HF; progress transfer tampil jika tersedia…", flush=True)
             path = Path(hf_hub_download(record["repo_id"], record["filename"], revision=record["revision"],
                                          cache_dir=environment["HF_HUB_CACHE"]))
-            verify(path, record)
+            verify(path, record, FileProgress("Verifikasi cache", record["size"]))
+            print("  Menyalin file terverifikasi ke folder model…", flush=True)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(path, target)
-        verify(target, record)
-    print(f'Verified {len(manifest["files"])} artifacts for {manifest["model"]}')
+        verify(target, record, FileProgress("Verifikasi salinan model", record["size"]))
+        completed_bytes += record["size"]
+        print(f"  Aset terverifikasi: {size_text(completed_bytes)}/{size_text(total_bytes)}", flush=True)
+    print(f'Verified {len(manifest["files"])} artifacts for {manifest["model"]}', flush=True)
 
 
 def materialize(manifest_path, upstream, runtime_root):
