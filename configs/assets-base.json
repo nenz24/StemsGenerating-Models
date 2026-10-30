@@ -1,0 +1,314 @@
+{
+  "schema_version": 1,
+  "model": "acestep-v15-base",
+  "source": "Official Hugging Face API model metadata, pinned revisions",
+  "files": [
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "Qwen3-Embedding-0.6B/added_tokens.json",
+      "destination": "checkpoints/Qwen3-Embedding-0.6B/added_tokens.json",
+      "size": 707,
+      "algorithm": "git-blob-sha1",
+      "digest": "b54f9135e44c1e81047e8d05cb027af8bc039eed"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "Qwen3-Embedding-0.6B/chat_template.jinja",
+      "destination": "checkpoints/Qwen3-Embedding-0.6B/chat_template.jinja",
+      "size": 4116,
+      "algorithm": "git-blob-sha1",
+      "digest": "699ff8df401fe4788525e9c1f9b86a99eadd6230"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "Qwen3-Embedding-0.6B/config.json",
+      "destination": "checkpoints/Qwen3-Embedding-0.6B/config.json",
+      "size": 1359,
+      "algorithm": "git-blob-sha1",
+      "digest": "21bd712c76114dc22587c6eeb84ab64186c9d245"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "Qwen3-Embedding-0.6B/merges.txt",
+      "destination": "checkpoints/Qwen3-Embedding-0.6B/merges.txt",
+      "size": 1671853,
+      "algorithm": "git-blob-sha1",
+      "digest": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "Qwen3-Embedding-0.6B/model.safetensors",
+      "destination": "checkpoints/Qwen3-Embedding-0.6B/model.safetensors",
+      "size": 1191586416,
+      "algorithm": "sha256",
+      "digest": "0437e45c94563b09e13cb7a64478fc406947a93cb34a7e05870fc8dcd48e23fd"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "Qwen3-Embedding-0.6B/special_tokens_map.json",
+      "destination": "checkpoints/Qwen3-Embedding-0.6B/special_tokens_map.json",
+      "size": 613,
+      "algorithm": "git-blob-sha1",
+      "digest": "ac23c0aaa2434523c494330aeb79c58395378103"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "Qwen3-Embedding-0.6B/tokenizer.json",
+      "destination": "checkpoints/Qwen3-Embedding-0.6B/tokenizer.json",
+      "size": 11423705,
+      "algorithm": "sha256",
+      "digest": "def76fb086971c7867b829c23a26261e38d9d74e02139253b38aeb9df8b4b50a"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "Qwen3-Embedding-0.6B/tokenizer_config.json",
+      "destination": "checkpoints/Qwen3-Embedding-0.6B/tokenizer_config.json",
+      "size": 5404,
+      "algorithm": "git-blob-sha1",
+      "digest": "ddaf69808214a44fdd26d3785b66c1367c78277a"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "Qwen3-Embedding-0.6B/vocab.json",
+      "destination": "checkpoints/Qwen3-Embedding-0.6B/vocab.json",
+      "size": 2776833,
+      "algorithm": "git-blob-sha1",
+      "digest": "4783fe10ac3adce15ac8f358ef5462739852c569"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "README.md",
+      "destination": "checkpoints/README.md",
+      "size": 5496,
+      "algorithm": "git-blob-sha1",
+      "digest": "a3115cec283fbdc2d500aa50fdffac3c87e6689a"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-5Hz-lm-1.7B/added_tokens.json",
+      "destination": "checkpoints/acestep-5Hz-lm-1.7B/added_tokens.json",
+      "size": 2217787,
+      "algorithm": "git-blob-sha1",
+      "digest": "584075018edeacd6dcc031b3e2cbbf90836eba41"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-5Hz-lm-1.7B/chat_template.jinja",
+      "destination": "checkpoints/acestep-5Hz-lm-1.7B/chat_template.jinja",
+      "size": 4168,
+      "algorithm": "git-blob-sha1",
+      "digest": "01be9b307daa2d425f7c168c9fb145a286e0afb4"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-5Hz-lm-1.7B/config.json",
+      "destination": "checkpoints/acestep-5Hz-lm-1.7B/config.json",
+      "size": 1385,
+      "algorithm": "git-blob-sha1",
+      "digest": "1325891e0f2cb06ea22906f9c89047d09d0dac1f"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-5Hz-lm-1.7B/merges.txt",
+      "destination": "checkpoints/acestep-5Hz-lm-1.7B/merges.txt",
+      "size": 1671853,
+      "algorithm": "git-blob-sha1",
+      "digest": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-5Hz-lm-1.7B/model.safetensors",
+      "destination": "checkpoints/acestep-5Hz-lm-1.7B/model.safetensors",
+      "size": 3708521528,
+      "algorithm": "sha256",
+      "digest": "f161689da73e5ecefa28ff780d51c2d92a00f056d021d7933c779ed5c6cd7db8"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-5Hz-lm-1.7B/special_tokens_map.json",
+      "destination": "checkpoints/acestep-5Hz-lm-1.7B/special_tokens_map.json",
+      "size": 1824199,
+      "algorithm": "git-blob-sha1",
+      "digest": "aa26266349a0f38be608e07138c9047356309551"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-5Hz-lm-1.7B/tokenizer.json",
+      "destination": "checkpoints/acestep-5Hz-lm-1.7B/tokenizer.json",
+      "size": 24321939,
+      "algorithm": "sha256",
+      "digest": "35af56c3f5cb3ea2cc578aa28a8937770981d504f183ac5c8c38baf4bbd4af4d"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-5Hz-lm-1.7B/tokenizer_config.json",
+      "destination": "checkpoints/acestep-5Hz-lm-1.7B/tokenizer_config.json",
+      "size": 14072925,
+      "algorithm": "sha256",
+      "digest": "6cd70cdd89425971794f5235562edcc608b0629a6c4686ae51a8b8c8b8ba5e95"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-5Hz-lm-1.7B/vocab.json",
+      "destination": "checkpoints/acestep-5Hz-lm-1.7B/vocab.json",
+      "size": 2776833,
+      "algorithm": "git-blob-sha1",
+      "digest": "4783fe10ac3adce15ac8f358ef5462739852c569"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-v15-turbo/config.json",
+      "destination": "checkpoints/acestep-v15-turbo/config.json",
+      "size": 1968,
+      "algorithm": "git-blob-sha1",
+      "digest": "6a0b5c09a654614302947fd1d7041f7ed0764d8c"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-v15-turbo/configuration_acestep_v15.py",
+      "destination": "checkpoints/acestep-v15-turbo/configuration_acestep_v15.py",
+      "size": 13130,
+      "algorithm": "git-blob-sha1",
+      "digest": "965a1b73afb1c89d0959c7d80691e487fdfde505"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-v15-turbo/model.safetensors",
+      "destination": "checkpoints/acestep-v15-turbo/model.safetensors",
+      "size": 4787825604,
+      "algorithm": "sha256",
+      "digest": "3f6e0797fad420a39bd33979eb6e840e30989e34a3794e843d23b60ec6e422d7"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-v15-turbo/modeling_acestep_v15_turbo.py",
+      "destination": "checkpoints/acestep-v15-turbo/modeling_acestep_v15_turbo.py",
+      "size": 96036,
+      "algorithm": "git-blob-sha1",
+      "digest": "fa1162a5a01cc45c7959f3c531e2a8272ca05104"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "acestep-v15-turbo/silence_latent.pt",
+      "destination": "checkpoints/acestep-v15-turbo/silence_latent.pt",
+      "size": 3841215,
+      "algorithm": "sha256",
+      "digest": "a778e9dd942f5e8b2c09c55370782d318834432b03dabbcdf70e6ed49ad6358b"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "config.json",
+      "destination": "checkpoints/config.json",
+      "size": 1968,
+      "algorithm": "git-blob-sha1",
+      "digest": "6a0b5c09a654614302947fd1d7041f7ed0764d8c"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "vae/config.json",
+      "destination": "checkpoints/vae/config.json",
+      "size": 425,
+      "algorithm": "git-blob-sha1",
+      "digest": "f49eb7b261dde15ed29c0fa1e790251dcecbd280"
+    },
+    {
+      "repo_id": "ACE-Step/Ace-Step1.5",
+      "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+      "filename": "vae/diffusion_pytorch_model.safetensors",
+      "destination": "checkpoints/vae/diffusion_pytorch_model.safetensors",
+      "size": 337431388,
+      "algorithm": "sha256",
+      "digest": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0"
+    },
+    {
+      "repo_id": "ACE-Step/acestep-v15-base",
+      "revision": "e432212fec32b8965a14ffa57ae653438d6abd14",
+      "filename": "README.md",
+      "destination": "checkpoints/acestep-v15-base/README.md",
+      "size": 5498,
+      "algorithm": "git-blob-sha1",
+      "digest": "09b1e911e95bb4543e08bfa19ad93bf53e2bc05f"
+    },
+    {
+      "repo_id": "ACE-Step/acestep-v15-base",
+      "revision": "e432212fec32b8965a14ffa57ae653438d6abd14",
+      "filename": "apg_guidance.py",
+      "destination": "checkpoints/acestep-v15-base/apg_guidance.py",
+      "size": 7956,
+      "algorithm": "git-blob-sha1",
+      "digest": "0448a3436bb42b0a667a4090087dd688e65229fb"
+    },
+    {
+      "repo_id": "ACE-Step/acestep-v15-base",
+      "revision": "e432212fec32b8965a14ffa57ae653438d6abd14",
+      "filename": "config.json",
+      "destination": "checkpoints/acestep-v15-base/config.json",
+      "size": 1940,
+      "algorithm": "git-blob-sha1",
+      "digest": "ba68842e7207fe015ef7bca698e40f12dc13241d"
+    },
+    {
+      "repo_id": "ACE-Step/acestep-v15-base",
+      "revision": "e432212fec32b8965a14ffa57ae653438d6abd14",
+      "filename": "configuration_acestep_v15.py",
+      "destination": "checkpoints/acestep-v15-base/configuration_acestep_v15.py",
+      "size": 13130,
+      "algorithm": "git-blob-sha1",
+      "digest": "965a1b73afb1c89d0959c7d80691e487fdfde505"
+    },
+    {
+      "repo_id": "ACE-Step/acestep-v15-base",
+      "revision": "e432212fec32b8965a14ffa57ae653438d6abd14",
+      "filename": "model.safetensors",
+      "destination": "checkpoints/acestep-v15-base/model.safetensors",
+      "size": 4787825604,
+      "algorithm": "sha256",
+      "digest": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b"
+    },
+    {
+      "repo_id": "ACE-Step/acestep-v15-base",
+      "revision": "e432212fec32b8965a14ffa57ae653438d6abd14",
+      "filename": "modeling_acestep_v15_base.py",
+      "destination": "checkpoints/acestep-v15-base/modeling_acestep_v15_base.py",
+      "size": 95545,
+      "algorithm": "git-blob-sha1",
+      "digest": "0f8cf5060b75a246f70f805133737a3b421e4483"
+    },
+    {
+      "repo_id": "ACE-Step/acestep-v15-base",
+      "revision": "e432212fec32b8965a14ffa57ae653438d6abd14",
+      "filename": "silence_latent.pt",
+      "destination": "checkpoints/acestep-v15-base/silence_latent.pt",
+      "size": 3841215,
+      "algorithm": "sha256",
+      "digest": "a778e9dd942f5e8b2c09c55370782d318834432b03dabbcdf70e6ed49ad6358b"
+    }
+  ],
+  "download_bytes": 14883891741
+}

@@ -1,0 +1,4 @@
+# Only needed if your local machine does not already have JupyterLab.
+# The model runtime is installed separately through the pinned upstream uv.lock.
+jupyterlab>=4,<5
+ipykernel>=6,<8
