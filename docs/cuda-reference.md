@@ -1,8 +1,10 @@
 # Referensi CUDA untuk B yang glitch
 
-Tujuan pertama adalah satu hasil CUDA yang dapat dibandingkan dengan baseline
-MPS. CFG 1 sudah dicoba di Mac dan lebih buruk. Sweep seed 0–4/CFG 3,5,7,
-metadata SongMap, input native/48 kHz dan konteks panjang menunggu hasil ini.
+Protokol ini membuat satu hasil CUDA yang dapat dibandingkan dengan baseline
+MPS. [Hasil CUDA FP32 pertama](cuda-fp32-result.md) sudah valid dan dinilai lebih
+bersih oleh pengguna, tetapi timbre masih terlalu dalam. Langkah aktif berikutnya
+adalah [satu kandidat bass elektrik petikan](bass-tone-colab.md). Sweep besar,
+metadata SongMap, input native/48 kHz dan konteks panjang tetap eksperimen terpisah.
 
 ## Ekspor di Mac
 

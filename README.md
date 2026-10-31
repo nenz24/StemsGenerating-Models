@@ -3,10 +3,16 @@
 POC JupyterLab untuk membuat bass/drum pengiring dari audio memakai pretrained
 ACE-Step 1.5 Base. Model belum dilatih ulang atau dikonversi ke Core AI/iPhone.
 
-**Status kualitas:** bass pada bagian B masih glitch di Mac/MPS. Rekonstruksi
-piano melalui encoder CPU/MLX bersih, decoder CPU/MLX menghasilkan output hampir
-identik, dan CFG 1 justru lebih buruk. Belum ada perbaikan kualitas yang terbukti.
-Langkah aktif adalah **satu pembanding CUDA dengan B dan CFG 7 yang sama**.
+**Status kualitas:** pengguna melaporkan hasil B pada CUDA/T4 FP32 lebih bersih
+dari glitch dibanding MPS, tetapi timbre bass masih terlalu dalam. Paket hasil
+berisi latent finite dan capture FP32. Ini satu contoh, belum membuktikan glitch
+hilang untuk semua input. Lihat [hasil CUDA](docs/cuda-fp32-result.md).
+
+Langkah aktif adalah **satu kandidat bass elektrik petikan natural**, dengan
+caption baru dan input/seed/CFG/langkah/FP32 yang sama. Ikuti
+[panduan Colab bass elektrik](docs/bass-tone-colab.md) untuk memakai sesi dan
+bobot yang sudah ada. Cukup upload `scripts/compare_bass_tone.py` ke sesi lama;
+baseline dipertahankan dan kandidat masuk ke direktori baru.
 
 ## Satu uji di Google Colab
 
@@ -40,14 +46,14 @@ Notebook Colab memasang ffmpeg jika belum tersedia. GPU mengikuti ketersediaan
 akun, dan sesi Colab bersifat sementara; unduh hasil sebelum sesi berakhir.
 Paket yang sama memakai kembali runtime/cache pada VM yang sama. Dtype CUDA dipilih
 upstream sesuai GPU dan dicatat; RNG/dtype CUDA dapat berbeda dari MPS. Satu hasil
-CUDA saja belum membuktikan bug MPS. CUDA nyata belum dijalankan di chat ini,
-karena environment chat tidak mempunyai GPU NVIDIA.
+CUDA saja belum membuktikan bug MPS. Environment chat tidak mempunyai GPU NVIDIA;
+hasil CUDA nyata yang diperiksa berasal dari run Colab pengguna.
 
 Lihat [panduan CUDA](docs/cuda-reference.md) untuk rincian dan penggunaan CLI.
 Untuk server JupyterLab NVIDIA milik sendiri, notebook 08 tetap tersedia.
 Jika T4 gagal dengan latent NaN, tersedia [sel retry FP32](docs/colab-fp32-recovery.md)
 untuk melanjutkan sesi yang sama. Runner terbaru memilih FP32 otomatis pada
-GPU pre-Ampere; ini belum membuktikan bahwa kualitas bass sudah membaik.
+GPU pre-Ampere. Hasil pertama dan batas kesimpulannya ada di catatan hasil CUDA.
 
 ## Batas POC saat ini
 
