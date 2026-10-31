@@ -15,10 +15,14 @@ def runtime_environment(root=ROOT, inherited=None):
         "PIP_CACHE_DIR": cache / "pip",
         "HF_HUB_CACHE": cache / "huggingface/hub",
         "HF_XET_CACHE": cache / "huggingface/xet",
+        "MPLCONFIGDIR": cache / "matplotlib",
     }
     environment = dict(os.environ if inherited is None else inherited)
     for name, directory in paths.items():
         directory.mkdir(parents=True, exist_ok=True)
         environment[name] = str(directory)
+    # Model subprocesses run outside the notebook and do not have matplotlib_inline.
+    # Use a standard headless backend without changing the parent Jupyter kernel.
+    environment["MPLBACKEND"] = "Agg"
     # Do not change HOME, HF_HOME, token bindings, proxy settings, or CA trust.
     return environment

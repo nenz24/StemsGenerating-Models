@@ -101,6 +101,21 @@ ke stash jika pull terhalang. Tunggu sel unduhan aktif selesai sebelum membuka
 ulang notebook yang baru dan memulai proses berikutnya. File lengkap yang lolos
 checksum dipakai kembali. Pemulihan transfer parsial mengikuti cache HF.
 
+## Error matplotlib_inline saat mulai generasi
+
+Jika semua 34 aset sudah terverifikasi tetapi impor backend gagal dengan
+`MPLBACKEND=module://matplotlib_inline.backend_inline`, pull perbaikan terbaru.
+Subprocess model sekarang memakai backend standar `Agg` dan cache konfigurasi
+lokal `.runtime-cache/matplotlib`, sebelum dependency Lightning/TorchMetrics
+mengimpor Matplotlib. Kernel Jupyter dan paketnya tetap terpisah.
+
+Lakukan Restart Kernel → Run All pada notebook 02 untuk membuat folder run baru.
+Folder hasil gagal dipertahankan untuk diagnosis; bobot lengkap yang sudah ada
+akan diverifikasi/dipakai kembali, tanpa diunduh ulang. Pengujian mengulang
+kegagalan impor dengan Matplotlib 3.10.8 dalam environment terpisah dan membuktikan
+impor serta rendering PNG berhasil dengan Agg. Ini belum membuktikan seluruh
+inferensi MPS pada Mac berhasil.
+
 ## Jika file Base tertahan berjam-jam
 
 Nomor [32/34] dengan `acestep-v15-base/model.safetensors` berarti transfer bobot
@@ -177,7 +192,7 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-42 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
+44 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
 sel kode notebook 01 juga dieksekusi tanpa error, tanpa mengunduh bobot
 atau menghasilkan stem model. Ketujuh sel kode notebook 02 diuji dalam mode
 dry-run yang ditandai jelas dengan persiapan audio nyata. Rencana dependency
