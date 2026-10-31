@@ -56,6 +56,10 @@ def cached_job(directory, job, signature):
     for name in ("source_sha256", "instrument", "seed", "duration", "condition"):
         if report.get(name) != job.get(name):
             raise ValueError("Completed chunk belongs to different inputs; use a new run")
+    if "guidance_scale" in job:
+        recorded = report.get("guidance_scale", report.get("settings", {}).get("params", {}).get("guidance_scale", 7.0))
+        if recorded != job["guidance_scale"]:
+            raise ValueError("Completed chunk belongs to different guidance; use a new run")
     if report.get("execution_signature") != signature:
         raise ValueError("Completed chunk belongs to different configuration; use a new run")
     stem = (directory / report.get("stem_file", "stem.wav")).resolve()
@@ -65,7 +69,8 @@ def cached_job(directory, job, signature):
 
 
 def execute(args, experiment):
-    from backends import AceBackend, StageBackend, weight_inventory
+    from backends import AceBackend, StageBackend, weight_inventory, validate_guidance
+    guidance = validate_guidance(getattr(args, "guidance_scale", 7.0))
     require_audio_tools()
     sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
     from runtime_environment import runtime_environment
@@ -101,6 +106,8 @@ def execute(args, experiment):
     resume = getattr(args, "resume", False)
     signature = getattr(args, "execution_signature", None)
     for index, job in enumerate(experiment["jobs"]):
+        if args.backend == "ace":
+            job["guidance_scale"] = guidance
         directory = args.out / f'{index:03d}_{job["condition"]}_{job["instrument"]}_seed{job["seed"]}'
         directory.mkdir(exist_ok=resume)
         if resume and cached_job(directory, job, signature) is not None:
@@ -108,7 +115,7 @@ def execute(args, experiment):
             continue
         if backend is None:
             started = time.perf_counter()
-            backend = (AceBackend(args.upstream, model_name=args.ace_model, offload_to_cpu=args.offload, device=device)
+            backend = (AceBackend(args.upstream, model_name=args.ace_model, offload_to_cpu=args.offload, device=device, guidance_scale=guidance)
                        if args.backend == "ace" else StageBackend(args.upstream, args.checkpoint))
             if getattr(args, "capture_decoder", None) is not None:
                 from decoder_capture import install_capture
@@ -172,6 +179,7 @@ def main():
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--max-job-seconds", type=int, choices=(10, 30), default=10, help="Explicitly opt into the 30-second unchunked context test")
     parser.add_argument("--capture-decoder", type=Path, help="Diagnostic: capture one ACE job's exact latents and default float decode")
+    parser.add_argument("--guidance-scale", type=float, default=7.0, help="ACE Base guidance; 1 bypasses CFG amplification, default remains 7")
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--upstream", type=Path)
     parser.add_argument("--checkpoint", type=Path, help="STAGE instrument-specific safetensors file")
@@ -180,6 +188,13 @@ def main():
     parser.add_argument("--device", choices=("auto", "cuda", "mps"), default="auto")
     parser.add_argument("--offload", action="store_true", help="Use upstream CPU offload to reduce GPU memory")
     args = parser.parse_args()
+    from backends import validate_guidance
+    try:
+        args.guidance_scale = validate_guidance(args.guidance_scale)
+    except ValueError as error:
+        parser.error(str(error))
+    if args.backend != "ace" and args.guidance_scale != 7.0:
+        parser.error("--guidance-scale is an ACE-only option")
     if args.execute and args.upstream is None:
         parser.error("--execute requires --upstream")
     if args.execute and args.backend == "ace" and args.assets_manifest is None:
@@ -198,6 +213,10 @@ def main():
     experiment["device_requested"] = args.device
     experiment["ace_model"] = args.ace_model
     experiment["offload_to_cpu"] = args.offload
+    if args.backend == "ace":
+        experiment["guidance_scale"] = args.guidance_scale
+        for job in experiment["jobs"]:
+            job["guidance_scale"] = args.guidance_scale
     args.out.mkdir(parents=True, exist_ok=False)
     write_json(args.out / "experiment.json", experiment)
     if args.execute:

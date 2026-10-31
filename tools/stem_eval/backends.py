@@ -1,8 +1,16 @@
 """Adapters against the inspected upstream APIs. Real inference needs GPU and weights."""
 from pathlib import Path
+import math
 import sys
 
 from provenance import sha256
+
+
+def validate_guidance(value):
+    """Validate the supported Base guidance range before loading model dependencies."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not 1 <= value <= 15:
+        raise ValueError("Use finite ACE guidance_scale in [1,15]")
+    return float(value)
 
 
 def weight_inventory(upstream, backend, checkpoint, model_name="acestep-v15-base"):
@@ -30,7 +38,8 @@ def weight_inventory(upstream, backend, checkpoint, model_name="acestep-v15-base
 
 
 class AceBackend:
-    def __init__(self, upstream, checkpoint=None, model_name="acestep-v15-base", offload_to_cpu=False, device="cuda"):
+    def __init__(self, upstream, checkpoint=None, model_name="acestep-v15-base", offload_to_cpu=False, device="cuda", guidance_scale=7.0):
+        self.guidance_scale = validate_guidance(guidance_scale)
         sys.path.insert(0, str(upstream))
         from acestep.handler import AceStepHandler
         from acestep.inference import GenerationConfig, GenerationParams, generate_music
@@ -54,7 +63,7 @@ class AceBackend:
             caption=f"Isolated {instrument} accompaniment following the source harmony, timing and dynamics.",
             instrumental=True, lyrics="[Instrumental]", duration=duration,
             repainting_start=0.0, repainting_end=-1,
-            inference_steps=50, guidance_scale=7.0, seed=seed,
+            inference_steps=50, guidance_scale=self.guidance_scale, seed=seed,
             thinking=False, use_cot_caption=False, use_cot_metas=False, use_cot_language=False,
             enable_normalization=False,
         )

@@ -4,7 +4,44 @@ POC lokal di JupyterLab: rekaman gitar/piano → bass atau drum pengiring memaka
 model pretrained ACE-Step. Mulai dari evaluasi kualitas, kemudian putuskan apakah
 fine-tuning diperlukan. Belum ada model baru yang dilatih atau konversi iPhone.
 
-## Prioritas terbaru: periksa pemutaran sub-bass di speaker MacBook
+## Rekonstruksi piano bersih: uji guidance DiT 7 versus 1
+
+Pengguna mengonfirmasi `source_listen.wav`, `cpu_encoder_listen.wav`, dan
+`mlx_encoder_listen.wav` semuanya bersih. Bersama kesamaan output decoder
+MLX/CPU, ini mengurangi dugaan jalur VAE sebagai penyebab utama pada sampel uji.
+Bass hasil generasi masih glitch; conditioning dan generasi DiT perlu diperiksa.
+Rekonstruksi bersih bukan bukti seluruh pipeline benar pada semua input.
+
+Uji satu pengaturan menggunakan B dan baseline yang sudah ada:
+
+```bash
+git pull --rebase --autostash
+python3 scripts/compare_guidance.py --execute
+```
+
+Satu generasi B baru memakai **guidance 1**, dengan sumber byte-identik, seed,
+Base/MPS, caption dan 50 langkah sama. **CFG 7 tidak digenerasi ulang**; baseline
+diambil dari cache pembanding decoder. Bobot lokal dipakai, tanpa unduhan baru.
+Pada source Base yang dipin, guidance 1 melewati penguatan CFG/APG dan cabang
+batch conditional/unconditional; prompt dan conditioning audio tetap digunakan.
+Ini belum membuktikan penyebab tertentu jika kualitas membaik: perubahan satu
+setting juga mengubah cabang implementasi/batching. RNG encoder dan MPS dapat
+bervariasi antarsesi meski seed DiT sama.
+
+Di folder `guidance_comparison_*`, bandingkan `cfg7_listen.wav` dan
+`cfg1_listen.wav`. Kedua pratinjau memakai gain 0.7 yang sama. Report menyimpan
+parameter yang benar-benar dipakai; bila setting lain ikut berubah, uji menolak
+menganggapnya perbandingan terkontrol dan tetap menyimpan hasil untuk inspeksi.
+Tanpa `--execute`, hanya snapshot dan plan dibuat. Hasil lama dipertahankan.
+
+Default CLI/notebook lama tetap guidance 7. CLI ACE kini menerima
+`--guidance-scale` dalam [1,15], dan cache menolak pencampuran hasil guidance
+berbeda. Mode lagu penuh belum diberi preset guidance baru sebelum kualitas
+percobaan ini dinilai. Jika CFG 1 masih rusak, jangan mengulang lagu penuh atau
+menganggap penambahan step otomatis memperbaiki; telusuri conditioning/backend
+DiT atau kesesuaian model dengan tugas bass ini.
+
+## Pemeriksaan pemutaran sub-bass (tetap glitch menurut laporan pengguna)
 
 Pengguna mendengarkan melalui speaker bawaan MacBook. Sampel hasil memiliki
 sekitar **60% energi di bawah 60 Hz** dan **82% di bawah 80 Hz**; piano sumber
@@ -523,7 +560,11 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-84 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Pemeriksaan source roundtrip menguji
+91 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Uji guidance memeriksa parameter
+nyata yang dikirim ke adapter, default 7, plan 1 tanpa model, penolakan input/
+baseline berubah, dan isolasi cache CFG 7 dari CFG 1. Kualitas CFG 1 belum diuji
+dengan bobot nyata di cloud ini.
+Pemeriksaan source roundtrip menguji
 snapshot interval yang sama tanpa gain kedua, penolakan input berubah, CLI tanpa
 model, dan adapter decoder bersama dengan model palsu. Bobot encoder nyata tidak
 dijalankan pada tes cloud tersebut.
