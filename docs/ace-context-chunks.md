@@ -8,6 +8,13 @@ or its linear stitch function.
 
 ## What the evidence supports
 
+The 90-second setting is now frozen as a reference while bass tuning is paused.
+Uploaded audio and reports are preserved in `baselines/electric-bass-context90/`.
+The listener reported more noise in chunk 2 and substantial noise in chunk 3 of
+the full-song result. A subsequent late-region 60-second retry was reported as
+full noise and rejected. This baseline records these defects; it does not mark
+the song as clean or recommend repeating the failed retry.
+
 The listener selected 90 seconds after reporting good 60/90-second output and
 substantial noise at 120 seconds. The uploaded 60/90-second reports both show
 the same piano file, Base/LEGO, CUDA FP32, seed 0, CFG 7, 50 steps and caption.

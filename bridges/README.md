@@ -1,5 +1,9 @@
 # ACE-Step context bridge
 
+[Notebook 13](../notebooks/13_colab_drum_probe.ipynb) starts a separate 30-second
+drum probe on the active VM, reusing existing runtime/weights. Bass reference
+audio and known defects are saved in `baselines/electric-bass-context90/`.
+
 [Notebook 12](../notebooks/12_colab_fresh_context_90.ipynb) is for a new Colab
 account/VM. It embeds the runtime bridge source, checks GPU/disk, installs the
 pinned runtime and weights, and generates the full song with 90-second contexts.

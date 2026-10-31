@@ -43,7 +43,7 @@ def discover_root(base, preferred=None):
     candidates = set()
     for folder in dict.fromkeys((base, base.parent)):
         for path in (folder, folder / "source", folder / "StemsGenerating-Models",
-                     *folder.glob("songmap_cuda_*/source")):
+                     *folder.glob("songmap_cuda_*/source"), *folder.glob("ace_context_source_*")):
             if valid(path): candidates.add(path.resolve())
     ready = [path for path in candidates
              if (path / "vendor/ACE-Step-1.5/.venv/bin/python").is_file()

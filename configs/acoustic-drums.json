@@ -1,0 +1,14 @@
+{
+  "id": "acoustic-drums-v1",
+  "model": "acestep-v15-base",
+  "device": "cuda",
+  "precision": "float32",
+  "instrument": "drums",
+  "seeds": [
+    0
+  ],
+  "guidance_scale": 7.0,
+  "inference_steps": 50,
+  "offload_to_cpu": true,
+  "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments."
+}
