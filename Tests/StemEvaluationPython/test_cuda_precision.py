@@ -1,6 +1,10 @@
 """Verify the worker's loader/offload dtype boundary without Torch or a GPU."""
 from pathlib import Path
 import json
+import hashlib
+import os
+import shutil
+import subprocess
 import sys
 import tempfile
 import types
@@ -13,6 +17,43 @@ from cuda_precision import FLOAT32_WORKER,float32_command
 
 
 class CudaPrecisionTests(unittest.TestCase):
+    def test_real_run_entrypoint_imports_siblings_from_unrelated_cwd(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory)
+            source=root/'source'
+            scripts=source/'tools/stem_eval'
+            shutil.copytree(ROOT/'tools/stem_eval',scripts,ignore=shutil.ignore_patterns('__pycache__'))
+            upstream=source/'vendor/ACE-Step-1.5'
+            package=upstream/'acestep';package.mkdir(parents=True)
+            (package/'__init__.py').touch()
+            (package/'handler.py').write_text('class AceStepHandler: pass\n')
+            (upstream/'torch.py').write_text('float32 = "float32"\n')
+            prepared=root/'prepared';prepared.mkdir()
+            # Plan mode verifies hashes, without decoding or inferring audio.
+            audio=b'hash-only input fixture; no model output'
+            conditioning=b'{}'
+            (prepared/'source.wav').write_bytes(audio)
+            (prepared/'conditioning.json').write_bytes(conditioning)
+            (prepared/'prepared.json').write_text(json.dumps({
+                'schema_version':1,'duration':30,'conditions':{'A':'source.wav'},
+                'condition_sha256':{'A':hashlib.sha256(audio).hexdigest()},
+                'conditioning_sha256':hashlib.sha256(conditioning).hexdigest()}))
+            unrelated=root/'content';unrelated.mkdir()
+            output=root/'plan'
+            command=float32_command([
+                sys.executable,str(scripts/'run.py'),'--prepared',str(prepared),
+                '--backend','ace','--seeds','0','--device','cuda',
+                '--max-job-seconds','30','--out',str(output)])
+            environment=dict(os.environ)
+            environment.pop('PYTHONPATH',None)
+            result=subprocess.run(command,cwd=unrelated,env=environment,capture_output=True,text=True,timeout=30)
+            self.assertEqual(result.returncode,0,result.stdout+'\n'+result.stderr)
+            experiment=json.loads((output/'experiment.json').read_text())
+            self.assertEqual(experiment['status'],'planned')
+            self.assertEqual(experiment['device_requested'],'cuda')
+            self.assertEqual(len(experiment['jobs']),1)
+            self.assertEqual(experiment['jobs'][0]['duration'],30)
+
     def test_override_precedes_weight_loading_and_survives_vae_offload(self):
         events=[]
         class Handler:
@@ -37,7 +78,7 @@ class CudaPrecisionTests(unittest.TestCase):
             self.assertEqual(path,str(script))
             self.assertEqual(run_name,'__main__')
             self.assertEqual(sys.argv,command[1:])
-            self.assertEqual(sys.path[0],'/fixture/source/vendor/ACE-Step-1.5')
+            self.assertEqual(sys.path[:2],['/fixture/source/tools/stem_eval','/fixture/source/vendor/ACE-Step-1.5'])
             handler_module.AceStepHandler().initialize_service('cuda')
             with self.assertRaisesRegex(RuntimeError,'requires device=cuda'):
                 handler_module.AceStepHandler().initialize_service('mps')

@@ -20,7 +20,7 @@ FP32_WORKER = r'''
 import runpy, sys
 from pathlib import Path
 script = Path(sys.argv[1]).resolve()
-sys.path.insert(0, str(script.parents[2] / "vendor/ACE-Step-1.5"))
+sys.path[:0] = [str(script.parent), str(script.parents[2] / "vendor/ACE-Step-1.5")]
 import torch
 import acestep.handler as ace_handler
 
