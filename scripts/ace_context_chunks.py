@@ -8,6 +8,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+import shutil
 import subprocess
 
 import numpy as np
@@ -33,7 +34,7 @@ def write_json(path,value):
     temporary.replace(path)
 
 
-def layout(total, context=60, margin=6, fade=.58, cues=None, energy=None):
+def layout(total, context=90, margin=6, fade=.58, cues=None, energy=None):
     values=(context,margin,fade)
     if (any(isinstance(v,bool) or not isinstance(v,(int,float)) or not math.isfinite(v) for v in values)
         or not 10<=context<=600 or not 0<fade<margin or margin<1 or context-2*margin<10):
@@ -88,11 +89,17 @@ def read_audio(path):
     return data
 
 
-def prepare(source, output, context=60, margin=6, fade=.58, cues_file=None):
+def prepare(source, output, context=90, margin=6, fade=.58, cues_file=None):
     source,output=Path(source).resolve(),Path(output).resolve()
     output.mkdir(parents=True,exist_ok=False)
+    original_hash=sha256(source)
+    generation_input=output/('input'+source.suffix.lower())
+    shutil.copyfile(source,generation_input)
+    if sha256(generation_input)!=original_hash:
+        raise ValueError('Original input changed while preparing the plan')
     clean=output/'source.wav'
-    # One canonical source, no gain here; single.generate applies its fixed .7 once.
+    # Canonical audio is for planning/mixing only. Generate from the preserved
+    # original so preprocessing matches the listener-approved single-pass probes.
     subprocess.run(['ffmpeg','-nostdin','-v','error','-n','-i',str(source),'-ar',str(RATE),
                     '-ac','2','-c:a','pcm_s16le',str(clean)],check=True)
     audio=read_audio(clean)
@@ -107,11 +114,20 @@ def prepare(source, output, context=60, margin=6, fade=.58, cues_file=None):
         block=audio[max(0,frame-RATE//8):min(len(audio),frame+RATE//8)]
         return float(np.sqrt(np.mean(block**2)))
     plan=layout(len(audio),context,margin,fade,cues,energy)
-    plan.update(schema_version=1,status='planned',original_sha256=sha256(source),source_file='source.wav',
+    plan.update(schema_version=2,status='planned',original_sha256=original_hash,source_file='source.wav',
                 source_sha256=sha256(clean),preset=single.PRESET,
+                generation_source_file=generation_input.name,generation_source_sha256=original_hash,
                 note='No inferred meter/downbeats. Context cap includes margins and integer end padding. Independent chunks; continuity and musical quality unverified.')
     write_json(output/'plan.json',plan)
     return plan
+
+
+def generation_source(folder,plan):
+    path=(folder/plan.get('generation_source_file',plan['source_file'])).resolve()
+    expected=plan.get('generation_source_sha256',plan['source_sha256'])
+    if not path.is_relative_to(folder.resolve()) or sha256(path)!=expected:
+        raise ValueError('Generation source changed or escapes the run')
+    return path
 
 
 def load_plan(path):
@@ -121,6 +137,7 @@ def load_plan(path):
         raise ValueError('Canonical source changed or escapes the run')
     if plan['preset']!=single.PRESET or single.frames(source)!=plan['total_frames']:
         raise ValueError('Preset or source duration differs from plan')
+    generation_source(path.parent,plan)
     return path.parent,plan,source
 
 
@@ -128,7 +145,7 @@ def verify_chunk(folder,plan,chunk):
     report=json.loads((folder/'single_pass.json').read_text())
     stem=folder/'electric_bass.wav';metadata=report.get('input',{})
     if (report.get('status')!='generated' or report.get('preset')!=plan['preset']
-        or metadata.get('original_sha256')!=plan['source_sha256']
+        or metadata.get('original_sha256')!=plan.get('generation_source_sha256',plan['source_sha256'])
         or metadata.get('start')!=chunk['input_start']/RATE
         or metadata.get('requested_duration')!=(chunk['input_end']-chunk['input_start'])/RATE
         or metadata.get('source_gain')!=.7 or metadata.get('model_duration')!=chunk['model_duration']
@@ -140,6 +157,7 @@ def verify_chunk(folder,plan,chunk):
 
 def run_chunks(root,plan_path):
     folder,plan,source=load_plan(plan_path)
+    source=generation_source(folder,plan)
     import fcntl
     with (folder/'.generation.lock').open('a+') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -283,7 +301,7 @@ def stitch_run(plan_path):
 def main():
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='command',required=True)
     plan=sub.add_parser('plan');plan.add_argument('--source',type=Path,required=True);plan.add_argument('--out',type=Path,required=True)
-    plan.add_argument('--context-seconds',type=float,default=60);plan.add_argument('--margin-seconds',type=float,default=6)
+    plan.add_argument('--context-seconds',type=float,default=90);plan.add_argument('--margin-seconds',type=float,default=6)
     plan.add_argument('--fade-seconds',type=float,default=.58);plan.add_argument('--cues',type=Path)
     for name in ['probe','run','stitch']:
         s=sub.add_parser(name);s.add_argument('--plan',type=Path,required=True)
@@ -297,7 +315,7 @@ def main():
         parent=folder/f'probe_{args.duration:03d}';parent.mkdir(exist_ok=True)
         index=0
         while (parent/f'attempt_{index:03d}').exists():index+=1
-        result=single.generate(args.root,source,parent/f'attempt_{index:03d}',start=args.start,duration=args.duration,execute=args.execute)
+        result=single.generate(args.root,generation_source(folder,plan),parent/f'attempt_{index:03d}',start=args.start,duration=args.duration,execute=args.execute)
     elif args.command=='run':
         if args.execute:result=run_chunks(args.root,args.plan)
         else:_,result,_=load_plan(args.plan)

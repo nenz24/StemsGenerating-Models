@@ -1,0 +1,8 @@
+{
+  "id": "electric-bass-context",
+  "context_cap_seconds": 90,
+  "margin_seconds": 6,
+  "fade_seconds": 0.58,
+  "selection": "Listener preferred the 90-second single-pass result; reported substantial noise at 120 seconds.",
+  "validation": "90-second feedback metadata checked against the selected Electric Bass preset. Full-song chunk generation and seam quality still require GPU execution and listening."
+}

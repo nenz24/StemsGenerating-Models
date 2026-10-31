@@ -15,6 +15,12 @@ import ace_context_chunks as chunks
 
 
 class ContextChunkTests(unittest.TestCase):
+    def test_selected_90_second_cap_yields_three_contexts_for_this_song(self):
+        plan=chunks.layout(round(243.330625*chunks.RATE))
+        self.assertEqual(plan['context_cap_seconds'],90)
+        self.assertEqual(len(plan['chunks']),3)
+        self.assertTrue(all(c['model_duration']<=90 for c in plan['chunks']))
+
     def test_context_cap_includes_margins_and_covers_fractional_song(self):
         for seconds in [10,23,59.9,60,60.125,130,243.330625,600]:
             for context,margin in [(22,6),(60,6),(90,6),(120,6)]:
@@ -71,7 +77,16 @@ class ContextChunkTests(unittest.TestCase):
             with patch.object(chunks.single,'generate',side_effect=AssertionError('must not generate')):
                 report=chunks.prepare(source,root/'valid')
                 self.assertEqual(report['status'],'planned')
+                self.assertEqual(chunks.sha256(chunks.generation_source(root/'valid',report)),chunks.sha256(source))
                 chunks.load_plan(root/'valid/plan.json')
+                saved=chunks.generation_source(root/'valid',report)
+                saved.write_bytes(b'changed original')
+                with self.assertRaisesRegex(ValueError,'Generation source changed'):
+                    chunks.load_plan(root/'valid/plan.json')
+                saved.write_bytes(source.read_bytes())
+                legacy=dict(report)
+                legacy.pop('generation_source_file');legacy.pop('generation_source_sha256')
+                self.assertEqual(chunks.generation_source(root/'valid',legacy),root/'valid/source.wav')
             (root/'valid/source.wav').write_bytes(b'changed')
             with self.assertRaises(ValueError):chunks.load_plan(root/'valid/plan.json')
 
@@ -83,12 +98,13 @@ class ContextChunkTests(unittest.TestCase):
             calls=[]
             fail=[True]
             def generate(_,source,output,*,start,duration,execute):
+                self.assertEqual(chunks.sha256(source),plan['generation_source_sha256'])
                 calls.append(start);output.mkdir()
                 if len(calls)==2 and fail[0]:raise RuntimeError('simulated interrupted generation')
                 sf.write(output/'electric_bass.wav',np.full((round(duration*chunks.RATE),2),.03),chunks.RATE,subtype='PCM_16')
                 chunks.write_json(output/'single_pass.json',{'status':'generated','preset':plan['preset'],
                     'stem_sha256':chunks.sha256(output/'electric_bass.wav'),
-                    'input':{'original_sha256':plan['source_sha256'],'start':start,'requested_duration':duration,
+                    'input':{'original_sha256':plan['generation_source_sha256'],'start':start,'requested_duration':duration,
                              'source_gain':.7,'model_duration':int(np.ceil(duration))}})
             with patch.object(chunks.single,'model_python',return_value=Path(sys.executable)),patch.object(chunks.single,'generate',side_effect=generate):
                 with self.assertRaisesRegex(RuntimeError,'interrupted'):
