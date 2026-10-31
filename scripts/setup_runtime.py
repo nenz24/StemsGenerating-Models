@@ -28,16 +28,24 @@ def checkout():
     return UPSTREAM
 
 
+def bootstrap_uv(environment):
+    """Install pinned uv into a bare tool venv using the kernel's existing pip, not ensurepip."""
+    bootstrap = ROOT / ".bootstrap"
+    python = bootstrap / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+    if not python.is_file():
+        venv.EnvBuilder(with_pip=False).create(bootstrap)
+    # pip --python supports target environments which do not have pip installed.
+    # Reuses the bare venv left by an interrupted/failed ensurepip attempt as well.
+    subprocess.run([sys.executable, "-m", "pip", "--python", str(python),
+                    "install", "uv==0.10.0"], env=environment, check=True)
+    return bootstrap / ("Scripts/uv.exe" if sys.platform == "win32" else "bin/uv")
+
+
 def install():
     checkout()
     environment = runtime_environment(ROOT)
     environment["UV_PROJECT_ENVIRONMENT"] = str(UPSTREAM / ".venv")
-    bootstrap = ROOT / ".bootstrap"
-    python = bootstrap / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
-    if not python.exists():
-        venv.EnvBuilder(with_pip=True).create(bootstrap)
-    subprocess.run([str(python), "-m", "pip", "install", "uv==0.10.0"], env=environment, check=True)
-    uv = bootstrap / ("Scripts/uv.exe" if sys.platform == "win32" else "bin/uv")
+    uv = bootstrap_uv(environment)
     subprocess.run([str(uv), "sync", "--frozen", "--python", "3.11"], cwd=UPSTREAM, env=environment, check=True)
     subprocess.run([str(runtime_python()), "-c", "import torch; print('torch:', torch.__version__); print('CUDA available:', torch.cuda.is_available()); print('MPS available:', hasattr(torch.backends, 'mps') and torch.backends.mps.is_available())"], env=environment, check=True)
 

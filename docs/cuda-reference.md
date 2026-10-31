@@ -43,6 +43,10 @@ current working directory `/content` atau folder `notebooks`.
 
 Jika ffmpeg/ffprobe belum ada, notebook memasangnya pada VM Colab. Model tetap
 memakai runtime Python 3.11 terisolasi; PyTorch bawaan kernel tidak diubah.
+Bootstrap memakai `pip` kernel untuk memasang `uv==0.10.0` ke virtualenv kosong
+dengan `pip --python`, tanpa bergantung pada `ensurepip` Python bawaan Colab.
+Sel setup selalu menjalankan `uv sync --frozen` agar instalasi yang terputus
+dapat dilanjutkan; paket yang sudah sesuai dipakai ulang.
 Upload paket yang sama pada VM yang sama memakai folder/runtime/cache yang sama,
 sementara hasil inferensi berada di folder run baru. Source yang berubah di
 folder hasil ekstraksi ditolak, bukan ditimpa. `BUNDLE_ZIP` dapat diisi dengan
@@ -54,6 +58,30 @@ notebook tidak otomatis menghubungkan Google Drive untuk menyimpannya.
 Untuk pemeriksaan paket/plan saja, `DRY_RUN = True` melewati instalasi, unduhan,
 inferensi dan download browser. Mode ini bukan hasil GPU nyata.
 
+### Memulihkan sesi lama yang gagal pada `ensurepip`
+
+Jika paket lama gagal saat membuat `.bootstrap` dengan Python 3.13 Colab,
+tambahkan dan jalankan sel ini di bawah sel yang gagal. Gunakan sesi yang sama
+agar variabel `ROOT` dan helper notebook masih tersedia:
+
+```python
+bootstrap_python = ROOT / ".bootstrap/bin/python"
+run_logged([
+    sys.executable, "-m", "pip", "--python", str(bootstrap_python),
+    "install", "pip", "uv==0.10.0",
+], env=runtime_environment(), check=True)
+run_logged([
+    sys.executable, str(ROOT / "scripts/setup_runtime.py"), "--install",
+], env=runtime_environment(), check=True)
+print(json.dumps(check_cuda(runtime_python()), indent=2))
+```
+
+Ini memasang `pip` dan `uv` hanya ke bootstrap, sehingga installer lama dapat
+melanjutkan tanpa `ensurepip`. Source paket, input B dan parameter inferensi tidak
+diubah. Setelah setup berhasil, lanjutkan sel unduh/verifikasi bobot; tidak perlu
+upload atau ekspor ulang untuk sesi ini. Untuk sesi baru, pull perbaikan di Mac,
+ekspor ZIP baru dan upload notebook/ZIP yang baru.
+
 ## Server Linux CUDA milik sendiri (alternatif)
 
 Upload ZIP, lalu ekstrak di Terminal ke folder baru (jangan menimpa percobaan lain):
@@ -64,7 +92,7 @@ python3 -m zipfile -e cuda_reference_xxx.zip cuda-reference
 
 Buka `cuda-reference/source/notebooks/08_cuda_reference.ipynb` dan Run All.
 Notebook memverifikasi hash paket sebelum setup, memeriksa `nvidia-smi`, memasang
-runtime pinned hanya bila belum ada, dan memeriksa `torch.cuda.is_available()` di
+runtime pinned dengan sync yang dapat diulang, dan memeriksa `torch.cuda.is_available()` di
 runtime tersebut sebelum mengunduh bobot. Wheel Linux x86_64 memakai PyTorch
 2.10.0+cu128; driver/GPU server harus kompatibel. Tidak ada instalasi paket sistem
 atau penyewaan server otomatis. Sediakan ffmpeg/ffprobe melalui pengelola OS

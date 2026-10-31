@@ -7,7 +7,8 @@ import sys
 import tempfile
 import types
 import unittest
-from unittest.mock import patch
+import venv
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -67,12 +68,55 @@ class RuntimeEnvironmentTests(unittest.TestCase):
             with patch.object(setup_runtime, "ROOT", root), patch.object(setup_runtime, "UPSTREAM", upstream), patch.object(setup_runtime, "checkout"), patch.object(setup_runtime.subprocess, "run") as run:
                 setup_runtime.install()
             self.assertEqual(run.call_count, 3)
+            self.assertEqual(run.call_args_list[0].args[0], [
+                sys.executable, "-m", "pip", "--python", str(python), "install", "uv==0.10.0"])
             for call in run.call_args_list:
                 environment = call.kwargs["env"]
                 self.assertEqual(environment["UV_PYTHON_INSTALL_DIR"], str(root / ".runtime-cache/uv/python"))
                 self.assertEqual(environment["UV_PROJECT_ENVIRONMENT"], str(upstream / ".venv"))
                 self.assertEqual(environment["MPLBACKEND"], "Agg")
             self.assertIn("--frozen", run.call_args_list[1].args[0])
+
+    def test_fresh_bootstrap_works_without_ensurepip(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            environment = runtime_environment(root)
+            with patch.object(setup_runtime, "ROOT", root), patch.object(venv.EnvBuilder, "_setup_pip", side_effect=AssertionError("ensurepip unavailable")), patch.object(setup_runtime.subprocess, "run") as run:
+                uv = setup_runtime.bootstrap_uv(environment)
+            python = root / ".bootstrap" / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+            self.assertTrue(python.is_file())
+            self.assertEqual(uv.parent, python.parent)
+            self.assertEqual(run.call_args.args[0], [
+                sys.executable, "-m", "pip", "--python", str(python), "install", "uv==0.10.0"])
+            self.assertEqual(run.call_args.kwargs["env"], environment)
+
+    def test_partial_bootstrap_without_pip_is_reused(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bootstrap = root / ".bootstrap"
+            venv.EnvBuilder(with_pip=False).create(bootstrap)
+            with patch.object(setup_runtime, "ROOT", root), patch.object(venv.EnvBuilder, "create", side_effect=AssertionError("must reuse partial bootstrap")), patch.object(setup_runtime.subprocess, "run") as run:
+                setup_runtime.bootstrap_uv(runtime_environment(root))
+            self.assertEqual(run.call_count, 1)
+            self.assertIn("--python", run.call_args.args[0])
+
+    def test_cuda_notebooks_resync_partial_model_runtime(self):
+        for name in ("08_cuda_reference", "09_colab_reference"):
+            with self.subTest(notebook=name):
+                notebook = json.loads((ROOT / f"notebooks/{name}.ipynb").read_text())
+                cell, = ("".join(cell["source"]) for cell in notebook["cells"]
+                         if cell["cell_type"] == "code" and "scripts/setup_runtime.py" in "".join(cell["source"]))
+                run_logged = Mock()
+                check_cuda = Mock(return_value={"cuda_available": True})
+                # The interpreter can exist even when uv sync was interrupted.
+                runtime_python = Mock(return_value=Path(sys.executable))
+                exec(compile(cell, name, "exec"), {
+                    "DRY_RUN": False, "ROOT": ROOT, "sys": sys, "json": json,
+                    "run_logged": run_logged, "check_cuda": check_cuda,
+                    "runtime_python": runtime_python, "runtime_environment": lambda: {}})
+                self.assertEqual(run_logged.call_args.args[0], [
+                    sys.executable, str(ROOT / "scripts/setup_runtime.py"), "--install"])
+                check_cuda.assert_called_once_with(Path(sys.executable))
 
     def test_model_download_has_explicit_local_hub_and_xet_cache(self):
         with tempfile.TemporaryDirectory() as directory:
