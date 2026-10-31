@@ -4,7 +4,39 @@ POC lokal di JupyterLab: rekaman gitar/piano → bass atau drum pengiring memaka
 model pretrained ACE-Step. Mulai dari evaluasi kualitas, kemudian putuskan apakah
 fine-tuning diperlukan. Belum ada model baru yang dilatih atau konversi iPhone.
 
-## Audit selesai: bandingkan decoder dengan latent yang sama
+## Kedua decoder masih glitch: kumpulkan sampel audio tanpa generasi baru
+
+Laporan terakhir: sumber hanya piano, decoder default dan pembanding CPU sama-sama
+glitch. `capture.json` memastikan default memanggil MLX VAE float32 dan kembali
+tanpa error. Latent `[1,750,64]` memiliki min sekitar -6.07, max 5.58 dan std 1.30.
+Statistik hingga ini tidak membuktikan latent sehat atau rusak secara musikal.
+Mengganti decoder saja belum menyelesaikan hasil; encoder sumber/DiT/kesesuaian
+model tetap perlu diperiksa. Jangan mengulang seluruh lagu untuk langkah ini.
+
+Bukti yang masih diperlukan adalah audio, bukan statistik tambahan. Ekspor dari
+hasil pembanding yang sudah ada:
+
+```bash
+git pull --ff-only
+python3 scripts/export_glitch_feedback.py
+```
+
+Perintah memilih `decoder_comparison_*` terbaru yang selesai dan membuat
+`feedback.zip` pada folder baru yang dicetak. Isinya hanya 10 detik selaras dari
+piano sumber, decoder default, decoder CPU, dan manifest setting/posisi/hash.
+Default mengambil offset 3–13 detik dalam B (biasanya detik lagu 30–40).
+Ketiga file memakai gain pratinjau 0.7 yang sama. Tidak ada inferensi, unduhan,
+atau unggahan otomatis; seluruh rekaman dan file latent tidak dimasukkan.
+Sumber/hasil lama dipertahankan dan checksum diperiksa sebelum ekspor.
+
+Lampirkan `feedback.zip` di chat untuk menilai jenis artefak yang sebenarnya.
+Untuk memilih run atau interval lain, gunakan `--run /path/to/decoder_comparison_xxx`,
+`--start` (offset dalam B), dan `--duration` (maksimal 10 detik).
+Ekspor diuji dengan audio sintetis: tiga klip tepat 10 detik pada interval sama,
+ZIP valid, sumber tidak berubah, dan audio yang berubah hash ditolak. Ini tidak
+memvalidasi kualitas bass atau menyatakan penyebab glitch sudah ditemukan.
+
+## Pembanding decoder dengan latent sama (sudah dilakukan pada laporan pengguna)
 
 Laporan pengguna menunjukkan raw B peak 0.999969, RMS 0.298339, tanpa NaN/Inf.
 Sesudah resampling tidak ada sampel di luar [-1,1]. Pratinjau dengan gain lebih
