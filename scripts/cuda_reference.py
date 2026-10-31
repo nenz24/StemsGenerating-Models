@@ -22,6 +22,7 @@ from mac_workflow import run_command
 from runtime_environment import runtime_environment
 from setup_runtime import runtime_python
 from stream_process import run_logged
+from cuda_precision import float32_command
 
 
 def notebook_source_digest(data):
@@ -66,7 +67,7 @@ def export_bundle(run,archive):
         write_json(reference/'comparison.json',report)
         with zipfile.ZipFile(io.BytesIO(source_zip)) as source:
             needed={'scripts/cuda_reference.py','notebooks/08_cuda_reference.ipynb',
-                    'notebooks/09_colab_reference.ipynb','configs/assets-base.json'}
+                    'notebooks/09_colab_reference.ipynb','configs/assets-base.json','scripts/cuda_precision.py'}
             if not needed.issubset(source.namelist()):
                 raise ValueError('Pull the committed CUDA runner/notebook before exporting')
             if hashlib.sha256(source.read('configs/assets-base.json')).hexdigest()!=sha256(ROOT/'configs/assets-base.json'):
@@ -118,12 +119,23 @@ def run_reference(reference,output,execute=False):
     report={'status':'planned','source_sha256':original['source_sha256'],'baseline_sha256':original['baseline_sha256'],
             'bridge_commit':original.get('bridge_commit'),'upstream_commit':COMMITS['ace'],
             'requested':{'device':'cuda','model':profile['model'],'seed':profile['seeds'][0],'guidance_scale':7,'steps':50,'duration':30},
+            'precision_policy':'FP32 on pre-Ampere CUDA (capability < 8.0); upstream default otherwise',
             'note':'One CUDA baseline, no sweep/metadata/long-input changes. Device dtypes and RNG streams may differ; this alone cannot prove an MPS bug.'}
     write_json(output/'cuda_reference.json',report)
     command=run_command(ROOT,profile,reference/'prepared',output/'generation',execute=execute)
     command+=['--max-job-seconds','30','--guidance-scale','7','--capture-decoder',str(output/'capture')]
     try:
-        if execute:report['hardware']=check_cuda(runtime_python())
+        if execute:
+            report['hardware']=check_cuda(runtime_python())
+            capability=report['hardware'].get('capability')
+            if capability is None:
+                raise RuntimeError('CUDA runtime did not report compute capability; cannot select safe precision')
+            if tuple(capability)<(8,0):
+                command=float32_command(command)
+                report['precision_override']='float32'
+            else:
+                report['precision_override']=None
+            write_json(output/'cuda_reference.json',report)
         run_logged(command,env=runtime_environment(),check=True)
         if not execute:
             print('PLAN ONLY: no CUDA inference executed',flush=True)
@@ -139,6 +151,11 @@ def run_reference(reference,output,execute=False):
         if changed-{'src_audio'} or original['baseline_settings']['config']!=result['settings']['config']:
             raise ValueError('Unexpected generation parameter changes; result retained for inspection')
         capture=json.loads((output/'capture/capture.json').read_text())
+        vae_calls=[call for call in capture.get('calls',[]) if call.get('backend')=='pytorch_vae']
+        if report.get('precision_override')=='float32' and (
+                capture.get('model_dtype')!='torch.float32' or not vae_calls or any(
+                    call.get('dtype')!='torch.float32' for call in vae_calls)):
+            raise ValueError('Requested FP32 worker did not report FP32 model/decoder')
         for name,path in (('mps_baseline',baseline),('cuda',folder/result.get('stem_file','stem.wav'))):
             canonicalize(path,output/(name+'_listen.wav'),duration=30,gain=0.7,max_duration=30)
         report.update(status='generated',settings=result['settings'],decoder_capture=capture,

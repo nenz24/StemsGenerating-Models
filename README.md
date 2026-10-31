@@ -45,6 +45,9 @@ karena environment chat tidak mempunyai GPU NVIDIA.
 
 Lihat [panduan CUDA](docs/cuda-reference.md) untuk rincian dan penggunaan CLI.
 Untuk server JupyterLab NVIDIA milik sendiri, notebook 08 tetap tersedia.
+Jika T4 gagal dengan latent NaN, tersedia [sel retry FP32](docs/colab-fp32-recovery.md)
+untuk melanjutkan sesi yang sama. Runner terbaru memilih FP32 otomatis pada
+GPU pre-Ampere; ini belum membuktikan bahwa kualitas bass sudah membaik.
 
 ## Batas POC saat ini
 

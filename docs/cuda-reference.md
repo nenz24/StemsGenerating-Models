@@ -58,6 +58,26 @@ notebook tidak otomatis menghubungkan Google Drive untuk menyimpannya.
 Untuk pemeriksaan paket/plan saja, `DRY_RUN = True` melewati instalasi, unduhan,
 inferensi dan download browser. Mode ini bukan hasil GPU nyata.
 
+### T4: generasi gagal dengan latent NaN
+
+T4 memakai compute capability 7.5. Pada uji pertama, upstream memilih FP16 dan
+seluruh 48.000 elemen latent menjadi NaN setelah diffusion; belum ada audio CUDA
+valid yang bisa dibandingkan dengan MPS. Ini mengarah ke masalah numerik FP16,
+bukan bukti bahwa glitch MPS dan kegagalan CUDA memiliki penyebab yang sama.
+
+Runner sekarang memakai FP32 pada GPU dengan capability < 8.0. Override berlaku
+sebelum memuat DiT, juga pada text encoder/VAE dan saat offload CPU/GPU. Ia tidak
+mengedit upstream pinned atau bobot. Report menyimpan `precision_override` dan
+dtype model/decoder diperiksa sebelum menandai hasil sebagai generated.
+GPU Ampere atau lebih baru tetap memakai pilihan dtype upstream. FP32 memerlukan
+memori lebih banyak dan dapat lebih lambat; keberhasilan nyata perlu diuji di GPU.
+
+Untuk sesi lama yang bobotnya sudah selesai diunduh, gunakan
+[sel pemulihan FP32](colab-fp32-recovery.md) di sesi Colab yang sama. Ini mengulang
+inferensi ke folder baru memakai bobot yang sudah ada. Variabel
+`ACESTEP_DTYPE=float32` dalam pesan error upstream belum dibaca oleh loader pada
+SHA pinned, sehingga mengaturnya saja tidak cukup.
+
 ### Memulihkan sesi lama yang gagal pada `ensurepip`
 
 Jika paket lama gagal saat membuat `.bootstrap` dengan Python 3.13 Colab,

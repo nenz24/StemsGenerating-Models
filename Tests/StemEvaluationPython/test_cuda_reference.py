@@ -15,6 +15,7 @@ sys.path.insert(0,str(ROOT/'scripts'))
 sys.path.insert(0,str(ROOT/'tools/stem_eval'))
 import cuda_reference
 from cuda_reference import export_bundle,run_reference,verify_bundle
+from cuda_precision import FLOAT32_WORKER
 from provenance import sha256
 import test_guidance_comparison
 
@@ -24,7 +25,7 @@ class CudaReferenceTests(unittest.TestCase):
         run,_,_=test_guidance_comparison.GuidanceComparisonTests().make_comparison(root)
         source=io.BytesIO()
         with zipfile.ZipFile(source,'w') as archive:
-            for name in ('scripts/cuda_reference.py','notebooks/08_cuda_reference.ipynb','notebooks/09_colab_reference.ipynb','configs/assets-base.json'):
+            for name in ('scripts/cuda_reference.py','scripts/cuda_precision.py','notebooks/08_cuda_reference.ipynb','notebooks/09_colab_reference.ipynb','configs/assets-base.json'):
                 data=(ROOT/name).read_bytes()
                 if bad_manifest and name=='configs/assets-base.json':data=b'changed'
                 archive.writestr(name,data)
@@ -113,8 +114,13 @@ class CudaReferenceTests(unittest.TestCase):
                 cuda_reference.check_cuda(Path('/model/python'))
 
     def test_single_candidate_must_report_cuda_and_matching_generation_parameters(self):
-        for device in ('cuda','mps'):
-            with self.subTest(device=device),tempfile.TemporaryDirectory() as directory:
+        cases=[('cuda',[8,0],'fixture','fixture',True),
+               ('mps',[8,0],'fixture','fixture',False),
+               ('cuda',[7,5],'torch.float32','torch.float32',True),
+               ('cuda',[7,5],'torch.float16','torch.float32',False),
+               ('cuda',[7,5],'torch.float32','torch.float16',False)]
+        for device,capability,model_dtype,vae_dtype,valid in cases:
+            with self.subTest(device=device,capability=capability,model_dtype=model_dtype,vae_dtype=vae_dtype),tempfile.TemporaryDirectory() as directory:
                 root=Path(directory);_,_,bundle=self.make_bundle(root)
                 reference=bundle/'reference';output=root/'result';calls=[]
                 def fake_generation(command,**kwargs):
@@ -132,15 +138,32 @@ class CudaReferenceTests(unittest.TestCase):
                     (output/'generation/experiment.json').write_text(json.dumps({'status':'generated','jobs':[job]}))
                     (output/'generation/session.json').write_text(json.dumps({'device':device,'fixture_only':True}))
                     (output/'capture').mkdir()
-                    (output/'capture/capture.json').write_text(json.dumps({'status':'captured','model_device':device,'model_dtype':'fixture'}))
-                with patch('cuda_reference.check_cuda',return_value={'fixture_only':True}),patch('cuda_reference.run_logged',side_effect=fake_generation):
-                    if device=='cuda':run_reference(reference,output,execute=True)
+                    (output/'capture/capture.json').write_text(json.dumps({'status':'captured','model_device':device,'model_dtype':model_dtype,
+                        'calls':[{'backend':'pytorch_vae','dtype':vae_dtype}]}))
+                with patch('cuda_reference.check_cuda',return_value={'fixture_only':True,'capability':capability}),patch('cuda_reference.run_logged',side_effect=fake_generation):
+                    if valid:run_reference(reference,output,execute=True)
                     else:
                         with self.assertRaises(ValueError):run_reference(reference,output,execute=True)
                 self.assertEqual(len(calls),1)
                 report=json.loads((output/'cuda_reference.json').read_text())
-                self.assertEqual(report['status'],'generated' if device=='cuda' else 'failed')
-                self.assertEqual((output/'cuda_listen.wav').exists(),device=='cuda')
+                self.assertEqual(report['status'],'generated' if valid else 'failed')
+                self.assertEqual((output/'cuda_listen.wav').exists(),valid)
+
+    def test_t4_uses_fp32_worker_and_keeps_failed_run_for_inspection(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);_,_,bundle=self.make_bundle(root)
+            failure=RuntimeError('fixture generation failed, no GPU inference')
+            with patch('cuda_reference.check_cuda',return_value={'gpu':'fixture T4','capability':[7,5]}),patch('cuda_reference.run_logged',side_effect=failure) as model:
+                with self.assertRaisesRegex(RuntimeError,'fixture generation failed'):
+                    run_reference(bundle/'reference',root/'failed',execute=True)
+            command=model.call_args.args[0]
+            self.assertEqual(command[1:3],['-c',FLOAT32_WORKER])
+            self.assertEqual(command[command.index('--guidance-scale')+1],'7')
+            self.assertEqual(command[command.index('--seeds')+1],'0')
+            report=json.loads((root/'failed/cuda_reference.json').read_text())
+            self.assertEqual(report['status'],'failed')
+            self.assertEqual(report['precision_override'],'float32')
+            verify_bundle(bundle)
 
 
 if __name__=='__main__':unittest.main()
