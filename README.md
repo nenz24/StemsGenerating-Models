@@ -4,13 +4,53 @@ POC lokal di JupyterLab: rekaman gitar/piano → bass atau drum pengiring memaka
 model pretrained ACE-Step. Mulai dari evaluasi kualitas, kemudian putuskan apakah
 fine-tuning diperlukan. Belum ada model baru yang dilatih atau konversi iPhone.
 
-## Glitch juga terjadi setelah 30 detik: uji urutan pemanggilan
+## B tetap rusak saat pertama; A punya sedikit glitch: audit raw audio
+
+Hasil pengguna dari notebook 07: B tetap rusak saat diproses pertama, A masih
+terdengar bassnya tetapi punya sedikit glitch, dan raw model B juga rusak. Ini
+melemahkan dugaan urutan pemanggilan sebagai penyebab utama. Glitch sudah
+terdengar sebelum stitching. Belum ada dasar untuk membesarkan chunk lagi.
+
+Periksa file yang sudah ada, **tanpa inferensi atau unduhan baru**:
+
+```bash
+git pull --ff-only
+python3 scripts/audit_audio.py
+```
+
+Perintah memilih hasil notebook 07 terbaru yang selesai. Untuk memilih eksplisit:
+
+```bash
+python3 scripts/audit_audio.py --run /path/to/sequence_diagnostics_xxx/reversed
+```
+
+Laporan mencatat puncak, RMS, sampel di luar [-1,1], NaN/Inf, format raw,
+stem tersimpan, sumber, serta level float setelah resampling sebelum PCM16.
+Pemeriksaan ini penting karena ekspor stem lama langsung mengubah output ke PCM16
+dengan gain 1: puncak berlebih dapat terpotong saat ekspor atau playback raw float.
+Itu kemungkinan yang dapat diukur, belum diagnosis glitch pengguna.
+Decoder upstream juga memiliki pembatasan peak sebelum ekspor. Audit mengukur
+file aktual dan resampling; jangan menganggap raw pasti melewati batas.
+
+Folder audit baru berisi `report.json` dan `chunk_001_raw_0_headroom.wav` (B),
+serta pratinjau A. Gain hanya diturunkan bila diperlukan untuk memberi ruang
+hingga -3 dBFS; audio pelan tidak dinaikkan. Pratinjau berasal dari raw yang sama,
+tanpa model baru, dan bukan stem evaluasi pengganti. Sumber/hasil lama dipertahankan.
+NaN/Inf menyebabkan pratinjau dilewati, bukan diganti diam-diam dengan nol.
+
+Bagikan output Terminal/report dan dengarkan B versi headroom. Bila peak melewati
+batas dan versi headroom membaik, clipping berperan. Bila raw sudah terpotong atau
+model menghasilkan artefak musik, menurunkan gain tidak memulihkan informasi itu.
+Peak normal juga tidak menjamin audio bebas artefak. Source upstream yang dipin
+memilih float32 pada jalur PyTorch MPS; jangan menebak bahwa semua error ini fp16.
+
+## Uji urutan pemanggilan (sudah dilakukan pada laporan pengguna)
 
 Pengguna melaporkan mode lagu penuh 30 detik juga rusak setelah potongan pertama.
 Memperpanjang konteks belum menyelesaikan glitch. Keberhasilan 30 detik pertama
 pada notebook 05 belum menguji input bagian berikutnya atau pemanggilan berulang.
 
-Gunakan **[notebooks/07_sequence_diagnostics.ipynb](notebooks/07_sequence_diagnostics.ipynb)**.
+Uji ini tersedia di **[notebooks/07_sequence_diagnostics.ipynb](notebooks/07_sequence_diagnostics.ipynb)**.
 Notebook memilih run `full_song30_*` terbaru yang selesai, atau isi `RUN` dengan
 folder bermasalah. Dengarkan sumber, stem tersimpan dan raw model chunk 1 serta 0.
 Set `RUN_REPLAY=False` bila hanya ingin mendengarkan cache tanpa inferensi.
@@ -333,7 +373,10 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-66 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Termasuk round-trip audio
+72 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Audit audio diuji dengan raw float
+WAV sintetis yang melebihi batas amplitudo: clipping terukur dan pratinjau hanya
+diattenuasi, dengan input lama tetap utuh. Ini bukan bukti penyebab glitch pengguna.
+Termasuk round-trip audio
 180 detik pada konteks 30 detik/overlap 3 detik, isolasi cache lama, dan resume
 runner dengan model palsu pada konteks 10 serta 30 detik. Tes tersebut tidak
 memvalidasi kualitas musik. Seluruh 9
