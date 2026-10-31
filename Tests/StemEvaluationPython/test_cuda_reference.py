@@ -24,7 +24,7 @@ class CudaReferenceTests(unittest.TestCase):
         run,_,_=test_guidance_comparison.GuidanceComparisonTests().make_comparison(root)
         source=io.BytesIO()
         with zipfile.ZipFile(source,'w') as archive:
-            for name in ('scripts/cuda_reference.py','notebooks/08_cuda_reference.ipynb','configs/assets-base.json'):
+            for name in ('scripts/cuda_reference.py','notebooks/08_cuda_reference.ipynb','notebooks/09_colab_reference.ipynb','configs/assets-base.json'):
                 data=(ROOT/name).read_bytes()
                 if bad_manifest and name=='configs/assets-base.json':data=b'changed'
                 archive.writestr(name,data)

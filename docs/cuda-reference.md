@@ -28,7 +28,33 @@ ZIP tidak berisi bobot. Unduhannya di server baru sekitar 13.86 GiB untuk aset
 model, di luar paket runtime/CUDA. Cache/temp dan salinan aset memerlukan ruang
 lebih dari ukuran unduhan. Notebook mencetak estimasi disk sebelum pemasangan.
 
-## Server Linux CUDA
+## Google Colab tanpa server pribadi
+
+Setelah pull dan ekspor di Mac, buka [Google Colab](https://colab.research.google.com/).
+Pilih **File → Upload notebook**, lalu pilih `notebooks/09_colab_reference.ipynb`
+dari checkout Mac. Pilih **Runtime → Change runtime type → GPU**, misalnya T4
+jika tersedia. GPU mengikuti ketersediaan akun; notebook tidak membeli paket GPU.
+
+Run all dan upload **satu** `cuda_reference_*.zip` hasil exporter ketika sel pertama
+meminta file. Tidak perlu clone repo privat, token GitHub, terminal, atau mount
+Google Drive. Notebook memeriksa GPU sebelum instalasi besar, memverifikasi isi/
+hash paket dan menentukan folder source dari hasil ekstraksi, bukan dari asumsi
+current working directory `/content` atau folder `notebooks`.
+
+Jika ffmpeg/ffprobe belum ada, notebook memasangnya pada VM Colab. Model tetap
+memakai runtime Python 3.11 terisolasi; PyTorch bawaan kernel tidak diubah.
+Upload paket yang sama pada VM yang sama memakai folder/runtime/cache yang sama,
+sementara hasil inferensi berada di folder run baru. Source yang berubah di
+folder hasil ekstraksi ditolak, bukan ditimpa. `BUNDLE_ZIP` dapat diisi dengan
+path ZIP yang sudah diupload untuk melewati tombol upload saat mengulang sel.
+
+Sel terakhir menawarkan download `cuda_result.zip`. Sesi Colab sementara:
+download hasil sebelum sesi berakhir. VM baru perlu menyediakan bobot lagi;
+notebook tidak otomatis menghubungkan Google Drive untuk menyimpannya.
+Untuk pemeriksaan paket/plan saja, `DRY_RUN = True` melewati instalasi, unduhan,
+inferensi dan download browser. Mode ini bukan hasil GPU nyata.
+
+## Server Linux CUDA milik sendiri (alternatif)
 
 Upload ZIP, lalu ekstrak di Terminal ke folder baru (jangan menimpa percobaan lain):
 

@@ -8,7 +8,7 @@ piano melalui encoder CPU/MLX bersih, decoder CPU/MLX menghasilkan output hampir
 identik, dan CFG 1 justru lebih buruk. Belum ada perbaikan kualitas yang terbukti.
 Langkah aktif adalah **satu pembanding CUDA dengan B dan CFG 7 yang sama**.
 
-## Satu uji di JupyterLab CUDA
+## Satu uji di Google Colab
 
 Di checkout Mac yang menyimpan hasil percobaan sebelumnya:
 
@@ -22,29 +22,29 @@ byte-identik, baseline MPS, setting/hash, dan snapshot kode commit Git saat ini.
 Tidak menjalankan model lagi di Mac. Bobot, kredensial, run lain dan output
 notebook lokal yang belum di-commit tidak disertakan.
 
-1. Upload ZIP itu ke server JupyterLab **Linux dengan GPU NVIDIA**.
-2. Di Terminal server, ekstrak ke folder baru:
-
-   ```bash
-   python3 -m zipfile -e cuda_reference_xxx.zip cuda-reference
-   ```
-
-3. Buka **`cuda-reference/source/notebooks/08_cuda_reference.ipynb`**, lalu Run All.
-4. Bandingkan `mps_baseline_listen.wav` dan `cuda_listen.wav`; paket `cuda_result.zip`
-   yang dicetak berisi audio/report tanpa bobot model.
+1. Buka [Google Colab](https://colab.research.google.com/) → **File → Upload notebook**.
+   Pilih **`notebooks/09_colab_reference.ipynb`** dari checkout Mac.
+2. Pilih **Runtime → Change runtime type → GPU** (misalnya T4 jika tersedia).
+3. **Run all**, lalu upload `cuda_reference_*.zip` saat diminta pada sel pertama.
+   Tidak memerlukan terminal atau token GitHub di Colab.
+4. Bandingkan `mps_baseline_listen.wav` dan `cuda_listen.wav`. Sel terakhir
+   mengunduh `cuda_result.zip` berisi audio/report tanpa bobot model.
 
 Notebook memeriksa GPU/disk, menyiapkan runtime Python 3.11 terisolasi, menyediakan
 aset pinned, dan menjalankan **satu** generasi: Base, seed 0, CFG 7, 50 langkah,
 30 detik. Bukan sweep seed/CFG dan bukan generasi seluruh lagu. Jika CUDA tidak
 tersedia di runtime model, proses gagal dengan jelas; tidak beralih ke CPU.
 
-Server baru memerlukan ruang sekitar 45–50 GiB untuk runtime, bobot dan cache,
-serta ffmpeg/ffprobe. Bobot lokal yang valid dipakai ulang. Dtype CUDA dipilih
+VM baru memerlukan ruang sekitar 45–50 GiB untuk runtime, bobot dan cache.
+Notebook Colab memasang ffmpeg jika belum tersedia. GPU mengikuti ketersediaan
+akun, dan sesi Colab bersifat sementara; unduh hasil sebelum sesi berakhir.
+Paket yang sama memakai kembali runtime/cache pada VM yang sama. Dtype CUDA dipilih
 upstream sesuai GPU dan dicatat; RNG/dtype CUDA dapat berbeda dari MPS. Satu hasil
 CUDA saja belum membuktikan bug MPS. CUDA nyata belum dijalankan di chat ini,
 karena environment chat tidak mempunyai GPU NVIDIA.
 
 Lihat [panduan CUDA](docs/cuda-reference.md) untuk rincian dan penggunaan CLI.
+Untuk server JupyterLab NVIDIA milik sendiri, notebook 08 tetap tersedia.
 
 ## Batas POC saat ini
 
@@ -77,5 +77,6 @@ python3 -m unittest discover -s Tests/StemEvaluationPython -v
 
 Tes menilai audio/timeline, hash/cache, CLI plan, kontrak adapter, dan simulasi
 kegagalan tanpa bobot model. Hasil tes kode tidak membuktikan mutu bass atau
-keberhasilan CUDA nyata. Notebook CUDA diuji dalam mode dry-run dengan fixture
-sintetis; hasil inferensi CUDA harus berasal dari server GPU pengguna.
+keberhasilan CUDA nyata. Notebook 08 dan 09 diuji dalam mode dry-run dengan
+fixture sintetis, termasuk folder kerja bergaya Colab yang terpisah dari source.
+Hasil inferensi CUDA harus berasal dari runtime GPU yang benar-benar dijalankan.

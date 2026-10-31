@@ -65,7 +65,8 @@ def export_bundle(run,archive):
                       assets_sha256=sha256(ROOT/'configs/assets-base.json'))
         write_json(reference/'comparison.json',report)
         with zipfile.ZipFile(io.BytesIO(source_zip)) as source:
-            needed={'scripts/cuda_reference.py','notebooks/08_cuda_reference.ipynb','configs/assets-base.json'}
+            needed={'scripts/cuda_reference.py','notebooks/08_cuda_reference.ipynb',
+                    'notebooks/09_colab_reference.ipynb','configs/assets-base.json'}
             if not needed.issubset(source.namelist()):
                 raise ValueError('Pull the committed CUDA runner/notebook before exporting')
             if hashlib.sha256(source.read('configs/assets-base.json')).hexdigest()!=sha256(ROOT/'configs/assets-base.json'):
