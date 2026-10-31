@@ -22,6 +22,11 @@ dengan `duration=None`; belum ada jaminan akan muat pada T4 FP32.
 
 ## Sesi Colab yang masih aktif
 
+Jika `ROOT` belum terdefinisi, sel di bawah mencarinya dari checkout pada VM,
+tanpa memerlukan variabel dari notebook sebelumnya. Upload yang sudah ada di
+memori atau disk dipakai kembali. Ganti seluruh sel upload lama dengan versi ini.
+Jika ada beberapa checkout yang siap, pilih path melalui `ROOT_HINT`.
+
 Di Mac, pull perubahan terbaru:
 
 ```bash
@@ -35,7 +40,7 @@ berikut. Saat upload, pilih **dua file sekaligus**:
 2. Audio piano asli sepanjang lagu, misalnya WAV/MP3/M4A/FLAC.
 
 `REFERENCE/prepared/source.wav` dari uji lama hanya berisi B 30 detik. Gunakan
-rekaman asli untuk lagu penuh. `ROOT` tetap folder source notebook 09. Helper
+rekaman asli untuk lagu penuh. `ROOT` adalah folder source yang ditemukan. Helper
 disimpan di `runs/` tanpa mengedit snapshot source, memasang runtime baru, atau
 mengunduh ulang bobot.
 
@@ -44,10 +49,60 @@ import importlib.util, uuid
 from pathlib import Path
 from google.colab import files
 
-uploaded = files.upload()  # Pilih helper .py dan satu audio asli
-scripts = [name for name in uploaded if Path(name).name.startswith("electric_full_song") and Path(name).suffix == ".py"]
-audios = [name for name in uploaded if Path(name).suffix.lower() in {".wav", ".mp3", ".m4a", ".flac", ".aac", ".aif", ".aiff", ".ogg"}]
-assert len(scripts) == 1 and len(audios) == 1, "Upload satu electric_full_song.py dan satu audio"
+def discover_root(base, preferred=None):
+    """Find a bridge checkout without notebook globals or recursively scanning model caches."""
+    base = Path(base).resolve()
+    markers = ("configs/assets-base.json", "tools/stem_eval/run.py", "scripts/setup_runtime.py")
+    def valid(path):
+        return all((path / name).is_file() for name in markers)
+    if preferred is not None:
+        path = Path(preferred).expanduser().resolve()
+        if not valid(path):
+            raise RuntimeError(f"ROOT yang dipilih bukan checkout bridge: {path}")
+        return path
+    candidates = set()
+    for folder in dict.fromkeys((base, base.parent)):
+        for path in (folder, folder / "source", folder / "StemsGenerating-Models",
+                     *folder.glob("songmap_cuda_*/source")):
+            if valid(path): candidates.add(path.resolve())
+    ready = [path for path in candidates
+             if (path / "vendor/ACE-Step-1.5/.venv/bin/python").is_file()
+             and (path / "vendor/ACE-Step-1.5/checkpoints/acestep-v15-base/model.safetensors").is_file()]
+    choices = sorted(ready or candidates)
+    if len(choices) > 1:
+        raise RuntimeError("Ada beberapa checkout bridge. Isi ROOT_HINT dengan salah satu path ini: "
+                           + ", ".join(map(str, choices)))
+    return choices[0] if choices else None
+
+ROOT_HINT = globals().get("ROOT")  # Isi Path("/content/.../source") jika ada beberapa checkout
+ROOT = discover_root(Path.cwd(), ROOT_HINT)
+if ROOT is None and Path.cwd() != Path("/content") and Path("/content").is_dir():
+    ROOT = discover_root(Path("/content"))
+if ROOT is None:
+    raise RuntimeError("Checkout bridge tidak ditemukan pada VM ini. Buka notebooks/10_colab_electric_full_song.ipynb untuk setup mandiri memakai cuda_reference_*.zip. Upload helper dan audio saja belum memasang runtime/bobot.")
+
+# Pakai kembali upload dari sel yang gagal, atau file yang masih ada di VM.
+def input_names(payload):
+    scripts = [n for n in payload if Path(n).name.startswith("electric_full_song") and Path(n).suffix == ".py"]
+    audios = [n for n in payload if Path(n).suffix.lower() in {".wav", ".mp3", ".m4a", ".flac", ".aac", ".aif", ".aiff", ".ogg"}]
+    return scripts, audios
+uploaded = dict(globals().get("uploaded") or {})
+packaged_helper = ROOT / "scripts/electric_full_song.py"
+if not input_names(uploaded)[0] and packaged_helper.is_file():
+    uploaded["electric_full_song.py"] = packaged_helper.read_bytes()
+scripts, audios = input_names(uploaded)
+if len(scripts) != 1 or len(audios) != 1:
+    local_helpers = list(Path.cwd().glob("electric_full_song*.py"))
+    local_audio = [p for p in Path.cwd().iterdir() if p.is_file() and p.suffix.lower() in {".wav", ".mp3", ".m4a", ".flac", ".aac", ".aif", ".aiff", ".ogg"}]
+    helper_file = local_helpers[0] if len(local_helpers) == 1 else (packaged_helper if packaged_helper.is_file() else None)
+    if helper_file is not None and len(local_audio) == 1:
+        uploaded = {helper_file.name: helper_file.read_bytes(), local_audio[0].name: local_audio[0].read_bytes()}
+    else:
+        uploaded = files.upload()
+        if not input_names(uploaded)[0] and packaged_helper.is_file():
+            uploaded["electric_full_song.py"] = packaged_helper.read_bytes()
+scripts, audios = input_names(uploaded)
+assert len(scripts) == 1 and len(audios) == 1, "Pilih satu helper electric_full_song.py dan satu audio asli"
 tools_dir = ROOT / "runs" / ("full_song_tools_" + uuid.uuid4().hex[:12])
 tools_dir.mkdir(parents=True)
 helper = tools_dir / "electric_full_song.py"
@@ -57,6 +112,7 @@ SOURCE_PATH.write_bytes(uploaded[audios[0]])
 spec = importlib.util.spec_from_file_location("electric_single_pass", helper)
 fullsong = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fullsong)
+print("ROOT:", ROOT)
 print("Audio siap:", SOURCE_PATH)
 ```
 
@@ -103,9 +159,27 @@ error dan runner tidak diam-diam mengganti mode menjadi chunk. GPU lebih besar
 dapat dicoba jika tersedia di akun. Report failure tetap bisa diunduh melalui
 sel terakhir. Keberhasilan kode/plan bukan bukti kualitas musik atau fit GPU.
 
-Jika sesi lama berakhir, notebook 09 dapat dipakai untuk menyiapkan `ROOT`,
-runtime dan bobot pada VM baru; sel generasi baseline B boleh dilewati. Cache
-VM lama tidak otomatis bertahan di sesi baru.
+## Kernel atau VM baru: notebook mandiri
+
+Gunakan [`10_colab_electric_full_song.ipynb`](../notebooks/10_colab_electric_full_song.ipynb)
+untuk alur lengkap yang tidak bergantung pada notebook sebelumnya. Pilih GPU,
+lalu Run All. Notebook mencari checkout yang ada. Jika tidak ada, ia meminta
+`cuda_reference_*.zip` hasil exporter Mac untuk menyediakan source bridge.
+ZIP hasil seperti `cuda_result.zip` atau `bass_tone_result.zip` tidak berisi source
+yang dibutuhkan. Notebook tidak menjalankan ulang baseline B atau A/B.
+Bila ingin mempertahankan file pada VM yang sedang dipakai, salin dan jalankan
+sel-sel notebook 10 pada notebook yang sama. Membuka notebook baru dapat memakai
+VM berbeda.
+
+Runtime yang masih lengkap dan bobot yang tersedia dipakai kembali. Runtime
+parsial diselesaikan memakai installer pinned, termasuk dukungan paket source
+lama yang masih memakai ensurepip. Bobot yang belum ada diunduh dengan progress.
+Helper yang sudah disertakan dalam paket tidak perlu diupload terpisah.
+
+Variabel kernel yang hilang tidak membuktikan bahwa cache hilang. Namun VM baru
+tidak otomatis memiliki folder/cache VM lama: bobot sekitar 13.86 GiB perlu
+disediakan lagi jika belum ada. Mengupload helper Python dan audio saja belum
+menyediakan checkout bridge, runtime atau bobot model.
 
 ## Colab atau JupyterLab
 

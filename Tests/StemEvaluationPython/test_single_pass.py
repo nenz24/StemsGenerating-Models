@@ -99,7 +99,7 @@ class SinglePassTests(unittest.TestCase):
                 self.assertIn("--worker", command)
                 self.assertEqual(command[command.index("--root") + 1], str(ROOT))
                 self.fake_generation(output)
-            with patch("stream_process.run_logged", side_effect=run) as worker:
+            with patch.object(single, "model_python", return_value=Path(sys.executable)), patch("stream_process.run_logged", side_effect=run) as worker:
                 report = single.generate(ROOT, source, output, execute=True)
             self.assertEqual(worker.call_count, 1)
             self.assertEqual(report["input"]["duration"], 60.125)
@@ -117,7 +117,7 @@ class SinglePassTests(unittest.TestCase):
         for changed in ("oom", "duration", "precision"):
             with self.subTest(changed=changed), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory); source = self.fractional_source(root); output = root / "song"
-                with patch("stream_process.run_logged", side_effect=lambda *a, **kw: self.fake_generation(output, changed)) as worker:
+                with patch.object(single, "model_python", return_value=Path(sys.executable)), patch("stream_process.run_logged", side_effect=lambda *a, **kw: self.fake_generation(output, changed)) as worker:
                     with self.assertRaises((ValueError, RuntimeError)):
                         single.generate(ROOT, source, output, execute=True)
                 self.assertEqual(worker.call_count, 1)

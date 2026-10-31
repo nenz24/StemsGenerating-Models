@@ -24,6 +24,11 @@ aktif, satu helper terbaru dapat diupload dan memakai runtime/bobot yang sudah
 ada. [Uji caption sebelumnya](docs/bass-tone-colab.md) dan
 [hasil CUDA awal](docs/cuda-fp32-result.md) disimpan sebagai catatan.
 
+Untuk kernel/VM Colab baru, gunakan
+[`10_colab_electric_full_song.ipynb`](notebooks/10_colab_electric_full_song.ipynb):
+notebook menentukan `ROOT`, memulihkan source dari ZIP jika diperlukan, menyiapkan
+runtime/bobot yang belum ada, lalu menjalankan full-song tanpa baseline A/B.
+
 ## Satu uji di Google Colab
 
 Di checkout Mac yang menyimpan hasil percobaan sebelumnya:

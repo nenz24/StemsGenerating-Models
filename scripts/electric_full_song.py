@@ -29,6 +29,40 @@ PRESET = {
 }
 
 
+def discover_root(base, preferred=None):
+    """Find a bridge checkout without notebook globals or recursively scanning model caches."""
+    base = Path(base).resolve()
+    markers = ("configs/assets-base.json", "tools/stem_eval/run.py", "scripts/setup_runtime.py")
+    def valid(path):
+        return all((path / name).is_file() for name in markers)
+    if preferred is not None:
+        path = Path(preferred).expanduser().resolve()
+        if not valid(path):
+            raise RuntimeError(f"ROOT yang dipilih bukan checkout bridge: {path}")
+        return path
+    candidates = set()
+    for folder in dict.fromkeys((base, base.parent)):
+        for path in (folder, folder / "source", folder / "StemsGenerating-Models",
+                     *folder.glob("songmap_cuda_*/source")):
+            if valid(path): candidates.add(path.resolve())
+    ready = [path for path in candidates
+             if (path / "vendor/ACE-Step-1.5/.venv/bin/python").is_file()
+             and (path / "vendor/ACE-Step-1.5/checkpoints/acestep-v15-base/model.safetensors").is_file()]
+    choices = sorted(ready or candidates)
+    if len(choices) > 1:
+        raise RuntimeError("Ada beberapa checkout bridge. Isi ROOT_HINT dengan salah satu path ini: "
+                           + ", ".join(map(str, choices)))
+    return choices[0] if choices else None
+
+
+def model_python(root):
+    python = root / "vendor/ACE-Step-1.5/.venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    if not python.is_file():
+        raise RuntimeError("Runtime model belum ada pada VM ini. Jalankan sel setup runtime dan bobot "
+                           "di notebooks/10_colab_electric_full_song.ipynb, lalu ulangi generasi.")
+    return python
+
+
 def attach(root):
     sys.path[:0] = [str(root / "tools/stem_eval"), str(root / "scripts")]
 
@@ -203,7 +237,6 @@ def generate(root, source, output, *, start=0, duration=None, execute=False):
     attach(root)
     from provenance import COMMITS, sha256, write_json
     from runtime_environment import runtime_environment
-    from setup_runtime import runtime_python
     from stream_process import run_logged
     from run import cached_job
     if not source.is_file(): raise FileNotFoundError(f"Source not found: {source}")
@@ -225,7 +258,7 @@ def generate(root, source, output, *, start=0, duration=None, execute=False):
             print(f"PLAN: one {metadata['model_duration']}s context; no GPU inference", flush=True)
             return report
         print(f"ONE PASS: {metadata['duration']:.3f}s audio, {metadata['model_duration']}s model request; no song stitching", flush=True)
-        command = [str(runtime_python()), str(Path(__file__).resolve()), "--worker", "--root", str(root), "--out", str(output)]
+        command = [str(model_python(root)), str(Path(__file__).resolve()), "--worker", "--root", str(root), "--out", str(output)]
         started = time.perf_counter()
         run_logged(command, env=runtime_environment(root), check=True)
         report["worker_seconds"] = time.perf_counter() - started
