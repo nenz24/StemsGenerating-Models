@@ -4,6 +4,45 @@ POC lokal di JupyterLab: rekaman gitar/piano → bass atau drum pengiring memaka
 model pretrained ACE-Step. Mulai dari evaluasi kualitas, kemudian putuskan apakah
 fine-tuning diperlukan. Belum ada model baru yang dilatih atau konversi iPhone.
 
+## Bass untuk lagu penuh sekitar 3 menit
+
+Jika notebook 02 sudah berhasil menghasilkan bass, gunakan
+**[notebooks/03_mac_full_song.ipynb](notebooks/03_mac_full_song.ipynb)** untuk
+seluruh rekaman. Notebook 02 mengambil klip 10 detik; notebook 03 memakai semua
+audio hingga batas 10 menit POC.
+
+1. Pull kode terbaru.
+2. Taruh satu file rekaman sendiri di **`data/full_song/`**. Folder ini dipisah
+   dari input notebook 02 agar rekaman uji lama tidak terpilih. WAV/MP3/M4A didukung.
+3. Buka notebook 03, lalu Restart Kernel → Run All.
+4. Hasil berada di folder run yang dicetak notebook: **`bass_full.wav`** dan
+   **`mix_full.wav`**, dengan panjang sama seperti audio yang didecode.
+
+Base/MPS/seed 0/CPU offload sudah diatur. Runtime dan bobot terverifikasi yang
+sudah tersedia dipakai kembali; notebook ini tidak memasang atau mengunduh model.
+Untuk rekaman tepat 180 detik dibuat 20 potongan 10 detik dengan overlap nominal
+1 detik (potongan akhir mengikuti akhir lagu). Model dimuat sekali per proses.
+Runtime total dapat mendekati banyak kali waktu generasi satu klip, tergantung
+hardware, warm-up dan isi audio; belum ada benchmark 3 menit pada Mac pengguna.
+
+Sumber/profil/manifest model yang sama memakai folder run yang sama. Chunk selesai
+dipakai ulang setelah dicek hash; chunk gagal dicoba dalam folder attempt baru.
+Hasil/cache yang berubah ditolak, bukan dipakai diam-diam. Jangan menjalankan dua
+generasi bersamaan untuk run sama; lock OS melindungi folder itu. Hasil final yang
+sudah selesai diverifikasi dan dipakai ulang. Run yang gagal tetap menyimpan
+metadata dan attempt-nya. Mengubah seed/instrument menghasilkan run terpisah.
+
+**Batas musikal:** setiap chunk digenerasi mandiri, bukan inferensi dengan konteks
+lagu 3 menit sekaligus. Crossfade linear menjaga kontinuitas audio dan panjang
+sampel, tetapi pola bass/groove, artikulasi dan fase dapat berbeda atau melemah
+pada sambungan. Dengarkan harmoni dan transisi di sekitar 9,18,27 detik dan
+seterusnya. Tidak ada jaminan lagu penuh mengikuti feel secara konsisten.
+
+Pengujian menyiapkan audio sintetis 180 detik dan membuktikan round-trip timeline
+20 chunk tanpa perubahan sampel untuk stem identitas. Runner juga diuji dengan
+model palsu yang gagal pada chunk kedua lalu melanjutkan tanpa meregenerasi chunk
+pertama. Tes tersebut tidak memvalidasi kualitas bass maupun inferensi MPS panjang.
+
 ## Langsung jalan untuk Mac Apple Silicon 24 GB
 
 Buka **[notebooks/02_mac_24gb_full.ipynb](notebooks/02_mac_24gb_full.ipynb)**.
@@ -192,7 +231,7 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-44 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
+50 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
 sel kode notebook 01 juga dieksekusi tanpa error, tanpa mengunduh bobot
 atau menghasilkan stem model. Ketujuh sel kode notebook 02 diuji dalam mode
 dry-run yang ditandai jelas dengan persiapan audio nyata. Rencana dependency

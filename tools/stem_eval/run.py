@@ -8,6 +8,7 @@ import platform
 import sys
 import subprocess
 import time
+import uuid
 
 from audio import canonicalize, listening_mix
 from accelerator import memory_stats, reset_memory_stats, select_device, synchronize
@@ -44,6 +45,24 @@ def plan(prepared, backend, instrument, seeds):
             "conditioning_consumed": "audio only; raw timing/chords retained for evaluation, not model inputs"}
 
 
+def cached_job(directory, job, signature):
+    file = directory / "result.json"
+    if not file.exists():
+        return None
+    report = json.loads(file.read_text())
+    if report.get("status") != "generated":
+        return None
+    for name in ("source_sha256", "instrument", "seed", "duration", "condition"):
+        if report.get(name) != job.get(name):
+            raise ValueError("Completed chunk belongs to different inputs; use a new run")
+    if report.get("execution_signature") != signature:
+        raise ValueError("Completed chunk belongs to different configuration; use a new run")
+    stem = (directory / report.get("stem_file", "stem.wav")).resolve()
+    if not stem.is_relative_to(directory.resolve()) or sha256(stem) != report["stem_sha256"]:
+        raise ValueError("Cached stem is missing or changed; refusing to silently reuse it")
+    return report
+
+
 def execute(args, experiment):
     from backends import AceBackend, StageBackend, weight_inventory
     require_audio_tools()
@@ -67,7 +86,8 @@ def execute(args, experiment):
         sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
         from model_assets import materialize, process
         process(args.assets_manifest, args.upstream)
-        runtime = materialize(args.assets_manifest, args.upstream, args.out / "runtime")
+        runtime_name = "runtime_" + uuid.uuid4().hex[:8] if getattr(args, "resume", False) else "runtime"
+        runtime = materialize(args.assets_manifest, args.upstream, args.out / runtime_name)
         os.environ["ACESTEP_CHECKPOINTS_DIR"] = str(runtime.resolve())
     session = {"weights": inventory, "model": args.ace_model if args.backend == "ace" else str(args.checkpoint), "platform": platform.platform(),
                "device": device, "gpu": torch.cuda.get_device_name() if device == "cuda" else "Apple Silicon / MPS", "versions": {}}
@@ -76,29 +96,46 @@ def execute(args, experiment):
             session["versions"][package] = importlib.metadata.version(package)
         except importlib.metadata.PackageNotFoundError:
             pass
-    started = time.perf_counter()
-    backend = (AceBackend(args.upstream, model_name=args.ace_model, offload_to_cpu=args.offload, device=device)
-               if args.backend == "ace" else StageBackend(args.upstream, args.checkpoint))
-    synchronize(torch, device)
-    session["model_load_seconds"] = time.perf_counter() - started
-    if args.backend == "ace":
-        session["assets_manifest_sha256"] = sha256(args.assets_manifest)
-        session["effective_model_code"] = [
-            {"path": str(path), "sha256": sha256(path)}
-            for path in sorted((runtime / args.ace_model).glob("*.py"))
-        ]
-    write_json(args.out / "session.json", session)
+    backend = None
+    resume = getattr(args, "resume", False)
+    signature = getattr(args, "execution_signature", None)
     for index, job in enumerate(experiment["jobs"]):
         directory = args.out / f'{index:03d}_{job["condition"]}_{job["instrument"]}_seed{job["seed"]}'
-        directory.mkdir()
-        report = dict(job, status="running")
+        directory.mkdir(exist_ok=resume)
+        if resume and cached_job(directory, job, signature) is not None:
+            print(f"[{index+1}/{len(experiment['jobs'])}] Memakai chunk selesai yang lolos checksum", flush=True)
+            continue
+        if backend is None:
+            started = time.perf_counter()
+            backend = (AceBackend(args.upstream, model_name=args.ace_model, offload_to_cpu=args.offload, device=device)
+                       if args.backend == "ace" else StageBackend(args.upstream, args.checkpoint))
+            synchronize(torch, device)
+            session["model_load_seconds"] = time.perf_counter() - started
+            if args.backend == "ace":
+                session["assets_manifest_sha256"] = sha256(args.assets_manifest)
+                session["effective_model_code"] = [
+                    {"path": str(path), "sha256": sha256(path)}
+                    for path in sorted((runtime / args.ace_model).glob("*.py"))
+                ]
+            session_file = args.out / "session.json"
+            if resume and session_file.exists():
+                session_file.rename(args.out / f"session.previous_{time.time_ns()}.json")
+            write_json(session_file, session)
+        attempt = directory / ("attempt_" + uuid.uuid4().hex[:8]) if resume else directory
+        if resume:
+            attempt.mkdir()
+            previous = directory / "result.json"
+            if previous.exists():
+                previous.rename(directory / f"result.previous_{time.time_ns()}.json")
+        report = dict(job, status="running", execution_signature=signature)
         write_json(directory / "result.json", report)
+        print(f"[{index+1}/{len(experiment['jobs'])}] Generate {job['instrument']} mulai {job.get('start_frame', 0)/32000:.2f}s", flush=True)
         try:
             reset_memory_stats(torch, device)
             started = time.perf_counter()
             with torch.inference_mode():
                 raw, settings = backend.generate(Path(job["source"]), job["duration"],
-                                                  job["instrument"], job["seed"], directory)
+                                                  job["instrument"], job["seed"], attempt)
             synchronize(torch, device)
             report.update(inference_seconds=time.perf_counter() - started,
                           device=device, settings=settings, **memory_stats(torch, device))
@@ -107,9 +144,12 @@ def execute(args, experiment):
             ], text=True))
             if abs(float(info["format"]["duration"]) - job["duration"]) > 0.05:
                 raise ValueError("Generated duration mismatch; raw audio retained for inspection")
-            canonicalize(raw, directory / "stem.wav", duration=job["duration"], gain=1)
-            listening_mix(args.prepared / "source.wav", directory / "stem.wav", directory / "mix.wav")
-            report.update(status="generated", stem_sha256=sha256(directory / "stem.wav"))
+            canonicalize(raw, attempt / "stem.wav", duration=job["duration"], gain=1)
+            clean_source = Path(job.get("clean_source", args.prepared / "source.wav"))
+            listening_mix(clean_source, attempt / "stem.wav", attempt / "mix.wav")
+            report.update(status="generated", stem_sha256=sha256(attempt / "stem.wav"),
+                          stem_file=str((attempt / "stem.wav").relative_to(directory)))
+            print(f"  Selesai dalam {report['inference_seconds']:.1f}s", flush=True)
         except Exception as error:
             report.update(status="failed", error=f"{type(error).__name__}: {error}")
             write_json(directory / "result.json", report)
