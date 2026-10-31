@@ -64,6 +64,10 @@ def main():
     parser.add_argument("--overlap-seconds", type=float, default=1)
     args = parser.parse_args()
     profile = json.loads(args.profile.read_text())
+    unsupported = sorted(set(profile) & {"caption", "precision", "guidance_scale", "inference_steps"})
+    if unsupported:
+        parser.error("Full-song runner cannot apply these preset fields: " + ", ".join(unsupported)
+                     + ". Use compare_bass_tone.py --prepared for the selected Electric Bass clip preset.")
     if profile["model"] != "acestep-v15-base" or len(profile["seeds"]) != 1:
         parser.error("Full-song POC uses Base and exactly one seed")
     assets = ROOT / "configs/assets-base.json"

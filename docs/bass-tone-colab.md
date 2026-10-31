@@ -1,5 +1,9 @@
 # Satu percobaan bass elektrik petikan di sesi Colab yang sama
 
+**Hasil:** pengguna memilih kandidat Electric Bass. Untuk generasi berikutnya,
+gunakan [preset terpilih](electric-bass-preset.md) secara langsung. Prosedur A/B
+di bawah disimpan untuk reproduksi percobaan.
+
 Target pengguna: bass elektrik petikan yang jelas dan natural. Hasil CUDA FP32
 pertama lebih bersih dari glitch menurut pengguna, tetapi timbrenya terlalu dalam.
 Percobaan ini mengganti **caption saja**. Input B 30 detik, Base, seed 0, CFG 7,

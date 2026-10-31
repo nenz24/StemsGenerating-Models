@@ -12,7 +12,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT / "scripts"), str(ROOT / "tools/stem_eval")]
-from compare_bass_tone import ELECTRIC_BASS_CAPTION, caption_worker, compare
+from compare_bass_tone import ELECTRIC_BASS_CAPTION, ELECTRIC_BASS_PRESET, caption_worker, compare, generate, selected_preset
 from compare_guidance import prepare
 from cuda_precision import FLOAT32_WORKER
 from provenance import COMMITS, sha256
@@ -20,6 +20,18 @@ import test_guidance_comparison
 
 
 class BassToneTests(unittest.TestCase):
+    def test_selected_preset_is_versioned_and_returns_independent_values(self):
+        self.assertEqual(json.loads((ROOT / "configs/electric-bass.json").read_text()), ELECTRIC_BASS_PRESET)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            chosen = selected_preset(root)
+            chosen["seeds"].append(123)
+            self.assertEqual(selected_preset(root)["seeds"], [0])
+            (root / "configs").mkdir()
+            (root / "configs/electric-bass.json").write_text(json.dumps(dict(ELECTRIC_BASS_PRESET, precision="float16")))
+            with self.assertRaisesRegex(ValueError, "differs from the selected"):
+                selected_preset(root)
+
     def baseline(self, root):
         run, job, _ = test_guidance_comparison.GuidanceComparisonTests().make_comparison(root)
         reference = root / "reference"
@@ -132,6 +144,66 @@ class BassToneTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "source differs"):
                 compare(ROOT, reference, baseline, root / "bad")
             self.assertFalse((root / "bad").exists())
+
+    def test_selected_preset_generates_directly_without_ab_comparison(self):
+        for changed in (None, "caption", "precision"):
+            with self.subTest(changed=changed), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                reference, baseline, original, capture = self.baseline(root)
+                output = root / "selected"
+                def model(command, **kwargs):
+                    self.assertIn(ELECTRIC_BASS_CAPTION, command[2])
+                    folder = output / "generation/000_A_bass_seed0"; folder.mkdir(parents=True)
+                    candidate = copy.deepcopy(original)
+                    candidate["settings"]["params"]["caption"] = ELECTRIC_BASS_CAPTION
+                    if changed == "caption": candidate["settings"]["params"]["caption"] = "unexpected generic bass"
+                    candidate["settings"]["config"] = {"batch_size": 1, "seeds": [0], "use_random_seed": False}
+                    shutil.copyfile(baseline / "generation/000_A_bass_seed0/stem.wav", folder / "stem.wav")
+                    shutil.copyfile(folder / "stem.wav", folder / "mix.wav")
+                    (folder / "result.json").write_text(json.dumps(candidate))
+                    job = {key: original[key] for key in ("condition", "instrument", "duration", "seed", "source_sha256", "guidance_scale")}
+                    (output / "generation/experiment.json").write_text(json.dumps({"status": "generated", "jobs": [job]}))
+                    (output / "generation/session.json").write_text("{}")
+                    (output / "capture").mkdir()
+                    actual = copy.deepcopy(capture)
+                    if changed == "precision": actual["model_dtype"] = "torch.float16"
+                    (output / "capture/capture.json").write_text(json.dumps(actual))
+                with patch("cuda_reference.check_cuda", return_value={"fixture_only": True}), patch("stream_process.run_logged", side_effect=model) as worker:
+                    if changed:
+                        with self.assertRaises(ValueError):
+                            generate(ROOT, reference / "prepared", output, execute=True, float32_worker=FLOAT32_WORKER)
+                    else:
+                        generate(ROOT, reference / "prepared", output, execute=True, float32_worker=FLOAT32_WORKER)
+                self.assertEqual(worker.call_count, 1)
+                report = json.loads((output / "generation.json").read_text())
+                self.assertEqual(report["status"], "failed" if changed else "generated")
+                self.assertEqual(report["preset"], ELECTRIC_BASS_PRESET)
+                self.assertEqual((output / "electric_bass_result.zip").exists(), changed is None)
+
+    def test_selected_cli_plans_without_gpu_and_rejects_corrupted_input(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            reference, _, _, _ = self.baseline(root)
+            command = [sys.executable, str(ROOT / "scripts/compare_bass_tone.py"), "--prepared", str(reference / "prepared"), "--out", str(root / "plan")]
+            result = subprocess.run(command, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            report = json.loads((root / "plan/generation.json").read_text())
+            self.assertEqual(report["status"], "planned")
+            self.assertEqual(report["preset"]["id"], "electric-bass")
+            self.assertFalse((root / "plan/electric_listen.wav").exists())
+            with (reference / "prepared/source.wav").open("ab") as stream: stream.write(b"changed")
+            with self.assertRaises(ValueError): generate(ROOT, reference / "prepared", root / "bad")
+            self.assertFalse((root / "bad").exists())
+
+    def test_legacy_song_runner_does_not_silently_ignore_selected_tone_or_precision(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            result = subprocess.run([sys.executable, str(ROOT / "scripts/run_song.py"),
+                "--source", str(root / "unused.wav"), "--out", str(root / "song"),
+                "--profile", str(ROOT / "configs/electric-bass.json")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("cannot apply these preset fields", result.stderr)
+            self.assertFalse((root / "song").exists())
 
 
 if __name__ == "__main__":

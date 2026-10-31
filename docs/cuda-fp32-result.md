@@ -46,5 +46,6 @@ Caption saat ini hanya berbunyi `Isolated bass accompaniment following the
 source harmony, timing and dynamics.` Ia belum menentukan bass elektrik,
 artikulasi petikan atau harmonik yang diinginkan. Langkah berikutnya adalah
 [satu kandidat caption bass elektrik](bass-tone-colab.md), sambil mempertahankan
-baseline CUDA FP32 dan seluruh setting lainnya. Ini uji pengaruh caption,
-bukan klaim bahwa caption saja pasti menyelesaikan masalah timbre.
+baseline CUDA FP32 dan seluruh setting lainnya. Pengguna kemudian memilih hasil
+electric bass tersebut; lihat [preset terpilih](electric-bass-preset.md).
+Ini belum membuktikan efek kausal caption atau konsistensi seluruh lagu.

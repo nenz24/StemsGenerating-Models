@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "electric-bass",
+  "model": "acestep-v15-base",
+  "device": "cuda",
+  "precision": "float32",
+  "instrument": "bass",
+  "seeds": [
+    0
+  ],
+  "guidance_scale": 7.0,
+  "inference_steps": 50,
+  "offload_to_cpu": true,
+  "caption": "Isolated fingerstyle electric bass guitar accompaniment. A dry, natural plucked tone with clearly articulated attacks, short note releases and audible upper harmonics. A simple musical bassline in a normal bass-guitar register following the piano's harmony, timing and dynamics."
+}

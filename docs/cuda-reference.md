@@ -2,8 +2,9 @@
 
 Protokol ini membuat satu hasil CUDA yang dapat dibandingkan dengan baseline
 MPS. [Hasil CUDA FP32 pertama](cuda-fp32-result.md) sudah valid dan dinilai lebih
-bersih oleh pengguna, tetapi timbre masih terlalu dalam. Langkah aktif berikutnya
-adalah [satu kandidat bass elektrik petikan](bass-tone-colab.md). Sweep besar,
+bersih oleh pengguna, tetapi timbre masih terlalu dalam. Kandidat bass elektrik
+berikutnya sudah dipilih pengguna: [preset Electric Bass](electric-bass-preset.md).
+Prosedur [uji caption](bass-tone-colab.md) disimpan untuk reproduksi. Sweep besar,
 metadata SongMap, input native/48 kHz dan konteks panjang tetap eksperimen terpisah.
 
 ## Ekspor di Mac

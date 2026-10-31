@@ -3,16 +3,23 @@
 POC JupyterLab untuk membuat bass/drum pengiring dari audio memakai pretrained
 ACE-Step 1.5 Base. Model belum dilatih ulang atau dikonversi ke Core AI/iPhone.
 
-**Status kualitas:** pengguna melaporkan hasil B pada CUDA/T4 FP32 lebih bersih
-dari glitch dibanding MPS, tetapi timbre bass masih terlalu dalam. Paket hasil
-berisi latent finite dan capture FP32. Ini satu contoh, belum membuktikan glitch
-hilang untuk semua input. Lihat [hasil CUDA](docs/cuda-fp32-result.md).
+**Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
+natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:
+Base, seed 0, CFG 7, 50 langkah. Lihat
+[preset terpilih dan generasi langsung](docs/electric-bass-preset.md) serta
+[`configs/electric-bass.json`](configs/electric-bass.json).
 
-Langkah aktif adalah **satu kandidat bass elektrik petikan natural**, dengan
-caption baru dan input/seed/CFG/langkah/FP32 yang sama. Ikuti
-[panduan Colab bass elektrik](docs/bass-tone-colab.md) untuk memakai sesi dan
-bobot yang sudah ada. Cukup upload `scripts/compare_bass_tone.py` ke sesi lama;
-baseline dipertahankan dan kandidat masuk ke direktori baru.
+Generasi klip berikutnya langsung memakai preset ini, tanpa mengulang A/B:
+
+```bash
+python3 scripts/compare_bass_tone.py --prepared /path/to/prepared --out runs/electric_plan
+```
+
+Tambahkan `--execute` untuk inferensi. Klip mendukung 10–30 detik; pemakaian
+seluruh lagu tiga menit masih memerlukan uji konsistensi. Untuk Colab yang masih
+aktif, satu helper terbaru dapat diupload dan memakai runtime/bobot yang sudah
+ada. [Uji caption sebelumnya](docs/bass-tone-colab.md) dan
+[hasil CUDA awal](docs/cuda-fp32-result.md) disimpan sebagai catatan.
 
 ## Satu uji di Google Colab
 
