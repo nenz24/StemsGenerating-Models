@@ -1,0 +1,56 @@
+{
+  "id": "electric-bass-context90-baseline-v1",
+  "status": "frozen_reference_with_known_defects",
+  "next_work": "Pause bass tuning; move to another instrument after user selection.",
+  "archives": [
+    {
+      "path": "chunked_feedback.zip",
+      "sha256": "0acbe57867cf3186e3dfa919a8c51ef1cc293bb66a36a2a4b0e20653c38ee9a2",
+      "bytes": 13743271
+    },
+    {
+      "path": "single_pass_90_feedback.zip",
+      "sha256": "6086a1dbda2955a9e7bd7edb61e8fb86c64fcc3d2785bb528468ce0a3d759ad9",
+      "bytes": 4286395
+    }
+  ],
+  "source_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "preset": {
+    "schema_version": 1,
+    "id": "electric-bass",
+    "model": "acestep-v15-base",
+    "device": "cuda",
+    "precision": "float32",
+    "instrument": "bass",
+    "seeds": [
+      0
+    ],
+    "guidance_scale": 7.0,
+    "inference_steps": 50,
+    "offload_to_cpu": true,
+    "caption": "Isolated fingerstyle electric bass guitar accompaniment. A dry, natural plucked tone with clearly articulated attacks, short note releases and audible upper harmonics. A simple musical bassline in a normal bass-guitar register following the piano's harmony, timing and dynamics."
+  },
+  "context_cap_seconds": 90,
+  "margin_seconds": 6,
+  "fade_seconds": 0.58,
+  "song_seconds": 243.330625,
+  "model_context_seconds": [
+    90,
+    89,
+    90
+  ],
+  "seam_centers_seconds": [
+    82.430625,
+    159.630625
+  ],
+  "listener_assessment": {
+    "single_pass_90": "Good; preferred electric-bass feel.",
+    "full_song_chunk_1": "Reference for the later chunks.",
+    "full_song_chunk_2": "Reasonably matches the first, but more noise.",
+    "full_song_chunk_3": "Substantial noise.",
+    "late_region_60_second_retry": "User reports full noise; rejected, no retry audio uploaded.",
+    "120_second_probe": "User reports substantial noise; rejected, audio not uploaded."
+  },
+  "preservation_scope": "Uploaded MP3 preview archives and reports. Original generated bass/mix WAVs, model weights and original piano file are not included.",
+  "validation_limits": "Metadata and hashes checked. No claim that full-song audio is clean, that 90s generalizes to every song section, or that manual_review=false certifies quality."
+}
