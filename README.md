@@ -101,6 +101,37 @@ ke stash jika pull terhalang. Tunggu sel unduhan aktif selesai sebelum membuka
 ulang notebook yang baru dan memulai proses berikutnya. File lengkap yang lolos
 checksum dipakai kembali. Pemulihan transfer parsial mengikuti cache HF.
 
+## Jika file Base tertahan berjam-jam
+
+Nomor [32/34] dengan `acestep-v15-base/model.safetensors` berarti transfer bobot
+Base sekitar 4.46 GiB belum selesai. Itu berbeda dari inferensi MPS. Heartbeat
+menandakan proses hidup saja; tanpa log lain belum dapat dibedakan jaringan,
+transfer Xet, atau penantian lock cache.
+
+Downloader sekarang memakai jalur **HTTP resmi HF** secara default, dengan Xet
+dinonaktifkan pada subprocess download, timeout metadata 20 detik dan HTTP read
+60 detik. Timeout tersebut bukan batas waktu keseluruhan transfer. TLS dan
+checksum tetap aktif. Cache HTTP terpisah menghindari lock/partial Xet yang
+tertahan tanpa menghapusnya. File target yang sudah diverifikasi digunakan lagi;
+file Base yang belum selesai dapat mulai diunduh dari awal pada cache HTTP baru.
+
+Hentikan sel unduhan lama memakai **Interrupt Kernel** sebelum menjalankan
+percobaan baru. Pull kode terbaru, lalu jalankan ulang sel unduhan notebook 02.
+Perubahan default transport ada di script sehingga tidak perlu mengubah notebook.
+Pilihan Xet tetap tersedia lewat `--transport xet` untuk eksperimen terpisah.
+
+Untuk bukti tambahan, dari Terminal di repository jalankan:
+
+```bash
+python3 scripts/diagnose_download.py --interval 10
+```
+
+Ini hanya membaca metadata target/cache selama 10 detik dan memeriksa proses
+yang membuka file lock bila `lsof` tersedia. Tidak membaca token/log autentikasi,
+menghapus cache, atau menghentikan proses. Ukuran/mtime/alokasi disk bukan
+pengukuran byte jaringan; lock yang ada belum berarti sedang dipegang. Kirim
+outputnya jika retry masih tertahan. Jangan menghapus cache atau lock secara massal.
+
 ## Perbaikan permission uv / folder home
 
 Jika instalasi lama gagal pada `~/.local/share/uv/python`, cukup pull kode terbaru
@@ -146,7 +177,7 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-40 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
+42 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
 sel kode notebook 01 juga dieksekusi tanpa error, tanpa mengunduh bobot
 atau menghasilkan stem model. Ketujuh sel kode notebook 02 diuji dalam mode
 dry-run yang ditandai jelas dengan persiapan audio nyata. Rencana dependency

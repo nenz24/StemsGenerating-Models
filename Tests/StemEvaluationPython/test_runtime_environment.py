@@ -70,7 +70,7 @@ class RuntimeEnvironmentTests(unittest.TestCase):
             with patch.object(model_assets, "ROOT", root), patch.object(model_assets, "runtime_environment", return_value=environment), patch.dict(sys.modules, {"huggingface_hub": types.SimpleNamespace(hf_hub_download=download)}), patch.dict(os.environ):
                 model_assets.process(manifest, upstream, download=True)
                 self.assertEqual(os.environ["HF_XET_CACHE"], environment["HF_XET_CACHE"])
-            self.assertEqual(calls[0]["cache_dir"], str(cache))
+            self.assertEqual(calls[0]["cache_dir"], str(cache / "http"))
             self.assertEqual((upstream / "checkpoints/model.bin").read_bytes(), b"fixture")
 
 
