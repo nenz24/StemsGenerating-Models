@@ -4,7 +4,76 @@ POC lokal di JupyterLab: rekaman gitar/piano → bass atau drum pengiring memaka
 model pretrained ACE-Step. Mulai dari evaluasi kualitas, kemudian putuskan apakah
 fine-tuning diperlukan. Belum ada model baru yang dilatih atau konversi iPhone.
 
-## Kedua decoder masih glitch: kumpulkan sampel audio tanpa generasi baru
+## Prioritas terbaru: periksa pemutaran sub-bass di speaker MacBook
+
+Pengguna mendengarkan melalui speaker bawaan MacBook. Sampel hasil memiliki
+sekitar **60% energi di bawah 60 Hz** dan **82% di bawah 80 Hz**; piano sumber
+hampir tidak punya energi di wilayah itu. Speaker kecil dapat mendistorsi sinyal
+seperti ini. Ini hipotesis pemutaran yang perlu diperiksa, belum bukti bahwa file
+atau kualitas bass sudah benar. Sebelum mencoba model lagi, lakukan uji cache:
+
+```bash
+git pull --ff-only
+python3 scripts/check_playback.py
+```
+
+Di folder baru yang dicetak, bandingkan dengan **volume perangkat tetap**:
+
+- `reference.wav`: cuplikan B yang sama dengan paket feedback.
+- `quiet_18db.wav`: sinyal sama, dipelankan 18 dB.
+- `highpass80_quiet.wav`: gain sama dengan versi pelan, ditambah high-pass 80 Hz.
+
+Mulai pada volume perangkat rendah dan jangan menaikkannya untuk mengompensasi
+file yang lebih pelan. Bila tersedia, dengarkan file yang sama melalui headphone.
+Jika artefak jauh berkurang pada level rendah/headphone, pemutaran mungkin
+berperan. Hilangnya artefak setelah high-pass saja bukan bukti speaker bermasalah:
+filter juga menghapus bass yang diinginkan. Ini diagnosis, bukan stem final.
+Tidak ada inferensi, unduhan atau perubahan pada hasil lama.
+
+## Analisis sampel dan langkah lanjutan bila playback tetap glitch
+
+Tiga file feedback selaras, 10 detik pada detik lagu 30–40, dan hash sesuai
+manifest. Waveform decoder MLX dan CPU memiliki korelasi **0.999999462**;
+RMS selisih setelah penyamaan skala hanya sekitar **0.104%** dari RMS default.
+Sekitar 99.41% energi output berada di bawah 300 Hz. Piano sumber mempunyai
+struktur nada yang jelas. Konsentrasi energi rendah sendiri wajar untuk bass;
+angka ini bukan ukuran mutu musikal atau bukti tunggal penyebab glitch.
+
+Kesamaan waveform melemahkan dugaan perbedaan backend decoder sebagai penyebab
+utama pada sampel ini. Encoder, conditioning, DiT, dan mutu model LEGO masih
+perlu diperiksa. Mengubah chunk/gain/decoder lagi belum didukung bukti ini.
+
+Jika artefak tetap terdengar melalui headphone/level rendah, pemeriksaan berikut
+yang sudah disiapkan hanya rekonstruksi sumber piano, **tanpa generasi bass**:
+
+```bash
+git pull --ff-only
+python3 scripts/check_source_roundtrip.py --execute
+```
+
+Sumber diambil dari pembanding decoder terakhir, pada offset B 3–13 detik yang
+sama dengan paket feedback. Snapshot tidak diberi gain tambahan. Worker hanya
+memuat bobot VAE lokal: encoder PyTorch CPU float32 dan encoder MLX upstream,
+kemudian **decoder CPU yang sama** untuk kedua hasil. DiT dan LM tidak dimuat;
+tidak ada diffusion atau unduhan baru. Encoder MLX memakai callable native/
+compiled upstream. Jika MLX tidak tersedia, uji melaporkan error dan menyimpan
+rekonstruksi CPU; tidak diam-diam menganggap fallback sebagai hasil MLX.
+
+Di folder `source_roundtrip_*` yang dicetak, dengarkan:
+
+- `source_listen.wav`: piano sumber.
+- `cpu_encoder_listen.wav`: encoder CPU → decoder CPU.
+- `mlx_encoder_listen.wav`: encoder MLX → decoder CPU.
+
+Keduanya seharusnya tetap terdengar sebagai rekonstruksi piano, bukan bass.
+Semua pratinjau memakai durasi dan gain bersama, tanpa padding. PyTorch dan MLX
+memakai sampler posterior dengan RNG berbeda; ini bukan perbandingan bit-identik.
+Jika hanya MLX rusak, telusuri jalur encoder MLX. Jika keduanya bersih, fokus ke
+conditioning/generasi DiT dan kualitas model. Jika keduanya rusak, periksa VAE/
+jalur rekonstruksi bersama. Report mencatat shape/std latent dan hasil/error.
+Tanpa `--execute`, hanya snapshot sumber yang dibuat. Hasil lama dipertahankan.
+
+## Ekspor sampel audio tanpa generasi baru (sudah diterima dan dianalisis)
 
 Laporan terakhir: sumber hanya piano, decoder default dan pembanding CPU sama-sama
 glitch. `capture.json` memastikan default memanggil MLX VAE float32 dan kembali
@@ -454,7 +523,11 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-80 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Pembanding decoder menguji snapshot
+84 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Pemeriksaan source roundtrip menguji
+snapshot interval yang sama tanpa gain kedua, penolakan input berubah, CLI tanpa
+model, dan adapter decoder bersama dengan model palsu. Bobot encoder nyata tidak
+dijalankan pada tes cloud tersebut.
+Pembanding decoder menguji snapshot
 latent tanpa perubahan, jejak fallback/dtype, tiling/tail tanpa kehilangan sampel,
 flag opt-in pada engine nyata dengan model palsu, dan ekspor WAV pembanding CPU.
 CPU/MPS/MLX dengan bobot model nyata belum diuji di cloud ini.
