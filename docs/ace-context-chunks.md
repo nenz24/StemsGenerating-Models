@@ -44,8 +44,11 @@ environment, not the locked ACE-Step environment.
 On Colab, reuse the active runtime that already has the bridge checkout, CUDA
 runtime and verified weights from notebook 10. A new notebook may attach to a
 different VM; copy the companion notebook cells into the active session if needed.
-Uploading this tool ZIP alone does not install ACE-Step, supply model weights or
-provide a GPU. No new checkpoint download is required on a complete existing VM.
+Notebook 11 now embeds the two helpers and verifies their hashes, so it asks for
+the piano audio only. No separate tool ZIP upload is needed. An optional ZIP is
+published at `bridges/ace_context_tools.zip` on GitHub. Neither that ZIP nor the
+notebook installs ACE-Step, supplies weights or provides a GPU. No new checkpoint
+download is required on a complete existing VM.
 
 From the bridge root:
 
