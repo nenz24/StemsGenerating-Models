@@ -4,6 +4,30 @@ POC lokal di JupyterLab: rekaman gitar/piano → bass atau drum pengiring memaka
 model pretrained ACE-Step. Mulai dari evaluasi kualitas, kemudian putuskan apakah
 fine-tuning diperlukan. Belum ada model baru yang dilatih atau konversi iPhone.
 
+## Glitch setelah sekitar detik 10 pada mode chunking
+
+Ada laporan hasil nyata dengan glitch berat yang berlanjut setelah detik 10.
+Mode notebook 03 masih eksperimen; tes timeline numerik bukan bukti kualitas
+musikal. Jangan mengulang seluruh generasi hanya untuk mencoba crossfade lain.
+
+Buka **[notebooks/04_seam_diagnostics.ipynb](notebooks/04_seam_diagnostics.ipynb)**
+untuk membaca cache run yang sudah ada dan mendengarkan chunk terpisah, raw model,
+bass gabungan, serta mix. Tidak ada model dimuat, unduhan atau inferensi baru.
+Cuplikan dan report disimpan di subfolder diagnostik baru; hasil lama dipertahankan.
+Pastikan folder RUN yang tercetak adalah run dengan suara bermasalah.
+
+Chunk kedua biasanya mewakili detik lagu 9–19. Crossfade pertama hanya 9–10;
+bagian 10–18 seharusnya identik dengan interior chunk kedua. Diagnostik memeriksa
+kesamaan sampel tersebut. Bila glitch sudah ada pada chunk kedua sebelum stitching,
+perbaikan harus menyasar generasi/konversi, bukan menebak pengaturan crossfade.
+Bila raw model bersih tetapi stem kanonis rusak, periksa konversi/clipping. Bila
+chunk kanonis bersih tetapi gabungan rusak, periksa stitching/fase/timing. Statistik
+peak/RMS/full-scale tidak otomatis menentukan kualitas atau penyebab glitch.
+
+Untuk menelusuri lanjut, bagikan report dan/atau cuplikan bass sekitar detik 7–22
+serta `chunk_001_before_stitch.wav` jika bersedia. Tidak perlu seluruh audio asli.
+Belum ada klaim bahwa glitch ini sudah diperbaiki tanpa pemeriksaan audio nyata.
+
 ## Bass untuk lagu penuh sekitar 3 menit
 
 Jika notebook 02 sudah berhasil menghasilkan bass, gunakan
@@ -231,7 +255,7 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-50 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
+52 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
 sel kode notebook 01 juga dieksekusi tanpa error, tanpa mengunduh bobot
 atau menghasilkan stem model. Ketujuh sel kode notebook 02 diuji dalam mode
 dry-run yang ditandai jelas dengan persiapan audio nyata. Rencana dependency
