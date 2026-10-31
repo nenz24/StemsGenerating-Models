@@ -110,6 +110,9 @@ def execute(args, experiment):
             started = time.perf_counter()
             backend = (AceBackend(args.upstream, model_name=args.ace_model, offload_to_cpu=args.offload, device=device)
                        if args.backend == "ace" else StageBackend(args.upstream, args.checkpoint))
+            if getattr(args, "capture_decoder", None) is not None:
+                from decoder_capture import install_capture
+                install_capture(backend.handler, args.capture_decoder)
             synchronize(torch, device)
             session["model_load_seconds"] = time.perf_counter() - started
             if args.backend == "ace":
@@ -168,6 +171,7 @@ def main():
     parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--max-job-seconds", type=int, choices=(10, 30), default=10, help="Explicitly opt into the 30-second unchunked context test")
+    parser.add_argument("--capture-decoder", type=Path, help="Diagnostic: capture one ACE job's exact latents and default float decode")
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--upstream", type=Path)
     parser.add_argument("--checkpoint", type=Path, help="STAGE instrument-specific safetensors file")
@@ -185,6 +189,8 @@ def main():
         if manifest_model != args.ace_model:
             parser.error("Asset manifest must match --ace-model")
     experiment = plan(args.prepared, args.backend, args.instrument, args.seeds)
+    if args.capture_decoder is not None and (args.backend != "ace" or len(experiment["jobs"]) != 1):
+        parser.error("Decoder capture requires exactly one ACE job")
     if any(not isinstance(job["duration"], (int,float)) or not math.isfinite(job["duration"])
            or not 0 < job["duration"] <= args.max_job_seconds for job in experiment["jobs"]):
         parser.error("Job duration exceeds the explicit --max-job-seconds limit")

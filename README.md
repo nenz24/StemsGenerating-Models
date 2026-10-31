@@ -4,7 +4,56 @@ POC lokal di JupyterLab: rekaman gitar/piano → bass atau drum pengiring memaka
 model pretrained ACE-Step. Mulai dari evaluasi kualitas, kemudian putuskan apakah
 fine-tuning diperlukan. Belum ada model baru yang dilatih atau konversi iPhone.
 
-## B tetap rusak saat pertama; A punya sedikit glitch: audit raw audio
+## Audit selesai: bandingkan decoder dengan latent yang sama
+
+Laporan pengguna menunjukkan raw B peak 0.999969, RMS 0.298339, tanpa NaN/Inf.
+Sesudah resampling tidak ada sampel di luar [-1,1]. Pratinjau dengan gain lebih
+rendah tetap glitch. Audit ini tidak mendukung clipping saat konversi sebagai
+penyebab utama; raw lama berformat PCM16 sehingga tidak membuktikan semua hal
+yang terjadi sebelum file raw ditulis. Penyebab glitch belum dipastikan.
+
+Ada celah observasi pada integrasi: `use_mlx_dit=False` hanya mematikan MLX DiT.
+Upstream tetap mencoba mengaktifkan MLX VAE otomatis di Mac. Model DiT MPS memakai
+float32, tetapi VAE PyTorch MPS memilih float16; MLX VAE punya dtype terpisah.
+Report lama belum merekam jalur VAE yang benar-benar terpanggil atau fallback-nya.
+
+Jalankan satu pembanding terarah:
+
+```bash
+git pull --ff-only
+python3 scripts/compare_decoders.py --execute
+```
+
+Perintah memilih B dari hasil notebook 07 terbaru, menyalin input byte-for-byte,
+dan memakai Base/seed/CFG/steps yang sama. **Hanya satu inferensi B baru** diperlukan
+karena hasil lama tidak menyimpan latent. Uji menyimpan latent tepat sebelum
+decoder, output float default sebelum ekspor, dan panggilan decoder/dtype aktual.
+Proses generasi kemudian keluar, sehingga memorinya dilepas.
+
+Proses kedua **hanya memuat VAE lokal di CPU float32** dan membaca latent tersimpan
+yang sama sebelum konversi dtype decoder; diffusion tidak diulang. CPU memakai
+window 128 frame latent/overlap 32 untuk membatasi memori. Tiling dan dtype juga
+bagian dari perbedaan jalur ini, sehingga hasilnya belum mengisolasi MLX saja.
+Tidak ada unduhan baru, perubahan seed/metadata, atau generasi ulang seluruh lagu.
+CPU decode bisa lebih lambat; waktu/memori nyata di Mac belum dibenchmark.
+
+Di folder `runs/decoder_comparison_*`, dengarkan:
+
+- `old_B_stem.wav`: B sebelumnya.
+- `default_decoder_listen.wav`: decoder default dari generasi baru.
+- `cpu_decoder_listen.wav`: decoder CPU dari latent yang sama.
+
+Kedua pratinjau memakai gain 0.7 yang sama, hingga 30 detik tanpa padding.
+`capture/capture.json` mencatat jalur/dtype/fallback dan hash latent; `comparison.json`
+mencatat CPU, waktu, dan hash output. Pemeriksaan checksum melindungi snapshot.
+
+Bila default rusak tetapi CPU bersih, masalah mengarah ke jalur decoder/dtype/
+tiling. Bila keduanya rusak, periksa encoder atau hasil DiT yang membentuk latent.
+Bila default baru juga bersih, variasi inferensi/sesi perlu diperiksa lagi.
+Ini belum perbaikan otomatis; jangan mengulang seluruh lagu sebelum membandingkan
+hasil. Tanpa `--execute`, perintah hanya menyiapkan rencana dan cache input.
+
+## Audit raw audio tanpa inferensi (sudah dilakukan pada laporan pengguna)
 
 Hasil pengguna dari notebook 07: B tetap rusak saat diproses pertama, A masih
 terdengar bassnya tetapi punya sedikit glitch, dan raw model B juga rusak. Ini
@@ -373,7 +422,11 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-72 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Audit audio diuji dengan raw float
+80 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Pembanding decoder menguji snapshot
+latent tanpa perubahan, jejak fallback/dtype, tiling/tail tanpa kehilangan sampel,
+flag opt-in pada engine nyata dengan model palsu, dan ekspor WAV pembanding CPU.
+CPU/MPS/MLX dengan bobot model nyata belum diuji di cloud ini.
+Audit audio diuji dengan raw float
 WAV sintetis yang melebihi batas amplitudo: clipping terukur dan pratinjau hanya
 diattenuasi, dengan input lama tetap utuh. Ini bukan bukti penyebab glitch pengguna.
 Termasuk round-trip audio
