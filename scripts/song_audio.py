@@ -1,4 +1,4 @@
-"""Sample-aligned full-song preparation and overlap stitching for the 10-second POC."""
+"""Sample-aligned full-song preparation and overlap stitching for bounded contexts."""
 import array
 import json
 import math
@@ -26,8 +26,7 @@ def chunk_starts(frame_count, chunk_frames=10 * RATE, overlap_frames=RATE):
 
 def prepare_song(source, output, chunk_seconds=10, overlap_seconds=1):
     source, output = Path(source).resolve(), Path(output)
-    if chunk_seconds != 10 or not 0 < overlap_seconds < chunk_seconds:
-        raise ValueError("This POC uses 10-second chunks with overlap in (0, 10)")
+    validate_chunk_settings(chunk_seconds, overlap_seconds)
     source_hash = sha256(source)
     if output.exists():
         manifest = json.loads((output / "song.json").read_text())
@@ -74,6 +73,15 @@ def prepare_song(source, output, chunk_seconds=10, overlap_seconds=1):
     except Exception:
         shutil.rmtree(output)
         raise
+
+
+def validate_chunk_settings(chunk_seconds, overlap_seconds):
+    if (isinstance(chunk_seconds, bool) or chunk_seconds not in (10, 30)
+        or isinstance(overlap_seconds, bool) or not isinstance(overlap_seconds, (int, float))
+        or not math.isfinite(overlap_seconds) or not 0 < overlap_seconds < chunk_seconds
+        or round(overlap_seconds * RATE) < 1
+        or round(overlap_seconds * RATE) >= round(chunk_seconds * RATE)):
+        raise ValueError("Use 10- or 30-second chunks with a finite, sample-sized overlap smaller than the chunk")
 
 
 def stitch_song(manifest, stems, target):

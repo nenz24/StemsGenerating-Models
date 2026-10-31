@@ -83,46 +83,48 @@ class FullSongTests(unittest.TestCase):
                 prepare_song(root / "source.wav", prepared)
 
     def test_actual_runner_recovers_second_chunk_without_regenerating_first(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            fixture(root / "source.wav", 12)
-            profile = json.loads((ROOT / "configs/mac-full-song.json").read_text())
-            output = root / "run"
-            experiment, song = song_plan(root / "source.wav", output, profile, ROOT / "configs/assets-base.json")
-            settings = types.SimpleNamespace(upstream=root / "upstream", backend="ace", checkpoint=None,
-                ace_model="acestep-v15-base", assets_manifest=ROOT / "configs/assets-base.json", device="mps",
-                offload=True, out=output, prepared=output / "prepared", resume=True,
-                execution_signature=experiment["execution_signature"])
-            class Model:
-                calls = 0
-                fail = True
-                def generate(self, source, duration, instrument, seed, target):
-                    self.calls += 1
-                    if self.calls == 2 and self.fail:
-                        raise RuntimeError("fixture interrupted second chunk")
-                    path = target / "raw.wav"
-                    shutil.copyfile(source, path)
-                    return path, {"fixture_only": True}
-            model = Model()
-            factory = MagicMock(return_value=model)
-            torch = types.ModuleType("torch")
-            torch.inference_mode = nullcontext
-            with patch.dict(os.environ), patch.dict(sys.modules, {"torch": torch}), patch("backends.AceBackend", factory), patch("backends.weight_inventory", return_value=[]), patch("model_assets.process"), patch("model_assets.materialize", return_value=root/"runtime/checkpoints"), patch.object(runner, "check_upstream"), patch.object(runner, "select_device", return_value="mps"), patch.object(runner, "synchronize"), patch.object(runner, "reset_memory_stats"), patch.object(runner, "memory_stats", return_value={}):
-                with self.assertRaises(RuntimeError):
-                    runner.execute(settings, experiment)
-                model.fail = False
-                runner.execute(settings, experiment)
-                self.assertEqual(model.calls, 3)  # success, failure, retry; first chunk generated once
-                self.assertEqual(factory.call_count, 2)
-                runner.execute(settings, experiment)
-                self.assertEqual(factory.call_count, 2)  # all cached: no model load
-            stems = stem_paths(output, experiment)
-            self.assertEqual(len(stems), 2)
-            stitch_song(song, stems, root / "out.wav")
-            self.assertTrue(read_pcm(root/"out.wav") == read_pcm(output/"prepared/source.wav"))
-            stems[0].write_bytes(b"corrupted")
-            with self.assertRaises(ValueError):
-                stem_paths(output, experiment)
+        for chunk_seconds, overlap, seconds in ((10, 1, 12), (30, 3, 40)):
+            with self.subTest(chunk_seconds=chunk_seconds):
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    fixture(root / "source.wav", seconds)
+                    profile = json.loads((ROOT / "configs/mac-full-song.json").read_text())
+                    output = root / "run"
+                    experiment, song = song_plan(root / "source.wav", output, profile, ROOT / "configs/assets-base.json", chunk_seconds, overlap)
+                    settings = types.SimpleNamespace(upstream=root / "upstream", backend="ace", checkpoint=None,
+                        ace_model="acestep-v15-base", assets_manifest=ROOT / "configs/assets-base.json", device="mps",
+                        offload=True, out=output, prepared=output / "prepared", resume=True,
+                        execution_signature=experiment["execution_signature"], max_job_seconds=chunk_seconds)
+                    class Model:
+                        calls = 0
+                        fail = True
+                        def generate(self, source, duration, instrument, seed, target):
+                            self.calls += 1
+                            if self.calls == 2 and self.fail:
+                                raise RuntimeError("fixture interrupted second chunk")
+                            path = target / "raw.wav"
+                            shutil.copyfile(source, path)
+                            return path, {"fixture_only": True}
+                    model = Model()
+                    factory = MagicMock(return_value=model)
+                    torch = types.ModuleType("torch")
+                    torch.inference_mode = nullcontext
+                    with patch.dict(os.environ), patch.dict(sys.modules, {"torch": torch}), patch("backends.AceBackend", factory), patch("backends.weight_inventory", return_value=[]), patch("model_assets.process"), patch("model_assets.materialize", return_value=root/"runtime/checkpoints"), patch.object(runner, "check_upstream"), patch.object(runner, "select_device", return_value="mps"), patch.object(runner, "synchronize"), patch.object(runner, "reset_memory_stats"), patch.object(runner, "memory_stats", return_value={}):
+                        with self.assertRaises(RuntimeError):
+                            runner.execute(settings, experiment)
+                        model.fail = False
+                        runner.execute(settings, experiment)
+                        self.assertEqual(model.calls, 3)  # success, failure, retry; first chunk generated once
+                        self.assertEqual(factory.call_count, 2)
+                        runner.execute(settings, experiment)
+                        self.assertEqual(factory.call_count, 2)  # all cached: no model load
+                    stems = stem_paths(output, experiment)
+                    self.assertEqual(len(stems), 2)
+                    stitch_song(song, stems, root / "out.wav")
+                    self.assertTrue(read_pcm(root/"out.wav") == read_pcm(output/"prepared/source.wav"))
+                    stems[0].write_bytes(b"corrupted")
+                    with self.assertRaises(ValueError):
+                        stem_paths(output, experiment)
 
     def test_notebook_is_unexecuted_and_uses_separate_input_folder(self):
         book = json.loads((ROOT / "notebooks/03_mac_full_song.ipynb").read_text())

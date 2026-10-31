@@ -4,6 +4,30 @@ POC lokal di JupyterLab: rekaman gitar/piano → bass atau drum pengiring memaka
 model pretrained ACE-Step. Mulai dari evaluasi kualitas, kemudian putuskan apakah
 fine-tuning diperlukan. Belum ada model baru yang dilatih atau konversi iPhone.
 
+## Langkah berikutnya: lagu penuh dengan konteks 30 detik
+
+Hasil uji pengguna: chunk 2 sepanjang 10 detik tetap glitch meski diulang dalam
+proses baru; generasi 30 detik pertama bersih. Ini mendukung percobaan konteks
+lebih panjang, tetapi belum memastikan penyebab glitch atau kualitas seluruh lagu.
+
+Pull kode terbaru, lalu buka
+**[notebooks/06_mac_full_song_30s.ipynb](notebooks/06_mac_full_song_30s.ipynb)**.
+Rekaman tetap di `data/full_song/`; jalankan Restart Kernel → Run All.
+Notebook memakai Base/MPS/seed 0/CPU offload, konteks 30 detik dan overlap nominal
+3 detik. Lagu tepat 180 detik menghasilkan 7 chunk; chunk terakhir mengikuti akhir
+lagu agar tetap punya konteks 30 detik. Model dimuat sekali selama proses.
+
+Bobot lokal dipakai tanpa unduhan baru. Run `full_song30_*` terpisah dari hasil
+10 detik, sehingga chunk yang glitch tidak dipakai kembali. Run yang terputus
+dapat dilanjutkan dengan sumber dan pengaturan sama. Hasilnya `bass_full.wav`
+dan `mix_full.wav`, dengan durasi sama seperti sumber hasil decode.
+
+Dengarkan interior setiap chunk dan sambungan di interval 27–30, 54–57, 81–84
+detik dan seterusnya. Overlap terakhir bisa lebih panjang. Generasi setiap chunk
+masih mandiri sehingga karakter/pola bass dapat berubah. Keberhasilan satu klip
+30 detik belum memvalidasi inferensi berulang sepanjang 3 menit. Arsitektur dan
+bobot pretrained tetap sama; belum ada training baru.
+
 ## Glitch setelah sekitar detik 10 pada mode chunking
 
 Ada laporan hasil nyata dengan glitch berat yang berlanjut setelah detik 10.
@@ -53,10 +77,10 @@ belum membuktikan bahwa inferensi 3 menit muat atau menghasilkan bass konsisten.
 
 ## Bass untuk lagu penuh sekitar 3 menit
 
-Jika notebook 02 sudah berhasil menghasilkan bass, gunakan
-**[notebooks/03_mac_full_song.ipynb](notebooks/03_mac_full_song.ipynb)** untuk
-seluruh rekaman. Notebook 02 mengambil klip 10 detik; notebook 03 memakai semua
-audio hingga batas 10 menit POC.
+**[notebooks/03_mac_full_song.ipynb](notebooks/03_mac_full_song.ipynb)**
+mempertahankan mode chunk 10 detik untuk reproduksi/diagnosis, memakai seluruh
+rekaman hingga batas 10 menit POC. Setelah uji notebook 05 menunjukkan 30 detik
+bersih, gunakan notebook 06 di atas. Instruksi mode lama:
 
 1. Pull kode terbaru.
 2. Taruh satu file rekaman sendiri di **`data/full_song/`**. Folder ini dipisah
@@ -278,18 +302,25 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-56 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
+60 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Termasuk round-trip audio
+180 detik pada konteks 30 detik/overlap 3 detik, isolasi cache lama, dan resume
+runner dengan model palsu pada konteks 10 serta 30 detik. Tes tersebut tidak
+memvalidasi kualitas musik. Seluruh 9
 sel kode notebook 01 juga dieksekusi tanpa error, tanpa mengunduh bobot
 atau menghasilkan stem model. Ketujuh sel kode notebook 02 diuji dalam mode
 dry-run yang ditandai jelas dengan persiapan audio nyata.
 Seluruh empat sel kode notebook 05 juga dieksekusi dalam mode dry-run dengan
 cache audio sintetis: input chunk identik dan rencana 30 detik tanpa inferensi.
+Kelima sel kode notebook 06 lolos dry-run dengan audio sintetis 180 detik,
+merencanakan 7 chunk tanpa unduhan atau inferensi model.
 Rencana dependency
 macOS 14 arm64/Python 3.11 berhasil diperiksa memakai uv 0.10.0 dan lockfile
 upstream: 125 paket dapat direncanakan, tanpa memasang dependency ML tersebut. Checkout source upstream pada commit yang dipin
 juga berhasil diverifikasi.
-Pemilihan MPS dan pemanggilan API diuji dengan mock. Inferensi MPS/CUDA nyata,
-instalasi dependency ML penuh, dan kualitas model pada rekamanmu belum diverifikasi. Default notebook tidak mengklaim keberhasilan generasi.
+Pemilihan MPS dan pemanggilan API diuji dengan mock. Cloud ini tidak menjalankan
+inferensi MPS/CUDA nyata atau instalasi dependency ML penuh. Pengguna melaporkan
+generasi 30 detik pertama bersih; kualitas seluruh lagu pada mode 30 detik belum
+divalidasi. Default notebook tidak mengklaim keberhasilan generasi.
 Tidak ada gerbang review lisensi untuk POC sesuai permintaan; catatan singkat ada
 di [docs/model-notes.md](docs/model-notes.md).
 
