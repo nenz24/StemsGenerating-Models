@@ -28,6 +28,29 @@ Untuk menelusuri lanjut, bagikan report dan/atau cuplikan bass sekitar detik 7â€
 serta `chunk_001_before_stitch.wav` jika bersedia. Tidak perlu seluruh audio asli.
 Belum ada klaim bahwa glitch ini sudah diperbaiki tanpa pemeriksaan audio nyata.
 
+### Chunk 1 bersih tetapi berbeda karakter; chunk 2 glitch
+
+Perbedaan karakter antar-generasi mandiri dapat terjadi meski input memakai seed
+yang sama. Glitch yang sudah terdengar pada chunk terpisah perlu ditelusuri pada
+generasi atau konversinya. Crossfade tidak memperbaiki interior chunk yang rusak.
+
+Gunakan **[notebooks/05_context_comparison.ipynb](notebooks/05_context_comparison.ipynb)**
+setelah mendengarkan notebook 04. Pilih run bermasalah melalui `RUN` jika bukan
+hasil terbaru. Restart Kernel â†’ Run All menjalankan dua inferensi baru:
+
+1. Ulang input chunk 2 yang sama persis, seed dan pengaturan sama, dalam proses baru.
+2. Generasi 30 detik pertama sekaligus, tanpa stitching atau gain tambahan.
+
+Bobot lokal dipakai kembali tanpa unduhan; hasil pembanding berada di folder baru.
+Tes 30 detik membutuhkan memori/waktu lebih besar dan belum diuji pada Mac 24 GB.
+Untuk memeriksa persiapan/rencana saja, set `DRY_RUN = True`.
+
+Bila chunk baru bersih, selidiki state handler atau variasi inferensi; itu belum
+membuktikan penyebab tertentu. Bila hanya konteks 30 detik yang bersih, konteks
+pendek/input lokal mungkin berperan. Bila keduanya rusak, periksa audio mentah,
+sumber, seed, decoder dan clipping sebelum memperpanjang generasi. Eksperimen ini
+belum membuktikan bahwa inferensi 3 menit muat atau menghasilkan bass konsisten.
+
 ## Bass untuk lagu penuh sekitar 3 menit
 
 Jika notebook 02 sudah berhasil menghasilkan bass, gunakan
@@ -255,10 +278,13 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-52 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
+56 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Seluruh 9
 sel kode notebook 01 juga dieksekusi tanpa error, tanpa mengunduh bobot
 atau menghasilkan stem model. Ketujuh sel kode notebook 02 diuji dalam mode
-dry-run yang ditandai jelas dengan persiapan audio nyata. Rencana dependency
+dry-run yang ditandai jelas dengan persiapan audio nyata.
+Seluruh empat sel kode notebook 05 juga dieksekusi dalam mode dry-run dengan
+cache audio sintetis: input chunk identik dan rencana 30 detik tanpa inferensi.
+Rencana dependency
 macOS 14 arm64/Python 3.11 berhasil diperiksa memakai uv 0.10.0 dan lockfile
 upstream: 125 paket dapat direncanakan, tanpa memasang dependency ML tersebut. Checkout source upstream pada commit yang dipin
 juga berhasil diverifikasi.

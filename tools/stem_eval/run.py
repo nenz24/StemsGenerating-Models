@@ -2,6 +2,7 @@
 import argparse
 import importlib.metadata
 import json
+import math
 import os
 from pathlib import Path
 import platform
@@ -144,7 +145,8 @@ def execute(args, experiment):
             ], text=True))
             if abs(float(info["format"]["duration"]) - job["duration"]) > 0.05:
                 raise ValueError("Generated duration mismatch; raw audio retained for inspection")
-            canonicalize(raw, attempt / "stem.wav", duration=job["duration"], gain=1)
+            canonicalize(raw, attempt / "stem.wav", duration=job["duration"], gain=1,
+                         max_duration=getattr(args, "max_job_seconds", 10))
             clean_source = Path(job.get("clean_source", args.prepared / "source.wav"))
             listening_mix(clean_source, attempt / "stem.wav", attempt / "mix.wav")
             report.update(status="generated", stem_sha256=sha256(attempt / "stem.wav"),
@@ -165,6 +167,7 @@ def main():
     parser.add_argument("--instrument", choices=("bass", "drums"), default="bass")
     parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--max-job-seconds", type=int, choices=(10, 30), default=10, help="Explicitly opt into the 30-second unchunked context test")
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--upstream", type=Path)
     parser.add_argument("--checkpoint", type=Path, help="STAGE instrument-specific safetensors file")
@@ -182,6 +185,10 @@ def main():
         if manifest_model != args.ace_model:
             parser.error("Asset manifest must match --ace-model")
     experiment = plan(args.prepared, args.backend, args.instrument, args.seeds)
+    if any(not isinstance(job["duration"], (int,float)) or not math.isfinite(job["duration"])
+           or not 0 < job["duration"] <= args.max_job_seconds for job in experiment["jobs"]):
+        parser.error("Job duration exceeds the explicit --max-job-seconds limit")
+    experiment["max_job_seconds"] = args.max_job_seconds
     experiment["device_requested"] = args.device
     experiment["ace_model"] = args.ace_model
     experiment["offload_to_cpu"] = args.offload

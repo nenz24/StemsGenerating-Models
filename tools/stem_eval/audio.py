@@ -29,11 +29,13 @@ def write_pcm(path, samples):
         audio.writeframes(data.tobytes())
 
 
-def canonicalize(source, target, start=0, duration=10, gain=0.7):
+def canonicalize(source, target, start=0, duration=10, gain=0.7, max_duration=10):
     """Fixed gain, never per-condition normalization; ffmpeg errors propagate."""
+    if isinstance(max_duration, bool) or not isinstance(max_duration, (int, float)) or not math.isfinite(max_duration) or not 0 < max_duration <= 30:
+        raise ValueError("Explicit duration limit must be in (0, 30]")
     if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
-           for v in (start, duration, gain)) or start < 0 or not 0 < duration <= 10 or not 0 < gain <= 1:
-        raise ValueError("Use a finite start >= 0 and duration in (0, 10]")
+           for v in (start, duration, gain)) or start < 0 or not 0 < duration <= max_duration or not 0 < gain <= 1:
+        raise ValueError(f"Use a finite start >= 0 and duration in (0, {max_duration}]")
     subprocess.run([
         require_tool("ffmpeg"), "-nostdin", "-v", "error", "-n", "-i", str(source),
         "-ss", str(start), "-t", str(duration), "-af", f"volume={gain}",
