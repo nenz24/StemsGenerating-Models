@@ -4,7 +4,38 @@ POC lokal di JupyterLab: rekaman gitar/piano → bass atau drum pengiring memaka
 model pretrained ACE-Step. Mulai dari evaluasi kualitas, kemudian putuskan apakah
 fine-tuning diperlukan. Belum ada model baru yang dilatih atau konversi iPhone.
 
-## Langkah berikutnya: lagu penuh dengan konteks 30 detik
+## Glitch juga terjadi setelah 30 detik: uji urutan pemanggilan
+
+Pengguna melaporkan mode lagu penuh 30 detik juga rusak setelah potongan pertama.
+Memperpanjang konteks belum menyelesaikan glitch. Keberhasilan 30 detik pertama
+pada notebook 05 belum menguji input bagian berikutnya atau pemanggilan berulang.
+
+Gunakan **[notebooks/07_sequence_diagnostics.ipynb](notebooks/07_sequence_diagnostics.ipynb)**.
+Notebook memilih run `full_song30_*` terbaru yang selesai, atau isi `RUN` dengan
+folder bermasalah. Dengarkan sumber, stem tersimpan dan raw model chunk 1 serta 0.
+Set `RUN_REPLAY=False` bila hanya ingin mendengarkan cache tanpa inferensi.
+
+Default Run All menjalankan **dua inferensi saja** dalam satu proses model baru,
+dengan urutan dibalik **[1,0]**: B (biasanya detik 27–57) lalu A (0–30).
+Posisi sebenarnya dicetak sesuai cache. Kedua input disalin utuh dan seed/settings
+dipertahankan; tidak ada gain/resampling tambahan, stitching, atau unduhan baru.
+Run dan hasil lama dipertahankan. Perbandingan tersimpan di `sequence_diagnostics_*`.
+
+- B bersih saat pertama, A rusak saat kedua: indikasi pengaruh urutan/state runtime.
+- B rusak saat pertama, A bersih saat kedua: indikasi isi/konteks B atau generasinya.
+- Keduanya bersih: sesi lama atau variasi inferensi mungkin berperan.
+- Keduanya rusak: periksa sumber, parameter, dtype/decoder dan raw output.
+
+Pola ini membantu menentukan eksperimen berikutnya; bukan bukti pasti penyebab.
+MPS dapat bervariasi meski seed sama. Statistik sinyal tidak menilai musik secara
+otomatis. Laporkan kondisi B saat urutan pertama, A saat kedua, dan raw modelnya.
+Jika stem/raw tersimpan bersih tetapi lagu gabungan rusak, fokuskan pemeriksaan
+pada stitching/mix. Mode lagu penuh belum dinyatakan bebas glitch.
+
+## Eksperimen lagu penuh dengan konteks 30 detik
+
+**Status:** glitch setelah potongan pertama masih dilaporkan. Gunakan notebook 07
+di atas sebelum mengulang seluruh generasi notebook 06.
 
 Hasil uji pengguna: chunk 2 sepanjang 10 detik tetap glitch meski diulang dalam
 proses baru; generasi 30 detik pertama bersih. Ini mendukung percobaan konteks
@@ -302,7 +333,7 @@ runner bisa disesuaikan dengan hardware JupyterLab yang sebenarnya.
 
 ## Status validasi
 
-60 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Termasuk round-trip audio
+66 pengujian audio/CLI plan, helper, profil lengkap Mac, cache lokal, progress dan kontrak MPS/CUDA lulus di Linux tanpa GPU. Termasuk round-trip audio
 180 detik pada konteks 30 detik/overlap 3 detik, isolasi cache lama, dan resume
 runner dengan model palsu pada konteks 10 serta 30 detik. Tes tersebut tidak
 memvalidasi kualitas musik. Seluruh 9
@@ -313,14 +344,17 @@ Seluruh empat sel kode notebook 05 juga dieksekusi dalam mode dry-run dengan
 cache audio sintetis: input chunk identik dan rencana 30 detik tanpa inferensi.
 Kelima sel kode notebook 06 lolos dry-run dengan audio sintetis 180 detik,
 merencanakan 7 chunk tanpa unduhan atau inferensi model.
+Keempat sel notebook 07 lolos mode cache-only dengan audio sintetis. Uji engine
+memakai model palsu memeriksa urutan [1,0], satu handler, kesesuaian input/mix,
+dan penyimpanan hasil pertama saat panggilan kedua gagal.
 Rencana dependency
 macOS 14 arm64/Python 3.11 berhasil diperiksa memakai uv 0.10.0 dan lockfile
 upstream: 125 paket dapat direncanakan, tanpa memasang dependency ML tersebut. Checkout source upstream pada commit yang dipin
 juga berhasil diverifikasi.
 Pemilihan MPS dan pemanggilan API diuji dengan mock. Cloud ini tidak menjalankan
 inferensi MPS/CUDA nyata atau instalasi dependency ML penuh. Pengguna melaporkan
-generasi 30 detik pertama bersih; kualitas seluruh lagu pada mode 30 detik belum
-divalidasi. Default notebook tidak mengklaim keberhasilan generasi.
+generasi 30 detik pertama bersih, tetapi bagian selanjutnya pada mode lagu penuh
+30 detik masih glitch. Default notebook tidak mengklaim keberhasilan generasi.
 Tidak ada gerbang review lisensi untuk POC sesuai permintaan; catatan singkat ada
 di [docs/model-notes.md](docs/model-notes.md).
 
