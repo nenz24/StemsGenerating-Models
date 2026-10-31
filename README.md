@@ -15,8 +15,11 @@ Generasi klip berikutnya langsung memakai preset ini, tanpa mengulang A/B:
 python3 scripts/compare_bass_tone.py --prepared /path/to/prepared --out runs/electric_plan
 ```
 
-Tambahkan `--execute` untuk inferensi. Klip mendukung 10–30 detik; pemakaian
-seluruh lagu tiga menit masih memerlukan uji konsistensi. Untuk Colab yang masih
+Tambahkan `--execute` untuk inferensi. Entry point klip ini mendukung 10–30 detik.
+Untuk durasi panjang, tersedia **[mode seluruh lagu satu panggilan](docs/electric-full-song.md)**
+hingga 600 detik, tanpa wajib chunk 30 detik. Pada T4 FP32, mulai dengan uji
+60 detik lalu seluruh tiga menit sesuai hasil memori/kualitas. Fit GPU dan kualitas
+durasi panjang belum diuji di chat. Untuk Colab yang masih
 aktif, satu helper terbaru dapat diupload dan memakai runtime/bobot yang sudah
 ada. [Uji caption sebelumnya](docs/bass-tone-colab.md) dan
 [hasil CUDA awal](docs/cuda-fp32-result.md) disimpan sebagai catatan.
@@ -70,8 +73,9 @@ GPU pre-Ampere. Hasil pertama dan batas kesimpulannya ada di catatan hasil CUDA.
   diuji pada jalur ACE.
 - Input pembanding tetap 32 kHz PCM16 hasil persiapan sebelumnya. Versi native/
   48 kHz harus diuji terpisah setelah baseline, bukan dicampur ke perubahan device.
-- Batas 10/30 detik adalah batas bridge saat ini, bukan bukti batas arsitektur
-  ACE-Step. Inferensi 60–180 detik memerlukan uji memori/kualitas tersendiri.
+- Batas 10/30 detik milik runner diagnosis lama. Runner single-pass Electric Bass
+  menerima 10–600 detik secara eksplisit; kemampuan durasi model tidak menjamin
+  semua panjang muat pada semua GPU, terutama FP32 pada T4.
 - Chunk independen dapat berbeda karakter/groove. Crossfade tidak memperbaiki
   audio yang sudah rusak sebelum stitching. Mode lagu penuh masih eksperimen.
 - Ini belum model generatif on-device siap iPhone. Feature/model integration,

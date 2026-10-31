@@ -67,7 +67,7 @@ def main():
     unsupported = sorted(set(profile) & {"caption", "precision", "guidance_scale", "inference_steps"})
     if unsupported:
         parser.error("Full-song runner cannot apply these preset fields: " + ", ".join(unsupported)
-                     + ". Use compare_bass_tone.py --prepared for the selected Electric Bass clip preset.")
+                     + ". Use electric_full_song.py for the selected Electric Bass long-context preset.")
     if profile["model"] != "acestep-v15-base" or len(profile["seeds"]) != 1:
         parser.error("Full-song POC uses Base and exactly one seed")
     assets = ROOT / "configs/assets-base.json"

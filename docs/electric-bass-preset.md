@@ -77,12 +77,13 @@ dipilih. File lama tetap utuh dan setiap generasi memakai direktori baru.
 
 ## Batas validasi
 
-Pilihan ini sudah dinilai pada satu cuplikan 30 detik. Konsistensi karakter,
-harmoni dan artefak pada seluruh lagu tiga menit masih perlu diuji. Caption yang
+Pilihan ini sudah dinilai pada satu cuplikan 30 detik. Untuk uji seluruh lagu,
+tersedia [runner satu panggilan 10–600 detik](electric-full-song.md). Konsistensi
+karakter, harmoni dan artefak sepanjang lagu masih perlu diuji. Caption yang
 sama tidak mengunci timbre antar-chunk, dan seed sama tidak menjamin sampling VAE
 identik antar-run.
 
-Runner `run_song.py` lama belum menerapkan parameter caption/precision preset
+Runner `run_song.py` lama tidak menerapkan parameter caption/precision preset
 ini. Ia menolak profil tersebut agar tidak diam-diam menghasilkan bass generik.
-Gunakan entry point klip di atas untuk preset terpilih. Penerapan ke seluruh lagu
-merupakan tahap berikutnya setelah pilihan timbre ini.
+Untuk preset terpilih, gunakan entry point klip di atas atau runner single-pass
+baru untuk durasi panjang.
