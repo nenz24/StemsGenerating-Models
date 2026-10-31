@@ -1,5 +1,14 @@
 # ACE-Step context bridge
 
+[Notebook 12](../notebooks/12_colab_fresh_context_90.ipynb) is for a new Colab
+account/VM. It embeds the runtime bridge source, checks GPU/disk, installs the
+pinned runtime and weights, and generates the full song with 90-second contexts.
+Select a GPU and upload the original piano only. No old source ZIP, old VM or
+GitHub login inside Colab is required. GPU access must be available on that
+account. A new VM downloads the runtime/weights again (about 45–50 GiB free disk).
+The previous duration probes are not repeated. Save WAV and feedback ZIPs before
+the session ends; live processes/files do not transfer automatically between VMs.
+
 [Notebook 11](../notebooks/11_colab_context_chunks.ipynb) includes the two Python
 helpers and verifies their SHA-256 checksums before loading them. Upload only the
 original piano audio. Use the existing Colab CUDA VM with the bridge checkout,
@@ -10,6 +19,7 @@ model runtime and weights from notebook 10. This notebook does not install model
 - `ace_context_chunks.py`: context planning, generation orchestration and stitching.
 - `electric_full_song.py`: the existing single-pass CUDA FP32 worker.
 - `11_colab_context_chunks.ipynb`: the notebook with embedded helpers.
+- `12_colab_fresh_context_90.ipynb`: fresh-VM notebook with embedded bridge source.
 - `electric-context.json`: the selected 90-second cap, margins and fade settings.
 - `ace-context-chunks.md`: usage, evidence and limitations.
 - `requirements-context-chunks.txt`: orchestration dependencies, separate from the

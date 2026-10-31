@@ -33,6 +33,15 @@ adjustable starting point, not a verified beat grid.
 
 ## Local/Colab use
 
+For a new Colab account/VM, use notebook 12. It embeds the bridge runtime source
+and performs GPU/disk checks, pinned runtime installation, verified model asset
+downloads and full-song 90-second chunk generation. It needs only the original
+piano upload, not the old VM, Mac export ZIP or GitHub credentials in Colab.
+Account GPU availability is still required. Model weights are not embedded;
+budget around 45–50 GiB free disk and a fresh download on an empty VM. The
+60/90/120-second probes are not rerun. `DRY_RUN=True` exercises source restoration
+and preparation only. Download both result and feedback ZIPs before closing.
+
 Run orchestration in a kernel/environment with NumPy, SciPy and SoundFile, plus
 ffmpeg/ffprobe. The already locked ACE-Step Python environment is used separately
 for inference. Do not upgrade or replace its pinned dependencies.
