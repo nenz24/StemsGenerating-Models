@@ -8,9 +8,11 @@ ACE-Step 1.5 Base. Model belum dilatih ulang atau dikonversi ke CoreAI/iPhone.
 [`acoustic-drums-shared-kit-full-v1`](baselines/acoustic-drums-shared-kit-full-v1/).
 Uji gitar elektrik clean 30 detik dinilai cukup baik dan disimpan di
 [`clean-electric-guitar-30-v1`](baselines/clean-electric-guitar-30-v1/).
-Lanjutkan [gitar seluruh lagu dengan chunk maksimal 90 detik](docs/clean-electric-guitar.md)
-di [`notebook 19`](notebooks/19_colab_guitar_context_90.ipynb), memakai runtime
-CUDA yang sudah tersedia. Hasil bass/drum lama tetap disimpan untuk mix gabungan.
+Hasil gitar chunk 90 detik ditolak karena noise dan strumming aneh. Lanjutkan
+[dua uji artikulasi 30 detik](docs/clean-electric-guitar.md) di
+[`notebook 20`](notebooks/20_colab_guitar_articulation.ipynb), memakai runtime
+CUDA yang sudah tersedia. Notebook 19 disimpan untuk reproduksi, default plan-only.
+Hasil bass/drum lama tetap disimpan untuk mix gabungan.
 
 **Target produk: seluruh inferensi lokal di iPhone / iOS 27 / CoreAI.** Rekaman
 piano menghasilkan gitar+bass+drum; rekaman gitar menghasilkan piano+bass+drum.

@@ -202,6 +202,14 @@ class SinglePassTests(unittest.TestCase):
             self.assertEqual(probe,{'reference_audio':None,'instrument':'guitar','caption':guitar_probe.PRESET['caption'],
                 'dtype':'float32','vae_dtype':'float32','limit':600,'calls':1})
             self.assertIn('old bridge engine must not be used', (tools/'run.py').read_text())
+            picked_out=root/'guitar_picked';picked_out.mkdir()
+            shutil.copytree(output/'prepared',picked_out/'prepared')
+            result=subprocess.run([sys.executable,str(guitar_helpers/'guitar_probe.py'),'--worker',
+                '--root',str(bridge),'--out',str(picked_out),'--variant','picked'],cwd=elsewhere,capture_output=True,text=True,timeout=30)
+            self.assertEqual(result.returncode,0,result.stderr)
+            probe=json.loads((picked_out/'generation/probe.json').read_text())
+            self.assertEqual(probe['caption'],guitar_probe.PICKED_PRESET['caption'])
+            self.assertEqual(probe['instrument'],'guitar')
 
 
 if __name__ == "__main__": unittest.main()

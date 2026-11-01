@@ -23,7 +23,7 @@ class GuitarProbeTests(unittest.TestCase):
         write_pcm(source, [100, -100] * (10 * RATE + RATE // 8))
         return source
 
-    def fake_worker(self, output, *, wrong_instruction=False, wrong_dtype=False):
+    def fake_worker(self, output, *, wrong_instruction=False, wrong_dtype=False, variant='original'):
         engine = guitar.load_engine(ROOT)
         prepared = output / 'prepared'
         folder = output / 'generation/000_A_guitar_seed0'
@@ -33,7 +33,7 @@ class GuitarProbeTests(unittest.TestCase):
         (output / 'generation/experiment.json').write_text(json.dumps(experiment))
         shutil.copyfile(prepared / 'source.wav', folder / 'stem.wav')
         shutil.copyfile(prepared / 'source.wav', folder / 'mix.wav')
-        params = {'caption': guitar.PRESET['caption'], 'seed': 0, 'guidance_scale': 7,
+        params = {'caption': guitar.PRESETS[variant]['caption'], 'src_audio': str(prepared / 'source.wav'), 'seed': 0, 'guidance_scale': 7,
                   'inference_steps': 50, 'duration': experiment['jobs'][0]['duration'],
                   'task_type': 'lego', 'instrumental': True, 'enable_normalization': False,
                   'reference_audio': None, 'thinking': False, 'use_cot_caption': False,
@@ -102,9 +102,51 @@ class GuitarProbeTests(unittest.TestCase):
             self.assertEqual([(j['instrument'], j['duration']) for j in experiment['jobs']], [('guitar', 90)])
             self.assertEqual(experiment['max_job_seconds'], 90)
 
+    def test_matched_articulation_exports_and_rejects_unrelated_setting_changes(self):
+        import guitar_articulation
+        for unrelated_change in (False, True):
+            with self.subTest(unrelated_change=unrelated_change), tempfile.TemporaryDirectory() as tmp:
+                base = Path(tmp); source = base / 'piano.wav'; output = base / 'comparison'
+                with wave.open(str(source), 'wb') as audio:
+                    audio.setparams((2, 2, RATE, 0, 'NONE', 'not compressed'))
+                    audio.writeframes(b'\0' * (31 * RATE * 4))
+                source_hash = sha256(source)
+                def worker(command, **kwargs):
+                    variant = command[command.index('--variant') + 1]
+                    folder = Path(command[command.index('--out') + 1])
+                    self.fake_worker(folder, variant=variant)
+                    if unrelated_change and variant == 'picked':
+                        path = folder / 'generation/000_A_guitar_seed0/result.json'
+                        result = json.loads(path.read_text())
+                        result['settings']['params']['shift'] = 2
+                        path.write_text(json.dumps(result))
+                with patch.object(guitar.single, 'model_python', return_value=Path(sys.executable)), patch('stream_process.run_logged', side_effect=worker) as run:
+                    if unrelated_change:
+                        with self.assertRaisesRegex(ValueError, 'Unexpected differences'):
+                            guitar_articulation.compare(ROOT, source, output, start=0, execute=True)
+                        self.assertEqual(json.loads((output / 'comparison.json').read_text())['status'], 'failed')
+                        self.assertFalse((output / 'guitar_articulation_feedback.zip').exists())
+                    else:
+                        report = guitar_articulation.compare(ROOT, source, output, start=0, execute=True)
+                        self.assertEqual(report['status'], 'generated')
+                        self.assertEqual(report['actual_parameter_differences'], ['caption', 'src_audio'])
+                        a, b = [json.loads((output / variant / 'guitar_probe.json').read_text()) for variant in ('original', 'picked')]
+                        self.assertEqual(a['input'], b['input'])
+                        self.assertEqual(b['preset'], guitar.PICKED_PRESET)
+                        with zipfile.ZipFile(output / 'guitar_articulation_feedback.zip') as z:
+                            self.assertIsNone(z.testzip())
+                            self.assertIn('picked/guitar_preview.mp3', z.namelist())
+                            self.assertNotIn('picked/guitar.wav', z.namelist())
+                        with zipfile.ZipFile(output / 'guitar_articulation_result.zip') as z:
+                            self.assertIn('original/guitar.wav', z.namelist())
+                            self.assertIn('picked/guitar.wav', z.namelist())
+                    self.assertEqual(run.call_count, 2)
+                    self.assertEqual(sha256(source), source_hash)
+                    self.assertEqual(guitar.PRESET['id'], 'clean-electric-guitar-v1')
+
     def test_notebook_dry_run_uses_new_engine_without_mutating_old_bridge(self):
         script = r'''
-import contextlib, io, json, shutil, sys, types
+import contextlib, io, json, shutil, sys, types, wave
 from pathlib import Path
 repo, base = map(Path, sys.argv[1:])
 root = base / 'ace_context_source_old'
@@ -115,7 +157,9 @@ old = engine.read_text().replace('if instrument not in ("bass", "drums", "guitar
 engine.write_text(old)
 sys.path[:0] = [str(root / 'tools/stem_eval'), str(root / 'scripts')]
 from audio import RATE, write_pcm
-source = base / 'piano.wav'; write_pcm(source, [100, -100] * (31 * RATE))
+source = base / 'piano.wav'
+with wave.open(str(source), 'wb') as audio:
+ audio.setparams((2, 2, RATE, 0, 'NONE', 'not compressed')); audio.writeframes(b'\0' * (121 * RATE * 4))
 def forbidden(*a, **kw): raise AssertionError('no upload/download in dry-run')
 colab = types.ModuleType('google.colab'); colab.files = types.SimpleNamespace(upload=forbidden, download=forbidden)
 sys.modules['google.colab'] = colab
@@ -142,9 +186,19 @@ for repeat in range(2):
  assert scope['GUITAR_CHUNK_OUT'] == chunk_out
 plan = scope['guitar_plan']
 assert plan['instrument'] == 'guitar' and plan['context_cap_seconds'] == 90
-assert plan['total_frames'] == 31 * RATE
+assert plan['total_frames'] == 121 * RATE
 assert engine.read_text() == old
 assert not list(chunk_out.rglob('guitar.wav'))
+book = json.loads((repo / 'notebooks/20_colab_guitar_articulation.ipynb').read_text())
+with contextlib.redirect_stdout(io.StringIO()):
+ for c in book['cells']:
+  if c['cell_type'] == 'code':
+   exec(compile(''.join(c['source']).replace('DRY_RUN = False', 'DRY_RUN = True'), 'guitar-articulation-notebook', 'exec'), scope)
+assert scope['report']['status'] == 'planned'
+assert scope['report']['start_seconds'] == 77.130625
+assert scope['report']['preset_differences'] == ['caption', 'id']
+assert engine.read_text() == old
+assert not list(scope['ARTICULATION_OUT'].rglob('guitar.wav'))
 '''
         with tempfile.TemporaryDirectory() as tmp:
             result = subprocess.run([sys.executable, '-c', script, str(ROOT), tmp],

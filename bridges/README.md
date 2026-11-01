@@ -1,10 +1,17 @@
 # ACE-Step context bridge
 
+[Notebook 20](../notebooks/20_colab_guitar_articulation.ipynb) is the next guitar
+test after the listener rejected the 90-second result for noise/strumming.
+Two matched 30-second clips at source start 77.130625s compare the original
+caption with a picked-note candidate. Same input bytes/model/settings, existing
+CUDA cache, no full-song regeneration. The original short reference is preserved.
+
 [Notebook 19](../notebooks/19_colab_guitar_context_90.ipynb) extends the accepted
 30-second clean guitar candidate to the full piano song with contexts capped at
 90 seconds, 6-second margins and 0.58-second equal-power fades. Same guitar
 preset, existing runtime/weights, resumable chunks, no bass/drum regeneration.
-It exports guitar and piano/guitar mix; longer guitar quality still needs review.
+The uploaded output was rejected for noise and unnatural strumming. It is
+retained for opt-in reproduction and now defaults to DRY_RUN=True.
 
 [Notebook 18](../notebooks/18_colab_clean_electric_guitar.ipynb) starts the selected
 clean electric guitar with one 30-second piano-conditioned probe. It embeds

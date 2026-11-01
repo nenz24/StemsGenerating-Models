@@ -1,0 +1,147 @@
+{
+  "experiment": "clean-electric-guitar-context90",
+  "execution_status": "generated",
+  "musical_quality_status": "rejected_by_listener",
+  "listener_assessment_original": "jadi noise dan strummingnya terdengar aneh",
+  "archive": {
+    "path": "guitar_chunked_feedback.zip",
+    "bytes": 13866633,
+    "sha256": "14a59b853c73a3b39ea8c680cb5bb5870ee6482dd2a057f05f707b76ce4ca707"
+  },
+  "source_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "duration_seconds": 243.330625,
+  "preset": {
+    "id": "clean-electric-guitar-v1",
+    "model": "acestep-v15-base",
+    "device": "cuda",
+    "precision": "float32",
+    "instrument": "guitar",
+    "seeds": [
+      0
+    ],
+    "guidance_scale": 7.0,
+    "inference_steps": 50,
+    "offload_to_cpu": true,
+    "caption": "Isolated clean electric guitar accompaniment. A warm, clear, undistorted electric guitar played naturally with gentle picked chord voicings and sparse rhythmic strums. Follow the piano performance chords, timing, phrasing and dynamics, leaving space for the piano melody. Subtle pick attack, natural note decay and expressive articulation. Electric guitar only, no bass guitar, drums, piano or vocals."
+  },
+  "chunks": [
+    {
+      "index": 0,
+      "model_seconds": 90,
+      "input_start_seconds": 0.0,
+      "model_input_sha256": "79adb023a22dec7a20579c5815e9418324def4cba63ccca9b368d340da5e726f",
+      "reported_stem_sha256": "05d67fea0a7afe673f7c5c1f24824bfa1e89d72c2a5279a2c4702dd241e8b2fd"
+    },
+    {
+      "index": 1,
+      "model_seconds": 89,
+      "input_start_seconds": 77.130625,
+      "model_input_sha256": "5a4b37f8186bdb9e9d1ac19bd59d1c12c215158bba8d290c740fcbe6a1511442",
+      "reported_stem_sha256": "fc97a5b2588f6f8c167d4ac06d6c39c2d6d8de5b62266915226a5e69c47d2b7b"
+    },
+    {
+      "index": 2,
+      "model_seconds": 90,
+      "input_start_seconds": 154.030625,
+      "model_input_sha256": "af89fe1ca2a5ad14ddb04755369fdc2662f6db5d9f71de98d99877c0fffdc82e",
+      "reported_stem_sha256": "3bcdf343e9dc64ef27ea31a12cc05e83c52c284447b41c8b5c6ae25278aa803a"
+    }
+  ],
+  "checks": {
+    "all_model_input_hashes_reproduced": true,
+    "reported_cuda_fp32": true,
+    "actual_guitar_settings_match": true,
+    "decoded_mp3_frames": 7786580,
+    "decoded_mp3_finite": true,
+    "decoded_mp3_peak": 0.7470695972442627,
+    "decoded_mp3_samples_abs_ge_one": 0
+  },
+  "seams": [
+    {
+      "center_seconds": 82.430625,
+      "left_rms_dbfs": -29.08595830294777,
+      "right_rms_dbfs": -27.86436996865865,
+      "correlation": -0.002822339122451131,
+      "blend_relative_rms_db": -0.031837478925906076,
+      "predicted_level_change_db": 1.2215883342891205,
+      "cost": 0.0962623721385104,
+      "index": 1,
+      "nominal_seconds": 83.130625,
+      "fade_start_frame": 2628500,
+      "fade_end_frame": 2647060,
+      "left_pitch": {
+        "hz": null,
+        "periodicity": null,
+        "note": "Monophonic bass pitch continuity is invalid for polyphonic guitar; review chords by listening"
+      },
+      "right_pitch": {
+        "hz": null,
+        "periodicity": null,
+        "note": "Monophonic bass pitch continuity is invalid for polyphonic guitar; review chords by listening"
+      },
+      "pitch_change_cents": null,
+      "manual_review": false,
+      "musical_review_required": true,
+      "note": "Signal flags do not evaluate groove/timbre. Equal-power does not guarantee phase continuity."
+    },
+    {
+      "center_seconds": 161.080625,
+      "left_rms_dbfs": -22.101233544682604,
+      "right_rms_dbfs": -31.6678599635718,
+      "correlation": 0.01362351447687849,
+      "blend_relative_rms_db": -0.03346918917006374,
+      "predicted_level_change_db": -9.566626418889193,
+      "cost": 0.12500731254035924,
+      "index": 2,
+      "nominal_seconds": 160.030625,
+      "fade_start_frame": 5145300,
+      "fade_end_frame": 5163860,
+      "left_pitch": {
+        "hz": null,
+        "periodicity": null,
+        "note": "Monophonic bass pitch continuity is invalid for polyphonic guitar; review chords by listening"
+      },
+      "right_pitch": {
+        "hz": null,
+        "periodicity": null,
+        "note": "Monophonic bass pitch continuity is invalid for polyphonic guitar; review chords by listening"
+      },
+      "pitch_change_cents": null,
+      "manual_review": true,
+      "musical_review_required": true,
+      "note": "Signal flags do not evaluate groove/timbre. Equal-power does not guarantee phase continuity."
+    }
+  ],
+  "interpretation": [
+    "The listener rejects this full-song result; successful execution is not musical approval.",
+    "The 90-second setting inherited from bass/drums has not retained the accepted guitar result. Duration, musical position and independent conditioning remain possible factors, not an isolated cause.",
+    "The original caption explicitly requests sparse rhythmic strums; a matched caption trial can test a picked-only alternative.",
+    "The second seam has a reported level difference of about 9.57 dB. This numerical flag does not establish the cause of noise or unusual strumming.",
+    "MP3 waveform checks cannot determine musical quality or prove that raw generation was free of clipping."
+  ],
+  "decision": "Keep the accepted opening-30s candidate. Notebook 19 defaults to plan-only reproduction. Next: two matched 30s trials at the beginning of input context 1 (77.130625s), same piano input and model settings, original versus picked-only caption. Do not render the full song again before listening.",
+  "preservation_scope": "Uploaded MP3s, seam WAV excerpts and reports only; raw full/chunk WAVs were not uploaded.",
+  "member_sha256": {
+    "plan.json": "b096881c6066f170452c07c706bf50eb58682301b298549da812518cf7037add",
+    "progress.json": "09e13b4fa78fb4d5457e44601e712aaf1c0b0cd22c51a20414e1a60dd9c2af35",
+    "stitched/chunk_000_before_stitch.mp3": "2a4fdfb534a73873f61343a339ac69d2708c57a2a5add5ee3f9f5a5e41d83ecd",
+    "stitched/chunk_001_before_stitch.mp3": "68974c79f7d24c5144acdccf5d31afcdbebb1f3bbdf4d6aa8a5a744dd550d954",
+    "stitched/chunk_002_before_stitch.mp3": "af10c01b890234b736ce64ec64551b48d6cc7453ee70eaa4c906f8c9cd304170",
+    "stitched/chunk_reports/000.json": "43f7a59db361b771c329f22ab9545099edfd8ab845e9ff3d0357dff433a6f8de",
+    "stitched/chunk_reports/001.json": "58ff27f584f3aa45206479c7c67e3ae6b1abbe64cf75b2dc4561fbc815d564cc",
+    "stitched/chunk_reports/002.json": "14376394298c260eab4e04a84d5a0c1d608187ea1eb7e5d7e683dbda2fa5bd52",
+    "stitched/guitar_full.mp3": "5235d61827d7bd386801be1b25c86fa7c2d947984bd92336137db2b0a9ab78c6",
+    "stitched/mix_full.mp3": "29c5ce17620daf9fbd692ae848b8bc171c01d3945a7ca8abd35e2fa3cd9ddf9b",
+    "stitched/seam_001.wav": "b9d70ee984d8f9d5c94b170894ac49b3f07216de36da8874168cde92f89fe8a3",
+    "stitched/seam_002.wav": "b09b80718217d3b18f60246e6f687e5566fa0fe5f6b340fdf3a3be68eb100c9d",
+    "stitched/seams.json": "7a9538ad8b96aa69fbfa16189624e5dd31612e6858fb9c66163d25b90fb7d475"
+  },
+  "next_trial_preflight": {
+    "start_seconds": 77.130625,
+    "duration_seconds": 30,
+    "input_sha256": "a69c75fa0bc4bfbeb5293f84af6170b2cc93f4c311a973bb0cc7978dce7401fa",
+    "both_variants_identical_input": true,
+    "pcm_matches_first_30_seconds_of_rejected_context_1": true,
+    "status": "planned_without_model_inference"
+  }
+}

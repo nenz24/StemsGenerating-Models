@@ -1,5 +1,42 @@
 # Clean electric guitar: accepted probe and 90-second contexts
 
+## Current result: 90-second guitar rejected
+
+The listener reports noise and unnatural strumming in
+`guitar_chunked_feedback.zip`. The full-song result is rejected and preserved in
+[`reviews/clean-electric-guitar-context90-rejected`](../reviews/clean-electric-guitar-context90-rejected/).
+All three model-input hashes were reproduced from the original piano; actual
+settings match v1 and CUDA FP32. The full MP3 decodes to the exact source length
+with finite samples and no samples reaching absolute amplitude 1. These checks
+do not explain or disprove the audible defects.
+
+The second seam has a reported level difference of about 9.57 dB, but seam
+statistics do not identify the cause of noise or unnatural playing. The
+90-second choice inherited from bass/drums has not retained the accepted guitar
+result. Context length, musical position and independent generation may matter.
+The original caption explicitly requests sparse rhythmic strums.
+
+Use [`20_colab_guitar_articulation.ipynb`](../notebooks/20_colab_guitar_articulation.ipynb)
+next, with the existing runtime/weights. It runs **two 30-second clips**, both
+using piano from 77.130625s (the start of input context 1 in the rejected run):
+
+- `original`: the unchanged v1 caption requesting picking and sparse strums.
+- `picked`: a separate v2 candidate requesting individually plucked chord tones,
+  space between phrases and gentle arpeggios.
+
+Input bytes, duration, seed, CFG, steps, model and precision match. Only the
+caption/preset id and file paths may differ; the comparison checks actual
+settings. This tests shorter context outside the accepted intro, then compares
+articulation at the same duration. It does not uniquely attribute a difference
+from the long run to the model's context length. Neither v2 nor a full-song
+30-second chunk arrangement is approved yet.
+
+Save `guitar_articulation_result.zip`; send `guitar_articulation_feedback.zip`
+and assess noise, articulation, chord following and timing for each variant.
+No full-song, bass or drum regeneration is part of this test. The accepted
+opening-30s guitar remains the local reference. Notebook 19 is now plan-only by
+default, retained for explicit reproduction of the rejected experiment.
+
 ## Accepted short probe and full-song continuation
 
 The listener found the uploaded 30-second result reasonably good and requested
@@ -8,8 +45,8 @@ frozen in [`clean-electric-guitar-30-v1`](../baselines/clean-electric-guitar-30-
 Its actual guitar settings match the preset, and the piano model-input hash was
 reproduced exactly. This acceptance covers the excerpt only.
 
-Use [`19_colab_guitar_context_90.ipynb`](../notebooks/19_colab_guitar_context_90.ipynb)
-on the active CUDA VM. Run all: it makes guitar contexts capped at 90 seconds
+The rejected [`19_colab_guitar_context_90.ipynb`](../notebooks/19_colab_guitar_context_90.ipynb)
+experiment made guitar contexts capped at 90 seconds
 **including** 6-second margins and integer padding, then stitches with a
 0.58-second float equal-power fade. The 243.330625-second piano produces three
 model contexts (90/89/90 seconds), keeps the exact source length, and exports
@@ -29,7 +66,7 @@ reuse the existing bass lossless export and approved shared-kit drum export;
 keep those result ZIPs. The bass baseline retains its known noise caveat.
 
 Guitar timbre, voicings and phrasing can change between contexts. The 90-second
-choice is inherited from bass/drum experiments, not validated for guitar yet.
+choice inherited from bass/drum experiments was rejected in this guitar trial.
 Monophonic bass pitch continuity is skipped for polyphonic guitar; numerical
 seam diagnostics cannot establish chord agreement or musical quality.
 

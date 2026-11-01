@@ -17,6 +17,12 @@ PRESET = {
     'caption': 'Isolated clean electric guitar accompaniment. A warm, clear, undistorted electric guitar played naturally with gentle picked chord voicings and sparse rhythmic strums. Follow the piano performance chords, timing, phrasing and dynamics, leaving space for the piano melody. Subtle pick attack, natural note decay and expressive articulation. Electric guitar only, no bass guitar, drums, piano or vocals.',
 }
 
+PICKED_PRESET = {
+    **PRESET, 'id': 'clean-electric-guitar-picked-v2',
+    'caption': 'Isolated clean electric guitar accompaniment. Warm, dry, undistorted electric guitar with sparse individually plucked chord tones and gentle arpeggios, one string at a time. Natural attacks and note releases, expressive pauses, and space for the piano melody. Follow the piano chords, timing, phrasing and dynamics. Picked notes only, no rhythmic strumming, tremolo, distortion, drums, bass guitar, piano or vocals.',
+}
+PRESETS = {'original': PRESET, 'picked': PICKED_PRESET}
+
 
 def load_engine(root):
     single.attach(root)
@@ -45,20 +51,23 @@ def package(output, success):
                     archive.write(output / relative, relative)
 
 
-def generate(root, source, output, *, start=0, duration=30, execute=False):
+def generate(root, source, output, *, start=0, duration=30, execute=False, variant='original'):
     if not math.isfinite(duration) or not 10 <= duration <= 90:
         raise ValueError('Guitar contexts must be 10–90 seconds; default probe is 30')
+    if variant not in PRESETS:
+        raise ValueError('Use guitar variant original or picked')
+    preset = PRESETS[variant]
     root, source, output = [Path(p).resolve() for p in (root, source, output)]
     engine = load_engine(root)
     from provenance import sha256, write_json
     from runtime_environment import runtime_environment
     from stream_process import run_logged
     from compare_bass_tone import require_fp32
-    config = root / 'configs/clean-electric-guitar.json'
-    if config.is_file() and json.loads(config.read_text()) != PRESET:
+    config = root / ('configs/clean-electric-guitar.json' if variant == 'original' else 'configs/clean-electric-guitar-picked.json')
+    if config.is_file() and json.loads(config.read_text()) != preset:
         raise ValueError('Guitar preset differs; use a new preset/version')
     output.mkdir(parents=True, exist_ok=False)
-    report = {'status': 'preparing', 'instrument': 'guitar', 'preset': PRESET,
+    report = {'status': 'preparing', 'instrument': 'guitar', 'preset': preset,
               'mode': 'single_pass_probe', 'model_calls_requested': 1,
               'engine_sha256': sha256(Path(engine.__file__)),
               'note': 'Original piano conditioning only. No bass/drum regeneration. Guitar sound, chord following and timing need listener review; no iPhone/CoreAI claim.'}
@@ -71,12 +80,12 @@ def generate(root, source, output, *, start=0, duration=30, execute=False):
             (output / 'generation').mkdir()
             experiment = engine.plan(output / 'prepared', 'ace', 'guitar', [0])
             experiment.update(max_job_seconds=90, device_requested='cuda',
-                              ace_model=PRESET['model'], offload_to_cpu=True,
+                              ace_model=preset['model'], offload_to_cpu=True,
                               guidance_scale=7, mode='single_pass_probe')
             write_json(output / 'generation/experiment.json', experiment)
             return report
         command = [str(single.model_python(root)), str(Path(__file__).resolve()), '--worker',
-                   '--root', str(root), '--out', str(output)]
+                   '--root', str(root), '--out', str(output), '--variant', variant]
         run_logged(command, env=runtime_environment(root), check=True)
         experiment = json.loads((output / 'generation/experiment.json').read_text())
         if experiment.get('status') != 'generated' or len(experiment['jobs']) != 1:
@@ -87,7 +96,7 @@ def generate(root, source, output, *, start=0, duration=30, execute=False):
         if result is None or result.get('device') != 'cuda' or job.get('instrument') != 'guitar' or job['source_sha256'] != metadata['source_sha256']:
             raise ValueError('Guitar device/input/result verification failed')
         params, config = result['settings']['params'], result['settings']['config']
-        expected = {'caption': PRESET['caption'], 'seed': 0, 'guidance_scale': 7,
+        expected = {'caption': preset['caption'], 'seed': 0, 'guidance_scale': 7,
                     'inference_steps': 50, 'duration': metadata['model_duration'],
                     'task_type': 'lego', 'instrumental': True,
                     'instruction': 'Generate the guitar track based on the audio context:',
@@ -134,13 +143,14 @@ if __name__ == '__main__':
     parser.add_argument('--start', type=float, default=0)
     parser.add_argument('--duration', type=float, default=30)
     parser.add_argument('--execute', action='store_true')
+    parser.add_argument('--variant', choices=tuple(PRESETS), default='original')
     parser.add_argument('--worker', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.worker:
-        single.execute_worker(args.root.resolve(), args.out.resolve(), preset=PRESET,
+        single.execute_worker(args.root.resolve(), args.out.resolve(), preset=PRESETS[args.variant],
                               instrument='guitar', engine=load_engine(args.root.resolve()))
     else:
         if args.source is None:
             parser.error('--source is required')
         print(json.dumps(generate(args.root, args.source, args.out, start=args.start,
-                                  duration=args.duration, execute=args.execute), indent=2))
+                                  duration=args.duration, execute=args.execute, variant=args.variant), indent=2))
