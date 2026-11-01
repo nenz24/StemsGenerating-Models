@@ -1,0 +1,4 @@
+// Shared defaults. Keep the account-specific Team in the ignored local include.
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM =
+#include? "Signing.local.xcconfig"

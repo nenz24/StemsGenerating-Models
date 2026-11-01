@@ -19,6 +19,7 @@
 		A20000000000000000000004 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		A20000000000000000000005 /* CoreAI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAI.framework; path = System/Library/Frameworks/CoreAI.framework; sourceTree = SDKROOT; };
 		A20000000000000000000006 /* ModelCandidates */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ModelCandidates; sourceTree = "<group>"; };
+		A20000000000000000000007 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -38,6 +39,7 @@
 				A20000000000000000000002 /* CoreAIModelProbe.swift */,
 				A20000000000000000000004 /* README.md */,
 				A20000000000000000000006 /* ModelCandidates */,
+				A20000000000000000000007 /* Signing.xcconfig */,
 				A30000000000000000000003 /* Frameworks */,
 				A30000000000000000000002 /* Products */,
 			);
@@ -155,10 +157,10 @@
 		};
 		A70000000000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A20000000000000000000007 /* Signing.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "CoreAI Probe";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -181,10 +183,10 @@
 		};
 		A70000000000000000000004 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A20000000000000000000007 /* Signing.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "CoreAI Probe";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

@@ -26,3 +26,4 @@ xcuserdata/
 *.xcuserstate
 DerivedData/
 /prototypes/ios27-coreai/build/
+/prototypes/ios27-coreai/Signing.local.xcconfig

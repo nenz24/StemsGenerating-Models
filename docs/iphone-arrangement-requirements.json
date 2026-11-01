@@ -87,7 +87,7 @@
     "local_model_caller_prepared": true,
     "xcode_project": "prototypes/ios27-coreai/CoreAIProbe.xcodeproj",
     "shared_scheme": "CoreAIProbe",
-    "signing_team_selection": "user selects the Apple signing Team in Xcode",
+    "signing_team_selection": "Apple Team stored in ignored Signing.local.xcconfig; shared Debug/Release configurations include it",
     "apple_compilation_verified": true,
     "apple_compilation_evidence": "User reported successful execution of the device probe app; not independently compiled in this Linux workspace",
     "physical_device_execution_verified": true,

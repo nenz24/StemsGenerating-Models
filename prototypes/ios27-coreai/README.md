@@ -19,10 +19,17 @@ git pull --ff-only
 open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
 ```
 
-1. Di Xcode pilih project **CoreAIProbe**, lalu target **CoreAIProbe**.
-   Buka **Signing & Capabilities**, biarkan **Automatically manage signing**
-   aktif, lalu pilih **Team** akun Apple Anda. Team ID sengaja tidak disimpan
-   karena harus sesuai dengan akun signing di Mac Anda.
+1. Simpan Apple Team ID dalam konfigurasi lokal, satu kali:
+
+   ```bash
+   python3 scripts/configure_coreai_signing.py --team TEAMIDANDA
+   ```
+
+   Ganti `TEAMIDANDA` dengan Team ID Apple berisi 10 huruf kapital/angka.
+   Debug dan Release membaca `Signing.xcconfig`, yang menyertakan file lokal
+   `Signing.local.xcconfig` bila tersedia. File lokal ini diabaikan Git, sehingga
+   pengaturan akun tidak perlu mengubah `project.pbxproj` setiap update.
+   Jika sudah memilih Team melalui UI Xcode, lihat pemindahan/pemulihan di bawah.
 2. Sambungkan iPhone 17 Pro, buka kunci, dan pilih **Trust/Percayai** jika diminta.
    Pilih scheme **CoreAIProbe** dan iPhone tersebut di toolbar Xcode, lalu tekan
    **Run** atau **Cmd+R**. Deployment target sudah disetel ke iOS 27.0.
@@ -37,6 +44,41 @@ architecture string. It needs no microphone permission, model, network or GPU
 download. A Simulator result is labelled and is not an iPhone measurement.
 Reported compute availability does not prove a model ran on that accelerator.
 The device probe does not call model inference or measure audio generation.
+
+## Konflik setelah Applying autostash
+
+Jika log sudah menyatakan fast-forward, versi repository sebenarnya sudah masuk;
+konflik dapat muncul sesudahnya ketika Git mengembalikan pengaturan Xcode lokal.
+Tutup Xcode agar file proyek tidak ditulis ulang saat pemulihan. Dari repository:
+
+```bash
+git fetch origin main &&
+recovery_script="$(mktemp /tmp/stems-coreai-recover.XXXXXX)" &&
+git show origin/main:scripts/recover_coreai_autostash.sh > "$recovery_script" &&
+bash "$recovery_script" &&
+open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
+```
+
+`fetch` dan `git show` dapat dijalankan meskipun working tree berkonflik. Skrip
+mengharuskan satu-satunya file konflik adalah proyek CoreAI dan branch dapat
+fast-forward ke `origin/main`. Jika file lain berkonflik, skrip berhenti dan
+menampilkan status untuk diperiksa.
+
+Sebelum memulihkan proyek, skrip membuat backup di folder sejajar repository:
+arsip seluruh folder prototype, versi lokal/upstream proyek dari index konflik,
+patch working/staged dan daftar stash. Team ID diambil dari versi lokal yang
+tersimpan dan divalidasi sebelum working tree diubah. Jika Team tidak ditemukan
+atau ambigu, skrip berhenti setelah backup dan mempertahankan konflik.
+
+Skrip kemudian memulihkan **hanya** file proyek dari HEAD, menyimpan Team dalam
+konfigurasi lokal, dan melakukan pull fast-forward dengan autostash dimatikan.
+Stash asli tetap ada. Pengaturan proyek lokal lainnya tetap tersedia dalam
+backup/stash untuk ditinjau, bukan otomatis dicampurkan lagi. File lain di
+working tree tidak dipulihkan oleh skrip.
+
+Setelah Team berpindah ke konfigurasi lokal, update normal memakai
+`git pull --ff-only`. Jika menahan pull karena perubahan tracked lain, periksa
+perubahan tersebut; jangan mengaplikasikan ulang seluruh autostash lama.
 
 ## Compile the model caller
 
