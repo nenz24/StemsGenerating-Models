@@ -1,5 +1,11 @@
 # ACE-Step context bridge
 
+[Notebook 17](../notebooks/17_colab_drum_shared_kit_song.ipynb) extends the approved
+kit-reference comparison across the song. It reuses approved chunk 0, generates
+only chunks 1/2 with the exact same reference WAV, and stitches the result. Cached
+notebook-16 WAVs or `drum_kit_result.zip` plus original piano are required. It
+reuses model/runtime cache and preserves earlier outputs.
+
 [Notebook 16](../notebooks/16_colab_drum_kit_reference.ipynb) runs one controlled
 reference-conditioned comparison: kit reference from chunk 1, target chunk 0.
 It reuses the active model runtime and verifies the reviewed control/reference

@@ -107,8 +107,9 @@ def files_for(plan):
     return ('drum_probe.json','drums.wav','drums_full') if instrument_of(plan)=='drums' else ('single_pass.json','electric_bass.wav','electric_bass')
 
 
-def prepare(source, output, context=90, margin=6, fade=.58, cues_file=None, *, instrument='bass'):
+def prepare(source, output, context=90, margin=6, fade=.58, cues_file=None, *, instrument='bass', reference_audio=None):
     worker=worker_for(instrument)
+    if reference_audio is not None and instrument!='drums':raise ValueError('Shared reference is supported for drums only')
     source,output=Path(source).resolve(),Path(output).resolve()
     output.mkdir(parents=True,exist_ok=False)
     original_hash=sha256(source)
@@ -137,6 +138,12 @@ def prepare(source, output, context=90, margin=6, fade=.58, cues_file=None, *, i
                 source_sha256=sha256(clean),preset=worker.PRESET,instrument=instrument,
                 generation_source_file=generation_input.name,generation_source_sha256=original_hash,
                 note='No inferred meter/downbeats. Context cap includes margins and integer end padding. Independent chunks; continuity and musical quality unverified.')
+    if reference_audio is not None:
+        reference_audio=Path(reference_audio).resolve()
+        frozen=output/('shared_reference'+reference_audio.suffix.lower())
+        digest=sha256(reference_audio);shutil.copyfile(reference_audio,frozen)
+        if sha256(frozen)!=digest:raise ValueError('Shared reference changed during copy')
+        plan['shared_reference']={'file':frozen.name,'sha256':digest}
     write_json(output/'plan.json',plan)
     return plan
 
@@ -149,14 +156,26 @@ def generation_source(folder,plan):
     return path
 
 
+def shared_reference(folder,plan):
+    item=plan.get('shared_reference')
+    if item is None:return None
+    if instrument_of(plan)!='drums':raise ValueError('Shared reference requires drums')
+    path=(folder/item['file']).resolve()
+    if not path.is_relative_to(folder.resolve()) or sha256(path)!=item['sha256']:
+        raise ValueError('Shared reference path/hash changed')
+    return path
+
+
 def load_plan(path):
     path=Path(path).resolve();plan=json.loads(path.read_text())
+    if plan.get('status')!='planned':raise ValueError('Plan preparation is incomplete')
     source=path.parent/plan['source_file']
     if not source.resolve().is_relative_to(path.parent) or sha256(source)!=plan['source_sha256']:
         raise ValueError('Canonical source changed or escapes the run')
     if plan['preset']!=worker_for(instrument_of(plan)).PRESET or single.frames(source)!=plan['total_frames']:
         raise ValueError('Preset or source duration differs from plan')
     generation_source(path.parent,plan)
+    shared_reference(path.parent,plan)
     return path.parent,plan,source
 
 
@@ -164,6 +183,12 @@ def verify_chunk(folder,plan,chunk):
     report_file,stem_file,_=files_for(plan)
     report=json.loads((folder/report_file).read_text())
     stem=folder/stem_file;metadata=report.get('input',{})
+    expected_ref=plan.get('shared_reference');actual_ref=report.get('reference_audio')
+    if expected_ref:
+        if not actual_ref or actual_ref.get('sha256')!=expected_ref['sha256'] or report.get('settings',{}).get('params',{}).get('reference_audio')!=actual_ref.get('path'):
+            raise ValueError('Chunk shared reference mismatch')
+    elif actual_ref is not None:
+        raise ValueError('Referenced chunk cannot be reused in an unreferenced plan')
     if (report.get('status')!='generated' or report.get('preset')!=plan['preset']
         or metadata.get('original_sha256')!=plan.get('generation_source_sha256',plan['source_sha256'])
         or metadata.get('start')!=chunk['input_start']/RATE
@@ -179,6 +204,7 @@ def run_chunks(root,plan_path):
     folder,plan,source=load_plan(plan_path)
     worker=worker_for(instrument_of(plan));report_file,_,_=files_for(plan)
     source=generation_source(folder,plan)
+    reference=shared_reference(folder,plan)
     import fcntl
     with (folder/'.generation.lock').open('a+') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -204,7 +230,8 @@ def run_chunks(root,plan_path):
                 while (parent/f'attempt_{number:03d}').exists():number+=1
                 completed=parent/f'attempt_{number:03d}'
                 worker.generate(root,source,completed,start=chunk['input_start']/RATE,
-                    duration=(chunk['input_end']-chunk['input_start'])/RATE,execute=True)
+                    duration=(chunk['input_end']-chunk['input_start'])/RATE,execute=True,
+                    **({'reference_audio':reference} if reference is not None else {}))
                 verify_chunk(completed,plan,chunk)
             progress[key]=str(completed.relative_to(folder));write_json(progress_file,progress)
     return progress
@@ -341,19 +368,22 @@ def main():
     plan.add_argument('--context-seconds',type=float,default=90);plan.add_argument('--margin-seconds',type=float,default=6)
     plan.add_argument('--fade-seconds',type=float,default=.58);plan.add_argument('--cues',type=Path)
     plan.add_argument('--instrument',choices=['bass','drums'],default='bass')
+    plan.add_argument('--reference-audio',type=Path)
     for name in ['probe','run','stitch']:
         s=sub.add_parser(name);s.add_argument('--plan',type=Path,required=True)
         if name!='stitch':s.add_argument('--root',type=Path,default=ROOT);s.add_argument('--execute',action='store_true')
         if name=='probe':s.add_argument('--duration',type=int,choices=[60,90,120],required=True);s.add_argument('--start',type=float,default=0)
     args=p.parse_args()
     if args.command=='plan':
-        result=prepare(args.source,args.out,args.context_seconds,args.margin_seconds,args.fade_seconds,args.cues,instrument=args.instrument)
+        result=prepare(args.source,args.out,args.context_seconds,args.margin_seconds,args.fade_seconds,args.cues,instrument=args.instrument,reference_audio=args.reference_audio)
     elif args.command=='probe':
         folder,plan,source=load_plan(args.plan)
         parent=folder/f'probe_{args.duration:03d}';parent.mkdir(exist_ok=True)
         index=0
         while (parent/f'attempt_{index:03d}').exists():index+=1
-        result=worker_for(instrument_of(plan)).generate(args.root,generation_source(folder,plan),parent/f'attempt_{index:03d}',start=args.start,duration=args.duration,execute=args.execute)
+        reference=shared_reference(folder,plan)
+        result=worker_for(instrument_of(plan)).generate(args.root,generation_source(folder,plan),parent/f'attempt_{index:03d}',start=args.start,duration=args.duration,execute=args.execute,
+            **({'reference_audio':reference} if reference is not None else {}))
     elif args.command=='run':
         if args.execute:result=run_chunks(args.root,args.plan)
         else:_,result,_=load_plan(args.plan)

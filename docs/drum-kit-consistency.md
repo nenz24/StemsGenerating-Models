@@ -1,5 +1,36 @@
 # Drum-kit identity across independently generated contexts
 
+## Approved comparison and full-song continuation
+
+The listener approved the chunk-0 reference-conditioned result as sufficiently
+good and requested the full song in that style. Its uploaded report changes only
+`reference_audio` and the path to byte-identical piano input relative to the
+unreferenced control. Reported candidate WAV SHA-256:
+`a881a18704c322e8325a933345870f08174baa6b55bf4e5d942368fea4d20b8b`.
+Reference WAV SHA-256:
+`275afb8a23a7fbcc1c06a8e72baa47a77149a2d6cb0f3a82214ebfe2e07b9c53`.
+
+Notebook 17 continues from that approved result. It creates a separate 90-second
+context plan, freezes the exact same reference bytes, verifies/reuses approved
+chunk 0 and generates only chunks 1/2 before stitching. Every cached/new chunk
+must carry the same reference hash and actual reference parameter. Old
+unreferenced plans cannot reuse referenced chunks or vice versa. The initial
+piano input is re-created and checked against the approved model-input hash.
+Incomplete approval preparation cannot be run as a completed plan.
+
+Use the active runtime/weights. If the notebook-16 files are gone, upload
+`drum_kit_result.zip` and original piano; the feedback MP3 ZIP is insufficient.
+No old notebook-15 result ZIP is required. Save `drum_shared_kit_result.zip` and
+upload `drum_shared_kit_feedback.zip`. The latter includes actual per-chunk
+reports, before-stitch previews and seam excerpts. Consistent reference bytes
+do not by themselves prove consistent musical results; assess the finished song.
+
+Only the initial comparison has listener approval. Full-song reference-conditioned
+GPU execution and consistency are not yet validated on the chat machine. No
+independent kick replacement or EQ is part of this continuation.
+
+## Original candidate
+
 The uploaded 90-second chunk run is useful to the listener but changes timbre.
 The preferred target is the lighter overall kit of chunk 1, with kick character
 from chunks 0/2. The listener confirmed that "bass" means kick/bass drum.

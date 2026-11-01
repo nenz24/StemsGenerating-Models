@@ -1,0 +1,35 @@
+{
+  "id": "acoustic-drums-kit-reference-v1",
+  "status": "listener_approved_single_chunk_for_full_song_trial",
+  "listener_assessment": "Sufficiently good; requested full song with this drum style.",
+  "archive": {
+    "path": "drum_kit_feedback.zip",
+    "sha256": "7526eb6efe5427ca8973015df801caa250a4ee34ba787d4750c95887a3b8c7b4",
+    "bytes": 9269467
+  },
+  "source_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "preset": {
+    "id": "acoustic-drums-v1",
+    "model": "acestep-v15-base",
+    "device": "cuda",
+    "precision": "float32",
+    "instrument": "drums",
+    "seeds": [
+      0
+    ],
+    "guidance_scale": 7.0,
+    "inference_steps": 50,
+    "offload_to_cpu": true,
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments."
+  },
+  "approved_chunk": 0,
+  "reference_from_chunk": 1,
+  "reported_approved_wav_sha256": "a881a18704c322e8325a933345870f08174baa6b55bf4e5d942368fea4d20b8b",
+  "reported_reference_wav_sha256": "275afb8a23a7fbcc1c06a8e72baa47a77149a2d6cb0f3a82214ebfe2e07b9c53",
+  "source_start_seconds": 0.0,
+  "source_duration_seconds": 89.130625,
+  "model_duration_seconds": 90,
+  "preservation_scope": "Uploaded feedback MP3s and reports only. Raw approved/reference WAVs must come from the existing Colab run or drum_kit_result.zip.",
+  "next_step": "Reuse approved chunk 0; generate only chunks 1 and 2 with identical frozen reference bytes; stitch in a separate output folder.",
+  "scope_limit": "Full-song style consistency has not yet been listener-approved. No separate kick replacement or EQ."
+}
