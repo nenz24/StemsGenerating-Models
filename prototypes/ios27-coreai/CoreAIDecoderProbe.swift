@@ -1,4 +1,4 @@
-// Pretrained decoder parity harness. Apple compilation/device results pending.
+// 0.2 s pretrained parity passed on device; the 1 s profile still needs verification.
 import CoreAI
 import CryptoKit
 import Darwin
@@ -37,7 +37,9 @@ enum CoreAIDecoderProbe {
         case numericalParityFailed
     }
 
-    static func run() async -> String {
+    static func run(oneSecond: Bool = false) async -> String {
+        let folderName = oneSecond ? "decoder-pretrained-1s" : "decoder-pretrained"
+        let expectedFrames = oneSecond ? 25 : 5
         var lines = [
             "Runtime: CoreAI",
             "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
@@ -46,6 +48,7 @@ enum CoreAIDecoderProbe {
             "Requested compute policy: cpuOnly",
             "Accelerator used by a model: NOT MEASURED"
         ]
+        lines.append("Window profile: \(oneSecond ? "1.0 s" : "0.2 s")")
         #if targetEnvironment(simulator)
         lines.append("Target: Simulator; not physical-device evidence")
         #else
@@ -58,9 +61,9 @@ enum CoreAIDecoderProbe {
         var executed = false
         do {
             guard let folder = Bundle.main.resourceURL?
-                .appendingPathComponent("ModelCandidates/decoder-pretrained"),
+                .appendingPathComponent("ModelCandidates/\(folderName)"),
                 FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
-                lines.append("Prepare on Mac: bash scripts/prepare_coreai_decoder.sh; then rebuild the app.")
+                lines.append("Prepare on Mac: bash scripts/prepare_coreai_decoder.sh --frames \(expectedFrames); then rebuild the app.")
                 throw ProbeError.missingPreparedBundle
             }
             let decoder = JSONDecoder()
@@ -70,7 +73,7 @@ enum CoreAIDecoderProbe {
             guard contract.schemaVersion == 1, contract.assetFile == "decoder.aimodel",
                   contract.functionName == "main", contract.inputName == "latent", contract.outputName == "audio",
                   contract.inputShape.count == 3, contract.inputShape[0] == 1, contract.inputShape[1] == 64,
-                  (1...25).contains(contract.inputShape[2]),
+                  contract.inputShape[2] == expectedFrames,
                   contract.outputShape == [1, 2, contract.inputShape[2] * 1920],
                   contract.sampleRate == 48000, contract.scalarType == "float32", contract.byteOrder == "little",
                   contract.inputFile == "latent.f32le", contract.expectedFile == "audio-reference.f32le",

@@ -153,9 +153,15 @@ checkpoint asli diverifikasi seluruh SHA-256, reference PyTorch FP32 dibuat,
 dan ekspor native penuh berhasil diuji di Linux. Native decoder sekitar 338 MB
 bersifat lokal dan diabaikan Git.
 
-Dari Mac, jalankan `bash scripts/prepare_coreai_decoder.sh`, lalu build ulang
-aplikasi dan tekan **Uji decoder pretrained**. Skrip memakai cache bila tersedia.
+[Profil 0,2 detik sudah PASS di iPhone](../../reviews/coreai-iphone17pro-pretrained-decoder-02s/README.md):
+tiga run cocok, rata-rata dua run hangat 33,88 ms, footprint proses maksimum
+tersampel 792,3 MiB (bukan peak persis atau alokasi model saja).
+
+Berikutnya di Mac, jalankan `bash scripts/prepare_coreai_decoder.sh --frames 25`,
+lalu build ulang aplikasi dan tekan **Uji decoder 1 detik**. Skrip memakai cache bila tersedia.
 Paket akhir yang sudah ada diverifikasi dan dipakai ulang; versi rusak tidak
-ditimpa otomatis. Pengujian memakai latent seed tetap 0,2 detik, bukan rekaman
-piano atau generasi pengiring. Swift baru, parity decoder iPhone, latensi dan
-memori belum diverifikasi.
+ditimpa otomatis. Paket 1 detik dibuat terpisah; tombol **Uji decoder pretrained**
+tetap memakai baseline 0,2 detik. Kedua paket memakai latent seed tetap, bukan
+rekaman piano atau generasi pengiring. Ekspor 1 detik berhasil di Linux;
+kompilasi Swift yang diperbarui, parity dan pengukuran profil 1 detik di iPhone
+belum diverifikasi. Pengujian ini belum menjalankan encoder atau generator.

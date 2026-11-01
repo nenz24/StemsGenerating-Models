@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "source": "User-pasted device report",
+    "independently_reproduced": false,
+    "device_model": "iPhone 17 Pro",
+    "device_model_evidence": "Previously identified by user; model identifier not emitted in report",
+    "source_commit": null,
+    "local_asset_hashes_in_report": false,
+    "cache_state": "unmeasured"
+  },
+  "runtime": "CoreAI",
+  "os": "Version 27.0.1 (Build 24A446)",
+  "architecture": "h18p",
+  "target": "iOS device build",
+  "test": "pretrained ACE VAE decoder / seeded latent / NOT instrument generation",
+  "requested_compute_policy": "cpuOnly",
+  "actual_accelerator": "not measured",
+  "input_shape": [
+    1,
+    64,
+    5
+  ],
+  "output_shape": [
+    1,
+    2,
+    9600
+  ],
+  "scalar_type": "float32",
+  "sample_rate": 48000,
+  "duration_seconds": 0.2,
+  "reference_binary_sha256_verified": true,
+  "publisher_checkpoint_verified_by_mac_preparation": true,
+  "tolerances": {
+    "absolute": 0.0001,
+    "relative": 0.001,
+    "normalized_rmse": 0.001
+  },
+  "source_asset_validation": true,
+  "source_asset_validation_ms": 0.371291,
+  "validated_load_specialization_ms": 859.562375,
+  "function_names": [
+    "main"
+  ],
+  "runs": [
+    {
+      "kind": "first",
+      "run_and_read_back_ms": 51.658833,
+      "max_absolute_error": 4.902482032775879e-06,
+      "rmse": 7.510023000184054e-07,
+      "normalized_rmse": 4.677160889274361e-06
+    },
+    {
+      "kind": "warm_1",
+      "run_and_read_back_ms": 33.858416,
+      "max_absolute_error": 4.902482032775879e-06,
+      "rmse": 7.510023000184054e-07,
+      "normalized_rmse": 4.677160889274361e-06
+    },
+    {
+      "kind": "warm_2",
+      "run_and_read_back_ms": 33.897625,
+      "max_absolute_error": 4.902482032775879e-06,
+      "rmse": 7.510023000184054e-07,
+      "normalized_rmse": 4.677160889274361e-06
+    }
+  ],
+  "derived_warm_mean_ms": 33.8780205,
+  "parity": "PASS (three runs)",
+  "memory": {
+    "baseline_mib": 17.751754760742188,
+    "sampled_maximum_mib": 792.3152618408203,
+    "sampling_interval_ms": 10,
+    "scope": "Whole process; not exact peak or isolated model allocation"
+  },
+  "total_probe_ms": 1003.710333,
+  "model_loaded": true,
+  "model_inference_executed": true,
+  "scope": "One repeated seeded latent; no full generator, musical quality, hardware placement, thermal budget or end-to-end timing validation"
+}

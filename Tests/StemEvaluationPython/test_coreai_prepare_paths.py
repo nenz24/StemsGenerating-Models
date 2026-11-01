@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class DecoderPreparePathTests(unittest.TestCase):
-    def run_fixture(self, reuse):
+    def run_fixture(self, reuse, frames=5):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp);repo = base / 'repo with spaces';(repo / 'scripts').mkdir(parents=True)
             shutil.copyfile(ROOT / 'scripts/prepare_coreai_decoder.sh', repo / 'scripts/prepare_coreai_decoder.sh')
@@ -42,16 +42,23 @@ if sys.argv[1]=='venv':
 '''
             prefix = '#!' + sys.executable + '\n'
             (tools / 'uv').write_text(prefix + uv_fixture);(tools / 'uv').chmod(0o755)
+            candidates = repo / 'prototypes/ios27-coreai/ModelCandidates'
+            baseline = candidates / 'decoder-pretrained/baseline-marker'
+            if frames == 25:
+                baseline.parent.mkdir(parents=True)
+                baseline.write_text('preserve 0.2 s baseline')
             if reuse:
                 target = repo / '.runtime-cache/coreai-decoder-venv/bin/python';target.parent.mkdir(parents=True)
                 target.write_text(prefix + python_fixture);target.chmod(0o755)
-                (repo / 'prototypes/ios27-coreai/ModelCandidates/decoder-pretrained').mkdir(parents=True)
+                (candidates / ('decoder-pretrained-1s' if frames == 25 else 'decoder-pretrained')).mkdir(parents=True, exist_ok=True)
             env = dict(os.environ, PATH=str(tools) + os.pathsep + os.environ['PATH'],
                        UV_PYTHON_INSTALL_DIR='/unwritable/managed-python', UV_CACHE_DIR='/unwritable/cache',
                        UV_PYTHON_BIN_DIR='/unwritable/bin', PREP_FIXTURE_ROOT=str(repo),
                        PREP_ORIGINAL_HOME=os.environ['HOME'], PREP_FIXTURE_LOG=str(log),
                        PREP_PYTHON_FIXTURE=prefix + python_fixture)
-            result = subprocess.run(['bash', str(repo / 'scripts/prepare_coreai_decoder.sh')],
+            command = ['bash', str(repo / 'scripts/prepare_coreai_decoder.sh')]
+            if frames == 25:command += ['--frames', '25']
+            result = subprocess.run(command,
                                     cwd=base, env=env, text=True, capture_output=True, timeout=20)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             calls = [json.loads(line) for line in log.read_text().splitlines()]
@@ -59,12 +66,30 @@ if sys.argv[1]=='venv':
             self.assertEqual(sum(a[0]=='uv' and a[1][:2]==['pip','install'] for a in calls), 1)
             python_args = next(a[1] for a in calls if a[0]=='python')
             self.assertEqual('--verify-only' in python_args, reuse)
+            self.assertEqual(python_args[python_args.index('--frames') + 1], str(frames))
+            self.assertEqual(Path(python_args[python_args.index('--out') + 1]),
+                             candidates / ('decoder-pretrained-1s' if frames == 25 else 'decoder-pretrained'))
+            if frames == 25:
+                self.assertEqual(baseline.read_text(), 'preserve 0.2 s baseline')
+                self.assertIn('Uji decoder 1 detik', result.stdout)
 
     def test_fresh_managed_python_and_package_cache_stay_in_checkout(self):
         self.run_fixture(False)
 
     def test_existing_environment_and_bundle_are_reused_with_local_uv_paths(self):
         self.run_fixture(True)
+
+    def test_one_second_export_and_reuse_select_separate_bundle_preserving_baseline(self):
+        for reuse in (False, True):
+            with self.subTest(reuse=reuse):self.run_fixture(reuse, frames=25)
+
+    def test_invalid_profiles_stop_before_setup(self):
+        for args in (['--frames'], ['--frames', '90'], ['--other', '25'], ['--frames', '25', 'extra']):
+            with self.subTest(args=args):
+                result = subprocess.run(['bash', str(ROOT / 'scripts/prepare_coreai_decoder.sh'), *args],
+                                        capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn('Usage:', result.stderr)
 
 
 if __name__ == '__main__':

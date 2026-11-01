@@ -43,6 +43,15 @@ struct CoreAIDeviceProbeApp: App {
                             }
                         }
                         .disabled(runningModel)
+                        Button("Uji decoder 1 detik") {
+                            runningModel = true
+                            report = "Memuat profil decoder pretrained 1 detik…"
+                            Task {
+                                report = await CoreAIDecoderProbe.run(oneSecond: true)
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
                         Text(report)
                             .font(.system(.footnote, design: .monospaced))
                             .textSelection(.enabled)

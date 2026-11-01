@@ -38,15 +38,16 @@ Lihat [jalur native](docs/coreai-native-export.md). Ekspor dan referensi PyTorch
 sudah dibuat dan inference model numerik native pada iPhone sudah dilaporkan lulus.
 
 **Audit komponen audio CoreAI:** [hasil dan rencana decoder VAE](reviews/coreai-ace-component-audit/README.md).
-Empat probe operator sintetis berhasil diekspor native. Decoder pretrained dan
-generasi audio pada iPhone belum diuji; ukuran bobot dan feature map diaudit
+Empat probe operator sintetis berhasil diekspor native. Decoder pretrained 0,2 detik
+sudah lulus parity di iPhone; generasi pengiring lengkap belum diuji. Ukuran bobot dan feature map diaudit
 terpisah dari waktu inference model numerik kecil.
 
-**Uji berikutnya di iPhone:** [decoder VAE pretrained](docs/coreai-pretrained-decoder.md).
-Jalankan `bash scripts/prepare_coreai_decoder.sh` di Mac sebelum build aplikasi;
-paket besar dibuat lokal, lalu tombol **Uji decoder pretrained** membandingkan
-output dan mencatat latensi serta sampel memori. Ekspor pretrained sudah diuji
-di Linux; hasil iPhone untuk decoder ini belum tersedia.
+**Decoder pretrained 0,2 detik PASS:** [laporan iPhone](reviews/coreai-iphone17pro-pretrained-decoder-02s/README.md),
+rata-rata dua run hangat 33,88 ms dan maksimum footprint proses tersampel 792,3 MiB.
+**Uji berikutnya:** [profil decoder 1 detik](docs/coreai-pretrained-decoder.md).
+Jalankan `bash scripts/prepare_coreai_decoder.sh --frames 25` di Mac sebelum build;
+lalu tekan **Uji decoder 1 detik**. Paket baseline 0,2 detik tetap disimpan.
+Ekspor 1 detik sudah diuji di Linux; parity dan pengukuran iPhone masih menunggu.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:

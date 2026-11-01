@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "asset_file": "decoder.aimodel",
+  "function_name": "main",
+  "input_name": "latent",
+  "output_name": "audio",
+  "input_shape": [
+    1,
+    64,
+    25
+  ],
+  "output_shape": [
+    1,
+    2,
+    48000
+  ],
+  "input_file": "latent.f32le",
+  "expected_file": "audio-reference.f32le",
+  "scalar_type": "float32",
+  "byte_order": "little",
+  "sample_rate": 48000,
+  "duration_seconds": 1.0,
+  "input_provenance": "Seed-0 standard-normal latent for numerical decoder testing; not a recorded performance",
+  "checkpoint": {
+    "repo_id": "ACE-Step/Ace-Step1.5",
+    "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+    "filename": "vae/diffusion_pytorch_model.safetensors",
+    "size": 337431388,
+    "digest": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0"
+  },
+  "checkpoint_full_sha256_verified": true,
+  "reference_backend": "PyTorch CPU Float32",
+  "weight_norm_fold_max_abs_error": 0.0,
+  "reference_peak": 1.0829030275344849,
+  "reference_rms": 0.2406689003545956,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "versions": {
+    "torch": "2.8.0+cpu",
+    "diffusers": "0.37.0",
+    "coreai-torch": "0.4.3",
+    "coreai-core": "1.0.0b3"
+  },
+  "artifact_sha256": {
+    "audio-reference.f32le": "aa3a26ccfa49fff335b0d552b3041e211c93c8a7a34aa48531d3b795e34331e7",
+    "decoder.aimodel/main.hash": "e75a4e11756e0c9720f7e8c9e8ae0f6bfdd1f7eade2ba585529cc19758b4283c",
+    "decoder.aimodel/main.mlirb": "52767efbec11628a03a9f6070690308b90c4151719bfa92aa2a5ef5a9b643204",
+    "decoder.aimodel/metadata.json": "46854720cc9c1c4b63469c3b5b6c0c69bd18c8c0d5efffd0445e469468d7ab9d",
+    "latent.f32le": "36b957ea048d809cd54eea8ad32f6641804eecb9c1e9438a8162f64fd1b02615"
+  },
+  "coreai_device_inference_verified": false
+}

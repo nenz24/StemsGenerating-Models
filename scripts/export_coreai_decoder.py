@@ -102,7 +102,9 @@ def main():
     manifest = json.loads((ROOT / 'configs/assets-base.json').read_text())
     record = next(r for r in manifest['files'] if r['filename'] == 'vae/diffusion_pytorch_model.safetensors')
     if args.verify_only:
-        verify_bundle(args.out, record)
+        reference = verify_bundle(args.out, record)
+        if reference['input_shape'][-1] != args.frames:
+            raise ValueError('Existing bundle has a different window; use the matching --frames value')
         print('Existing pretrained decoder bundle: VERIFIED (no download/re-export)')
         return
     if args.out.exists():

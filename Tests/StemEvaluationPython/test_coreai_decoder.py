@@ -70,6 +70,23 @@ class DecoderPreparationTests(unittest.TestCase):
             self.assertIn('Output already exists', result.stderr)
             self.assertEqual(marker.read_text(), 'preserve')
 
+    def test_verify_only_rejects_a_different_requested_window(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder, ref, _ = self.fixture(Path(tmp))
+            manifest = json.loads((ROOT / 'configs/assets-base.json').read_text())
+            ref['checkpoint'] = next(r for r in manifest['files']
+                                     if r['filename'] == 'vae/diffusion_pytorch_model.safetensors')
+            reference = folder / 'reference.json'
+            reference.write_text(json.dumps(ref))
+            original = reference.read_bytes()
+            for frames, expected_code in [(25, 1), (1, 0)]:
+                result = subprocess.run([sys.executable, str(ROOT / 'scripts/export_coreai_decoder.py'),
+                                         '--out', str(folder), '--frames', str(frames), '--verify-only'],
+                                        capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, expected_code, result.stdout + result.stderr)
+                if frames == 25:self.assertIn('different window', result.stderr)
+                self.assertEqual(reference.read_bytes(), original)
+
 
 if __name__ == '__main__':
     unittest.main()

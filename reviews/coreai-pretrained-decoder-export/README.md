@@ -25,11 +25,19 @@ staging happens outside that resource tree.
 new download or export. Integrity tests cover checksum mismatch, missing hash
 coverage, invalid reference size/path and preservation of existing outputs.
 
-**Not verified:** compilation of the new Swift decoder probe with the Apple
-SDK, model specialization/inference on iPhone, decoder parity across CoreAI and
-PyTorch, physical memory peak, latency, accelerator placement or musical quality.
+**At export time, not verified:** compilation of the new Swift decoder probe with
+the Apple SDK, iPhone inference/parity, memory, latency or accelerator placement.
 Seeded latent output is for numerical testing; it is not generated accompaniment.
 The first iPhone gate uses CPU-only and a 0.2-second window. The affine device
 success remains separate evidence.
+
+**Subsequent evidence:** the user has now reported successful 0.2 s pretrained
+decoder parity and device timings in the
+[iPhone report](../coreai-iphone17pro-pretrained-decoder-02s/README.md). That report
+does not identify its Mac-exported artifact hashes; this Linux manifest remains
+export evidence rather than a byte-for-byte identity claim about the device asset.
+A [one-second export](../coreai-pretrained-decoder-export-1s/README.md) is ready
+for the next device gate. Exact peak memory, hardware placement and full
+accompaniment generation remain unverified.
 
 User steps: [Mac preparation and iPhone probe](../../docs/coreai-pretrained-decoder.md).
