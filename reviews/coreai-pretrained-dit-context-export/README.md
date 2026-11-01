@@ -37,3 +37,9 @@ Apple compilation of the updated Swift profile, iPhone parity, latency and
 memory are pending. A longer two-block pass would not establish full-denoiser
 feasibility, diffusion-loop correctness, music quality or an end-to-end timing
 budget. Follow the [device steps](../../docs/coreai-dit-context.md).
+
+**Subsequent evidence:** the user reported
+[longer-context parity PASS on iPhone](../coreai-iphone17pro-pretrained-dit-context/README.md).
+The report does not emit the exact source commit or Mac asset hashes; this
+Linux manifest remains independent export evidence. The next export experiment
+uses [FP16 weight storage with FP32 calculations](../coreai-pretrained-dit-storage16-export/README.md).

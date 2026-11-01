@@ -1,6 +1,6 @@
 // API declarations checked against the user's Xcode 27 SDK interfaces.
 // The user reported a successful tensor probe on iOS 27.0.1; see reviews/.
-// Affine, codec and short DiT block passed; longer two-block context testing is next.
+// Affine, codec and FP32 DiT profiles passed; FP16 weight-storage testing is next.
 import CoreAI
 import SwiftUI
 import UIKit
@@ -75,6 +75,15 @@ struct CoreAIDeviceProbeApp: App {
                             report = "Memuat dua blok DiT pretrained dengan konteks 160 token…"
                             Task {
                                 report = await CoreAIDecoderProbe.runDiTContext()
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
+                        Button("Uji bobot FP16") {
+                            runningModel = true
+                            report = "Memuat bobot FP16 dengan hitungan FP32 dan memeriksa baseline…"
+                            Task {
+                                report = await CoreAIDecoderProbe.runDiTStorage16()
                                 runningModel = false
                             }
                         }

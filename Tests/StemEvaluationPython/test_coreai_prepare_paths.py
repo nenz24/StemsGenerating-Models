@@ -58,11 +58,16 @@ if sys.argv[1]=='venv':
                 encoder_marker.parent.mkdir(parents=True)
                 encoder_marker.write_text('preserve encoder')
                 bundle_name = 'dit-block-pretrained'
-                if dit_profile == 'context':
+                if dit_profile != 'short':
                     short_marker = candidates / 'dit-block-pretrained/baseline-marker'
                     short_marker.parent.mkdir(parents=True)
                     short_marker.write_text('preserve short DiT block')
                     bundle_name = 'dit-context-pretrained'
+                if dit_profile == 'storage16':
+                    context_marker = candidates/'dit-context-pretrained/baseline-marker'
+                    context_marker.parent.mkdir(parents=True)
+                    context_marker.write_text('preserve FP32 context')
+                    bundle_name = 'dit-storage16-pretrained'
             if reuse:
                 target = repo / '.runtime-cache/coreai-decoder-venv/bin/python';target.parent.mkdir(parents=True)
                 target.write_text(prefix + python_fixture);target.chmod(0o755)
@@ -76,7 +81,7 @@ if sys.argv[1]=='venv':
             if component == 'encoder':command += ['--component', 'encoder']
             if frames == 25:command += ['--frames', '25']
             if dit:command = ['bash', str(repo / 'scripts/prepare_coreai_dit_block.sh')]
-            if dit and dit_profile == 'context':command += ['--profile', 'context']
+            if dit and dit_profile != 'short':command += ['--profile', dit_profile]
             result = subprocess.run(command,
                                     cwd=base, env=env, text=True, capture_output=True, timeout=20)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -92,7 +97,7 @@ if sys.argv[1]=='venv':
             if not dit:self.assertEqual(python_args[python_args.index('--component') + 1], component)
             if frames == 25:
                 self.assertEqual(baseline.read_text(), 'preserve 0.2 s baseline')
-                button = ('Uji DiT konteks panjang' if dit_profile == 'context' else 'Uji blok generator') if dit else f'Uji {component} 1 detik'
+                button = {'short':'Uji blok generator','context':'Uji DiT konteks panjang','storage16':'Uji bobot FP16'}[dit_profile] if dit else f'Uji {component} 1 detik'
                 self.assertIn(button, result.stdout)
             if component == 'encoder':
                 self.assertEqual(decoder_one_second.read_text(), 'preserve 1 s decoder')
@@ -100,7 +105,8 @@ if sys.argv[1]=='venv':
                 self.assertEqual(encoder_marker.read_text(), 'preserve encoder')
                 self.assertIn('scripts/export_coreai_dit_block.py', python_args)
                 self.assertEqual(python_args[python_args.index('--profile') + 1], dit_profile)
-                if dit_profile == 'context':self.assertEqual(short_marker.read_text(), 'preserve short DiT block')
+                if dit_profile != 'short':self.assertEqual(short_marker.read_text(), 'preserve short DiT block')
+                if dit_profile == 'storage16':self.assertEqual(context_marker.read_text(), 'preserve FP32 context')
 
     def test_fresh_managed_python_and_package_cache_stay_in_checkout(self):
         self.run_fixture(False)
@@ -141,6 +147,11 @@ if sys.argv[1]=='venv':
                                         capture_output=True, text=True, timeout=10)
                 self.assertEqual(result.returncode, 2)
                 self.assertIn('Usage:', result.stderr)
+
+    def test_storage16_export_and_reuse_preserve_fp32_context_and_other_baselines(self):
+        for reuse in (False, True):
+            with self.subTest(reuse=reuse):
+                self.run_fixture(reuse, frames=25, component='encoder', dit=True, dit_profile='storage16')
 
 
 if __name__ == '__main__':

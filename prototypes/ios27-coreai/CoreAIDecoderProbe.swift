@@ -1,4 +1,4 @@
-// Codec and one short DiT block passed on device; the longer two-block profile is pending.
+// Codec and FP32 DiT profiles passed on device; FP16 storage / FP32 math is pending.
 import CoreAI
 import CryptoKit
 import Darwin
@@ -7,11 +7,12 @@ import Foundation
 
 enum CoreAIDecoderProbe {
     private enum Profile {
-        case decoderShort, decoderOneSecond, encoderOneSecond, ditBlock, ditContext
+        case decoderShort, decoderOneSecond, encoderOneSecond, ditBlock, ditContext, ditStorage16
         var isEncoder: Bool { self == .encoderOneSecond }
-        var isDiTContext: Bool { self == .ditContext }
+        var isStorage16: Bool { self == .ditStorage16 }
+        var isDiTContext: Bool { self == .ditContext || isStorage16 }
         var isDiT: Bool { self == .ditBlock || isDiTContext }
-        var component: String { isDiT ? (isDiTContext ? "dit-context" : "dit-block") : (isEncoder ? "encoder" : "decoder") }
+        var component: String { isStorage16 ? "dit-storage16" : (isDiT ? (isDiTContext ? "dit-context" : "dit-block") : (isEncoder ? "encoder" : "decoder")) }
         var frames: Int { self == .decoderShort ? 5 : 25 }
         var folderName: String {
             isDiT ? "\(component)-pretrained" : (self == .decoderShort ? "decoder-pretrained" : "\(component)-pretrained-1s")
@@ -53,6 +54,9 @@ enum CoreAIDecoderProbe {
         let profile: String?
         let slidingWindow: Int?
         let maskGeometryVerified: Bool?
+        let weightStorageDtype: String?
+        let computeDtype: String?
+        let originalFp32ReferenceFile: String?
         let outputShape: [Int]
         let inputFile: String?
         let expectedFile: String?
@@ -74,6 +78,7 @@ enum CoreAIDecoderProbe {
         case invalidFloatData
         case invalidOutputTensor
         case numericalParityFailed
+        case originalFP32ParityFailed
     }
 
     static func run(oneSecond: Bool = false) async -> String {
@@ -90,6 +95,10 @@ enum CoreAIDecoderProbe {
 
     static func runDiTContext() async -> String {
         await run(profile: .ditContext)
+    }
+
+    static func runDiTStorage16() async -> String {
+        await run(profile: .ditStorage16)
     }
 
     private static func run(profile: Profile) async -> String {
@@ -114,6 +123,10 @@ enum CoreAIDecoderProbe {
         } else {
             lines.append("Window profile: \(profile.frames == 25 ? "1.0 s" : "0.2 s")")
         }
+        if profile.isStorage16 {
+            lines.append("Precision profile: FP16 stored weights; FP32 calculations, masks and input/output")
+            lines.append("Original FP32 baseline parity: REQUIRED; runtime RAM savings NOT MEASURED")
+        }
         #if targetEnvironment(simulator)
         lines.append("Target: Simulator; not physical-device evidence")
         #else
@@ -128,7 +141,8 @@ enum CoreAIDecoderProbe {
             guard let folder = Bundle.main.resourceURL?
                 .appendingPathComponent("ModelCandidates/\(profile.folderName)"),
                 FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
-                let script = profile.isDiT ? "bash scripts/prepare_coreai_dit_block.sh --profile \(profile.isDiTContext ? "context" : "short")" :
+                let ditProfile = profile.isStorage16 ? "storage16" : (profile.isDiTContext ? "context" : "short")
+                let script = profile.isDiT ? "bash scripts/prepare_coreai_dit_block.sh --profile \(ditProfile)" :
                     "bash scripts/prepare_coreai_decoder.sh --component \(component) --frames \(profile.frames)"
                 lines.append("Prepare on Mac: \(script); then rebuild the app.")
                 throw ProbeError.missingPreparedBundle
@@ -153,9 +167,13 @@ enum CoreAIDecoderProbe {
                     throw ProbeError.invalidContract
                 }
                 if profile.isDiTContext {
-                    guard contract.profile == "context", contract.layerPrefixes == ["decoder.layers.0.", "decoder.layers.1."],
+                    guard contract.profile == (profile.isStorage16 ? "storage16" : "context"), contract.layerPrefixes == ["decoder.layers.0.", "decoder.layers.1."],
                           contract.slidingWindow == 128, contract.maskGeometryVerified == true else { throw ProbeError.invalidContract }
                 } else if contract.layerPrefix != "decoder.layers.0." { throw ProbeError.invalidContract }
+                if profile.isStorage16 {
+                    guard contract.weightStorageDtype == "float16", contract.computeDtype == "float32",
+                          contract.originalFp32ReferenceFile == "hidden-fp32-reference.f32le" else { throw ProbeError.invalidContract }
+                }
             } else {
                 guard (contract.component ?? "decoder") == component,
                       (!profile.isEncoder || contract.posteriorMode == "mean"),
@@ -171,6 +189,11 @@ enum CoreAIDecoderProbe {
             }
             let expected = try readFloats(folder: folder, name: profile.expectedFile,
                                           count: contract.outputShape.reduce(1, *), hashes: contract.artifactSha256)
+            let fp32Baseline: [Float]?
+            if profile.isStorage16 {
+                fp32Baseline = try readFloats(folder: folder, name: "hidden-fp32-reference.f32le",
+                                              count: contract.outputShape.reduce(1, *), hashes: contract.artifactSha256)
+            } else { fp32Baseline = nil }
             if !profile.isDiT {
                 lines.append("Audio duration / sample rate: \(Double(profile.frames) / 25) s / 48000 Hz stereo")
                 lines.append("Input/output shapes: \(profile.inputShape) -> \(contract.outputShape)")
@@ -213,33 +236,24 @@ enum CoreAIDecoderProbe {
                     Array(UnsafeBufferPointer(start: pointer, count: expected.count))
                 }
                 let elapsed = ms(start.duration(to: clock.now))
-                var maxError = 0.0
-                var squaredError = 0.0
-                var squaredReference = 0.0
-                var elementwisePass = true
-                for (result, reference) in zip(actual, expected) {
-                    guard result.isFinite else { throw ProbeError.invalidOutputTensor }
-                    let error = abs(Double(result) - Double(reference))
-                    maxError = max(maxError, error)
-                    squaredError += error * error
-                    squaredReference += Double(reference) * Double(reference)
-                    if error > contract.absoluteTolerance + contract.relativeTolerance * abs(Double(reference)) {
-                        elementwisePass = false
-                    }
-                }
-                let rmse = sqrt(squaredError / Double(expected.count))
-                let referenceRms = sqrt(squaredReference / Double(expected.count))
-                let normalizedRmse = rmse / max(referenceRms, 1e-12)
+                let stats = try compare(actual: actual, expected: expected, contract: contract)
                 let label = iteration == 0 ? "First inference" : "Warm inference \(iteration)"
                 lines.append("\(label) run+read-back ms: \(elapsed)")
-                lines.append("Max abs error: \(maxError); RMSE: \(rmse); normalized RMSE: \(normalizedRmse)")
-                guard elementwisePass, normalizedRmse <= contract.relativeRmseTolerance else {
+                lines.append("Max abs error: \(stats.maxError); RMSE: \(stats.rmse); normalized RMSE: \(stats.normalizedRmse)")
+                guard stats.passed else {
                     throw ProbeError.numericalParityFailed
                 }
+                if let fp32Baseline {
+                    let original = try compare(actual: actual, expected: fp32Baseline, contract: contract)
+                    lines.append("Original FP32 baseline max abs error: \(original.maxError); RMSE: \(original.rmse); normalized RMSE: \(original.normalizedRmse)")
+                    guard original.passed else { throw ProbeError.originalFP32ParityFailed }
+                }
             }
+            if profile.isStorage16 { lines.append("Original FP32 baseline parity: PASS (three runs)") }
             lines.append("Pretrained \(component) parity: PASS (three runs)")
         } catch {
             let detail = error as NSError
+            if profile.isStorage16 { lines.append("Original FP32 baseline parity: NOT PASSED") }
             lines.append("Pretrained \(component) parity: NOT PASSED")
             lines.append("Error: \(String(reflecting: error))")
             lines.append("Error domain/code: \(detail.domain) / \(detail.code)")
@@ -254,6 +268,27 @@ enum CoreAIDecoderProbe {
         lines.append("Model loaded: \(loaded ? "YES" : "NO")")
         lines.append("Model inference executed: \(executed ? "YES" : "NO")")
         return lines.joined(separator: "\n")
+    }
+
+    private static func compare(actual: [Float], expected: [Float], contract: Contract) throws
+        -> (maxError: Double, rmse: Double, normalizedRmse: Double, passed: Bool) {
+        guard actual.count == expected.count, !expected.isEmpty else { throw ProbeError.invalidOutputTensor }
+        var maxError = 0.0
+        var squaredError = 0.0
+        var squaredReference = 0.0
+        var elementwisePass = true
+        for (result, reference) in zip(actual, expected) {
+            guard result.isFinite else { throw ProbeError.invalidOutputTensor }
+            let error = abs(Double(result) - Double(reference))
+            maxError = max(maxError, error)
+            squaredError += error * error
+            squaredReference += Double(reference) * Double(reference)
+            if error > contract.absoluteTolerance + contract.relativeTolerance * abs(Double(reference)) { elementwisePass = false }
+        }
+        let rmse = sqrt(squaredError / Double(expected.count))
+        let referenceRms = sqrt(squaredReference / Double(expected.count))
+        let normalizedRmse = rmse / max(referenceRms, 1e-12)
+        return (maxError, rmse, normalizedRmse, elementwisePass && normalizedRmse <= contract.relativeRmseTolerance)
     }
 
     private static func readFloats(folder: URL, name: String, count: Int, hashes: [String: String]) throws -> [Float] {

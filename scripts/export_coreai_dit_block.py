@@ -36,6 +36,8 @@ def profile_spec(profile):
         return INPUT_SHAPES, OUTPUT_SHAPE, 'dit-block.aimodel', [0]
     if profile == 'context':
         return CONTEXT_INPUT_SHAPES, [1, 160, 2048], 'dit-context.aimodel', [0, 1]
+    if profile == 'storage16':
+        return CONTEXT_INPUT_SHAPES, [1, 160, 2048], 'dit-storage16.aimodel', [0, 1]
     raise ValueError('Unknown DiT profile')
 
 
@@ -67,16 +69,22 @@ def verify_bundle(folder, record, profile='short'):
             or ref.get('checkpoint', {}).get('digest') != record['digest']
             or ref.get('checkpoint_full_sha256_verified') is not True
             or (profile == 'short' and ref.get('layer_prefix') != 'decoder.layers.0.')
-            or (profile == 'context' and (ref.get('layer_prefixes') != ['decoder.layers.0.', 'decoder.layers.1.']
+            or (profile != 'short' and (ref.get('layer_prefixes') != ['decoder.layers.0.', 'decoder.layers.1.']
                                          or ref.get('sliding_window') != 128 or ref.get('mask_geometry_verified') is not True))
             or ref.get('input_shapes') != shapes or ref.get('output_shape') != output_shape
             or ref.get('function_name') != 'main' or ref.get('output_name') != 'hidden_out'
             or ref.get('scalar_type') != 'float32' or ref.get('byte_order') != 'little'):
         raise ValueError('Unexpected pretrained DiT block contract')
+    if profile == 'storage16' and (ref.get('weight_storage_dtype') != 'float16'
+            or ref.get('compute_dtype') != 'float32'
+            or ref.get('original_fp32_reference_file') != 'hidden-fp32-reference.f32le'
+            or ref.get('storage16_vs_original_fp32', {}).get('parity_passed') is not True):
+        raise ValueError('Unexpected storage16 precision/baseline contract')
     hashes = ref['artifact_sha256']
     required = {f'{name}.f32le' for name in shapes} | {
         'hidden-reference.f32le', f'{asset}/main.hash',
         f'{asset}/main.mlirb', f'{asset}/metadata.json'}
+    if profile == 'storage16':required.add('hidden-fp32-reference.f32le')
     actual = {str(p.relative_to(folder)) for p in folder.rglob('*')
               if p.is_file() and p.name != '.DS_Store' and p != folder / 'reference.json'}
     if not required.issubset(hashes) or actual != set(hashes):
@@ -85,10 +93,52 @@ def verify_bundle(folder, record, profile='short'):
         path = (folder / name).resolve()
         if not path.is_relative_to(folder.resolve()) or sha256(path) != digest:
             raise ValueError(f'DiT block integrity mismatch: {name}')
-    for name, shape in [(f'{n}.f32le', s) for n, s in shapes.items()] + [('hidden-reference.f32le', output_shape)]:
+    binaries = [(f'{n}.f32le', s) for n, s in shapes.items()] + [('hidden-reference.f32le', output_shape)]
+    if profile == 'storage16':binaries.append(('hidden-fp32-reference.f32le', output_shape))
+    for name, shape in binaries:
         if (folder / name).stat().st_size != math.prod(shape) * 4:
             raise ValueError('DiT block binary size mismatch')
     return ref
+
+
+def precision_metrics(actual, reference):
+    import numpy as np
+    actual = actual.detach().float().numpy().astype(np.float64)
+    reference = reference.detach().float().numpy().astype(np.float64)
+    if not np.isfinite(actual).all():return {'finite': False, 'parity_passed': False}
+    error = actual - reference
+    rmse = float(np.sqrt(np.mean(error**2)))
+    normalized = rmse / max(float(np.sqrt(np.mean(reference**2))), 1e-12)
+    fraction = float(np.mean(np.abs(error) > 1e-4 + 1e-3 * np.abs(reference)))
+    return {'finite': True, 'max_absolute_error': float(np.max(np.abs(error))), 'rmse': rmse,
+            'normalized_rmse': normalized, 'elementwise_fraction_over_bound': fraction,
+            'parity_passed': fraction == 0 and normalized <= 1e-3}
+
+
+def convert_storage16(model):
+    """Store learned values as FP16; explicitly upcast linear weights for FP32 math.
+
+    Normalization weights and AdaLN tables promote naturally with FP32 activations.
+    These casts do not establish runtime RAM savings: specialization may upcast
+    constants. The actual native file size and device execution are separate gates.
+    """
+    import torch
+    model.to(dtype=torch.float16)
+
+    class Float32Linear(torch.nn.Linear):
+        def forward(self, x):
+            return torch.nn.functional.linear(x, self.weight.float(), None if self.bias is None else self.bias.float())
+
+    def replace(module):
+        for name, child in list(module.named_children()):
+            if isinstance(child, torch.nn.Linear):
+                with torch.device('meta'):
+                    new = Float32Linear(child.in_features, child.out_features, bias=child.bias is not None)
+                new.weight = child.weight;new.bias = child.bias
+                new.eval();setattr(module, name, new)
+            else:replace(child)
+    replace(model)
+    return model
 
 
 def load_upstream(source, config_path, config_source):
@@ -124,15 +174,17 @@ def load_upstream(source, config_path, config_source):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--profile', choices=['short', 'context'], default='short')
+    parser.add_argument('--profile', choices=['short', 'context', 'storage16'], default='short')
     parser.add_argument('--checkpoint', type=Path)
     parser.add_argument('--out', type=Path)
     parser.add_argument('--verify-only', action='store_true')
     args = parser.parse_args()
-    context = args.profile == 'context'
+    context = args.profile != 'short'
+    storage16 = args.profile == 'storage16'
     shapes, output_shape, asset, indices = profile_spec(args.profile)
     if args.out is None:
-        args.out = ROOT / 'prototypes/ios27-coreai/ModelCandidates' / ('dit-context-pretrained' if context else 'dit-block-pretrained')
+        folder = 'dit-storage16-pretrained' if storage16 else ('dit-context-pretrained' if context else 'dit-block-pretrained')
+        args.out = ROOT / 'prototypes/ios27-coreai/ModelCandidates' / folder
     publisher = records();record = publisher['model.safetensors']
     if args.verify_only:
         verify_bundle(args.out, record, args.profile);print('Existing pretrained DiT profile: VERIFIED (no download/re-export)');return
@@ -197,11 +249,31 @@ def main():
     inputs = tuple(values[name] for name in shapes)
     with torch.no_grad():expected = model(*inputs).detach()
     if list(expected.shape) != output_shape or not torch.isfinite(expected).all():raise ValueError('Invalid PyTorch reference')
+    fp32_original = expected.clone() if storage16 else None
+    if storage16:
+        # Audit activation FP16 separately; it is not silently adopted as the
+        # reference for a storage-only change that is meant to retain FP32 math.
+        model.half()
+        half_inputs = tuple(values[name].half() if name in ['hidden','condition','temb','rope_cos','rope_sin']
+                            else values[name] for name in shapes)
+        try:
+            with torch.no_grad():half_result = model(*half_inputs)
+            activation_audit = precision_metrics(half_result, fp32_original)
+        except (RuntimeError, NotImplementedError) as error:
+            activation_audit = {'supported': False, 'parity_passed': False, 'error': str(error)}
+        model = convert_storage16(model)
+        with torch.no_grad():expected = model(*inputs).detach()
+        storage_comparison = precision_metrics(expected, fp32_original)
+        print('Activation-FP16 audit versus original FP32:', activation_audit, flush=True)
+        print('Storage16 / FP32 math versus original FP32:', storage_comparison, flush=True)
+        if expected.dtype != torch.float32 or not storage_comparison['parity_passed']:
+            raise ValueError('Storage16 failed the original FP32 parity bound; original bundles preserved')
     stage_root = ROOT / '.runtime-cache/coreai-dit-staging';stage_root.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix=args.profile + '-', dir=stage_root))
     print('Exporting actual pretrained DiT block; staging retained on failure:', stage, flush=True)
     for name, value in values.items():value.numpy().astype('<f4', copy=False).tofile(stage / f'{name}.f32le')
     expected.numpy().astype('<f4', copy=False).tofile(stage / 'hidden-reference.f32le')
+    if storage16:fp32_original.numpy().astype('<f4', copy=False).tofile(stage / 'hidden-fp32-reference.f32le')
     exported = torch.export.export(model, inputs).run_decompositions(get_decomp_table())
     program = TorchConverter().add_exported_program(exported, input_names=list(shapes), output_names=['hidden_out']).to_coreai()
     program.save_asset(stage / asset)
@@ -222,6 +294,12 @@ def main():
         ref.update(layer_prefixes=prefixes, sliding_window=cfg.sliding_window, mask_geometry_verified=True)
     else:
         ref['layer_prefix'] = prefixes[0]
+    if storage16:
+        ref.update(weight_storage_dtype='float16', compute_dtype='float32',
+                   original_fp32_reference_file='hidden-fp32-reference.f32le',
+                   storage16_vs_original_fp32=storage_comparison,
+                   activation_fp16_vs_original_fp32_audit=activation_audit,
+                   runtime_ram_savings_verified=False)
     (stage / 'reference.json').write_text(json.dumps(ref, indent=2)+'\n')
     verify_bundle(stage, record, args.profile)
     args.out.parent.mkdir(parents=True, exist_ok=True)

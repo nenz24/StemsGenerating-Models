@@ -19,6 +19,7 @@ class DiTBlockPreparationTests(unittest.TestCase):
         input_shapes, output_shape, asset, _ = MODULE.profile_spec(profile)
         shapes = {f'{name}.f32le': shape for name, shape in input_shapes.items()}
         shapes['hidden-reference.f32le'] = output_shape
+        if profile == 'storage16':shapes['hidden-fp32-reference.f32le'] = output_shape
         data = {name: bytes(math.prod(shape) * 4) for name, shape in shapes.items()}
         data.update({f'{asset}/main.hash': b'fixture only',
                      f'{asset}/main.mlirb': b'not executable',
@@ -31,10 +32,14 @@ class DiTBlockPreparationTests(unittest.TestCase):
                'input_shapes': input_shapes, 'output_shape': output_shape,
                'function_name': 'main', 'output_name': 'hidden_out', 'scalar_type': 'float32', 'byte_order': 'little',
                'artifact_sha256': {name: hashlib.sha256(value).hexdigest() for name, value in data.items()}}
-        if profile == 'context':
+        if profile != 'short':
             ref.pop('layer_prefix')
-            ref.update(profile='context', layer_prefixes=['decoder.layers.0.', 'decoder.layers.1.'],
+            ref.update(profile=profile, layer_prefixes=['decoder.layers.0.', 'decoder.layers.1.'],
                        sliding_window=128, mask_geometry_verified=True)
+        if profile == 'storage16':
+            ref.update(weight_storage_dtype='float16', compute_dtype='float32',
+                       original_fp32_reference_file='hidden-fp32-reference.f32le',
+                       storage16_vs_original_fp32={'parity_passed': True})
         self.write_reference(folder, ref)
         return ref, record
 
@@ -97,6 +102,22 @@ class DiTBlockPreparationTests(unittest.TestCase):
             del ref['artifact_sha256']['local_mask.f32le']
             self.write_reference(folder, ref)
             with self.assertRaises(ValueError):MODULE.verify_bundle(folder, record, 'context')
+
+    def test_storage16_requires_fp32_math_and_a_separate_original_reference(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp) / 'bundle';ref, record = self.fixture(folder, 'storage16')
+            MODULE.verify_bundle(folder, record, 'storage16')
+            with self.assertRaises(ValueError):MODULE.verify_bundle(folder, record, 'context')
+            for key, value in [('compute_dtype', 'float16'), ('weight_storage_dtype', 'float32'),
+                               ('original_fp32_reference_file', 'hidden-reference.f32le'),
+                               ('storage16_vs_original_fp32', {'parity_passed': False})]:
+                self.write_reference(folder, dict(ref, **{key: value}))
+                with self.assertRaises(ValueError):MODULE.verify_bundle(folder, record, 'storage16')
+            self.write_reference(folder, ref)
+            (folder/'hidden-fp32-reference.f32le').write_bytes(b'bad')
+            ref['artifact_sha256']['hidden-fp32-reference.f32le'] = hashlib.sha256(b'bad').hexdigest()
+            self.write_reference(folder, ref)
+            with self.assertRaises(ValueError):MODULE.verify_bundle(folder, record, 'storage16')
 
 
 if __name__ == '__main__':unittest.main()

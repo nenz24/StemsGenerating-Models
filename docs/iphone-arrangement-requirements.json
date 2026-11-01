@@ -41,7 +41,7 @@
       "scope": "This import evidence establishes module type-check only; see the later device report for app/tensor execution"
     },
     "physical_device_execution_verified": true,
-    "physical_device_execution_scope": "User-reported tensor, affine, VAE encoder/decoder and one short pretrained DiT block parity; hardware placement unmeasured",
+    "physical_device_execution_scope": "User-reported tensor, affine, VAE and FP32 DiT gates including local/full blocks 0+1 at 160/64 tokens; hardware placement unmeasured",
     "public_sdk_interface_review": {
       "archive_name": "coreai-api.apDMX4.zip",
       "archive_sha256": "7c8d1c8cde67d4f062032c0704fc0991d958ceb17e0952defd2d7c4daa5cb597",
@@ -103,11 +103,11 @@
   },
   "unverified": {
     "coreai_sdk_custom_audio_model_support": "Pretrained encoder posterior mean at 1 s and decoder at 0.2/1 s Float32 parity reported; joint codec, stochastic posterior and full conditional generator unverified",
-    "model_import_format_and_operators": "Native .aimodel affine, VAE encoder/decoder and short Base DiT block verified on iPhone; long context and full generator unverified",
+    "model_import_format_and_operators": "Native affine, VAE and two FP32 Base DiT blocks with 160/64 context verified on iPhone; FP16 storage and full generator unverified",
     "accelerator_and_precision_support": "Float32 affine and VAE encoder/decoder parity verified under requested CPU-only policy; actual placement and GPU/Neural Engine inference unmeasured",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
-    "model_conversion_training_and_device_benchmarks": "VAE and one short pretrained DiT block passed separate device gates; longer two-block export verified with device gate pending; full generator/sampling/training unimplemented"
+    "model_conversion_training_and_device_benchmarks": "VAE and FP32 DiT context gates passed separately; FP16 weight-storage/FP32-math export verified with device gate pending; full generator and sampling unimplemented"
   },
   "local_prototype_status": {
     "source_directory": "prototypes/ios27-coreai",
@@ -119,8 +119,8 @@
     "apple_compilation_verified": true,
     "apple_compilation_evidence": "User reported successful execution of the device probe app; not independently compiled in this Linux workspace",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-pretrained-dit-block/report.json",
-    "device_execution_scope": "Affine, separate VAE gates and short DiT block pass; long context, full denoiser/accompaniment and hardware placement unverified",
+    "device_execution_report": "reviews/coreai-iphone17pro-pretrained-dit-context/report.json",
+    "device_execution_scope": "Separate VAE and two FP32 DiT local/full blocks pass; storage16, full denoiser/accompaniment and hardware placement unverified",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -292,9 +292,37 @@
     "audio_duration_claim": null,
     "input_provenance": "Synthetic hidden/conditioning/timestep activations, RoPE and finite padding/local/full masks",
     "requested_device_compute_policy": "cpuOnly",
+    "new_swift_apple_build_verified": true,
+    "device_parity_verified": true,
+    "validation_manifest": "reviews/coreai-pretrained-dit-context-export/reference.json",
+    "full_generator_and_diffusion_loop_implemented": false,
+    "device_report": "reviews/coreai-iphone17pro-pretrained-dit-context/report.json",
+    "device_evidence_source": "User-pasted report; not independently reproduced"
+  },
+  "pretrained_dit_storage16_probe": {
+    "preparation_command": "bash scripts/prepare_coreai_dit_block.sh --profile storage16",
+    "local_ignored_bundle": "prototypes/ios27-coreai/ModelCandidates/dit-storage16-pretrained",
+    "publisher_checkpoint_full_sha256_verified_in_development": true,
+    "native_export_verified_in_development": true,
+    "weight_storage_dtype": "float16",
+    "compute_dtype": "float32",
+    "input_output_dtype": "float32",
+    "hidden_tokens": 160,
+    "condition_tokens": 64,
+    "layer_prefixes": [
+      "decoder.layers.0.",
+      "decoder.layers.1."
+    ],
+    "host_original_fp32_parity_passed": true,
+    "host_original_fp32_normalized_rmse": 4.573766628225064e-07,
+    "device_comparisons_required": [
+      "PyTorch storage16/FP32 math reference",
+      "Original FP32-weight reference"
+    ],
+    "requested_device_compute_policy": "cpuOnly",
     "new_swift_apple_build_verified": false,
     "device_parity_verified": false,
-    "validation_manifest": "reviews/coreai-pretrained-dit-context-export/reference.json",
-    "full_generator_and_diffusion_loop_implemented": false
+    "runtime_ram_savings_verified": false,
+    "validation_manifest": "reviews/coreai-pretrained-dit-storage16-export/reference.json"
   }
 }

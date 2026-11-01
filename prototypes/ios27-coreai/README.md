@@ -191,5 +191,14 @@ blok 0 (local radius 128) → 1 (full), 160 hidden / 64 conditioning token,
 dengan mask publisher yang berbeda. Native bundle tambahan sekitar 507 MB,
 checkpoint Base diambil dari cache, profil pendek dan codec tetap disimpan.
 [Panduan konteks panjang](../../docs/coreai-dit-context.md) menjelaskan kontraknya.
-Ekspor Linux berhasil; build Swift terbaru dan parity/timing/memori profil ini
-di iPhone masih menunggu.
+[Profil konteks FP32 sudah PASS di iPhone](../../reviews/coreai-iphone17pro-pretrained-dit-context/README.md),
+rata-rata dua run hangat 31,10 ms.
+
+Berikutnya jalankan `bash scripts/prepare_coreai_dit_block.sh --profile storage16`,
+build ulang, lalu tekan **Uji bobot FP16**. Profil baru menyimpan parameter sebagai
+FP16, tetapi hitungan dan input/output tetap FP32. Native asset sekitar 252 MB;
+paket lengkap dengan referensi baseline FP32 tambahan sekitar 257 MB. App wajib
+meluluskan pembandingan dengan kedua referensi. Baseline konteks FP32 tetap disimpan.
+[Panduan bobot FP16](../../docs/coreai-dit-storage16.md) menjelaskan audit precision
+dan batas pengukuran RAM. Ekspor Linux berhasil; build Swift terbaru, dua gerbang
+parity, latensi dan dampak memori pada iPhone masih menunggu.

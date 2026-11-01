@@ -8,6 +8,11 @@ Profil ini memakai **160 hidden / 64 condition token**, lalu menjalankan blok
 pretrained **0 (local) → 1 (full)**. Precision tetap Float32 dan kebijakan
 perangkat tetap CPU-only. Input aktivasi masih sintetis; ini belum generasi musik.
 
+[Hasil iPhone profil ini sudah PASS](../reviews/coreai-iphone17pro-pretrained-dit-context/README.md):
+rata-rata dua run hangat 31,10 ms. Tahap berikutnya adalah
+[penyimpanan bobot FP16 dengan hitungan FP32](coreai-dit-storage16.md).
+Langkah di bawah tetap tersedia untuk mengulang baseline konteks FP32.
+
 ## Jalankan di Mac
 
 ```bash
@@ -34,7 +39,8 @@ Pilih iPhone 17 Pro → **Cmd+R** → **Uji DiT konteks panjang**.
 Jalankan profil ini terlebih dahulu setelah membuka ulang aplikasi agar baseline
 footprint lebih mudah dibaca. Cache CoreAI tetap dapat memengaruhi waktu load.
 Bagikan laporan lengkap. Source Swift terbaru belum dikompilasi dengan Apple
-SDK di workspace Linux; ekspor dan pemeriksaan referensi dilakukan di Linux.
+SDK di workspace Linux; pengguna telah menjalankan profil FP32 ini di iPhone,
+sementara perubahan terbaru untuk profil bobot FP16 masih perlu diuji.
 
 ## Kontrak dan cakupan
 
