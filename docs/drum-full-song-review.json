@@ -1,0 +1,55 @@
+{
+  "experiment": "acoustic-drums-full-song-single-pass",
+  "execution_status": "generated",
+  "musical_quality_status": "rejected_by_listener",
+  "listener_assessment": "Groove, timbre and timing became unclear in the full-song output.",
+  "feedback_archive_sha256": "d70172e221bdd5841fa4a734f7d678d35fd13150996c02f2bfa019cb61814cab",
+  "feedback_archive_preserved_in_repository": false,
+  "source_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "model_input_sha256": "df975dc1ec02ad5131c50dc527fc2ef295186beb25b636bb6ad85ec74a67ab1a",
+  "source_seconds": 243.330625,
+  "model_seconds": 244,
+  "model_calls_requested": 1,
+  "mode": "single_pass",
+  "preset": {
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.",
+    "device": "cuda",
+    "guidance_scale": 7.0,
+    "id": "acoustic-drums-v1",
+    "inference_steps": 50,
+    "instrument": "drums",
+    "model": "acestep-v15-base",
+    "offload_to_cpu": true,
+    "precision": "float32",
+    "seeds": [
+      0
+    ]
+  },
+  "checks": {
+    "model_input_hash_reproduced": true,
+    "initial_30_seconds_input_pcm_identical_to_approved_baseline": true,
+    "cuda_fp32_model_and_completed_vae_captures": true,
+    "decoded_mp3_frames": 7786580,
+    "decoded_mp3_duration_seconds": 243.330625,
+    "decoded_mp3_finite": true,
+    "decoded_mp3_peak": 0.6731529235839844,
+    "decoded_mp3_samples_abs_ge_one": 0,
+    "explicit_bpm": null,
+    "explicit_timesignature": "",
+    "song_stitching_used": false
+  },
+  "related_listener_observations": {
+    "opening_30_seconds": "approved",
+    "start_90_duration_30": "many glitches",
+    "start_210_duration_30": "no glitches"
+  },
+  "interpretation": [
+    "Successful execution is not musical approval.",
+    "The recorded preset/source are consistent; long-context generation did not retain the preferred local result.",
+    "This result is not explained by song-chunk crossfades, because none were used.",
+    "The evidence does not isolate diffusion versus internal VAE processing or determine a unique cause.",
+    "Missing BPM/meter settings show audio-only conditioning, not proof that filling those fields would fix the model."
+  ],
+  "decision": "Keep approved 30-second baseline. Treat full-song notebook as opt-in reproduction, not the next recommended quality path. No automatic new duration/seed sweep.",
+  "limits": "Original full-song WAV and raw float waveform were not uploaded, so their hashes and pre-encoding clipping cannot be independently checked."
+}

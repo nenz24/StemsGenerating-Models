@@ -2,6 +2,16 @@
 
 ## Full-song single-pass experiment
 
+**Rejected by the listener:** the full 243.33-second output lost clear groove,
+timbre and timing. `docs/drum-full-song-review.json` records the evidence and
+limits. Input/preset consistency and the initial 30-second PCM prefix were
+verified; the lossy preview has the correct length and no full-scale samples.
+There was no song stitching. These checks do not isolate a unique cause in the
+long-context generation/decoder pipeline. `generated` is not a quality verdict.
+Notebook 14 is retained for reproduction with DRY_RUN=True by default; it is
+not the next recommended quality experiment. Do not repeat duration/seed sweeps
+without a testable hypothesis. Preserve the approved opening 30-second baseline.
+
 The uploaded START=90 probe is reported glitchy; START=210 is reported clean.
 Both reports have the same source, drum preset and CUDA FP32 settings. At the
 listener's request, notebook 14 now tests the entire original piano in one model
