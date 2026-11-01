@@ -1,6 +1,6 @@
 """ACE-Step bounded-context experiments and measured, sample-aligned stitching.
 
-Reuses electric_full_song.py unchanged. Plan/probe default to no inference.
+Reuses the checked bass/drum workers. Plan/probe default to no inference.
 Needs numpy, scipy, soundfile, ffmpeg, plus the existing CUDA runtime for --execute.
 """
 import argparse
@@ -89,7 +89,26 @@ def read_audio(path):
     return data
 
 
-def prepare(source, output, context=90, margin=6, fade=.58, cues_file=None):
+def instrument_of(plan):
+    instrument=plan.get('instrument',plan.get('preset',{}).get('instrument','bass'))
+    if instrument not in ('bass','drums'):raise ValueError('Supported chunk instruments: bass, drums')
+    return instrument
+
+
+def worker_for(instrument):
+    if instrument=='bass':return single
+    if instrument=='drums':
+        import drum_probe
+        return drum_probe
+    raise ValueError('Supported chunk instruments: bass, drums')
+
+
+def files_for(plan):
+    return ('drum_probe.json','drums.wav','drums_full') if instrument_of(plan)=='drums' else ('single_pass.json','electric_bass.wav','electric_bass')
+
+
+def prepare(source, output, context=90, margin=6, fade=.58, cues_file=None, *, instrument='bass'):
+    worker=worker_for(instrument)
     source,output=Path(source).resolve(),Path(output).resolve()
     output.mkdir(parents=True,exist_ok=False)
     original_hash=sha256(source)
@@ -115,7 +134,7 @@ def prepare(source, output, context=90, margin=6, fade=.58, cues_file=None):
         return float(np.sqrt(np.mean(block**2)))
     plan=layout(len(audio),context,margin,fade,cues,energy)
     plan.update(schema_version=2,status='planned',original_sha256=original_hash,source_file='source.wav',
-                source_sha256=sha256(clean),preset=single.PRESET,
+                source_sha256=sha256(clean),preset=worker.PRESET,instrument=instrument,
                 generation_source_file=generation_input.name,generation_source_sha256=original_hash,
                 note='No inferred meter/downbeats. Context cap includes margins and integer end padding. Independent chunks; continuity and musical quality unverified.')
     write_json(output/'plan.json',plan)
@@ -135,15 +154,16 @@ def load_plan(path):
     source=path.parent/plan['source_file']
     if not source.resolve().is_relative_to(path.parent) or sha256(source)!=plan['source_sha256']:
         raise ValueError('Canonical source changed or escapes the run')
-    if plan['preset']!=single.PRESET or single.frames(source)!=plan['total_frames']:
+    if plan['preset']!=worker_for(instrument_of(plan)).PRESET or single.frames(source)!=plan['total_frames']:
         raise ValueError('Preset or source duration differs from plan')
     generation_source(path.parent,plan)
     return path.parent,plan,source
 
 
 def verify_chunk(folder,plan,chunk):
-    report=json.loads((folder/'single_pass.json').read_text())
-    stem=folder/'electric_bass.wav';metadata=report.get('input',{})
+    report_file,stem_file,_=files_for(plan)
+    report=json.loads((folder/report_file).read_text())
+    stem=folder/stem_file;metadata=report.get('input',{})
     if (report.get('status')!='generated' or report.get('preset')!=plan['preset']
         or metadata.get('original_sha256')!=plan.get('generation_source_sha256',plan['source_sha256'])
         or metadata.get('start')!=chunk['input_start']/RATE
@@ -157,6 +177,7 @@ def verify_chunk(folder,plan,chunk):
 
 def run_chunks(root,plan_path):
     folder,plan,source=load_plan(plan_path)
+    worker=worker_for(instrument_of(plan));report_file,_,_=files_for(plan)
     source=generation_source(folder,plan)
     import fcntl
     with (folder/'.generation.lock').open('a+') as lock:
@@ -174,7 +195,7 @@ def run_chunks(root,plan_path):
             # Recover a finished attempt after an interrupted progress write.
             completed=None
             for attempt in sorted(parent.glob('attempt_*')):
-                report=attempt/'single_pass.json'
+                report=attempt/report_file
                 if report.is_file() and json.loads(report.read_text()).get('status')=='generated':
                     verify_chunk(attempt,plan,chunk);completed=attempt;break
             if completed is None:
@@ -182,7 +203,7 @@ def run_chunks(root,plan_path):
                 number=0
                 while (parent/f'attempt_{number:03d}').exists():number+=1
                 completed=parent/f'attempt_{number:03d}'
-                single.generate(root,source,completed,start=chunk['input_start']/RATE,
+                worker.generate(root,source,completed,start=chunk['input_start']/RATE,
                     duration=(chunk['input_end']-chunk['input_start'])/RATE,execute=True)
                 verify_chunk(completed,plan,chunk)
             progress[key]=str(completed.relative_to(folder));write_json(progress_file,progress)
@@ -260,13 +281,16 @@ def stitch_arrays(plan,audios):
         output[a:b]=blend
         before=audios[i-1][max(0,a-left['input_start']-RATE//3):a-left['input_start']]
         after=audios[i][b-right['input_start']:b-right['input_start']+RATE//3]
-        lp,rp=pitch(before),pitch(after)
+        if instrument_of(plan)=='drums':
+            lp=rp={'hz':None,'periodicity':None,'note':'Pitch continuity is not a drum-groove measure'}
+        else:lp,rp=pitch(before),pitch(after)
         cents=1200*math.log2(rp['hz']/lp['hz']) if lp['hz'] and rp['hz'] else None
         stats.update(index=i,nominal_seconds=nominal/RATE,fade_start_frame=a,fade_end_frame=b,
                      left_pitch=lp,right_pitch=rp,pitch_change_cents=cents,
                      manual_review=(stats['blend_relative_rms_db'] < -3 or abs(stats['predicted_level_change_db'])>6
                                     or cents is not None and abs(cents)>150),
-                     note='Pitch/level changes may be musical. Equal-power does not guarantee phase continuity.')
+                     musical_review_required=True,
+                     note='Signal flags do not evaluate groove/timbre. Equal-power does not guarantee phase continuity.')
         seams.append(stats)
     peak=float(np.max(np.abs(output)))
     gain=min(1.,.95/peak) if peak else 1.
@@ -276,24 +300,37 @@ def stitch_arrays(plan,audios):
 
 def stitch_run(plan_path):
     folder,plan,source=load_plan(plan_path)
+    report_file,_,stem_name=files_for(plan)
     progress=json.loads((folder/'progress.json').read_text())
-    audios=[]
+    audios=[];verified=[]
     for chunk in plan['chunks']:
         run=(folder/progress[str(chunk['index'])]).resolve()
         if not run.is_relative_to(folder/f'chunk_{chunk["index"]:03d}'):raise ValueError('Chunk path escapes run')
-        audios.append(read_audio(verify_chunk(run,plan,chunk)))
+        stem=verify_chunk(run,plan,chunk)
+        audios.append(read_audio(stem));verified.append((run,stem))
     output=folder/'stitched'
     if output.exists():raise ValueError('Stitched output exists; preserve it before another stitch')
     audio,report=stitch_arrays(plan,audios)
     output.mkdir()
-    sf.write(output/'electric_bass.wav',audio,RATE,subtype='PCM_24')
+    sf.write(output/f'{stem_name}.wav',audio,RATE,subtype='PCM_24')
     sf.write(output/'mix_full.wav',.5*(.7*read_audio(source)+audio),RATE,subtype='PCM_24')
-    for stem in ['electric_bass','mix_full']:
+    for stem in [stem_name,'mix_full']:
         subprocess.run(['ffmpeg','-nostdin','-v','error','-n','-i',str(output/f'{stem}.wav'),'-c:a','libmp3lame','-b:a','192k',str(output/f'{stem}.mp3')],check=True)
     for seam in report['seams']:
         center=round(seam['center_seconds']*RATE)
         sf.write(output/f'seam_{seam["index"]:03d}.wav',audio[max(0,center-3*RATE):min(len(audio),center+3*RATE)],RATE,subtype='PCM_24')
-    report.update(status='stitched',export_frames=len(audio),stem_sha256=sha256(output/'electric_bass.wav'))
+    (output/'chunk_reports').mkdir()
+    for chunk,(run,stem) in zip(plan['chunks'],verified):
+        start=max(0,(chunk['core_start']-chunk['input_start'])/RATE)
+        length=min(8.,(chunk['core_end']-chunk['core_start'])/RATE)
+        write_json(output/'chunk_reports'/f'{chunk["index"]:03d}.json',
+            {'chunk':chunk,'stem_sha256_verified':sha256(stem),
+             'preview_song_start_seconds':chunk['core_start']/RATE,
+             'preview_seconds':length,'generation_report':json.loads((run/report_file).read_text())})
+        subprocess.run(['ffmpeg','-nostdin','-v','error','-n','-ss',str(start),'-i',str(stem),
+            '-t',str(length),'-c:a','libmp3lame','-b:a','192k',str(output/f'chunk_{chunk["index"]:03d}_before_stitch.mp3')],check=True)
+    report.update(status='stitched',instrument=instrument_of(plan),export_frames=len(audio),
+                  stem_file=f'{stem_name}.wav',stem_sha256=sha256(output/f'{stem_name}.wav'))
     write_json(output/'seams.json',report)
     return report
 
@@ -303,19 +340,20 @@ def main():
     plan=sub.add_parser('plan');plan.add_argument('--source',type=Path,required=True);plan.add_argument('--out',type=Path,required=True)
     plan.add_argument('--context-seconds',type=float,default=90);plan.add_argument('--margin-seconds',type=float,default=6)
     plan.add_argument('--fade-seconds',type=float,default=.58);plan.add_argument('--cues',type=Path)
+    plan.add_argument('--instrument',choices=['bass','drums'],default='bass')
     for name in ['probe','run','stitch']:
         s=sub.add_parser(name);s.add_argument('--plan',type=Path,required=True)
         if name!='stitch':s.add_argument('--root',type=Path,default=ROOT);s.add_argument('--execute',action='store_true')
         if name=='probe':s.add_argument('--duration',type=int,choices=[60,90,120],required=True);s.add_argument('--start',type=float,default=0)
     args=p.parse_args()
     if args.command=='plan':
-        result=prepare(args.source,args.out,args.context_seconds,args.margin_seconds,args.fade_seconds,args.cues)
+        result=prepare(args.source,args.out,args.context_seconds,args.margin_seconds,args.fade_seconds,args.cues,instrument=args.instrument)
     elif args.command=='probe':
         folder,plan,source=load_plan(args.plan)
         parent=folder/f'probe_{args.duration:03d}';parent.mkdir(exist_ok=True)
         index=0
         while (parent/f'attempt_{index:03d}').exists():index+=1
-        result=single.generate(args.root,generation_source(folder,plan),parent/f'attempt_{index:03d}',start=args.start,duration=args.duration,execute=args.execute)
+        result=worker_for(instrument_of(plan)).generate(args.root,generation_source(folder,plan),parent/f'attempt_{index:03d}',start=args.start,duration=args.duration,execute=args.execute)
     elif args.command=='run':
         if args.execute:result=run_chunks(args.root,args.plan)
         else:_,result,_=load_plan(args.plan)

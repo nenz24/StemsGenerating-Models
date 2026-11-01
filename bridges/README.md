@@ -1,5 +1,10 @@
 # ACE-Step context bridge
 
+[Notebook 15](../notebooks/15_colab_drum_context_90.ipynb) generates drum in bounded
+90-second contexts and stitches them using the bass method, while keeping the
+drum preset unchanged. It reuses the active runtime/weights. Its feedback includes
+pre-stitch chunk previews and actual reports; GPU/music quality is not yet tested.
+
 [Notebook 14](../notebooks/14_colab_drum_full_song.ipynb) tests the full drum song
 in one continuous context using the active runtime/weights, without stitching.
 The uploaded full-song result was rejected for unclear groove/timbre/timing.

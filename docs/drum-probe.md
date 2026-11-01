@@ -1,5 +1,31 @@
 # Acoustic drum probe
 
+## 90-second contexts followed by stitching
+
+Notebook 15 is the listener-requested controlled alternative to the rejected
+full-song single context. It uses the same margin/float equal-power stitching
+method as the bass experiment, with the acoustic drum preset unchanged. A
+90-second cap includes margins/padding; this piano produces 90/89/90-second model
+contexts and two seams. Drum chunking at this cap has not yet been evaluated on
+GPU. The noisy bass baseline is a method reference, not proof this will be clean.
+
+Use the active runtime/weights. Copy notebook 15 cells into the active Colab
+session if necessary; original piano is reused or uploaded when requested. No
+bass generation, model installation or checkpoint download is performed. Completed
+drum chunks resume only after source/preset/frame/hash verification. Old bass
+plans/results remain supported and are never reused as drum results.
+
+`drum_chunked_feedback.zip` includes full drum/mix MP3, separate pre-stitch chunk
+previews, actual per-chunk reports and seam excerpts. `drum_chunked_result.zip`
+also preserves generated chunk WAVs and final WAVs. Pitch-continuity scoring is
+not applied to drums; level/correlation flags do not certify groove or timbre.
+
+```bash
+python scripts/ace_context_chunks.py plan --instrument drums --source /path/to/piano.mp3 --out runs/drums90 --context-seconds 90
+python scripts/ace_context_chunks.py run --plan runs/drums90/plan.json --execute
+python scripts/ace_context_chunks.py stitch --plan runs/drums90/plan.json
+```
+
 ## Full-song single-pass experiment
 
 **Rejected by the listener:** the full 243.33-second output lost clear groove,
