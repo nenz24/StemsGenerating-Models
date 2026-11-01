@@ -14,22 +14,27 @@ import export_coreai_dit_block as MODULE
 
 
 class DiTBlockPreparationTests(unittest.TestCase):
-    def fixture(self, folder):
+    def fixture(self, folder, profile='short'):
         folder.mkdir()
-        shapes = {f'{name}.f32le': shape for name, shape in MODULE.INPUT_SHAPES.items()}
-        shapes['hidden-reference.f32le'] = MODULE.OUTPUT_SHAPE
+        input_shapes, output_shape, asset, _ = MODULE.profile_spec(profile)
+        shapes = {f'{name}.f32le': shape for name, shape in input_shapes.items()}
+        shapes['hidden-reference.f32le'] = output_shape
         data = {name: bytes(math.prod(shape) * 4) for name, shape in shapes.items()}
-        data.update({'dit-block.aimodel/main.hash': b'fixture only',
-                     'dit-block.aimodel/main.mlirb': b'not executable',
-                     'dit-block.aimodel/metadata.json': b'{}'})
+        data.update({f'{asset}/main.hash': b'fixture only',
+                     f'{asset}/main.mlirb': b'not executable',
+                     f'{asset}/metadata.json': b'{}'})
         for name, value in data.items():
             p = folder / name;p.parent.mkdir(parents=True, exist_ok=True);p.write_bytes(value)
         record = {'digest': 'fixture checkpoint'}
-        ref = {'schema_version': 1, 'asset_file': 'dit-block.aimodel', 'checkpoint': record,
+        ref = {'schema_version': 1, 'asset_file': asset, 'checkpoint': record,
                'checkpoint_full_sha256_verified': True, 'layer_prefix': 'decoder.layers.0.',
-               'input_shapes': MODULE.INPUT_SHAPES, 'output_shape': MODULE.OUTPUT_SHAPE,
+               'input_shapes': input_shapes, 'output_shape': output_shape,
                'function_name': 'main', 'output_name': 'hidden_out', 'scalar_type': 'float32', 'byte_order': 'little',
                'artifact_sha256': {name: hashlib.sha256(value).hexdigest() for name, value in data.items()}}
+        if profile == 'context':
+            ref.pop('layer_prefix')
+            ref.update(profile='context', layer_prefixes=['decoder.layers.0.', 'decoder.layers.1.'],
+                       sliding_window=128, mask_geometry_verified=True)
         self.write_reference(folder, ref)
         return ref, record
 
@@ -79,6 +84,19 @@ class DiTBlockPreparationTests(unittest.TestCase):
             self.write_reference(folder, ref)
             with self.assertRaises(ValueError):MODULE.verify_bundle(folder, record)
             self.assertEqual(outside.read_bytes(), b'keep')
+
+    def test_context_profile_requires_both_layers_and_distinct_local_mask(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp) / 'bundle';ref, record = self.fixture(folder, 'context')
+            MODULE.verify_bundle(folder, record, 'context')
+            with self.assertRaises(ValueError):MODULE.verify_bundle(folder, record)
+            for key, value in [('layer_prefixes', ['decoder.layers.1.', 'decoder.layers.0.']),
+                               ('sliding_window', 16), ('mask_geometry_verified', False)]:
+                self.write_reference(folder, dict(ref, **{key: value}))
+                with self.assertRaises(ValueError):MODULE.verify_bundle(folder, record, 'context')
+            del ref['artifact_sha256']['local_mask.f32le']
+            self.write_reference(folder, ref)
+            with self.assertRaises(ValueError):MODULE.verify_bundle(folder, record, 'context')
 
 
 if __name__ == '__main__':unittest.main()

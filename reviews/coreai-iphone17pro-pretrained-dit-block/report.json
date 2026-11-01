@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "source": "User-pasted device report",
+    "independently_reproduced": false,
+    "device_model": "iPhone 17 Pro",
+    "device_model_evidence": "Previously identified by user; model identifier not emitted in report",
+    "source_commit": null,
+    "local_asset_hashes_in_report": false,
+    "cache_state": "unmeasured"
+  },
+  "runtime": "CoreAI",
+  "os": "Version 27.0.1 (Build 24A446)",
+  "architecture": "h18p",
+  "target": "iOS device build",
+  "test": "pretrained ACE Base DiT block 0 / synthetic activations / NOT instrument generation",
+  "requested_compute_policy": "cpuOnly",
+  "actual_accelerator": "not measured",
+  "output_shape": [
+    1,
+    16,
+    2048
+  ],
+  "scalar_type": "float32",
+  "reference_binary_sha256_verified": true,
+  "publisher_checkpoint_verified_by_mac_preparation": true,
+  "tolerances": {
+    "absolute": 0.0001,
+    "relative": 0.001,
+    "normalized_rmse": 0.001
+  },
+  "source_asset_validation": true,
+  "source_asset_validation_ms": 0.238666,
+  "validated_load_specialization_ms": 322.957625,
+  "function_names": [
+    "main"
+  ],
+  "runs": [
+    {
+      "kind": "first",
+      "run_and_read_back_ms": 18.869667,
+      "max_absolute_error": 0.000179290771484375,
+      "rmse": 1.2832379143245418e-05,
+      "normalized_rmse": 1.7727500149824247e-06
+    },
+    {
+      "kind": "warm_1",
+      "run_and_read_back_ms": 4.377792,
+      "max_absolute_error": 0.000179290771484375,
+      "rmse": 1.2832379143245418e-05,
+      "normalized_rmse": 1.7727500149824247e-06
+    },
+    {
+      "kind": "warm_2",
+      "run_and_read_back_ms": 4.637042,
+      "max_absolute_error": 0.000179290771484375,
+      "rmse": 1.2832379143245418e-05,
+      "normalized_rmse": 1.7727500149824247e-06
+    }
+  ],
+  "derived_warm_mean_ms": 4.507417,
+  "parity": "PASS (three runs)",
+  "memory": {
+    "baseline_mib": 20.36115264892578,
+    "sampled_maximum_mib": 168.92408752441406,
+    "sampling_interval_ms": 10,
+    "scope": "Whole process; not exact peak, isolated model allocation or whole-device usage"
+  },
+  "total_probe_ms": 406.333292,
+  "model_loaded": true,
+  "model_inference_executed": true,
+  "scope": "One repeated synthetic 16-token hidden / 8-token condition input for block 0; long-context behavior, full denoiser and generation unverified",
+  "input_shapes": {
+    "condition": [
+      1,
+      8,
+      2048
+    ],
+    "cross_mask": [
+      1,
+      1,
+      16,
+      8
+    ],
+    "hidden": [
+      1,
+      16,
+      2048
+    ],
+    "rope_cos": [
+      1,
+      16,
+      128
+    ],
+    "rope_sin": [
+      1,
+      16,
+      128
+    ],
+    "self_mask": [
+      1,
+      1,
+      16,
+      16
+    ],
+    "temb": [
+      1,
+      6,
+      2048
+    ]
+  },
+  "output_name": "hidden_out",
+  "layer_prefix": "decoder.layers.0."
+}

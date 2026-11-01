@@ -41,7 +41,7 @@
       "scope": "This import evidence establishes module type-check only; see the later device report for app/tensor execution"
     },
     "physical_device_execution_verified": true,
-    "physical_device_execution_scope": "User-reported tensor, native affine, pretrained VAE decoder (0.2/1 s) and encoder posterior mean (1 s) parity; hardware placement unmeasured",
+    "physical_device_execution_scope": "User-reported tensor, affine, VAE encoder/decoder and one short pretrained DiT block parity; hardware placement unmeasured",
     "public_sdk_interface_review": {
       "archive_name": "coreai-api.apDMX4.zip",
       "archive_sha256": "7c8d1c8cde67d4f062032c0704fc0991d958ceb17e0952defd2d7c4daa5cb597",
@@ -103,11 +103,11 @@
   },
   "unverified": {
     "coreai_sdk_custom_audio_model_support": "Pretrained encoder posterior mean at 1 s and decoder at 0.2/1 s Float32 parity reported; joint codec, stochastic posterior and full conditional generator unverified",
-    "model_import_format_and_operators": "Native .aimodel affine and pretrained VAE encoder/decoder verified on iPhone; generator operators unverified",
+    "model_import_format_and_operators": "Native .aimodel affine, VAE encoder/decoder and short Base DiT block verified on iPhone; long context and full generator unverified",
     "accelerator_and_precision_support": "Float32 affine and VAE encoder/decoder parity verified under requested CPU-only policy; actual placement and GPU/Neural Engine inference unmeasured",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
-    "model_conversion_training_and_device_benchmarks": "Encoder/decoder separate device gates passed; one pretrained Base DiT block exported with device gate pending; full generator/sampling/training unimplemented"
+    "model_conversion_training_and_device_benchmarks": "VAE and one short pretrained DiT block passed separate device gates; longer two-block export verified with device gate pending; full generator/sampling/training unimplemented"
   },
   "local_prototype_status": {
     "source_directory": "prototypes/ios27-coreai",
@@ -119,8 +119,8 @@
     "apple_compilation_verified": true,
     "apple_compilation_evidence": "User reported successful execution of the device probe app; not independently compiled in this Linux workspace",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-pretrained-encoder-1s/report.json",
-    "device_execution_scope": "Native affine and pretrained VAE encoder posterior mean / decoder pass separate device gates; joint codec, full accompaniment and hardware placement unverified",
+    "device_execution_report": "reviews/coreai-iphone17pro-pretrained-dit-block/report.json",
+    "device_execution_scope": "Affine, separate VAE gates and short DiT block pass; long context, full denoiser/accompaniment and hardware placement unverified",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -154,7 +154,7 @@
     "native_model_reference": "prototypes/ios27-coreai/ModelCandidates/affine-native-reference.json",
     "current_native_probe_apple_compilation_verified": true,
     "native_inference_report": "reviews/coreai-iphone17pro-native-affine/report.json",
-    "checkpoint_conversion_scope": "Pretrained VAE decoder FP32 0.2/1 s, encoder posterior mean 1 s, and one complete Base DiT block FP32; full generator unimplemented"
+    "checkpoint_conversion_scope": "VAE decoder 0.2/1 s, encoder mean 1 s, short Base block 0 and longer Base blocks 0+1 FP32; full generator unimplemented"
   },
   "audio_component_audit": {
     "report": "reviews/coreai-ace-component-audit/report.json",
@@ -265,10 +265,36 @@
     "audio_duration_claim": null,
     "input_provenance": "Synthetic hidden/condition/timestep activations; RoPE; finite masks; no user recording or text conditioning",
     "requested_device_compute_policy": "cpuOnly",
-    "new_swift_apple_build_verified": false,
-    "device_parity_verified": false,
+    "new_swift_apple_build_verified": true,
+    "device_parity_verified": true,
     "validation_manifest": "reviews/coreai-pretrained-dit-block-export/reference.json",
     "memory_measurement": "10 ms sampled whole-process phys_footprint; not exact peak or isolated model allocation",
+    "full_generator_and_diffusion_loop_implemented": false,
+    "device_report": "reviews/coreai-iphone17pro-pretrained-dit-block/report.json",
+    "device_evidence_source": "User-pasted report; not independently reproduced"
+  },
+  "pretrained_dit_context_probe": {
+    "preparation_command": "bash scripts/prepare_coreai_dit_block.sh --profile context",
+    "local_ignored_bundle": "prototypes/ios27-coreai/ModelCandidates/dit-context-pretrained",
+    "publisher_checkpoint_full_sha256_verified_in_development": true,
+    "pretrained_export_verified_in_development": true,
+    "layer_prefixes": [
+      "decoder.layers.0.",
+      "decoder.layers.1."
+    ],
+    "parameter_count": 125867008,
+    "hidden_tokens": 160,
+    "condition_tokens": 64,
+    "sliding_window_radius": 128,
+    "mask_builder": "Verified publisher create_4d_mask",
+    "mask_geometry_verified": true,
+    "reference_backend": "PyTorch CPU Float32 / publisher eager attention",
+    "audio_duration_claim": null,
+    "input_provenance": "Synthetic hidden/conditioning/timestep activations, RoPE and finite padding/local/full masks",
+    "requested_device_compute_policy": "cpuOnly",
+    "new_swift_apple_build_verified": false,
+    "device_parity_verified": false,
+    "validation_manifest": "reviews/coreai-pretrained-dit-context-export/reference.json",
     "full_generator_and_diffusion_loop_implemented": false
   }
 }

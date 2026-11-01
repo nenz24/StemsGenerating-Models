@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class DecoderPreparePathTests(unittest.TestCase):
-    def run_fixture(self, reuse, frames=5, component='decoder', dit=False):
+    def run_fixture(self, reuse, frames=5, component='decoder', dit=False, dit_profile='short'):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp);repo = base / 'repo with spaces';(repo / 'scripts').mkdir(parents=True)
             shutil.copyfile(ROOT / 'scripts/prepare_coreai_decoder.sh', repo / 'scripts/prepare_coreai_decoder.sh')
@@ -58,6 +58,11 @@ if sys.argv[1]=='venv':
                 encoder_marker.parent.mkdir(parents=True)
                 encoder_marker.write_text('preserve encoder')
                 bundle_name = 'dit-block-pretrained'
+                if dit_profile == 'context':
+                    short_marker = candidates / 'dit-block-pretrained/baseline-marker'
+                    short_marker.parent.mkdir(parents=True)
+                    short_marker.write_text('preserve short DiT block')
+                    bundle_name = 'dit-context-pretrained'
             if reuse:
                 target = repo / '.runtime-cache/coreai-decoder-venv/bin/python';target.parent.mkdir(parents=True)
                 target.write_text(prefix + python_fixture);target.chmod(0o755)
@@ -71,6 +76,7 @@ if sys.argv[1]=='venv':
             if component == 'encoder':command += ['--component', 'encoder']
             if frames == 25:command += ['--frames', '25']
             if dit:command = ['bash', str(repo / 'scripts/prepare_coreai_dit_block.sh')]
+            if dit and dit_profile == 'context':command += ['--profile', 'context']
             result = subprocess.run(command,
                                     cwd=base, env=env, text=True, capture_output=True, timeout=20)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -86,12 +92,15 @@ if sys.argv[1]=='venv':
             if not dit:self.assertEqual(python_args[python_args.index('--component') + 1], component)
             if frames == 25:
                 self.assertEqual(baseline.read_text(), 'preserve 0.2 s baseline')
-                self.assertIn('Uji blok generator' if dit else f'Uji {component} 1 detik', result.stdout)
+                button = ('Uji DiT konteks panjang' if dit_profile == 'context' else 'Uji blok generator') if dit else f'Uji {component} 1 detik'
+                self.assertIn(button, result.stdout)
             if component == 'encoder':
                 self.assertEqual(decoder_one_second.read_text(), 'preserve 1 s decoder')
             if dit:
                 self.assertEqual(encoder_marker.read_text(), 'preserve encoder')
                 self.assertIn('scripts/export_coreai_dit_block.py', python_args)
+                self.assertEqual(python_args[python_args.index('--profile') + 1], dit_profile)
+                if dit_profile == 'context':self.assertEqual(short_marker.read_text(), 'preserve short DiT block')
 
     def test_fresh_managed_python_and_package_cache_stay_in_checkout(self):
         self.run_fixture(False)
@@ -119,6 +128,19 @@ if sys.argv[1]=='venv':
     def test_dit_preparation_only_prepares_environment_and_preserves_all_codec_bundles(self):
         for reuse in (False, True):
             with self.subTest(reuse=reuse):self.run_fixture(reuse, frames=25, component='encoder', dit=True)
+
+    def test_long_context_export_and_reuse_preserve_short_dit_and_codec_bundles(self):
+        for reuse in (False, True):
+            with self.subTest(reuse=reuse):
+                self.run_fixture(reuse, frames=25, component='encoder', dit=True, dit_profile='context')
+
+    def test_invalid_dit_profile_stops_before_environment_setup(self):
+        for args in (['--profile'], ['--profile','other'], ['--profile','context','extra']):
+            with self.subTest(args=args):
+                result = subprocess.run(['bash', str(ROOT/'scripts/prepare_coreai_dit_block.sh'), *args],
+                                        capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn('Usage:', result.stderr)
 
 
 if __name__ == '__main__':

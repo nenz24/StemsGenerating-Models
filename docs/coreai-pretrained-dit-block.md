@@ -5,6 +5,12 @@ iPhone. Tahap ini memeriksa satu blok **diffusion transformer (DiT)** dari model
 Base yang dipakai pada baseline CUDA. Blok ini mencakup self-attention,
 cross-attention, RoPE, RMSNorm, modulasi timestep dan MLP dengan bobot asli.
 
+[Hasil iPhone sudah PASS](../reviews/coreai-iphone17pro-pretrained-dit-block/README.md):
+tiga run cocok, rata-rata dua run hangat 4,51 ms. Tahap berikutnya adalah
+[dua blok dengan konteks lebih panjang](coreai-dit-context.md), yang menguji
+mask lokal dan penuh di atas radius 128 token. Langkah di bawah tetap tersedia
+untuk mengulang baseline satu blok pendek.
+
 ## Jalankan di Mac
 
 ```bash
@@ -37,7 +43,8 @@ Hash publisher tetap wajib cocok. Tidak memerlukan GPU CUDA atau training baru.
 Pilih iPhone 17 Pro → **Cmd+R** → **Uji blok generator**. Jalankan tombol ini
 terlebih dahulu setelah membuka ulang aplikasi agar footprint awal lebih mudah
 dibaca. Cache CoreAI tetap dapat memengaruhi load. Bagikan laporan lengkap.
-Perubahan Swift terbaru belum dikompilasi dengan Apple SDK di workspace Linux.
+Profil pendek telah dijalankan pengguna di iPhone. Perubahan Swift terbaru untuk
+profil konteks panjang belum dikompilasi dengan Apple SDK di workspace Linux.
 
 ## Cakupan uji
 

@@ -37,3 +37,10 @@ is about 9.58 GB, before VAE and activations; a successful block export does not
 establish full-device feasibility or final musical quality.
 
 Follow the [Mac and device steps](../../docs/coreai-pretrained-dit-block.md).
+
+**Subsequent evidence:** the user reported
+[short-block parity PASS on iPhone](../coreai-iphone17pro-pretrained-dit-block/README.md).
+The exact device source commit and Mac asset hashes were not emitted; this
+Linux manifest remains independent export evidence. A
+[longer two-block profile](../coreai-pretrained-dit-context-export/README.md)
+is prepared for the next device gate.

@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "profile": "context",
+  "asset_file": "dit-context.aimodel",
+  "function_name": "main",
+  "output_name": "hidden_out",
+  "input_shapes": {
+    "hidden": [
+      1,
+      160,
+      2048
+    ],
+    "condition": [
+      1,
+      64,
+      2048
+    ],
+    "temb": [
+      1,
+      6,
+      2048
+    ],
+    "rope_cos": [
+      1,
+      160,
+      128
+    ],
+    "rope_sin": [
+      1,
+      160,
+      128
+    ],
+    "self_mask": [
+      1,
+      1,
+      160,
+      160
+    ],
+    "cross_mask": [
+      1,
+      1,
+      160,
+      64
+    ],
+    "local_mask": [
+      1,
+      1,
+      160,
+      160
+    ]
+  },
+  "output_shape": [
+    1,
+    160,
+    2048
+  ],
+  "scalar_type": "float32",
+  "byte_order": "little",
+  "checkpoint": {
+    "repo_id": "ACE-Step/acestep-v15-base",
+    "revision": "e432212fec32b8965a14ffa57ae653438d6abd14",
+    "filename": "model.safetensors",
+    "size": 4787825604,
+    "digest": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b"
+  },
+  "checkpoint_full_sha256_verified": true,
+  "publisher_source_digests": {
+    "modeling_acestep_v15_base.py": "0f8cf5060b75a246f70f805133737a3b421e4483",
+    "configuration_acestep_v15.py": "965a1b73afb1c89d0959c7d80691e487fdfde505",
+    "config.json": "ba68842e7207fe015ef7bca698e40f12dc13241d"
+  },
+  "input_provenance": "Seed-0 synthetic activations; RoPE positions 0..159; finite additive key masks",
+  "scope": "2 complete pretrained block(s), self/cross-attention, RoPE, RMSNorm, AdaLN and MLP; NOT full denoiser or instrument generation",
+  "parameter_count": 125867008,
+  "reference_backend": "PyTorch CPU Float32 / publisher eager attention",
+  "reference_peak": 521.6171264648438,
+  "reference_rms": 13.582156362116457,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "versions": {
+    "torch": "2.8.0+cpu",
+    "transformers": "4.57.3",
+    "coreai-torch": "0.4.3",
+    "coreai-core": "1.0.0b3"
+  },
+  "artifact_sha256": {
+    "condition.f32le": "a4a49594df2da0eec70af414a6c06911bdae41af39ed43d6b7745bd4aed8123a",
+    "cross_mask.f32le": "85368246bd342301513dfa0293df9e9e535fa3133e6997202f6dabbf10011ac4",
+    "dit-context.aimodel/main.hash": "dd7a8f41e2065e9f7eb1f5d99569558e84bad61bdd91484741810b4bf4419dd8",
+    "dit-context.aimodel/main.mlirb": "21eec48ff9d441d0a4f276cb050d0275f5abc1695b2cd9e521596c99a3ab636a",
+    "dit-context.aimodel/metadata.json": "b5c23ef26142459ab61dc0ce4407fa5d9b5d2467c81580676f4f6cdb48c2a01a",
+    "hidden-reference.f32le": "96e7f5c6f74df0c6ff9dc3d649ddf06d8c88d8f931a4ef582a8da5602f46a4b3",
+    "hidden.f32le": "f76bdef072f7324df8e1f406c7bcc2e79b9b77080af22b0d621314883ee00123",
+    "local_mask.f32le": "11f8147bd885f37852710edfd1d7dc0342843668c37d85a69474d213d73ecad7",
+    "rope_cos.f32le": "7729ee713d61a04f6fa13320f57c2be2341dd5fc8087ead714cfea3076073c9a",
+    "rope_sin.f32le": "9872bf5fa8d2efbe5abebf3d03d3efd5b47de8ae1189925467627d2502c2d035",
+    "self_mask.f32le": "c00c321a640f55b797b2f4edb581b5145d3ebf11bbbc2a348b4ab2cfd1e1aba4",
+    "temb.f32le": "6448aa2616794e7bb01bbda19940c896de3b37660a615d8f9dd028390bbb0a66"
+  },
+  "coreai_device_inference_verified": false,
+  "layer_prefixes": [
+    "decoder.layers.0.",
+    "decoder.layers.1."
+  ],
+  "sliding_window": 128,
+  "mask_geometry_verified": true
+}

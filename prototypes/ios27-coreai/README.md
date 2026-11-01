@@ -174,14 +174,22 @@ Pengujian ini belum menjalankan diffusion generator lengkap.
 
 ## Blok diffusion transformer pretrained
 
-Berikutnya jalankan `bash scripts/prepare_coreai_dit_block.sh`, build ulang,
-lalu tekan **Uji blok generator**. Skrip memverifikasi checkpoint Base lengkap
+[Satu blok pendek sudah PASS di iPhone](../../reviews/coreai-iphone17pro-pretrained-dit-block/README.md),
+rata-rata dua run hangat 4,51 ms. Skrip memverifikasi checkpoint Base lengkap
 (unduhan 4,79 GB bila belum ada), lalu mengekspor hanya `decoder.layers.0.*`
 dengan self/cross-attention dan MLP asli. Native block sekitar 252 MB;
 semua paket codec tetap tersimpan. Tujuh input runtime mencakup hidden states,
 conditioning, timestep modulation, RoPE dan masks.
 
 [Panduan blok DiT](../../docs/coreai-pretrained-dit-block.md) menjelaskan batas
-uji 16 token sintetis ini. Ekspor Linux berhasil; build Swift terbaru dan
-parity/timing/memori blok pada iPhone masih menunggu. Belum ada generasi instrumen
+uji 16 token sintetis ini. Belum ada generasi instrumen
 lengkap, loop diffusion atau pengukuran end-to-end di iPhone.
+
+Berikutnya jalankan `bash scripts/prepare_coreai_dit_block.sh --profile context`,
+build ulang, lalu tekan **Uji DiT konteks panjang**. Profil terpisah ini memakai
+blok 0 (local radius 128) → 1 (full), 160 hidden / 64 conditioning token,
+dengan mask publisher yang berbeda. Native bundle tambahan sekitar 507 MB,
+checkpoint Base diambil dari cache, profil pendek dan codec tetap disimpan.
+[Panduan konteks panjang](../../docs/coreai-dit-context.md) menjelaskan kontraknya.
+Ekspor Linux berhasil; build Swift terbaru dan parity/timing/memori profil ini
+di iPhone masih menunggu.

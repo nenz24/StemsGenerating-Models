@@ -1,4 +1,4 @@
-// Encoder/decoder parity passed on device. DiT-block device results pending.
+// Codec and one short DiT block passed on device; the longer two-block profile is pending.
 import CoreAI
 import CryptoKit
 import Darwin
@@ -7,22 +7,28 @@ import Foundation
 
 enum CoreAIDecoderProbe {
     private enum Profile {
-        case decoderShort, decoderOneSecond, encoderOneSecond, ditBlock
+        case decoderShort, decoderOneSecond, encoderOneSecond, ditBlock, ditContext
         var isEncoder: Bool { self == .encoderOneSecond }
-        var isDiT: Bool { self == .ditBlock }
-        var component: String { isDiT ? "dit-block" : (isEncoder ? "encoder" : "decoder") }
+        var isDiTContext: Bool { self == .ditContext }
+        var isDiT: Bool { self == .ditBlock || isDiTContext }
+        var component: String { isDiT ? (isDiTContext ? "dit-context" : "dit-block") : (isEncoder ? "encoder" : "decoder") }
         var frames: Int { self == .decoderShort ? 5 : 25 }
         var folderName: String {
-            isDiT ? "dit-block-pretrained" : (self == .decoderShort ? "decoder-pretrained" : "\(component)-pretrained-1s")
+            isDiT ? "\(component)-pretrained" : (self == .decoderShort ? "decoder-pretrained" : "\(component)-pretrained-1s")
         }
         var inputName: String { isEncoder ? "audio" : "latent" }
         var outputName: String { isDiT ? "hidden_out" : (isEncoder ? "latent" : "audio") }
         var inputShape: [Int] { isEncoder ? [1, 2, frames * 1920] : [1, 64, frames] }
-        var outputShape: [Int] { isDiT ? [1, 16, 2048] : (isEncoder ? [1, 64, frames] : [1, 2, frames * 1920]) }
+        var hiddenTokens: Int { isDiTContext ? 160 : 16 }
+        var conditionTokens: Int { isDiTContext ? 64 : 8 }
+        var outputShape: [Int] { isDiT ? [1, hiddenTokens, 2048] : (isEncoder ? [1, 64, frames] : [1, 2, frames * 1920]) }
         var inputShapes: [String: [Int]] {
-            isDiT ? ["hidden": [1, 16, 2048], "condition": [1, 8, 2048], "temb": [1, 6, 2048],
-                     "rope_cos": [1, 16, 128], "rope_sin": [1, 16, 128],
-                     "self_mask": [1, 1, 16, 16], "cross_mask": [1, 1, 16, 8]] : [inputName: inputShape]
+            guard isDiT else { return [inputName: inputShape] }
+            var shapes = ["hidden": [1, hiddenTokens, 2048], "condition": [1, conditionTokens, 2048], "temb": [1, 6, 2048],
+                          "rope_cos": [1, hiddenTokens, 128], "rope_sin": [1, hiddenTokens, 128],
+                          "self_mask": [1, 1, hiddenTokens, hiddenTokens], "cross_mask": [1, 1, hiddenTokens, conditionTokens]]
+            if isDiTContext { shapes["local_mask"] = [1, 1, hiddenTokens, hiddenTokens] }
+            return shapes
         }
         var expectedFile: String { isDiT ? "hidden-reference.f32le" : "\(outputName)-reference.f32le" }
         var checkpointDigest: String {
@@ -43,6 +49,10 @@ enum CoreAIDecoderProbe {
         let inputShape: [Int]?
         let inputShapes: [String: [Int]]?
         let layerPrefix: String?
+        let layerPrefixes: [String]?
+        let profile: String?
+        let slidingWindow: Int?
+        let maskGeometryVerified: Bool?
         let outputShape: [Int]
         let inputFile: String?
         let expectedFile: String?
@@ -78,11 +88,15 @@ enum CoreAIDecoderProbe {
         await run(profile: .ditBlock)
     }
 
+    static func runDiTContext() async -> String {
+        await run(profile: .ditContext)
+    }
+
     private static func run(profile: Profile) async -> String {
         let component = profile.component
         let testDescription: String
         if profile.isDiT {
-            testDescription = "pretrained ACE Base DiT block 0 / synthetic activations"
+            testDescription = "pretrained ACE Base DiT \(profile.isDiTContext ? "blocks 0+1" : "block 0") / synthetic activations"
         } else {
             let inputDescription = profile.isEncoder ? "synthetic audio / posterior mean" : "seeded latent"
             testDescription = "pretrained ACE VAE \(component) / \(inputDescription)"
@@ -96,7 +110,7 @@ enum CoreAIDecoderProbe {
             "Accelerator used by a model: NOT MEASURED"
         ]
         if profile.isDiT {
-            lines.append("Block scope: decoder.layers.0.; 16 hidden tokens / 8 condition tokens; no audio duration claim")
+            lines.append("Block scope: \(profile.isDiTContext ? "layers 0 (local radius 128) -> 1 (full)" : "decoder.layers.0."); \(profile.hiddenTokens) hidden tokens / \(profile.conditionTokens) condition tokens; no audio duration claim")
         } else {
             lines.append("Window profile: \(profile.frames == 25 ? "1.0 s" : "0.2 s")")
         }
@@ -114,7 +128,7 @@ enum CoreAIDecoderProbe {
             guard let folder = Bundle.main.resourceURL?
                 .appendingPathComponent("ModelCandidates/\(profile.folderName)"),
                 FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
-                let script = profile.isDiT ? "bash scripts/prepare_coreai_dit_block.sh" :
+                let script = profile.isDiT ? "bash scripts/prepare_coreai_dit_block.sh --profile \(profile.isDiTContext ? "context" : "short")" :
                     "bash scripts/prepare_coreai_decoder.sh --component \(component) --frames \(profile.frames)"
                 lines.append("Prepare on Mac: \(script); then rebuild the app.")
                 throw ProbeError.missingPreparedBundle
@@ -135,9 +149,13 @@ enum CoreAIDecoderProbe {
                 throw ProbeError.invalidContract
             }
             if profile.isDiT {
-                guard contract.inputShapes == profile.inputShapes, contract.layerPrefix == "decoder.layers.0." else {
+                guard contract.inputShapes == profile.inputShapes else {
                     throw ProbeError.invalidContract
                 }
+                if profile.isDiTContext {
+                    guard contract.profile == "context", contract.layerPrefixes == ["decoder.layers.0.", "decoder.layers.1."],
+                          contract.slidingWindow == 128, contract.maskGeometryVerified == true else { throw ProbeError.invalidContract }
+                } else if contract.layerPrefix != "decoder.layers.0." { throw ProbeError.invalidContract }
             } else {
                 guard (contract.component ?? "decoder") == component,
                       (!profile.isEncoder || contract.posteriorMode == "mean"),

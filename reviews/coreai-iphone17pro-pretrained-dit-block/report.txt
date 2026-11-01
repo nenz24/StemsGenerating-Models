@@ -1,0 +1,43 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: pretrained ACE Base DiT block 0 / synthetic activations / NOT instrument generation
+Requested compute policy: cpuOnly
+Accelerator used by a model: NOT MEASURED
+Block scope: decoder.layers.0.; 16 hidden tokens / 8 condition tokens; no audio duration claim
+Target: iOS device build
+Input condition: [1, 8, 2048]
+Input cross_mask: [1, 1, 16, 8]
+Input hidden: [1, 16, 2048]
+Input rope_cos: [1, 16, 128]
+Input rope_sin: [1, 16, 128]
+Input self_mask: [1, 1, 16, 16]
+Input temb: [1, 6, 2048]
+Output hidden_out: [1, 16, 2048]
+Reference binary SHA-256: VERIFIED; pretrained checkpoint verified by Mac preparation
+Tolerances: abs 0.0001, rel 0.001, normalized RMSE 0.001
+Source asset validation: true
+Source asset validation ms: 0.238666
+Validated load/specialization ms: 322.957625
+Function names: ["main"]
+Runtime input condition descriptor: [1, 8, 2048], float32, interleave nil
+Runtime input cross_mask descriptor: [1, 1, 16, 8], float32, interleave nil
+Runtime input hidden descriptor: [1, 16, 2048], float32, interleave nil
+Runtime input rope_cos descriptor: [1, 16, 128], float32, interleave nil
+Runtime input rope_sin descriptor: [1, 16, 128], float32, interleave nil
+Runtime input self_mask descriptor: [1, 1, 16, 16], float32, interleave nil
+Runtime input temb descriptor: [1, 6, 2048], float32, interleave nil
+Runtime output descriptor: [1, 16, 2048], float32, interleave nil
+First inference run+read-back ms: 18.869667
+Max abs error: 0.000179290771484375; RMSE: 1.2832379143245418e-05; normalized RMSE: 1.7727500149824247e-06
+Warm inference 1 run+read-back ms: 4.377792
+Max abs error: 0.000179290771484375; RMSE: 1.2832379143245418e-05; normalized RMSE: 1.7727500149824247e-06
+Warm inference 2 run+read-back ms: 4.637042
+Max abs error: 0.000179290771484375; RMSE: 1.2832379143245418e-05; normalized RMSE: 1.7727500149824247e-06
+Pretrained dit-block parity: PASS (three runs)
+Process footprint baseline MiB: 20.36115264892578
+Sampled process footprint peak MiB (10 ms sampling): 168.92408752441406
+Memory scope: whole process; sampled maximum, NOT exact peak or isolated model allocation
+Total dit-block probe ms: 406.333292
+Model loaded: YES
+Model inference executed: YES
