@@ -38,7 +38,8 @@ build. Jalankan **Cmd+R**, lalu tekan **Uji denoiser bertahap**.
 Sebaiknya buka ulang aplikasi dan jalankan ini terlebih dahulu. Laporan pada
 layar diperbarui per bagian, dan tahap terakhir disimpan ke Documents secara
 best effort. Jika berhenti, kirim laporan lengkap atau tahap terakhirnya.
-Source Swift terbaru belum dikompilasi dengan Apple SDK di workspace Linux.
+Pengguna sudah menjalankan caller ini di iPhone: lihat hasil di bawah.
+Workspace Linux tidak menyediakan Apple SDK untuk kompilasi independen.
 
 Caller memegang satu model bagian di dalam scope async tersendiri. Outputnya
 disalin ke NDArray CPU baru sebelum scope berakhir, supaya tensor antara tidak
@@ -48,8 +49,34 @@ dianggap langsung terhapus: scope Swift saja belum menjamin unload pada backend.
 Sebelum setiap bagian berikutnya, caller membaca footprint proses dan berhenti
 jika sudah mencapai **2000 MiB**, menyisakan ruang di bawah limit yang dilaporkan.
 Ini pemeriksaan sebelum tahap, bukan pembatas memori OS. Lonjakan saat kompilasi
-satu bagian masih dapat melewati sampling/guard. Keberhasilan penuh di iPhone
-dan berkurangnya peak RAM masih perlu diukur.
+satu bagian masih dapat melewati sampling/guard. Pengurangan kebutuhan RAM model
+dan peak memori yang sebenarnya belum terukur.
+
+## Hasil pengulangan pada perangkat
+
+[Dua laporan iPhone](../reviews/coreai-iphone17pro-sharded-denoiser/README.md)
+mencatat kegagalan BNNS di bagian 13 pada percobaan pertama, kemudian **PASS
+14/14 bagian dan kedua referensi** setelah tombol ditekan lagi dalam aplikasi
+yang sama. Run kedua selesai dalam 3,79 detik; normalized RMSE terhadap FP32 asli
+sekitar `3,30e-6`. Penyebab kegagalan pertama belum dipastikan. Perubahan timing
+sesuai dengan pengaruh cache/inisialisasi, tetapi bukan bukti cache rusak.
+Footprint tersampel 40,22 MiB pada run kedua bukan seluruh RAM model atau perangkat.
+
+Untuk memeriksa kestabilan tanpa mengubah model, ambil pembaruan dan buka proyek:
+
+```bash
+git pull --ff-only &&
+open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
+```
+
+Jika paket 14 bagian sudah disiapkan seperti pada laporan tersebut, tidak perlu
+menjalankan skrip persiapan atau mengunduh bobot ulang. Build dengan **Cmd+R**,
+tekan **Uji kestabilan 3x**, lalu bagikan laporan lengkap. Tombol ini mengulang
+forward tiga kali dalam proses yang sama, dengan tensor input baru, tanpa
+menghapus cache. Semua percobaan dipertahankan; PASS memerlukan tiga dual-parity
+PASS. Guard footprint atau kesalahan persiapan menghentikan percobaan berikutnya.
+Ini bukan uji tiga cold launch. Wrapper pengulangan baru belum dikompilasi dengan
+Apple SDK di workspace Linux dan perlu diuji di perangkat.
 
 ## Cakupan dan pembandingan
 
@@ -68,5 +95,5 @@ Toleransi tetap `abs(error) <= 1e-4 + 1e-3 * abs(reference)`, normalized RMSE <=
 Probe iPhone awal menjalankan **satu forward penuh**, dengan dua pembandingan
 akhir terhadap referensi partisi dan FP32 asli. Laporan mencatat bagian yang
 selesai, load/run+copy per bagian, waktu total dan footprint proses tersampel
-tiap 10 ms. Ini belum benchmark warm berulang atau loop diffusion/CFG, belum
+tiap 10 ms. Laporan yang diterima belum membuktikan kestabilan berulang atau loop diffusion/CFG, belum
 conditioning dari piano/teks, dan belum menghasilkan waveform instrumen.

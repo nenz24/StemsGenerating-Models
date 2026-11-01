@@ -1,0 +1,40 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: COMPLETE 24-layer denoiser / 14 sequential assets / synthetic latents / NOT instrument generation
+Requested compute policy: cpuOnly; accelerator placement NOT MEASURED
+Execution: one forward; detached CPU copies between assets; native cache eviction NOT GUARANTEED
+Process footprint stop before next stage: 2000 MiB; not an OS peak-memory guarantee
+Target: iOS device build
+Reference binary SHA-256: VERIFIED; both FP32 references; all 24 layers in ordered pairs
+Before stage 1/14 footprint MiB: 20.579856872558594
+Stage 1/14 front.aimodel: load ms 489.183125; run+detached-copy ms 102.07675
+Before stage 2/14 footprint MiB: 272.9396438598633
+Stage 2/14 blocks-00-01.aimodel: load ms 473.485584; run+detached-copy ms 38.003334
+Before stage 3/14 footprint MiB: 336.00267028808594
+Stage 3/14 blocks-02-03.aimodel: load ms 459.303542; run+detached-copy ms 37.741083
+Before stage 4/14 footprint MiB: 336.86236572265625
+Stage 4/14 blocks-04-05.aimodel: load ms 469.045542; run+detached-copy ms 36.480625
+Before stage 5/14 footprint MiB: 337.40962982177734
+Stage 5/14 blocks-06-07.aimodel: load ms 498.923125; run+detached-copy ms 35.728333
+Before stage 6/14 footprint MiB: 337.94120025634766
+Stage 6/14 blocks-08-09.aimodel: load ms 572.362125; run+detached-copy ms 37.199292
+Before stage 7/14 footprint MiB: 338.53533935546875
+Stage 7/14 blocks-10-11.aimodel: load ms 887.66075; run+detached-copy ms 37.26275
+Before stage 8/14 footprint MiB: 340.39501190185547
+Stage 8/14 blocks-12-13.aimodel: load ms 855.831666; run+detached-copy ms 36.81325
+Before stage 9/14 footprint MiB: 340.92662811279297
+Stage 9/14 blocks-14-15.aimodel: load ms 914.004333; run+detached-copy ms 36.869791
+Before stage 10/14 footprint MiB: 341.5519485473633
+Stage 10/14 blocks-16-17.aimodel: load ms 868.386542; run+detached-copy ms 36.607458
+Before stage 11/14 footprint MiB: 345.1304397583008
+Stage 11/14 blocks-18-19.aimodel: load ms 862.631833; run+detached-copy ms 37.559916
+Before stage 12/14 footprint MiB: 342.6776351928711
+Stage 12/14 blocks-20-21.aimodel: load ms 832.580709; run+detached-copy ms 36.3035
+Before stage 13/14 footprint MiB: 343.1467514038086
+Sharded denoiser dual parity: NOT PASSED
+Error: BNNSCoreAIDelegate.BNNSDelegate.BNNSError.graphLoadFailed(file:///private/var/mobile/Containers/Data/Application/2F5BB4D7-343A-4BDA-85E6-32C102D28216/Library/Caches/coreai-cache/24A446/com.nenz24.CoreAIProbe/bf3abd435702453579a74b554a9f16097fea2a28a19ab7dc298731d345f632cd/5EAD63D13736453D6D5163D60336CC215843CF81F5BDB388C11A42F88A57786C/model.aimodelx/main-this-delegates/BNNS/bnns.ir)
+Process baseline MiB: 18.532981872558594
+Sampled process maximum MiB (10 ms): 742.5498886108398
+Completed stages: 12/14; complete forward executed: NO; total probe ms: 9625.730458
+Memory scope: whole process; sampled, not exact peak; native cache behavior unverified

@@ -63,8 +63,11 @@ memakai 14 asset berurutan, masing-masing sekitar 252 MB atau kurang, dengan
 copy tensor CPU antar bagian dan guard footprint sebelum tahap berikutnya.
 Jalankan `bash scripts/prepare_coreai_denoiser.sh`, build ulang, lalu tekan
 **Uji denoiser bertahap**. Checkpoint cache dipakai ulang; paket monolitik diarsipkan
-di luar resource aplikasi. Ekspor dan parity partisi Linux berhasil, hasil iPhone
-masih menunggu. Ini satu velocity forward, belum generasi instrumen lengkap.
+di luar resource aplikasi. [Hasil iPhone](reviews/coreai-iphone17pro-sharded-denoiser/README.md)
+sudah PASS 14/14 dan kedua referensi pada pengulangan dalam aplikasi yang sama,
+setelah run pertama gagal di BNNS. Kestabilan dan penyebab kegagalan belum pasti.
+Tombol **Uji kestabilan 3x** memeriksa tiga forward tanpa menghapus cache;
+wrapper baru perlu diuji di perangkat. Ini belum generasi instrumen lengkap.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:

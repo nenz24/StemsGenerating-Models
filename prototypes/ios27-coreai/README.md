@@ -223,6 +223,16 @@ Laporan lama diberi label dan tidak otomatis menjalankan model. Output tiap
 bagian disalin menjadi tensor CPU mandiri sebelum scope model berakhir; cache
 internal CoreAI belum tentu dievikt. Guard berhenti sebelum bagian berikutnya
 jika footprint proses mencapai 2000 MiB, tanpa menjamin peak di dalam tahap.
-Ekspor dan parity seluruh partisi Linux berhasil; build Swift terbaru,
-load/parity/latensi/memori iPhone masih menunggu.
-Ini belum loop diffusion atau generasi pengiring dari piano.
+Ekspor dan parity seluruh partisi Linux berhasil.
+[Dua laporan iPhone](../../reviews/coreai-iphone17pro-sharded-denoiser/README.md)
+mencatat kegagalan BNNS pada bagian 13, kemudian PASS seluruh 14 bagian dan kedua
+referensi setelah tombol ditekan ulang dalam aplikasi yang tetap terbuka.
+Run PASS memerlukan 3,79 detik. Footprint proses tersampel 40,22 MiB bukan seluruh
+kebutuhan RAM model; cache dan penyebab kegagalan pertama belum terukur.
+
+Setelah `git pull --ff-only`, build ulang dan tekan **Uji kestabilan 3x**.
+Paket model yang sama dipakai; persiapan/unduhan ulang tidak diperlukan bila sudah
+tersedia. Ketiga percobaan disimpan bersama dan PASS hanya jika ketiganya lolos.
+Tidak ada penghapusan cache atau restart antar percobaan. Wrapper baru belum
+dikompilasi dengan Apple SDK di workspace Linux. Ini belum uji cold launch,
+loop diffusion atau generasi pengiring dari piano.

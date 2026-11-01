@@ -39,6 +39,9 @@ independent CPU-owned tensors and releases its model/function/output references
 before advancing. Backend caches are not assumed to evict immediately. The
 2000 MiB pre-stage process-footprint guard may stop the chain if allocations
 accumulate; it cannot guarantee an upper bound for compilation peaks inside a
-stage. Apple compilation, all-stage iPhone completion, dual parity, actual cache
-behavior and reduced peak memory remain unverified. This is still one velocity
-forward, not a full conditioning/diffusion/music pipeline.
+stage. At export time, Apple compilation and device execution were unverified.
+[Subsequent user device evidence](../coreai-iphone17pro-sharded-denoiser/README.md)
+records an initial failure at stage 13 followed by all-stage completion and dual parity
+PASS on a same-process rerun. Actual cache behavior, repeatability and total model
+memory remain unverified. This is still one velocity forward, not a full
+conditioning/diffusion/music pipeline. The export-time manifest remains unchanged.

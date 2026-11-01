@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "evidence_source": "User-supplied iPhone app reports; not independently reproduced on Linux",
+  "reported_device": "iPhone 17 Pro",
+  "os": "27.0.1 (24A446)",
+  "architecture": "h18p",
+  "requested_compute_policy": "cpuOnly",
+  "accelerator_placement_measured": false,
+  "scope": "One synthetic 25-frame velocity prediction through all 24 layers, 14 assets; no conditioning pipeline, diffusion loop or waveform generation",
+  "rerun_context": {
+    "user_confirmed": "Pressed the button again while the SAME app stayed open",
+    "cache_cleared_reported": false,
+    "cache_residency_measured": false,
+    "initial_cache_state_known": false,
+    "exact_asset_hashes_emitted": false,
+    "source_commit_emitted": false
+  },
+  "attempts": [
+    {
+      "report": "attempt-1.txt",
+      "completed_stages": 12,
+      "failed_stage": 13,
+      "failed_asset": "blocks-22-23.aimodel",
+      "error": "BNNSError.graphLoadFailed",
+      "exact_failure_subphase_known": false,
+      "complete_forward_executed": false,
+      "dual_parity_passed": false,
+      "total_probe_ms": 9625.730458,
+      "process_baseline_mib": 18.532981872558594,
+      "sampled_process_maximum_mib": 742.5498886108398,
+      "before_failed_stage_process_mib": 343.1467514038086,
+      "stages": [
+        {
+          "stage": 1,
+          "asset": "front.aimodel",
+          "before_process_footprint_mib": 20.579856872558594,
+          "load_ms": 489.183125,
+          "run_and_detached_copy_ms": 102.07675
+        },
+        {
+          "stage": 2,
+          "asset": "blocks-00-01.aimodel",
+          "before_process_footprint_mib": 272.9396438598633,
+          "load_ms": 473.485584,
+          "run_and_detached_copy_ms": 38.003334
+        },
+        {
+          "stage": 3,
+          "asset": "blocks-02-03.aimodel",
+          "before_process_footprint_mib": 336.00267028808594,
+          "load_ms": 459.303542,
+          "run_and_detached_copy_ms": 37.741083
+        },
+        {
+          "stage": 4,
+          "asset": "blocks-04-05.aimodel",
+          "before_process_footprint_mib": 336.86236572265625,
+          "load_ms": 469.045542,
+          "run_and_detached_copy_ms": 36.480625
+        },
+        {
+          "stage": 5,
+          "asset": "blocks-06-07.aimodel",
+          "before_process_footprint_mib": 337.40962982177734,
+          "load_ms": 498.923125,
+          "run_and_detached_copy_ms": 35.728333
+        },
+        {
+          "stage": 6,
+          "asset": "blocks-08-09.aimodel",
+          "before_process_footprint_mib": 337.94120025634766,
+          "load_ms": 572.362125,
+          "run_and_detached_copy_ms": 37.199292
+        },
+        {
+          "stage": 7,
+          "asset": "blocks-10-11.aimodel",
+          "before_process_footprint_mib": 338.53533935546875,
+          "load_ms": 887.66075,
+          "run_and_detached_copy_ms": 37.26275
+        },
+        {
+          "stage": 8,
+          "asset": "blocks-12-13.aimodel",
+          "before_process_footprint_mib": 340.39501190185547,
+          "load_ms": 855.831666,
+          "run_and_detached_copy_ms": 36.81325
+        },
+        {
+          "stage": 9,
+          "asset": "blocks-14-15.aimodel",
+          "before_process_footprint_mib": 340.92662811279297,
+          "load_ms": 914.004333,
+          "run_and_detached_copy_ms": 36.869791
+        },
+        {
+          "stage": 10,
+          "asset": "blocks-16-17.aimodel",
+          "before_process_footprint_mib": 341.5519485473633,
+          "load_ms": 868.386542,
+          "run_and_detached_copy_ms": 36.607458
+        },
+        {
+          "stage": 11,
+          "asset": "blocks-18-19.aimodel",
+          "before_process_footprint_mib": 345.1304397583008,
+          "load_ms": 862.631833,
+          "run_and_detached_copy_ms": 37.559916
+        },
+        {
+          "stage": 12,
+          "asset": "blocks-20-21.aimodel",
+          "before_process_footprint_mib": 342.6776351928711,
+          "load_ms": 832.580709,
+          "run_and_detached_copy_ms": 36.3035
+        }
+      ]
+    },
+    {
+      "report": "attempt-2.txt",
+      "completed_stages": 14,
+      "complete_forward_executed": true,
+      "dual_parity_passed": true,
+      "total_probe_ms": 3785.887708,
+      "process_baseline_mib": 32.02177429199219,
+      "sampled_process_maximum_mib": 40.224945068359375,
+      "partition_reference": {
+        "max_abs_error": 1.3887882232666016e-05,
+        "rmse": 3.861574325062525e-06,
+        "normalized_rmse": 3.295652767186769e-06
+      },
+      "original_fp32_reference": {
+        "max_abs_error": 1.4349818229675293e-05,
+        "rmse": 3.871427727681515e-06,
+        "normalized_rmse": 3.3040617978036044e-06
+      },
+      "stages": [
+        {
+          "stage": 1,
+          "asset": "front.aimodel",
+          "before_process_footprint_mib": 33.38114929199219,
+          "load_ms": 2.9045,
+          "run_and_detached_copy_ms": 211.48475
+        },
+        {
+          "stage": 2,
+          "asset": "blocks-00-01.aimodel",
+          "before_process_footprint_mib": 29.521774291992188,
+          "load_ms": 1.786041,
+          "run_and_detached_copy_ms": 927.335542
+        },
+        {
+          "stage": 3,
+          "asset": "blocks-02-03.aimodel",
+          "before_process_footprint_mib": 29.787399291992188,
+          "load_ms": 1.7315,
+          "run_and_detached_copy_ms": 939.73425
+        },
+        {
+          "stage": 4,
+          "asset": "blocks-04-05.aimodel",
+          "before_process_footprint_mib": 30.006149291992188,
+          "load_ms": 1.729166,
+          "run_and_detached_copy_ms": 903.399416
+        },
+        {
+          "stage": 5,
+          "asset": "blocks-06-07.aimodel",
+          "before_process_footprint_mib": 30.209274291992188,
+          "load_ms": 1.747208,
+          "run_and_detached_copy_ms": 357.796958
+        },
+        {
+          "stage": 6,
+          "asset": "blocks-08-09.aimodel",
+          "before_process_footprint_mib": 30.474899291992188,
+          "load_ms": 1.715167,
+          "run_and_detached_copy_ms": 36.849125
+        },
+        {
+          "stage": 7,
+          "asset": "blocks-10-11.aimodel",
+          "before_process_footprint_mib": 32.80302429199219,
+          "load_ms": 1.637333,
+          "run_and_detached_copy_ms": 39.345959
+        },
+        {
+          "stage": 8,
+          "asset": "blocks-12-13.aimodel",
+          "before_process_footprint_mib": 33.30302429199219,
+          "load_ms": 1.523208,
+          "run_and_detached_copy_ms": 39.85375
+        },
+        {
+          "stage": 9,
+          "asset": "blocks-14-15.aimodel",
+          "before_process_footprint_mib": 33.75614929199219,
+          "load_ms": 1.644625,
+          "run_and_detached_copy_ms": 38.991625
+        },
+        {
+          "stage": 10,
+          "asset": "blocks-16-17.aimodel",
+          "before_process_footprint_mib": 34.20927429199219,
+          "load_ms": 1.600375,
+          "run_and_detached_copy_ms": 38.629541
+        },
+        {
+          "stage": 11,
+          "asset": "blocks-18-19.aimodel",
+          "before_process_footprint_mib": 34.67802429199219,
+          "load_ms": 1.623625,
+          "run_and_detached_copy_ms": 38.049417
+        },
+        {
+          "stage": 12,
+          "asset": "blocks-20-21.aimodel",
+          "before_process_footprint_mib": 35.16239929199219,
+          "load_ms": 1.544417,
+          "run_and_detached_copy_ms": 36.117916
+        },
+        {
+          "stage": 13,
+          "asset": "blocks-22-23.aimodel",
+          "before_process_footprint_mib": 35.61552429199219,
+          "load_ms": 1.249,
+          "run_and_detached_copy_ms": 36.571
+        },
+        {
+          "stage": 14,
+          "asset": "tail.aimodel",
+          "before_process_footprint_mib": 36.05302429199219,
+          "load_ms": 22.875292,
+          "run_and_detached_copy_ms": 1.288709
+        }
+      ]
+    }
+  ],
+  "interpretation": {
+    "complete_device_forward_verified": true,
+    "repeatability_verified": false,
+    "first_failure_root_cause_confirmed": false,
+    "cache_or_initialization_effects": "Consistent with timings and same-process rerun; not a confirmed root cause",
+    "memory_scope": "10 ms sampled phys_footprint of app process; not exact peak, all-device usage or isolated model allocation; shared/file-backed/runtime allocations not fully characterized",
+    "whole_model_40_mib_claim_supported": false,
+    "cold_launch_reliability_verified": false,
+    "instrument_generation_verified": false
+  }
+}

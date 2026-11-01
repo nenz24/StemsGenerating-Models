@@ -97,6 +97,15 @@ struct CoreAIDeviceProbeApp: App {
                             }
                         }
                         .disabled(runningModel)
+                        Button("Uji kestabilan 3x") {
+                            runningModel = true
+                            report = "Memeriksa tiga forward berurutan dalam aplikasi yang sama…"
+                            Task {
+                                report = await CoreAIDecoderProbe.runDenoiserStability { text in self.report = text }
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
                         Text(report)
                             .font(.system(.footnote, design: .monospaced))
                             .textSelection(.enabled)

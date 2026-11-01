@@ -1,4 +1,4 @@
-// Codec and two-block DiT gates passed; the complete 24-layer denoiser is pending.
+// Component gates and one complete sharded denoiser forward passed on device.
 import CoreAI
 import CryptoKit
 import Darwin
@@ -128,6 +128,39 @@ enum CoreAIDecoderProbe {
     }
 
     static func runShardedDenoiser(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        let result = await runShardedDenoiserAttempt(priorReports: [], progress: progress)
+        return result.report
+    }
+
+    static func runDenoiserStability(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        var lines = ["Test: sharded denoiser repeatability / 3 attempts in the SAME app process",
+                     "Same prepared assets and synthetic inputs; fresh input tensors each attempt",
+                     "No cache clearing, app restart or automatic retry of a stage",
+                     "Cache residency, compilation reuse and accelerator placement NOT MEASURED",
+                     "This is NOT cold-launch testing or instrument generation"]
+        var passed = 0
+        var attempted = 0
+        for iteration in 1...3 {
+            let prefix = lines + ["", "=== Attempt \(iteration)/3 ==="]
+            let result = await runShardedDenoiserAttempt(priorReports: prefix) { text in
+                progress(prefix.joined(separator: "\n") + "\n" + text)
+            }
+            attempted += 1
+            if result.passed { passed += 1 }
+            lines = prefix + [result.report]
+            saveProgress(lines, profile: .denoiser)
+            if result.stopRepeating {
+                lines.append("Remaining attempts skipped: preparation/manifest or process-footprint guard failed.")
+                break
+            }
+        }
+        lines.append("Repeatability: \(passed == 3 ? "PASS" : "NOT PASSED"); dual parity passed \(passed)/3; attempted \(attempted)/3")
+        saveProgress(lines, profile: .denoiser)
+        return lines.joined(separator: "\n")
+    }
+
+    private static func runShardedDenoiserAttempt(priorReports: [String], progress: @escaping @MainActor @Sendable (String) -> Void)
+        async -> (report: String, passed: Bool, stopRepeating: Bool) {
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",
                      "Test: COMPLETE 24-layer denoiser / 14 sequential assets / synthetic latents / NOT instrument generation",
@@ -143,6 +176,8 @@ enum CoreAIDecoderProbe {
         let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
         var completed = 0
+        var passed = false
+        var stopRepeating = false
         do {
             guard let folder = Bundle.main.resourceURL?.appendingPathComponent("ModelCandidates/denoiser-sharded"),
                   FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
@@ -196,7 +231,7 @@ enum CoreAIDecoderProbe {
                 lines.append("Before stage \(index+1)/14 footprint MiB: \(Double(footprint)/1048576)")
                 guard footprint < 2000 * 1048576 else { throw ShardError.memoryBudgetReached }
                 let phase = "Phase: stage \(index+1)/14 \(stage.assetFile) loading/running"
-                saveProgress(lines + [phase], profile: .denoiser)
+                saveProgress(priorReports + lines + [phase], profile: .denoiser)
                 await progress((lines + [phase]).joined(separator: "\n"))
                 var inputs: [String: NDArray] = [:]
                 for name in stage.inputShapes.keys { inputs[name] = state[name] }
@@ -207,7 +242,7 @@ enum CoreAIDecoderProbe {
                 }
                 completed += 1
                 lines.append("Stage \(completed)/14 \(stage.assetFile): load ms \(result.loadMs); run+detached-copy ms \(result.runMs)")
-                saveProgress(lines, profile: .denoiser)
+                saveProgress(priorReports + lines, profile: .denoiser)
                 await progress(lines.joined(separator: "\n"))
                 await Task.yield()
             }
@@ -220,17 +255,19 @@ enum CoreAIDecoderProbe {
             lines.append("Original FP32 baseline max abs error: \(baseline.maxError); RMSE: \(baseline.rmse); normalized RMSE: \(baseline.normalizedRmse)")
             guard stats.passed, baseline.passed else { throw ProbeError.numericalParityFailed }
             lines.append("Sharded denoiser dual parity: PASS (one complete forward, all 24 layers)")
+            passed = true
         } catch {
             lines.append("Sharded denoiser dual parity: NOT PASSED")
             lines.append("Error: \(String(reflecting: error))")
+            stopRepeating = error is ShardError
         }
         let usage = memory.finish()
         if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
         if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
         lines.append("Completed stages: \(completed)/14; complete forward executed: \(completed == 14 ? "YES" : "NO"); total probe ms: \(ms(start.duration(to: clock.now)))")
         lines.append("Memory scope: whole process; sampled, not exact peak; native cache behavior unverified")
-        saveProgress(lines, profile: .denoiser)
-        return lines.joined(separator: "\n")
+        saveProgress(priorReports + lines, profile: .denoiser)
+        return (lines.joined(separator: "\n"), passed, stopRepeating)
     }
 
     // All model/function/output references stay inside this async scope. Fresh

@@ -103,11 +103,11 @@
   },
   "unverified": {
     "coreai_sdk_custom_audio_model_support": "Pretrained encoder posterior mean at 1 s and decoder at 0.2/1 s Float32 parity reported; joint codec, stochastic posterior and full conditional generator unverified",
-    "model_import_format_and_operators": "Native affine, VAE and two-block DiT including stored-FP16/F32-math verified on iPhone; complete denoiser exported with device gate pending",
+    "model_import_format_and_operators": "Native affine, VAE and DiT verified on iPhone; one complete 14-asset denoiser forward passed both references after an earlier BNNS failure; repeatability and full generation unverified",
     "accelerator_and_precision_support": "Float32 affine and VAE encoder/decoder parity verified under requested CPU-only policy; actual placement and GPU/Neural Engine inference unmeasured",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
-    "model_conversion_training_and_device_benchmarks": "Monolithic denoiser hit memory limit; 14 partitions exported and numerically verified on host, sequential iPhone gate pending; conditioning/diffusion loop unimplemented"
+    "model_conversion_training_and_device_benchmarks": "Monolithic denoiser hit memory limit; 14-part denoiser passed one same-process rerun after BNNS failure; conditioning/diffusion loop unimplemented"
   },
   "local_prototype_status": {
     "source_directory": "prototypes/ios27-coreai",
@@ -117,10 +117,10 @@
     "shared_scheme": "CoreAIProbe",
     "signing_team_selection": "Apple Team stored in ignored Signing.local.xcconfig; shared Debug/Release configurations include it",
     "apple_compilation_verified": true,
-    "apple_compilation_evidence": "User reported successful execution of the device probe app; not independently compiled in this Linux workspace",
+    "apple_compilation_evidence": "User executed the 14-stage device probe; new three-attempt wrapper not yet Apple-built; no independent Apple SDK compilation on Linux",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-full-denoiser-memory-failure/report.json",
-    "device_execution_scope": "Component gates passed; monolithic loading hit memory exception; sequential 14-asset device gate pending",
+    "device_execution_report": "reviews/coreai-iphone17pro-sharded-denoiser/report.json",
+    "device_execution_scope": "One complete synthetic denoiser forward, 14 assets / 24 layers, dual parity PASS on same-process rerun; earlier BNNS failure retained; no instrument generation",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -403,9 +403,21 @@
     "pre_stage_process_footprint_stop_mib": 2000,
     "in_stage_peak_memory_bound_guaranteed": false,
     "monolith_preserved_under": ".runtime-cache/coreai-retired-bundles/",
-    "new_swift_apple_build_verified": false,
-    "device_parity_verified": false,
+    "new_swift_apple_build_verified": true,
+    "device_parity_verified": true,
     "validation_manifest": "reviews/coreai-sharded-denoiser-export/reference.json",
-    "scope": "One complete synthetic velocity forward; not diffusion/music generation"
+    "scope": "One complete synthetic velocity forward; not diffusion/music generation",
+    "device_report": "reviews/coreai-iphone17pro-sharded-denoiser/report.json",
+    "device_forward_count_passed": 1,
+    "device_original_fp32_normalized_rmse": 3.3040617978036044e-06,
+    "device_repeat_context": "Pressed the button again while the same app stayed open; first attempt failed at stage 13 with BNNS graphLoadFailed",
+    "repeatability_verified": false,
+    "cold_launch_reliability_verified": false,
+    "first_failure_root_cause_confirmed": false,
+    "runtime_ram_savings_verified": false,
+    "total_model_ram_measured": false,
+    "stability_wrapper_prepared": true,
+    "stability_wrapper_apple_build_verified": false,
+    "stability_wrapper_device_execution_verified": false
   }
 }
