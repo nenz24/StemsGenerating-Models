@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import shutil
 import sys
+import wave
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -41,7 +42,7 @@ class DrumProbeTests(unittest.TestCase):
         shutil.copyfile(prepared/'source.wav',folder/'stem.wav')
         shutil.copyfile(prepared/'source.wav',folder/'mix.wav')
         params={'caption':drum.PRESET['caption'],'seed':0,'guidance_scale':7,'inference_steps':50,
-                'duration':30,'task_type':'lego','instrumental':True,'enable_normalization':False,
+                'duration':exp['jobs'][0]['duration'],'task_type':'lego','instrumental':True,'enable_normalization':False,
                 'thinking':False,'use_cot_caption':False,'use_cot_metas':False,'use_cot_language':False,
                 'instruction':'Generate the bass track based on the audio context:' if wrong else 'Generate the drums track based on the audio context:'}
         settings={'params':params,'config':{'seeds':[0],'batch_size':1,'use_random_seed':False}}
@@ -78,6 +79,46 @@ class DrumProbeTests(unittest.TestCase):
             for name in ['configs/assets-base.json','tools/stem_eval/run.py','scripts/setup_runtime.py']:
                 p=root/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text('marker')
             self.assertEqual(drum.single.discover_root(base),root)
+
+    def long_source(self,root):
+        path=root/'long.wav'
+        with wave.open(str(path),'wb') as w:
+            w.setparams((2,2,RATE,0,'NONE','not compressed'))
+            for _ in range(61):w.writeframesraw(b'\0'*(RATE*4))
+            w.writeframesraw(b'\0'*(RATE//8*4))
+        return path
+
+    def test_full_song_is_one_drum_context_and_fractional_padding_is_trimmed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp);source=self.long_source(p)
+            with patch('stream_process.run_logged',side_effect=AssertionError('no worker in dry-run')):
+                report=drum.generate(ROOT,source,p/'plan',duration=None)
+            exp=json.loads((p/'plan/generation/experiment.json').read_text())
+            self.assertEqual(report['input']['duration'],61.125)
+            self.assertEqual(exp['jobs'][0]['duration'],62)
+            self.assertEqual(exp['jobs'][0]['instrument'],'drums')
+            self.assertEqual(len(exp['jobs']),1)
+            out=p/'real'
+            def run(command,**kwargs):
+                self.assertIn('--worker',command)
+                self.assertNotIn('--instrument',command)
+                self.fake(out)
+            with patch.object(drum.single,'model_python',return_value=Path(sys.executable)),patch('stream_process.run_logged',side_effect=run) as worker:
+                result=drum.generate(ROOT,source,out,duration=None,execute=True)
+            self.assertEqual(worker.call_count,1)
+            self.assertEqual(result['status'],'generated')
+            self.assertEqual(drum.single.frames(out/'drums.wav'),round(61.125*RATE))
+
+    def test_full_song_failure_is_preserved_without_chunk_fallback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp);source=self.long_source(p);out=p/'failed'
+            with patch.object(drum.single,'model_python',return_value=Path(sys.executable)),patch('stream_process.run_logged',side_effect=RuntimeError('CUDA out of memory')) as worker:
+                with self.assertRaisesRegex(RuntimeError,'out of memory'):
+                    drum.generate(ROOT,source,out,duration=None,execute=True)
+            self.assertEqual(worker.call_count,1)
+            self.assertEqual(json.loads((out/'drum_probe.json').read_text())['status'],'failed')
+            self.assertTrue((out/'drum_feedback.zip').is_file())
+            self.assertFalse((out/'drums.wav').exists())
 
 
 if __name__=='__main__':unittest.main()

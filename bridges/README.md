@@ -1,5 +1,10 @@
 # ACE-Step context bridge
 
+[Notebook 14](../notebooks/14_colab_drum_full_song.ipynb) tests the full drum song
+in one continuous context using the active runtime/weights, without stitching.
+It keeps the selected drum preset. GPU memory fit and long-song quality are
+unverified; failures retain reports instead of silently switching modes.
+
 [Notebook 13](../notebooks/13_colab_drum_probe.ipynb) starts a separate 30-second
 drum probe on the active VM, reusing existing runtime/weights. Bass reference
 audio and known defects are saved in `baselines/electric-bass-context90/`.

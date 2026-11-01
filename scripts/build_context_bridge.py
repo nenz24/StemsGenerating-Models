@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK = ROOT / 'notebooks/11_colab_context_chunks.ipynb'
 FRESH_NOTEBOOK = ROOT / 'notebooks/12_colab_fresh_context_90.ipynb'
 DRUM_NOTEBOOK = ROOT / 'notebooks/13_colab_drum_probe.ipynb'
+DRUM_FULL_NOTEBOOK = ROOT / 'notebooks/14_colab_drum_full_song.ipynb'
 ARCHIVE = ROOT / 'bridges/ace_context_tools.zip'
 BEGIN = '# BEGIN EMBEDDED CONTEXT HELPERS\n'
 END = '# END EMBEDDED CONTEXT HELPERS\n'
@@ -24,6 +25,7 @@ FILES = {
     '11_colab_context_chunks.ipynb': 'notebooks/11_colab_context_chunks.ipynb',
     '12_colab_fresh_context_90.ipynb': 'notebooks/12_colab_fresh_context_90.ipynb',
     '13_colab_drum_probe.ipynb': 'notebooks/13_colab_drum_probe.ipynb',
+    '14_colab_drum_full_song.ipynb': 'notebooks/14_colab_drum_full_song.ipynb',
 }
 
 
@@ -54,17 +56,17 @@ def fresh_notebook():
     return (json.dumps(book,indent=1,ensure_ascii=False)+'\n').encode()
 
 
-def drum_notebook():
+def drum_notebook(notebook=DRUM_NOTEBOOK):
     payload={name:encode((ROOT/'scripts'/name).read_bytes())
              for name in ['drum_probe.py','electric_full_song.py']}
-    book=json.loads(DRUM_NOTEBOOK.read_text())
+    book=json.loads(notebook.read_text())
     cells=[c for c in book['cells'] if c['cell_type']=='code' and BEGIN in ''.join(c['source'])]
     if len(cells)!=1:raise ValueError('Expected one drum helper cell')
     source=''.join(cells[0]['source']);before,remainder=source.split(BEGIN,1);_,after=remainder.split(END,1)
     cells[0]['source']=(before+BEGIN+'EMBEDDED_HELPERS = '+json.dumps(payload,indent=2)+'\n'+END+after).splitlines(keepends=True)
     for c in book['cells']:
         if c['cell_type']=='code':
-            compile(''.join(c['source']),str(DRUM_NOTEBOOK),'exec')
+            compile(''.join(c['source']),str(notebook),'exec')
             if c['outputs'] or c['execution_count'] is not None:raise ValueError('Clear drum notebook outputs')
     return (json.dumps(book,indent=1,ensure_ascii=False)+'\n').encode()
 
@@ -91,24 +93,27 @@ def build(check=False):
                 raise ValueError('Publish notebooks without execution outputs')
     fresh_bytes = fresh_notebook()
     drum_bytes = drum_notebook()
+    drum_full_bytes = drum_notebook(DRUM_FULL_NOTEBOOK)
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
         for name, source_path in sorted(FILES.items()):
             data = (notebook_bytes if name=='11_colab_context_chunks.ipynb' else
                     fresh_bytes if name=='12_colab_fresh_context_90.ipynb' else
-                    drum_bytes if name=='13_colab_drum_probe.ipynb' else (ROOT/source_path).read_bytes())
+                    drum_bytes if name=='13_colab_drum_probe.ipynb' else
+                    drum_full_bytes if name=='14_colab_drum_full_song.ipynb' else (ROOT/source_path).read_bytes())
             info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
             archive.writestr(info, data)
     archive_bytes = buffer.getvalue()
     if check:
-        if NOTEBOOK.read_bytes() != notebook_bytes or FRESH_NOTEBOOK.read_bytes()!=fresh_bytes or DRUM_NOTEBOOK.read_bytes()!=drum_bytes or not ARCHIVE.is_file() or ARCHIVE.read_bytes() != archive_bytes:
+        if NOTEBOOK.read_bytes() != notebook_bytes or FRESH_NOTEBOOK.read_bytes()!=fresh_bytes or DRUM_NOTEBOOK.read_bytes()!=drum_bytes or DRUM_FULL_NOTEBOOK.read_bytes()!=drum_full_bytes or not ARCHIVE.is_file() or ARCHIVE.read_bytes() != archive_bytes:
             raise ValueError('Bridge artifacts are stale; run scripts/build_context_bridge.py')
     else:
         NOTEBOOK.write_bytes(notebook_bytes)
         FRESH_NOTEBOOK.write_bytes(fresh_bytes)
         DRUM_NOTEBOOK.write_bytes(drum_bytes)
+        DRUM_FULL_NOTEBOOK.write_bytes(drum_full_bytes)
         ARCHIVE.parent.mkdir(parents=True, exist_ok=True)
         ARCHIVE.write_bytes(archive_bytes)
     print(('Verified' if check else 'Built'), ARCHIVE.relative_to(ROOT), len(archive_bytes), 'bytes')

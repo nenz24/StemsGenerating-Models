@@ -139,8 +139,11 @@ def prepare(source, output, start=0, duration=None):
     return metadata
 
 
-def execute_worker(root, output):
+def execute_worker(root, output, *, preset=None, instrument="bass"):
     """Reuse the inspected engine directly, with process-local caption/FP32/export overrides."""
+    preset = PRESET if preset is None else preset
+    if instrument not in ("bass", "drums") or preset.get("instrument") != instrument:
+        raise ValueError("Worker instrument must match the requested preset")
     attach(root)
     from provenance import check_upstream, write_json
     from runtime_environment import runtime_environment
@@ -171,7 +174,7 @@ def execute_worker(root, output):
             super().__init__(*args, **kwargs)
             original_params = self.params_type
             def params(*args, **kwargs):
-                kwargs["caption"] = PRESET["caption"]
+                kwargs["caption"] = preset["caption"]
                 return original_params(*args, **kwargs)
             self.params_type = params
     backends.AceBackend = ElectricBackend
@@ -180,12 +183,12 @@ def execute_worker(root, output):
     prepared = output / "prepared"
     generation = output / "generation"
     generation.mkdir(exist_ok=False)
-    experiment = engine.plan(prepared, "ace", "bass", [0])
-    experiment.update(max_job_seconds=600, device_requested="cuda", ace_model=PRESET["model"],
+    experiment = engine.plan(prepared, "ace", instrument, [0])
+    experiment.update(max_job_seconds=600, device_requested="cuda", ace_model=preset["model"],
                       offload_to_cpu=True, guidance_scale=7, mode="single_pass")
     write_json(generation / "experiment.json", experiment)
     args = SimpleNamespace(upstream=root / "vendor/ACE-Step-1.5", backend="ace", checkpoint=None,
-        ace_model=PRESET["model"], assets_manifest=root / "configs/assets-base.json", device="cuda",
+        ace_model=preset["model"], assets_manifest=root / "configs/assets-base.json", device="cuda",
         offload=True, out=generation, prepared=prepared, max_job_seconds=600,
         guidance_scale=7.0, capture_decoder=output / "capture")
     try:

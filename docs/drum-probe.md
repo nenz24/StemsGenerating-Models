@@ -1,5 +1,31 @@
 # Acoustic drum probe
 
+## Full-song single-pass experiment
+
+The uploaded START=90 probe is reported glitchy; START=210 is reported clean.
+Both reports have the same source, drum preset and CUDA FP32 settings. At the
+listener's request, notebook 14 now tests the entire original piano in one model
+invocation. It uses the existing runtime/weights and keeps the same drum caption,
+seed, CFG and steps. No song chunking, stitching, automatic short-context retry,
+precision change or bass regeneration is performed.
+
+Upload the full original piano, not the exported 30-second prepared source. The
+helper accepts 10–600 seconds and pads a fractional final second for the model,
+then trims the export to the original sample count. The legacy engine CLI limits
+stay unchanged; longer contexts call the engine API in a fresh process. Memory
+fit and musical quality of the full song require actual CUDA execution.
+
+```bash
+python scripts/drum_probe.py --source /path/to/piano.mp3 --out runs/drum_full_plan --full-song
+python scripts/drum_probe.py --source /path/to/piano.mp3 --out runs/drum_full_real --full-song --execute
+```
+
+`--duration 60` is an explicit optional excerpt experiment; it is not run by the
+full-song notebook. The default CLI and notebook 13 remain 30 seconds. Existing
+baselines are preserved. On failure, download the available `drum_feedback.zip`.
+
+## Original 30-second probe
+
 Bass context 90 is frozen, with its noisy chunks documented in
 `baselines/electric-bass-context90/`. Do not overwrite those archives or regenerate
 bass while starting a new instrument.

@@ -1,4 +1,4 @@
-"""One 30-second drum probe using the existing pinned ACE-Step CUDA runtime."""
+"""Drum probes or full-song single-pass using the pinned ACE-Step CUDA runtime."""
 import argparse
 import json
 from pathlib import Path
@@ -28,7 +28,7 @@ def package(output, success):
                 archive.write(output/relative,relative)
 
 
-def generate(root,source,output,*,start=0,execute=False):
+def generate(root,source,output,*,start=0,duration=30,execute=False):
     root,source,output=[Path(p).resolve() for p in (root,source,output)]
     single.attach(root)
     from provenance import sha256,write_json
@@ -37,23 +37,35 @@ def generate(root,source,output,*,start=0,execute=False):
     from mac_workflow import run_command
     from compare_bass_tone import caption_worker,require_fp32
     from cuda_precision import FLOAT32_WORKER
-    from run import cached_job
+    from run import cached_job,plan
     config=root/'configs/acoustic-drums.json'
     if config.is_file() and json.loads(config.read_text())!=PRESET:
         raise ValueError('Drum preset differs; preserve the old experiment and use a new preset/version')
     output.mkdir(parents=True,exist_ok=False)
     report={'status':'preparing','instrument':'drums','preset':PRESET,
-            'note':'Independent 30-second instrument probe; no bass regeneration, full-song drum quality or inferred meter/BPM claims.'}
+            'mode':'single_pass','model_calls_requested':1,
+            'note':'One continuous drum context; no song chunking or stitching. VAE may tile internally. No bass regeneration or inferred meter/BPM claims.'}
     write_json(output/'drum_probe.json',report)
     try:
-        metadata=single.prepare(source,output/'prepared',start=start,duration=30)
+        metadata=single.prepare(source,output/'prepared',start=start,duration=duration)
         report.update(status='planned',input=metadata)
-        command=run_command(root,PRESET,output/'prepared',output/'generation',execute=execute)
-        command+=['--max-job-seconds','30','--guidance-scale','7','--capture-decoder',str(output/'capture')]
-        if execute:
-            single.model_python(root)
-            command=[command[0],'-c',caption_worker(FLOAT32_WORKER,PRESET['caption']),*command[1:]]
-        run_logged(command,env=runtime_environment(root),check=True)
+        if metadata['model_duration']<=30:
+            command=run_command(root,PRESET,output/'prepared',output/'generation',execute=execute)
+            command+=['--max-job-seconds','30','--guidance-scale','7','--capture-decoder',str(output/'capture')]
+            if execute:
+                single.model_python(root)
+                command=[command[0],'-c',caption_worker(FLOAT32_WORKER,PRESET['caption']),*command[1:]]
+            run_logged(command,env=runtime_environment(root),check=True)
+        elif execute:
+            command=[str(single.model_python(root)),str(Path(__file__).resolve()),'--worker',
+                     '--root',str(root),'--out',str(output)]
+            run_logged(command,env=runtime_environment(root),check=True)
+        else:
+            generation=output/'generation';generation.mkdir()
+            experiment=plan(output/'prepared','ace','drums',[0])
+            experiment.update(max_job_seconds=600,device_requested='cuda',ace_model=PRESET['model'],
+                              offload_to_cpu=True,guidance_scale=7,mode='single_pass')
+            write_json(generation/'experiment.json',experiment)
         if not execute:return report
         experiment=json.loads((output/'generation/experiment.json').read_text())
         if experiment.get('status')!='generated' or len(experiment['jobs'])!=1:
@@ -64,7 +76,7 @@ def generate(root,source,output,*,start=0,execute=False):
             raise ValueError('Drum device/input/result verification failed')
         params,config=result['settings']['params'],result['settings']['config']
         expected={'caption':PRESET['caption'],'seed':0,'guidance_scale':7,'inference_steps':50,
-                  'duration':30,'task_type':'lego','instrumental':True,
+                  'duration':metadata['model_duration'],'task_type':'lego','instrumental':True,
                   'instruction':'Generate the drums track based on the audio context:',
                   'enable_normalization':False,'thinking':False,'use_cot_caption':False,
                   'use_cot_metas':False,'use_cot_language':False}
@@ -97,6 +109,14 @@ def generate(root,source,output,*,start=0,execute=False):
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--root',type=Path,default=Path(__file__).resolve().parents[1])
-    p.add_argument('--source',type=Path,required=True);p.add_argument('--out',type=Path,required=True)
+    p.add_argument('--source',type=Path);p.add_argument('--out',type=Path,required=True)
+    group=p.add_mutually_exclusive_group()
+    group.add_argument('--duration',type=float,default=30)
+    group.add_argument('--full-song',action='store_true')
+    p.add_argument('--worker',action='store_true',help=argparse.SUPPRESS)
     p.add_argument('--start',type=float,default=0);p.add_argument('--execute',action='store_true')
-    a=p.parse_args();print(json.dumps(generate(a.root,a.source,a.out,start=a.start,execute=a.execute),indent=2))
+    a=p.parse_args()
+    if a.worker:single.execute_worker(a.root.resolve(),a.out.resolve(),preset=PRESET,instrument='drums')
+    else:
+        if a.source is None:p.error('--source is required')
+        print(json.dumps(generate(a.root,a.source,a.out,start=a.start,duration=None if a.full_song else a.duration,execute=a.execute),indent=2))

@@ -150,11 +150,11 @@ class SinglePassTests(unittest.TestCase):
                 "        self.params_type=lambda **kw: SimpleNamespace(**kw)\n")
             (tools / "run.py").write_text(
                 "import json\ndef plan(prepared,*args):\n"
-                "    return {'jobs':[{'duration':json.loads((prepared/'prepared.json').read_text())['duration']}]}\n"
+                "    return {'jobs':[{'instrument':args[1],'duration':json.loads((prepared/'prepared.json').read_text())['duration']}]}\n"
                 "def execute(args,experiment):\n    import backends\n    model=backends.AceBackend()\n"
                 "    params=model.params_type(caption='generic')\n"
                 "    canonicalize(args.prepared/'source.wav',args.out/'export.wav',duration=61,gain=1,max_duration=args.max_job_seconds)\n"
-                "    probe={'caption':params.caption,'dtype':model.handler.dtype,'vae_dtype':model.handler._get_vae_dtype('cuda'),'limit':args.max_job_seconds,'calls':1}\n"
+                "    probe={'instrument':experiment['jobs'][0]['instrument'],'caption':params.caption,'dtype':model.handler.dtype,'vae_dtype':model.handler._get_vae_dtype('cuda'),'limit':args.max_job_seconds,'calls':1}\n"
                 "    (args.out/'probe.json').write_text(json.dumps(probe))\n    experiment['status']='generated'\n")
             output = root / "output"; output.mkdir()
             source = self.fractional_source(root)
@@ -165,8 +165,17 @@ class SinglePassTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
             self.assertEqual(result.returncode, 0, result.stderr)
             probe = json.loads((output / "generation/probe.json").read_text())
-            self.assertEqual(probe, {"caption": single.PRESET["caption"], "dtype": "float32", "vae_dtype": "float32", "limit": 600, "calls": 1})
+            self.assertEqual(probe, {"instrument":"bass", "caption": single.PRESET["caption"], "dtype": "float32", "vae_dtype": "float32", "limit": 600, "calls": 1})
             self.assertEqual(single.frames(output / "generation/export.wav"), 61 * RATE)
+            import drum_probe
+            drums=root/'drums';drums.mkdir()
+            shutil.copytree(output/'prepared',drums/'prepared')
+            result=subprocess.run([sys.executable,str(ROOT/'scripts/drum_probe.py'),'--worker',
+                '--root',str(bridge),'--out',str(drums)],cwd=elsewhere,capture_output=True,text=True,timeout=30)
+            self.assertEqual(result.returncode,0,result.stderr)
+            probe=json.loads((drums/'generation/probe.json').read_text())
+            self.assertEqual(probe,{'instrument':'drums','caption':drum_probe.PRESET['caption'],
+                'dtype':'float32','vae_dtype':'float32','limit':600,'calls':1})
 
 
 if __name__ == "__main__": unittest.main()
