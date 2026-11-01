@@ -98,25 +98,29 @@ contain imports but no compiler/graph-construction declarations.
 
 ## Uji model native berikutnya
 
-Percobaan paket lama `affine.mlpackage` ditolak pada iPhone saat pemuatan:
-`Source asset validation: false`, `failedToSpecialize`, `Missing hash file`.
-Inference belum berjalan; ini bukan kegagalan parity/operator/performa.
-[Laporan penolakan](../../reviews/coreai-iphone17pro-raw-candidate/README.md).
-Tombol uji legacy telah dilepas; aplikasi tetap dapat menjalankan probe tensor.
+Dokumentasi resmi sudah terbaca. Format sumber adalah **`.aimodel`**, hasil AOT
+**`.aimodelc`**. Ini memperbaiki ejaan `.aimodels` yang sebelumnya diikuti dari
+koreksi pengguna sebelum dokumentasi dapat diakses.
 
-Pengguna mengoreksi format native CoreAI menjadi **`.aimodels`** dan memberikan
-https://developer.apple.com/core-ai/ . Jalur berikutnya harus mengikuti exporter
-CoreAI yang didokumentasikan. Isi halaman belum dapat diakses dari workspace ini
-(proxy HTTP 403), sehingga nama tool, perintah konversi dan skema hash belum
-terverifikasi. Tidak ada penggantian ekstensi, pembuatan hash ad hoc atau uji
-`.mlmodelc` lanjutan. Source paket legacy/exporter/tests tetap sebagai catatan
-percobaan yang ditolak; bukan jalur yang direkomendasikan.
+Aset `ModelCandidates/affine.aimodel` sudah diekspor dengan **coreai-torch 0.4.3**.
+Hash native dibuat otomatis oleh exporter resmi. Input Float32 [1, 4] bernama
+`x`, output `y`, fungsi `main`, rumus `y = 2*x + 0.25`. Referensi PyTorch ada di
+`affine-native-reference.json`. Tidak ada konversi/unduhan bobot ACE-Step.
 
-Setelah aset native serta kontrak input/output tersedia, gunakan pemanggil
-`CoreAIModelProbe`, uji model numerik kecil, lalu komponen audio. Belum ada aset
-native, inference model yang berhasil, atau konversi ACE-Step.
+Source aplikasi menambahkan tombol **Uji model native**. Tombol itu memuat aset
+native melalui CoreAI dengan CPU-only, memeriksa nilai terhadap referensi dalam
+3 run, dan mencatat waktu pemuatan terpisah dari run pertama serta 2 run hangat.
+CPU-only adalah kebijakan yang diminta; penempatan akselerator tidak diukur.
+Versi Swift baru belum dikompilasi atau dijalankan di iPhone.
 
-API evidence and limitations: [SDK review](../../docs/coreai-sdk-probe.md).
+Prototype menyalin sumber portable menggunakan folder resource yang sudah ada
+untuk menguji pemuatan langsung. Ini belum merupakan integrasi build-time AOT.
+Untuk integrasi Xcode standar/AOT, dokumentasi Apple mensyaratkan Metal Toolchain.
+Lihat [jalur ekspor resmi dan cara reproduksi](../../docs/coreai-native-export.md).
+
+Paket legacy `.mlpackage` tetap disimpan sebagai arsip percobaan yang ditolak
+(`Missing hash file`), bukan sebagai input tombol baru. Inference model native,
+kecocokan operator ACE-Step dan kualitas musik masih belum terverifikasi.
 
 ## Optional command-line build on the Mac
 

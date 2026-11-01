@@ -1,6 +1,6 @@
 // API declarations checked against the user's Xcode 27 SDK interfaces.
 // The user reported a successful tensor probe on iOS 27.0.1; see reviews/.
-// The raw legacy package was rejected; await a native .aimodels export.
+// The raw legacy package was rejected; the native .aimodel test still needs device verification.
 import CoreAI
 import SwiftUI
 import UIKit
@@ -9,6 +9,7 @@ import UIKit
 @MainActor
 struct CoreAIDeviceProbeApp: App {
     @State private var report = "Belum dijalankan."
+    @State private var runningModel = false
 
     var body: some Scene {
         WindowGroup {
@@ -23,7 +24,16 @@ struct CoreAIDeviceProbeApp: App {
                                 report = "Pemeriksaan gagal: \(error)"
                             }
                         }
-                        Text("Uji model menunggu aset native .aimodels.")
+                        .disabled(runningModel)
+                        Button(runningModel ? "Memeriksa model…" : "Uji model native") {
+                            runningModel = true
+                            report = "Memuat aset native .aimodel melalui CoreAI…"
+                            Task {
+                                report = await CoreAINativeNumericalProbe.run()
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
                         Text(report)
                             .font(.system(.footnote, design: .monospaced))
                             .textSelection(.enabled)

@@ -1,0 +1,38 @@
+{
+  "asset_file": "affine.aimodel",
+  "function_name": "main",
+  "input_name": "x",
+  "output_name": "y",
+  "input_shape": [
+    1,
+    4
+  ],
+  "output_shape": [
+    1,
+    4
+  ],
+  "input_values": [
+    0.0,
+    0.25,
+    -0.5,
+    1.0
+  ],
+  "expected_values": [
+    0.25,
+    0.75,
+    -0.75,
+    2.25
+  ],
+  "absolute_tolerance": 1e-06,
+  "exporter": "coreai-torch 0.4.3",
+  "coreai_core_version": "1.0.0b3",
+  "torch_version": "2.8.0+cpu",
+  "runtime_under_test": "CoreAI",
+  "reference_execution": "PyTorch CPU",
+  "coreai_device_inference_verified": false,
+  "artifact_sha256": {
+    "affine.aimodel/main.hash": "1b2236867f98b7bcd8417b81aa614be12a073f92a244f3ea76778b8d4d90dcf9",
+    "affine.aimodel/main.mlirb": "8cefc288b333e76f05d8f6061f3bd5125d2cbe7fe1f177ab446d189ce08a75db",
+    "affine.aimodel/metadata.json": "fad20808b389943d574976fead4ea9f9578a4ab68cd5dec46d4a35a0caff2398"
+  }
+}

@@ -202,3 +202,19 @@ would establish only that particular model/format path, not ACE-Step operator
 coverage, music quality, Neural Engine placement or production performance.
 The first run and two warmed runs use `.cpuOnly` and include output read-back;
 model load/specialization timing is recorded separately.
+
+## Official documentation now accessible; native export prepared
+
+The published network change enabled HTTP 200 retrieval of the official CoreAI
+integration and AOT guides. They specify `.aimodel` source and `.aimodelc` AOT
+variants. This supersedes the earlier unverified `.aimodels` requirement and
+blocked-page notes. Apple's exporter is `coreai-torch`, using `TorchConverter`
+and `AIProgram.save_asset`. The native affine export was actually produced with
+coreai-torch 0.4.3/coreai-core 1.0.0b3/PyTorch 2.8.0+cpu, including the native
+`main.hash` emitted by the exporter. No hash schema was guessed.
+
+See [native export guide](coreai-native-export.md) for authoritative sources,
+reproduction and exact validation scope. Export and PyTorch reference generation
+are verified; current Swift compilation and native inference on iPhone are not.
+An optional Linux in-package runtime smoke was terminated without a completed
+result; it supplies no model-inference or parity evidence.

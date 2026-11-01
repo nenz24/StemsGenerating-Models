@@ -58,10 +58,11 @@ CoreAI belum terbukti dapat langsung memuat checkpoint ACE-Step. Jika kemampuan
 yang diperlukan tidak tersedia, laporkan blocker; jangan mengganti runtime diam-diam.
 
 Uji paket legacy `.mlpackage` kemudian ditolak dengan `Missing hash file` saat
-specialization, sebelum inference. Pengguna mengoreksi format native yang dituju
-menjadi `.aimodels` dan memberikan https://developer.apple.com/core-ai/ . Jalur
-legacy dihentikan; exporter native dan aset valid masih diperlukan. Halaman resmi
-belum dapat dibaca dari workspace ini karena proxy HTTP 403.
+specialization, sebelum inference. Setelah perubahan jaringan, dokumentasi resmi
+dapat dibaca: format sumber adalah `.aimodel` dan hasil AOT `.aimodelc`, yang
+memperbaiki ejaan `.aimodels` sebelumnya. Ekspor native model numerik berhasil
+dengan coreai-torch 0.4.3. Lihat [jalur resmi](coreai-native-export.md); inference
+native pada iPhone masih menunggu uji.
 
 Pemeriksaan berikutnya tersedia pada `scripts/probe_coreai_sdk.sh`, dijalankan
 di Mac dengan Xcode. Probe melakukan type-check `import CoreAI` untuk target

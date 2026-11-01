@@ -1,0 +1,5 @@
+# Native CoreAI exporter, separate from the audio/CUDA experiment environment.
+coreai-torch==0.4.3
+coreai-core==1.0.0b3
+torch==2.8.0
+numpy<2.5
