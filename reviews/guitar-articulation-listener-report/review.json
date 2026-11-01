@@ -1,0 +1,13 @@
+{
+  "experiment": "guitar-articulation-original-versus-picked",
+  "evidence_kind": "listener_report_only",
+  "listener_assessment_original": "ternyata original guitar juga tidak masuk denga akor dan nada piano, serta picked jadi glitch semua",
+  "original_status": "rejected_harmonic_and_pitch_mismatch",
+  "picked_status": "rejected_glitches",
+  "paired_run_archive_uploaded": false,
+  "exact_run_source_and_settings_verified": false,
+  "current_guitar_harmony_approved": false,
+  "opening_reference_scope": "Historical favorable impression of the opening 30s; does not establish correct chord/pitch agreement or a qualified guitar accompaniment baseline.",
+  "current_conditioning": "Source audio plus caption; wrapper does not pass time-aligned chord/note events.",
+  "next_step": "Verify uploaded paired feedback and localize pitch/chord disagreements and glitches before selecting further generation work."
+}

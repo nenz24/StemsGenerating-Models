@@ -1,8 +1,8 @@
 {
   "id": "clean-electric-guitar-30-v1",
-  "status": "listener_accepted_30_second_candidate_for_longer_trial",
+  "status": "historical_tone_reference_harmonic_agreement_not_approved",
   "listener_assessment_original": "hasil kitar lumayan oke",
-  "approval_scope": "Opening 30-second clean electric guitar only; not yet a full-song verdict.",
+  "approval_scope": "Historical favorable impression of the opening 30s; does not establish correct chord/pitch agreement or a qualified guitar accompaniment baseline.",
   "archive": {
     "path": "guitar_feedback.zip",
     "bytes": 1432072,
@@ -45,7 +45,7 @@
     "actual_guitar_instruction": true,
     "reported_cuda_fp32": true
   },
-  "next_step": "Generate full song in contexts capped at 90 seconds with the same preset, then review each chunk and seam; reuse bass/drum outputs for later combined mix.",
+  "next_step": "Obtain paired-run feedback ZIP; compare guitar with piano harmony/timing and verify a generation path with time-aligned harmonic guidance before another full-song render.",
   "member_sha256": {
     "guitar_probe.json": "d0f2e3a609681f23e67006c852af334b877986f597760a0c8d2a057f62e0c87f",
     "prepared/input.json": "d9d13727b1f2bf25651b1ec2d36c117b65f7bca78342404111b6b495fe91b2ae",
@@ -55,5 +55,17 @@
     "capture/capture.json": "b15e291ad0f9a3355419f88a639dde667d062c8dab02b3f9a125ac2d95e89dfa",
     "guitar_preview.mp3": "f511536669b3ebfd7aef2fe70213d51aae92c0ad5635844ea891cb194c37b9e3",
     "mix_preview.mp3": "0c043ba3561d9290149a00c8c24020ec81c542a91ad02d23597ac6558540b850"
-  }
+  },
+  "assessment_history": [
+    {
+      "status": "listener_accepted_30_second_candidate_for_longer_trial",
+      "listener_assessment_original": "hasil kitar lumayan oke",
+      "approval_scope": "Opening 30-second clean electric guitar only; not yet a full-song verdict."
+    },
+    {
+      "status": "no_current_harmony_approved_guitar",
+      "listener_assessment_original": "ternyata original guitar juga tidak masuk denga akor dan nada piano, serta picked jadi glitch semua",
+      "scope": "Later original/picked comparison rejected. Exact comparison input not verified; no separate claim that the opening excerpt was the compared source."
+    }
+  ]
 }

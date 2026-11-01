@@ -1,10 +1,17 @@
 # ACE-Step context bridge
 
-[Notebook 20](../notebooks/20_colab_guitar_articulation.ipynb) is the next guitar
-test after the listener rejected the 90-second result for noise/strumming.
+The listener rejects both guitar articulation variants: original does not fit
+the piano chords/pitches, picked glitches. See the
+[current review](../reviews/guitar-articulation-listener-report/). No guitar
+baseline currently qualifies for harmonic agreement; source/output analysis is
+the next step once the paired feedback ZIP is available. Notebooks 18–20 are
+retained for reproduction and default to plan-only.
+
+[Notebook 20](../notebooks/20_colab_guitar_articulation.ipynb) records the paired
+experiment after the listener rejected the 90-second result for noise/strumming.
 Two matched 30-second clips at source start 77.130625s compare the original
 caption with a picked-note candidate. Same input bytes/model/settings, existing
-CUDA cache, no full-song regeneration. The original short reference is preserved.
+CUDA cache, no full-song regeneration. The original short tone history is preserved.
 
 [Notebook 19](../notebooks/19_colab_guitar_context_90.ipynb) extends the accepted
 30-second clean guitar candidate to the full piano song with contexts capped at

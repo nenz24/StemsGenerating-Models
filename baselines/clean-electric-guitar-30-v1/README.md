@@ -1,4 +1,10 @@
-# Clean electric guitar: accepted opening probe
+# Clean electric guitar: historical opening-tone reference
+
+**Current qualification:** the later original/picked comparison was rejected
+for harmonic mismatch and glitches. There is no harmony-approved guitar
+baseline. The initial favorable opening impression below is preserved as tone
+history; it did not establish correct chord/pitch agreement. The latest report
+does not separately identify the opening clip as the failed comparison input.
 
 The listener described `guitar_feedback.zip` as **"hasil kitar lumayan oke"**
 and requested the next stage using the existing 90-second chunk approach.
@@ -14,8 +20,8 @@ archive/member hashes. The ZIP contains MP3 previews and reports; keep
 `guitar_result.zip` from Colab for lossless WAVs. Reported raw guitar/mix WAV
 hashes cannot be verified here without those WAVs.
 
-Notebook 19 continues with the same preset in contexts capped at 90 seconds,
-6-second margins and 0.58-second equal-power crossfades. The longer guitar
-contexts, chord changes, playing feel, timbre and seams still
-need listening. Existing bass/drum baselines remain available for a subsequent
-combined mix, without regenerating them.
+Notebook 19's 90-second continuation was rejected for noise/strumming. Both
+notebook-20 articulation variants were subsequently rejected. See the
+[current review](../../reviews/guitar-articulation-listener-report/). Existing
+audio and bass/drum baselines are preserved; no further full-song guitar render
+is currently recommended.
