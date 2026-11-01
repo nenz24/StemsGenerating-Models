@@ -6,6 +6,12 @@ FP16, lalu diubah ke FP32 saat digunakan dalam proyeksi linear. Aktivasi, mask,
 input/output dan perhitungan tetap FP32. Ini menguji pengurangan ukuran asset
 sambil menjaga hasil baseline; bukan klaim pengurangan RAM atau waktu inference.
 
+[Hasil iPhone sudah PASS untuk kedua referensi](../reviews/coreai-iphone17pro-pretrained-dit-storage16/README.md):
+rata-rata dua run hangat 32,46 ms, footprint maksimum tersampel 638,2 MiB.
+Penghematan RAM belum terbukti; laporan profil FP32 sebelumnya mencatat 174,1 MiB.
+Langkah berikutnya adalah [satu forward denoiser lengkap](coreai-full-denoiser.md).
+Panduan di bawah tetap tersedia untuk mengulang profil dua blok.
+
 ## Jalankan di Mac
 
 ```bash

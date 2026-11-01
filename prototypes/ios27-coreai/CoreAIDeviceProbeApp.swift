@@ -1,6 +1,6 @@
 // API declarations checked against the user's Xcode 27 SDK interfaces.
 // The user reported a successful tensor probe on iOS 27.0.1; see reviews/.
-// Affine, codec and FP32 DiT profiles passed; FP16 weight-storage testing is next.
+// Component gates passed; a complete 24-layer denoiser forward is next.
 import CoreAI
 import SwiftUI
 import UIKit
@@ -8,7 +8,7 @@ import UIKit
 @main
 @MainActor
 struct CoreAIDeviceProbeApp: App {
-    @State private var report = "Belum dijalankan."
+    @State private var report = CoreAIDecoderProbe.savedDenoiserReport() ?? "Belum dijalankan."
     @State private var runningModel = false
 
     var body: some Scene {
@@ -84,6 +84,15 @@ struct CoreAIDeviceProbeApp: App {
                             report = "Memuat bobot FP16 dengan hitungan FP32 dan memeriksa baseline…"
                             Task {
                                 report = await CoreAIDecoderProbe.runDiTStorage16()
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
+                        Button("Uji denoiser lengkap") {
+                            runningModel = true
+                            report = "Memuat denoiser 24 layer untuk satu prediksi velocity…"
+                            Task {
+                                report = await CoreAIDecoderProbe.runDenoiser()
                                 runningModel = false
                             }
                         }

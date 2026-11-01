@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "source": "User-pasted device report",
+    "independently_reproduced": false,
+    "device_model": "iPhone 17 Pro",
+    "device_model_evidence": "Previously identified by user; model identifier not emitted in report",
+    "source_commit": null,
+    "local_asset_hashes_in_report": false,
+    "cache_state": "unmeasured"
+  },
+  "runtime": "CoreAI",
+  "os": "Version 27.0.1 (Build 24A446)",
+  "architecture": "h18p",
+  "target": "iOS device build",
+  "test": "pretrained ACE Base DiT blocks 0+1 / synthetic activations / NOT instrument generation",
+  "requested_compute_policy": "cpuOnly",
+  "actual_accelerator": "not measured",
+  "output_shape": [
+    1,
+    160,
+    2048
+  ],
+  "scalar_type": "float32",
+  "reference_binary_sha256_verified": true,
+  "publisher_checkpoint_verified_by_mac_preparation": true,
+  "tolerances": {
+    "absolute": 0.0001,
+    "relative": 0.001,
+    "normalized_rmse": 0.001
+  },
+  "source_asset_validation": true,
+  "source_asset_validation_ms": 0.655375,
+  "validated_load_specialization_ms": 718.08675,
+  "function_names": [
+    "main"
+  ],
+  "runs": [
+    {
+      "kind": "first",
+      "run_and_read_back_ms": 143.19475,
+      "max_absolute_error": 0.0013427734375,
+      "rmse": 2.8891748854000516e-05,
+      "normalized_rmse": 2.127184248442011e-06,
+      "original_fp32_comparison": {
+        "max_absolute_error": 0.001922607421875,
+        "rmse": 2.8958450833713256e-05,
+        "normalized_rmse": 2.1320952225931604e-06
+      }
+    },
+    {
+      "kind": "warm_1",
+      "run_and_read_back_ms": 30.895334,
+      "max_absolute_error": 0.0013427734375,
+      "rmse": 2.8891748854000516e-05,
+      "normalized_rmse": 2.127184248442011e-06,
+      "original_fp32_comparison": {
+        "max_absolute_error": 0.001922607421875,
+        "rmse": 2.8958450833713256e-05,
+        "normalized_rmse": 2.1320952225931604e-06
+      }
+    },
+    {
+      "kind": "warm_2",
+      "run_and_read_back_ms": 34.030042,
+      "max_absolute_error": 0.0013427734375,
+      "rmse": 2.8891748854000516e-05,
+      "normalized_rmse": 2.127184248442011e-06,
+      "original_fp32_comparison": {
+        "max_absolute_error": 0.001922607421875,
+        "rmse": 2.8958450833713256e-05,
+        "normalized_rmse": 2.1320952225931604e-06
+      }
+    }
+  ],
+  "derived_warm_mean_ms": 32.462688,
+  "parity": "PASS (three runs)",
+  "memory": {
+    "baseline_mib": 16.361083984375,
+    "sampled_maximum_mib": 638.1745910644531,
+    "sampling_interval_ms": 10,
+    "scope": "Whole process; not exact peak, isolated model allocation or whole-device usage"
+  },
+  "total_probe_ms": 1380.613167,
+  "model_loaded": true,
+  "model_inference_executed": true,
+  "scope": "Both references pass for one repeated synthetic two-block case; file-size savings do not establish RAM or latency savings, full denoiser still unverified",
+  "input_shapes": {
+    "condition": [
+      1,
+      64,
+      2048
+    ],
+    "cross_mask": [
+      1,
+      1,
+      160,
+      64
+    ],
+    "hidden": [
+      1,
+      160,
+      2048
+    ],
+    "local_mask": [
+      1,
+      1,
+      160,
+      160
+    ],
+    "rope_cos": [
+      1,
+      160,
+      128
+    ],
+    "rope_sin": [
+      1,
+      160,
+      128
+    ],
+    "self_mask": [
+      1,
+      1,
+      160,
+      160
+    ],
+    "temb": [
+      1,
+      6,
+      2048
+    ]
+  },
+  "output_name": "hidden_out",
+  "layer_prefixes": [
+    "decoder.layers.0.",
+    "decoder.layers.1."
+  ],
+  "sliding_window_radius": 128,
+  "precision_profile": {
+    "weight_storage_dtype": "float16",
+    "compute_dtype": "float32",
+    "input_output_dtype": "float32"
+  },
+  "original_fp32_baseline_parity": "PASS (three runs)"
+}

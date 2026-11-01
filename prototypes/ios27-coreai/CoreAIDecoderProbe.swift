@@ -1,4 +1,4 @@
-// Codec and FP32 DiT profiles passed on device; FP16 storage / FP32 math is pending.
+// Codec and two-block DiT gates passed; the complete 24-layer denoiser is pending.
 import CoreAI
 import CryptoKit
 import Darwin
@@ -7,23 +7,29 @@ import Foundation
 
 enum CoreAIDecoderProbe {
     private enum Profile {
-        case decoderShort, decoderOneSecond, encoderOneSecond, ditBlock, ditContext, ditStorage16
+        case decoderShort, decoderOneSecond, encoderOneSecond, ditBlock, ditContext, ditStorage16, denoiser
         var isEncoder: Bool { self == .encoderOneSecond }
         var isStorage16: Bool { self == .ditStorage16 }
+        var isDenoiser: Bool { self == .denoiser }
+        var hasStoredHalfWeights: Bool { isStorage16 || isDenoiser }
         var isDiTContext: Bool { self == .ditContext || isStorage16 }
         var isDiT: Bool { self == .ditBlock || isDiTContext }
-        var component: String { isStorage16 ? "dit-storage16" : (isDiT ? (isDiTContext ? "dit-context" : "dit-block") : (isEncoder ? "encoder" : "decoder")) }
+        var component: String { isDenoiser ? "denoiser" : (isStorage16 ? "dit-storage16" : (isDiT ? (isDiTContext ? "dit-context" : "dit-block") : (isEncoder ? "encoder" : "decoder"))) }
         var frames: Int { self == .decoderShort ? 5 : 25 }
         var folderName: String {
-            isDiT ? "\(component)-pretrained" : (self == .decoderShort ? "decoder-pretrained" : "\(component)-pretrained-1s")
+            (isDiT || isDenoiser) ? "\(component)-pretrained" : (self == .decoderShort ? "decoder-pretrained" : "\(component)-pretrained-1s")
         }
         var inputName: String { isEncoder ? "audio" : "latent" }
-        var outputName: String { isDiT ? "hidden_out" : (isEncoder ? "latent" : "audio") }
+        var outputName: String { isDenoiser ? "velocity" : (isDiT ? "hidden_out" : (isEncoder ? "latent" : "audio")) }
         var inputShape: [Int] { isEncoder ? [1, 2, frames * 1920] : [1, 64, frames] }
         var hiddenTokens: Int { isDiTContext ? 160 : 16 }
         var conditionTokens: Int { isDiTContext ? 64 : 8 }
-        var outputShape: [Int] { isDiT ? [1, hiddenTokens, 2048] : (isEncoder ? [1, 64, frames] : [1, 2, frames * 1920]) }
+        var outputShape: [Int] { isDenoiser ? [1, 25, 64] : (isDiT ? [1, hiddenTokens, 2048] : (isEncoder ? [1, 64, frames] : [1, 2, frames * 1920])) }
         var inputShapes: [String: [Int]] {
+            if isDenoiser {
+                return ["noise": [1, 25, 64], "condition": [1, 64, 2048], "context": [1, 25, 128],
+                        "timestep": [1], "timestep_r": [1]]
+            }
             guard isDiT else { return [inputName: inputShape] }
             var shapes = ["hidden": [1, hiddenTokens, 2048], "condition": [1, conditionTokens, 2048], "temb": [1, 6, 2048],
                           "rope_cos": [1, hiddenTokens, 128], "rope_sin": [1, hiddenTokens, 128],
@@ -31,9 +37,10 @@ enum CoreAIDecoderProbe {
             if isDiTContext { shapes["local_mask"] = [1, 1, hiddenTokens, hiddenTokens] }
             return shapes
         }
-        var expectedFile: String { isDiT ? "hidden-reference.f32le" : "\(outputName)-reference.f32le" }
+        var expectedFile: String { isDenoiser ? "velocity-reference.f32le" : (isDiT ? "hidden-reference.f32le" : "\(outputName)-reference.f32le") }
+        var originalReferenceFile: String { isDenoiser ? "velocity-fp32-reference.f32le" : "hidden-fp32-reference.f32le" }
         var checkpointDigest: String {
-            isDiT ? "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b" :
+            (isDiT || isDenoiser) ? "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b" :
                 "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0"
         }
     }
@@ -54,6 +61,9 @@ enum CoreAIDecoderProbe {
         let profile: String?
         let slidingWindow: Int?
         let maskGeometryVerified: Bool?
+        let layerCount: Int?
+        let checkpointPrefix: String?
+        let latentFrames: Int?
         let weightStorageDtype: String?
         let computeDtype: String?
         let originalFp32ReferenceFile: String?
@@ -101,10 +111,32 @@ enum CoreAIDecoderProbe {
         await run(profile: .ditStorage16)
     }
 
+    static func runDenoiser() async -> String {
+        await run(profile: .denoiser)
+    }
+
+    static func savedDenoiserReport() -> String? {
+        guard let url = denoiserReportURL(), let report = try? String(contentsOf: url, encoding: .utf8) else { return nil }
+        return "Laporan denoiser tersimpan dari percobaan sebelumnya:\n\n" + report
+    }
+
+    private static func denoiserReportURL() -> URL? {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("last-denoiser-probe.txt")
+    }
+
+    private static func saveProgress(_ lines: [String], profile: Profile) {
+        guard profile.isDenoiser, let url = denoiserReportURL() else { return }
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? lines.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
+    }
+
     private static func run(profile: Profile) async -> String {
         let component = profile.component
         let testDescription: String
-        if profile.isDiT {
+        if profile.isDenoiser {
+            testDescription = "pretrained ACE Base COMPLETE 24-layer denoiser / one velocity prediction / synthetic latents"
+        } else if profile.isDiT {
             testDescription = "pretrained ACE Base DiT \(profile.isDiTContext ? "blocks 0+1" : "block 0") / synthetic activations"
         } else {
             let inputDescription = profile.isEncoder ? "synthetic audio / posterior mean" : "seeded latent"
@@ -118,12 +150,14 @@ enum CoreAIDecoderProbe {
             "Requested compute policy: cpuOnly",
             "Accelerator used by a model: NOT MEASURED"
         ]
-        if profile.isDiT {
+        if profile.isDenoiser {
+            lines.append("Denoiser scope: all 24 layers + input/time/condition/output projections; 25 latent frames; no diffusion loop or waveform generation")
+        } else if profile.isDiT {
             lines.append("Block scope: \(profile.isDiTContext ? "layers 0 (local radius 128) -> 1 (full)" : "decoder.layers.0."); \(profile.hiddenTokens) hidden tokens / \(profile.conditionTokens) condition tokens; no audio duration claim")
         } else {
             lines.append("Window profile: \(profile.frames == 25 ? "1.0 s" : "0.2 s")")
         }
-        if profile.isStorage16 {
+        if profile.hasStoredHalfWeights {
             lines.append("Precision profile: FP16 stored weights; FP32 calculations, masks and input/output")
             lines.append("Original FP32 baseline parity: REQUIRED; runtime RAM savings NOT MEASURED")
         }
@@ -137,13 +171,16 @@ enum CoreAIDecoderProbe {
         let memory = CoreAIProcessFootprintSampler()
         var loaded = false
         var executed = false
+        saveProgress(lines + ["Phase: validating prepared references"], profile: profile)
         do {
             guard let folder = Bundle.main.resourceURL?
                 .appendingPathComponent("ModelCandidates/\(profile.folderName)"),
                 FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
                 let ditProfile = profile.isStorage16 ? "storage16" : (profile.isDiTContext ? "context" : "short")
-                let script = profile.isDiT ? "bash scripts/prepare_coreai_dit_block.sh --profile \(ditProfile)" :
-                    "bash scripts/prepare_coreai_decoder.sh --component \(component) --frames \(profile.frames)"
+                let script: String
+                if profile.isDenoiser { script = "bash scripts/prepare_coreai_denoiser.sh" }
+                else if profile.isDiT { script = "bash scripts/prepare_coreai_dit_block.sh --profile \(ditProfile)" }
+                else { script = "bash scripts/prepare_coreai_decoder.sh --component \(component) --frames \(profile.frames)" }
                 lines.append("Prepare on Mac: \(script); then rebuild the app.")
                 throw ProbeError.missingPreparedBundle
             }
@@ -162,7 +199,12 @@ enum CoreAIDecoderProbe {
                   contract.relativeRmseTolerance > 0, contract.relativeRmseTolerance <= 0.01 else {
                 throw ProbeError.invalidContract
             }
-            if profile.isDiT {
+            if profile.isDenoiser {
+                guard contract.profile == "denoiser", contract.inputShapes == profile.inputShapes,
+                      contract.layerCount == 24, contract.checkpointPrefix == "decoder.", contract.latentFrames == 25 else {
+                    throw ProbeError.invalidContract
+                }
+            } else if profile.isDiT {
                 guard contract.inputShapes == profile.inputShapes else {
                     throw ProbeError.invalidContract
                 }
@@ -170,16 +212,16 @@ enum CoreAIDecoderProbe {
                     guard contract.profile == (profile.isStorage16 ? "storage16" : "context"), contract.layerPrefixes == ["decoder.layers.0.", "decoder.layers.1."],
                           contract.slidingWindow == 128, contract.maskGeometryVerified == true else { throw ProbeError.invalidContract }
                 } else if contract.layerPrefix != "decoder.layers.0." { throw ProbeError.invalidContract }
-                if profile.isStorage16 {
-                    guard contract.weightStorageDtype == "float16", contract.computeDtype == "float32",
-                          contract.originalFp32ReferenceFile == "hidden-fp32-reference.f32le" else { throw ProbeError.invalidContract }
-                }
             } else {
                 guard (contract.component ?? "decoder") == component,
                       (!profile.isEncoder || contract.posteriorMode == "mean"),
                       contract.inputName == profile.inputName, contract.inputShape == profile.inputShape,
                       contract.sampleRate == 48000, contract.inputFile == "\(profile.inputName).f32le",
                       contract.expectedFile == profile.expectedFile else { throw ProbeError.invalidContract }
+            }
+            if profile.hasStoredHalfWeights {
+                guard contract.weightStorageDtype == "float16", contract.computeDtype == "float32",
+                      contract.originalFp32ReferenceFile == profile.originalReferenceFile else { throw ProbeError.invalidContract }
             }
             var tensorInputs: [String: NDArray] = [:]
             for (name, shape) in profile.inputShapes {
@@ -190,11 +232,11 @@ enum CoreAIDecoderProbe {
             let expected = try readFloats(folder: folder, name: profile.expectedFile,
                                           count: contract.outputShape.reduce(1, *), hashes: contract.artifactSha256)
             let fp32Baseline: [Float]?
-            if profile.isStorage16 {
-                fp32Baseline = try readFloats(folder: folder, name: "hidden-fp32-reference.f32le",
+            if profile.hasStoredHalfWeights {
+                fp32Baseline = try readFloats(folder: folder, name: profile.originalReferenceFile,
                                               count: contract.outputShape.reduce(1, *), hashes: contract.artifactSha256)
             } else { fp32Baseline = nil }
-            if !profile.isDiT {
+            if !profile.isDiT && !profile.isDenoiser {
                 lines.append("Audio duration / sample rate: \(Double(profile.frames) / 25) s / 48000 Hz stereo")
                 lines.append("Input/output shapes: \(profile.inputShape) -> \(contract.outputShape)")
             } else {
@@ -204,14 +246,17 @@ enum CoreAIDecoderProbe {
             lines.append("Reference binary SHA-256: VERIFIED; pretrained checkpoint verified by Mac preparation")
             lines.append("Tolerances: abs \(contract.absoluteTolerance), rel \(contract.relativeTolerance), normalized RMSE \(contract.relativeRmseTolerance)")
             let url = folder.appendingPathComponent(contract.assetFile)
+            saveProgress(lines + ["Phase: native asset validation"], profile: profile)
             let validationStart = clock.now
             lines.append("Source asset validation: \(AIModelAsset.isValid(at: url))")
             lines.append("Source asset validation ms: \(ms(validationStart.duration(to: clock.now)))")
+            saveProgress(lines + ["Phase: loading/specializing complete model"], profile: profile)
             let loadStart = clock.now
             let probe = try await CoreAIModelProbe(contentsOf: url, options: .cpuOnly)
             loaded = true
             lines.append("Validated load/specialization ms: \(ms(loadStart.duration(to: clock.now)))")
             lines.append("Function names: \(probe.model.functionNames)")
+            saveProgress(lines + ["Phase: model loaded; reading descriptors"], profile: profile)
             if let descriptor = probe.model.functionDescriptor(for: contract.functionName) {
                 for name in profile.inputShapes.keys.sorted() {
                     if let value = descriptor.inputDescriptor(of: name), case .ndArray(let array) = value {
@@ -223,6 +268,7 @@ enum CoreAIDecoderProbe {
                 }
             }
             for iteration in 0..<3 {
+                saveProgress(lines + ["Phase: inference \(iteration + 1) running"], profile: profile)
                 let start = clock.now
                 var outputs = try await probe.runStateless(functionNamed: contract.functionName,
                                                            inputs: tensorInputs)
@@ -248,12 +294,13 @@ enum CoreAIDecoderProbe {
                     lines.append("Original FP32 baseline max abs error: \(original.maxError); RMSE: \(original.rmse); normalized RMSE: \(original.normalizedRmse)")
                     guard original.passed else { throw ProbeError.originalFP32ParityFailed }
                 }
+                saveProgress(lines + ["Phase: inference \(iteration + 1) passed"], profile: profile)
             }
-            if profile.isStorage16 { lines.append("Original FP32 baseline parity: PASS (three runs)") }
+            if profile.hasStoredHalfWeights { lines.append("Original FP32 baseline parity: PASS (three runs)") }
             lines.append("Pretrained \(component) parity: PASS (three runs)")
         } catch {
             let detail = error as NSError
-            if profile.isStorage16 { lines.append("Original FP32 baseline parity: NOT PASSED") }
+            if profile.hasStoredHalfWeights { lines.append("Original FP32 baseline parity: NOT PASSED") }
             lines.append("Pretrained \(component) parity: NOT PASSED")
             lines.append("Error: \(String(reflecting: error))")
             lines.append("Error domain/code: \(detail.domain) / \(detail.code)")
@@ -267,6 +314,7 @@ enum CoreAIDecoderProbe {
         lines.append("Total \(component) probe ms: \(ms(totalStart.duration(to: clock.now)))")
         lines.append("Model loaded: \(loaded ? "YES" : "NO")")
         lines.append("Model inference executed: \(executed ? "YES" : "NO")")
+        saveProgress(lines, profile: profile)
         return lines.joined(separator: "\n")
     }
 

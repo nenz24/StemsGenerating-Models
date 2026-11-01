@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "profile": "denoiser",
+  "asset_file": "denoiser.aimodel",
+  "function_name": "main",
+  "output_name": "velocity",
+  "input_shapes": {
+    "noise": [
+      1,
+      25,
+      64
+    ],
+    "condition": [
+      1,
+      64,
+      2048
+    ],
+    "context": [
+      1,
+      25,
+      128
+    ],
+    "timestep": [
+      1
+    ],
+    "timestep_r": [
+      1
+    ]
+  },
+  "output_shape": [
+    1,
+    25,
+    64
+  ],
+  "scalar_type": "float32",
+  "byte_order": "little",
+  "layer_count": 24,
+  "checkpoint_prefix": "decoder.",
+  "latent_frames": 25,
+  "latent_rate_hz": 25,
+  "patch_size": 2,
+  "parameter_count": 1575458880,
+  "weight_storage_dtype": "float16",
+  "compute_dtype": "float32",
+  "original_fp32_reference_file": "velocity-fp32-reference.f32le",
+  "storage16_vs_original_fp32": {
+    "finite": true,
+    "max_absolute_error": 4.947185516357422e-06,
+    "rmse": 1.3495991560352856e-06,
+    "normalized_rmse": 1.1518127717546934e-06,
+    "elementwise_fraction_over_bound": 0.0,
+    "parity_passed": true
+  },
+  "checkpoint": {
+    "repo_id": "ACE-Step/acestep-v15-base",
+    "revision": "e432212fec32b8965a14ffa57ae653438d6abd14",
+    "filename": "model.safetensors",
+    "size": 4787825604,
+    "digest": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b"
+  },
+  "checkpoint_full_sha256_verified": true,
+  "publisher_source_digests": {
+    "modeling_acestep_v15_base.py": "0f8cf5060b75a246f70f805133737a3b421e4483",
+    "configuration_acestep_v15.py": "965a1b73afb1c89d0959c7d80691e487fdfde505",
+    "config.json": "ba68842e7207fe015ef7bca698e40f12dc13241d"
+  },
+  "reference_backend": "PyTorch CPU Float32 / publisher eager attention",
+  "input_provenance": "Seed-0 synthetic noise/context/condition; timestep=0.5, timestep_r=0.25; not recorded audio or complete conditioning",
+  "scope": "Complete 24-layer velocity forward with projections/time embeddings, odd-length pad/crop; no diffusion loop, CFG or generated instrument",
+  "reference_peak": 4.5208964347839355,
+  "reference_rms": 1.1717174407743296,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "versions": {
+    "torch": "2.8.0+cpu",
+    "transformers": "4.57.3",
+    "coreai-torch": "0.4.3",
+    "coreai-core": "1.0.0b3"
+  },
+  "artifact_sha256": {
+    "condition.f32le": "397246108efedb5f6486d306c2fd00cafb60f0909764d3a2fe8a02dd4fc403ff",
+    "context.f32le": "d6a2f796806d470c608f597ed796ddec003917e8b574e9ec6e1bf30ec819dfbe",
+    "denoiser.aimodel/main.hash": "d5b2338b4d64749dee67df36a59b326e7b38d9f3e188a3279d2e3e4f474ac769",
+    "denoiser.aimodel/main.mlirb": "49dd38a505bb1281bc6a33b4a693c2cf5dffbefd2a57b3f812a23fa87a3ff4ca",
+    "denoiser.aimodel/metadata.json": "7b819a2b424cdb9d1414cdcbdd88a0e8f62f11a26c71d2eed2216acf8e9660d5",
+    "noise.f32le": "36b957ea048d809cd54eea8ad32f6641804eecb9c1e9438a8162f64fd1b02615",
+    "timestep.f32le": "d99e58435243d9fef9c88273b8d553b4fba4d0baf8009d29eae74fa99e0d9f57",
+    "timestep_r.f32le": "75e253f50979177eba47b2d0805ad36038789108924514d2a761a70de057d16f",
+    "velocity-fp32-reference.f32le": "bdc964e508b63911dff79d8a5948aa368b2f2dd0288066079f9d39bac3e4faa4",
+    "velocity-reference.f32le": "200564008006f6560e78e800b48c25487fbdc0c0b9dc782b433ae675ea475161"
+  },
+  "coreai_device_inference_verified": false,
+  "runtime_ram_savings_verified": false
+}

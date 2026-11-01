@@ -200,5 +200,22 @@ FP16, tetapi hitungan dan input/output tetap FP32. Native asset sekitar 252 MB;
 paket lengkap dengan referensi baseline FP32 tambahan sekitar 257 MB. App wajib
 meluluskan pembandingan dengan kedua referensi. Baseline konteks FP32 tetap disimpan.
 [Panduan bobot FP16](../../docs/coreai-dit-storage16.md) menjelaskan audit precision
-dan batas pengukuran RAM. Ekspor Linux berhasil; build Swift terbaru, dua gerbang
-parity, latensi dan dampak memori pada iPhone masih menunggu.
+dan batas pengukuran RAM.
+[Hasil berikutnya sudah PASS pada kedua referensi](../../reviews/coreai-iphone17pro-pretrained-dit-storage16/README.md),
+dua run hangat rata-rata 32,46 ms, tetapi footprint tersampel 638,2 MiB tidak
+menunjukkan penghematan RAM.
+
+## Denoiser lengkap, satu forward
+
+Jalankan `bash scripts/prepare_coreai_denoiser.sh`, build ulang, lalu tekan
+**Uji denoiser lengkap**. Semua 24 layer, input/time/condition/output projections
+dan pad/crop asli ikut berjalan pada 25 latent frame sintetis. Paket lokal baru
+sekitar 3,15 GB memakai FP16 stored weights/FP32 math, dengan dua referensi.
+Checkpoint Base dipakai ulang dan semua baseline tetap tersimpan.
+
+[Panduan denoiser lengkap](../../docs/coreai-full-denoiser.md) menjelaskan kontrak
+dan batas memorinya. Tahap validasi/load/inference disimpan secara best effort;
+setelah aplikasi dibuka ulang, laporan denoiser terakhir dapat muncul kembali.
+Laporan lama diberi label dan tidak otomatis menjalankan model. Ekspor Linux
+berhasil; build Swift terbaru, load/parity/latensi/memori iPhone masih menunggu.
+Ini belum loop diffusion atau generasi pengiring dari piano.

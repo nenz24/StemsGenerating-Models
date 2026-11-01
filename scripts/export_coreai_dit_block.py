@@ -116,24 +116,45 @@ def precision_metrics(actual, reference):
 
 
 def convert_storage16(model):
-    """Store learned values as FP16; explicitly upcast linear weights for FP32 math.
+    """Store learned values as FP16; explicitly upcast projections for FP32 math.
 
     Normalization weights and AdaLN tables promote naturally with FP32 activations.
     These casts do not establish runtime RAM savings: specialization may upcast
     constants. The actual native file size and device execution are separate gates.
     """
     import torch
-    model.to(dtype=torch.float16)
+    # Keep analytical buffers (e.g. full-model rotary inv_freq) at their original
+    # precision. Only learned parameter storage is changed.
+    for parameter in model.parameters():parameter.data = parameter.detach().half()
 
     class Float32Linear(torch.nn.Linear):
         def forward(self, x):
             return torch.nn.functional.linear(x, self.weight.float(), None if self.bias is None else self.bias.float())
+
+    class Float32Conv1d(torch.nn.Conv1d):
+        def forward(self, x):
+            return self._conv_forward(x, self.weight.float(), None if self.bias is None else self.bias.float())
+
+    class Float32ConvTranspose1d(torch.nn.ConvTranspose1d):
+        def forward(self, x):
+            return torch.nn.functional.conv_transpose1d(x, self.weight.float(), None if self.bias is None else self.bias.float(),
+                                                        self.stride, self.padding, self.output_padding, self.groups, self.dilation)
 
     def replace(module):
         for name, child in list(module.named_children()):
             if isinstance(child, torch.nn.Linear):
                 with torch.device('meta'):
                     new = Float32Linear(child.in_features, child.out_features, bias=child.bias is not None)
+                new.weight = child.weight;new.bias = child.bias
+                new.eval();setattr(module, name, new)
+            elif isinstance(child, (torch.nn.Conv1d, torch.nn.ConvTranspose1d)):
+                if child.padding_mode != 'zeros':raise ValueError('Storage16 convolution requires verified zero padding')
+                kind = Float32ConvTranspose1d if isinstance(child, torch.nn.ConvTranspose1d) else Float32Conv1d
+                kwargs = dict(in_channels=child.in_channels, out_channels=child.out_channels, kernel_size=child.kernel_size,
+                              stride=child.stride, padding=child.padding, dilation=child.dilation, groups=child.groups,
+                              bias=child.bias is not None, padding_mode=child.padding_mode)
+                if isinstance(child, torch.nn.ConvTranspose1d):kwargs['output_padding'] = child.output_padding
+                with torch.device('meta'):new = kind(**kwargs)
                 new.weight = child.weight;new.bias = child.bias
                 new.eval();setattr(module, name, new)
             else:replace(child)

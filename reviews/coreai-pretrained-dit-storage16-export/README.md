@@ -38,3 +38,9 @@ Smaller serialized weight storage does not establish reduced device RAM: native
 specialization may materialize FP32 constants. Hardware placement, latency,
 RAM savings, full-generator feasibility and musical quality remain unverified.
 Follow the [Mac and device steps](../../docs/coreai-dit-storage16.md).
+
+**Subsequent evidence:** both numerical gates
+[passed on the user's iPhone](../coreai-iphone17pro-pretrained-dit-storage16/README.md).
+The sampled process footprint was higher than in the separate FP32 context
+report; this does not demonstrate runtime RAM savings. Exact Mac asset hashes
+and source commit were not emitted, so this manifest remains Linux export evidence.

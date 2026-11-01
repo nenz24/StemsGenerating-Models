@@ -41,7 +41,7 @@
       "scope": "This import evidence establishes module type-check only; see the later device report for app/tensor execution"
     },
     "physical_device_execution_verified": true,
-    "physical_device_execution_scope": "User-reported tensor, affine, VAE and FP32 DiT gates including local/full blocks 0+1 at 160/64 tokens; hardware placement unmeasured",
+    "physical_device_execution_scope": "User-reported VAE and DiT component gates including dual parity for FP16-stored weights/FP32 math; full denoiser device gate and hardware placement unverified",
     "public_sdk_interface_review": {
       "archive_name": "coreai-api.apDMX4.zip",
       "archive_sha256": "7c8d1c8cde67d4f062032c0704fc0991d958ceb17e0952defd2d7c4daa5cb597",
@@ -103,11 +103,11 @@
   },
   "unverified": {
     "coreai_sdk_custom_audio_model_support": "Pretrained encoder posterior mean at 1 s and decoder at 0.2/1 s Float32 parity reported; joint codec, stochastic posterior and full conditional generator unverified",
-    "model_import_format_and_operators": "Native affine, VAE and two FP32 Base DiT blocks with 160/64 context verified on iPhone; FP16 storage and full generator unverified",
+    "model_import_format_and_operators": "Native affine, VAE and two-block DiT including stored-FP16/F32-math verified on iPhone; complete denoiser exported with device gate pending",
     "accelerator_and_precision_support": "Float32 affine and VAE encoder/decoder parity verified under requested CPU-only policy; actual placement and GPU/Neural Engine inference unmeasured",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
-    "model_conversion_training_and_device_benchmarks": "VAE and FP32 DiT context gates passed separately; FP16 weight-storage/FP32-math export verified with device gate pending; full generator and sampling unimplemented"
+    "model_conversion_training_and_device_benchmarks": "Complete 24-layer one-forward denoiser exported; device load/parity/memory pending; full conditioning and diffusion generation loop unimplemented"
   },
   "local_prototype_status": {
     "source_directory": "prototypes/ios27-coreai",
@@ -119,8 +119,8 @@
     "apple_compilation_verified": true,
     "apple_compilation_evidence": "User reported successful execution of the device probe app; not independently compiled in this Linux workspace",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-pretrained-dit-context/report.json",
-    "device_execution_scope": "Separate VAE and two FP32 DiT local/full blocks pass; storage16, full denoiser/accompaniment and hardware placement unverified",
+    "device_execution_report": "reviews/coreai-iphone17pro-pretrained-dit-storage16/report.json",
+    "device_execution_scope": "Both storage16 references pass for two blocks; complete denoiser and end-to-end accompaniment unverified",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -154,7 +154,7 @@
     "native_model_reference": "prototypes/ios27-coreai/ModelCandidates/affine-native-reference.json",
     "current_native_probe_apple_compilation_verified": true,
     "native_inference_report": "reviews/coreai-iphone17pro-native-affine/report.json",
-    "checkpoint_conversion_scope": "VAE decoder 0.2/1 s, encoder mean 1 s, short Base block 0 and longer Base blocks 0+1 FP32; full generator unimplemented"
+    "checkpoint_conversion_scope": "VAE and complete 24-layer Base denoiser FP16-storage/FP32-math exported; source conditioning and full generation loop unimplemented"
   },
   "audio_component_audit": {
     "report": "reviews/coreai-ace-component-audit/report.json",
@@ -320,9 +320,66 @@
       "Original FP32-weight reference"
     ],
     "requested_device_compute_policy": "cpuOnly",
+    "new_swift_apple_build_verified": true,
+    "device_parity_verified": true,
+    "runtime_ram_savings_verified": false,
+    "validation_manifest": "reviews/coreai-pretrained-dit-storage16-export/reference.json",
+    "device_both_reference_parity_verified": true,
+    "device_report": "reviews/coreai-iphone17pro-pretrained-dit-storage16/report.json",
+    "device_evidence_source": "User-pasted report; not independently reproduced"
+  },
+  "pretrained_full_denoiser_probe": {
+    "preparation_script": "scripts/prepare_coreai_denoiser.sh",
+    "exporter_script": "scripts/export_coreai_denoiser.py",
+    "local_ignored_bundle": "prototypes/ios27-coreai/ModelCandidates/denoiser-pretrained",
+    "publisher_checkpoint_full_sha256_verified_in_development": true,
+    "native_export_verified_in_development": true,
+    "layer_count": 24,
+    "parameter_count": 1575458880,
+    "dense_fp32_parameter_bytes": 6301835520,
+    "native_asset_bytes": 3152952948,
+    "prepared_bundle_bytes": 3153512618,
+    "latent_frames": 25,
+    "input_shapes": {
+      "noise": [
+        1,
+        25,
+        64
+      ],
+      "condition": [
+        1,
+        64,
+        2048
+      ],
+      "context": [
+        1,
+        25,
+        128
+      ],
+      "timestep": [
+        1
+      ],
+      "timestep_r": [
+        1
+      ]
+    },
+    "output_shape": [
+      1,
+      25,
+      64
+    ],
+    "scope": "One complete velocity forward with synthetic inputs, no CFG/diffusion loop or generated waveform",
+    "weight_storage_dtype": "float16",
+    "compute_dtype": "float32",
+    "input_output_dtype": "float32",
+    "analytical_rope_buffers_dtype": "float32",
+    "host_original_fp32_parity_passed": true,
+    "host_original_fp32_normalized_rmse": 1.1518127717546934e-06,
+    "requested_device_compute_policy": "cpuOnly",
     "new_swift_apple_build_verified": false,
     "device_parity_verified": false,
+    "persistent_progress": "Best-effort local Documents log, shown with previous-session label after app relaunch; not termination-cause evidence",
     "runtime_ram_savings_verified": false,
-    "validation_manifest": "reviews/coreai-pretrained-dit-storage16-export/reference.json"
+    "validation_manifest": "reviews/coreai-pretrained-full-denoiser-export/reference.json"
   }
 }

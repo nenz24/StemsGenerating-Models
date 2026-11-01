@@ -12,11 +12,12 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class DecoderPreparePathTests(unittest.TestCase):
-    def run_fixture(self, reuse, frames=5, component='decoder', dit=False, dit_profile='short'):
+    def run_fixture(self, reuse, frames=5, component='decoder', dit=False, dit_profile='short', denoiser=False):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp);repo = base / 'repo with spaces';(repo / 'scripts').mkdir(parents=True)
             shutil.copyfile(ROOT / 'scripts/prepare_coreai_decoder.sh', repo / 'scripts/prepare_coreai_decoder.sh')
             if dit:shutil.copyfile(ROOT / 'scripts/prepare_coreai_dit_block.sh', repo / 'scripts/prepare_coreai_dit_block.sh')
+            if denoiser:shutil.copyfile(ROOT/'scripts/prepare_coreai_denoiser.sh',repo/'scripts/prepare_coreai_denoiser.sh')
             tools = base / 'bin';tools.mkdir();log = base / 'calls.jsonl'
             (tools / 'uname').write_text('#!/bin/sh\ncase "$1" in -s) echo Darwin;; -m) echo arm64;; esac\n')
             (tools / 'uname').chmod(0o755)
@@ -68,6 +69,11 @@ if sys.argv[1]=='venv':
                     context_marker.parent.mkdir(parents=True)
                     context_marker.write_text('preserve FP32 context')
                     bundle_name = 'dit-storage16-pretrained'
+                if denoiser:
+                    storage_marker=candidates/'dit-storage16-pretrained/baseline-marker'
+                    storage_marker.parent.mkdir(parents=True)
+                    storage_marker.write_text('preserve storage16')
+                    bundle_name='denoiser-pretrained'
             if reuse:
                 target = repo / '.runtime-cache/coreai-decoder-venv/bin/python';target.parent.mkdir(parents=True)
                 target.write_text(prefix + python_fixture);target.chmod(0o755)
@@ -82,6 +88,7 @@ if sys.argv[1]=='venv':
             if frames == 25:command += ['--frames', '25']
             if dit:command = ['bash', str(repo / 'scripts/prepare_coreai_dit_block.sh')]
             if dit and dit_profile != 'short':command += ['--profile', dit_profile]
+            if denoiser:command=['bash',str(repo/'scripts/prepare_coreai_denoiser.sh')]
             result = subprocess.run(command,
                                     cwd=base, env=env, text=True, capture_output=True, timeout=20)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -98,15 +105,17 @@ if sys.argv[1]=='venv':
             if frames == 25:
                 self.assertEqual(baseline.read_text(), 'preserve 0.2 s baseline')
                 button = {'short':'Uji blok generator','context':'Uji DiT konteks panjang','storage16':'Uji bobot FP16'}[dit_profile] if dit else f'Uji {component} 1 detik'
+                if denoiser:button='Uji denoiser lengkap'
                 self.assertIn(button, result.stdout)
             if component == 'encoder':
                 self.assertEqual(decoder_one_second.read_text(), 'preserve 1 s decoder')
             if dit:
                 self.assertEqual(encoder_marker.read_text(), 'preserve encoder')
-                self.assertIn('scripts/export_coreai_dit_block.py', python_args)
-                self.assertEqual(python_args[python_args.index('--profile') + 1], dit_profile)
+                self.assertIn('scripts/export_coreai_denoiser.py' if denoiser else 'scripts/export_coreai_dit_block.py', python_args)
+                if not denoiser:self.assertEqual(python_args[python_args.index('--profile') + 1], dit_profile)
                 if dit_profile != 'short':self.assertEqual(short_marker.read_text(), 'preserve short DiT block')
                 if dit_profile == 'storage16':self.assertEqual(context_marker.read_text(), 'preserve FP32 context')
+                if denoiser:self.assertEqual(storage_marker.read_text(),'preserve storage16')
 
     def test_fresh_managed_python_and_package_cache_stay_in_checkout(self):
         self.run_fixture(False)
@@ -152,6 +161,11 @@ if sys.argv[1]=='venv':
         for reuse in (False, True):
             with self.subTest(reuse=reuse):
                 self.run_fixture(reuse, frames=25, component='encoder', dit=True, dit_profile='storage16')
+
+    def test_full_denoiser_export_and_reuse_preserve_all_previous_bundles(self):
+        for reuse in (False,True):
+            with self.subTest(reuse=reuse):
+                self.run_fixture(reuse,frames=25,component='encoder',dit=True,dit_profile='storage16',denoiser=True)
 
 
 if __name__ == '__main__':

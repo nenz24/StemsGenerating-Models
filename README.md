@@ -1,8 +1,8 @@
 # StemsGenerating-Models
 
 POC JupyterLab untuk membuat bass/drum/gitar pengiring dari audio memakai pretrained
-ACE-Step 1.5 Base. Komponen VAE sedang dipindahkan ke CoreAI/iPhone;
-model generatif penuh belum dikonversi atau dilatih ulang.
+ACE-Step 1.5 Base. Komponen VAE dan denoiser sudah diekspor ke CoreAI;
+generasi pengiring lengkap di iPhone belum diuji. Model belum dilatih ulang.
 
 **Pindah akun/VM Colab:** [notebook 22](notebooks/22_colab_cache_transfer.ipynb)
 memisahkan backup bobot via CPU (`ACTION="backup"`) dan restore pada VM GPU
@@ -52,11 +52,15 @@ alokasi model; encoder FP32 yang diekspor tetap sekitar 338 MB.
 rata-rata dua run hangat 4,51 ms untuk satu blok, 16 hidden / 8 condition token.
 **Dua blok DiT konteks 160/64 juga PASS:** [laporan iPhone](reviews/coreai-iphone17pro-pretrained-dit-context/README.md),
 rata-rata dua run hangat 31,10 ms.
-**Uji berikutnya:** [bobot tersimpan FP16, hitungan FP32](docs/coreai-dit-storage16.md).
-Jalankan `bash scripts/prepare_coreai_dit_block.sh --profile storage16`, build ulang,
-lalu tekan **Uji bobot FP16**. Native asset turun sekitar 504→252 MB; paket dengan
-dua referensi sekitar 257 MB. Baseline tetap tersimpan. Ekspor Linux berhasil;
-parity iPhone dan dampak RAM/latensi masih menunggu.
+**Bobot tersimpan FP16/hitungan FP32 juga PASS pada kedua referensi:**
+[laporan iPhone](reviews/coreai-iphone17pro-pretrained-dit-storage16/README.md),
+dua run hangat rata-rata 32,46 ms. Footprint tersampel 638,2 MiB tidak menunjukkan
+penghematan RAM dibanding profil FP32 sebelumnya.
+**Uji berikutnya:** [denoiser lengkap 24 layer, satu velocity forward](docs/coreai-full-denoiser.md).
+Jalankan `bash scripts/prepare_coreai_denoiser.sh`, build ulang, lalu tekan
+**Uji denoiser lengkap**. Paket tambahan sekitar 3,15 GB, checkpoint cache dipakai
+ulang dan semua baseline disimpan. Ekspor penuh Linux berhasil; hasil iPhone
+masih menunggu. Belum ada loop diffusion atau audio instrumen yang dihasilkan.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:
