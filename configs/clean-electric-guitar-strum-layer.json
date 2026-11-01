@@ -1,0 +1,14 @@
+{
+  "id": "clean-electric-guitar-strum-layer-v3",
+  "model": "acestep-v15-base",
+  "device": "cuda",
+  "precision": "float32",
+  "instrument": "guitar",
+  "seeds": [
+    0
+  ],
+  "guidance_scale": 7.0,
+  "inference_steps": 50,
+  "offload_to_cpu": true,
+  "caption": "Isolated clean electric rhythm guitar accompaniment in the warm, clear, undistorted tone of the reference. Natural gentle chord strumming with expressive dynamics and space for another guitar. Follow the piano chords, timing and phrasing. Guitar accompaniment only."
+}

@@ -19,6 +19,7 @@ DRUM_KIT_SONG_NOTEBOOK = ROOT / 'notebooks/17_colab_drum_shared_kit_song.ipynb'
 GUITAR_NOTEBOOK = ROOT / 'notebooks/18_colab_clean_electric_guitar.ipynb'
 GUITAR_CHUNK_NOTEBOOK = ROOT / 'notebooks/19_colab_guitar_context_90.ipynb'
 GUITAR_ARTICULATION_NOTEBOOK = ROOT / 'notebooks/20_colab_guitar_articulation.ipynb'
+GUITAR_LAYERS_NOTEBOOK = ROOT / 'notebooks/21_colab_guitar_layers.ipynb'
 ARCHIVE = ROOT / 'bridges/ace_context_tools.zip'
 BEGIN = '# BEGIN EMBEDDED CONTEXT HELPERS\n'
 END = '# END EMBEDDED CONTEXT HELPERS\n'
@@ -38,6 +39,7 @@ FILES = {
     '18_colab_clean_electric_guitar.ipynb': 'notebooks/18_colab_clean_electric_guitar.ipynb',
     '19_colab_guitar_context_90.ipynb': 'notebooks/19_colab_guitar_context_90.ipynb',
     '20_colab_guitar_articulation.ipynb': 'notebooks/20_colab_guitar_articulation.ipynb',
+    '21_colab_guitar_layers.ipynb': 'notebooks/21_colab_guitar_layers.ipynb',
 }
 
 
@@ -68,9 +70,11 @@ def fresh_notebook():
     return (json.dumps(book,indent=1,ensure_ascii=False)+'\n').encode()
 
 
-def drum_notebook(notebook=DRUM_NOTEBOOK, helpers=('drum_probe.py','electric_full_song.py')):
+def drum_notebook(notebook=DRUM_NOTEBOOK, helpers=('drum_probe.py','electric_full_song.py'), extra_payload=None):
     paths = helpers if isinstance(helpers, dict) else {name: 'scripts/' + name for name in helpers}
     payload={name:encode((ROOT/path).read_bytes()) for name, path in paths.items()}
+    if set(payload) & set(extra_payload or {}): raise ValueError('Duplicate embedded payload names')
+    payload.update(extra_payload or {})
     book=json.loads(notebook.read_text())
     cells=[c for c in book['cells'] if c['cell_type']=='code' and BEGIN in ''.join(c['source'])]
     if len(cells)!=1:raise ValueError('Expected one drum helper cell')
@@ -126,6 +130,20 @@ def build(check=False):
         'guitar_run.py': 'tools/stem_eval/run.py',
         'guitar_articulation.py': 'scripts/guitar_articulation.py',
     })
+    style_folder = ROOT / 'baselines/clean-electric-guitar-30-v1'
+    style_metadata = json.loads((style_folder/'baseline.json').read_text())
+    style_archive = (style_folder/style_metadata['archive']['path']).read_bytes()
+    if hashlib.sha256(style_archive).hexdigest() != style_metadata['archive']['sha256']:
+        raise ValueError('Approved guitar style archive changed')
+    with zipfile.ZipFile(io.BytesIO(style_archive)) as style_zip:
+        style_audio = style_zip.read('guitar_preview.mp3')
+    guitar_layers_bytes = drum_notebook(GUITAR_LAYERS_NOTEBOOK, {
+        'electric_full_song.py': 'scripts/electric_full_song.py',
+        'guitar_probe.py': 'scripts/guitar_probe.py',
+        'guitar_run.py': 'tools/stem_eval/run.py',
+        'guitar_layers.py': 'scripts/guitar_layers.py',
+        'ace_context_chunks.py': 'scripts/ace_context_chunks.py',
+    }, {'approved_guitar_style.mp3': encode(style_audio)})
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
         for name, source_path in sorted(FILES.items()):
@@ -138,14 +156,15 @@ def build(check=False):
                     drum_kit_song_bytes if name=='17_colab_drum_shared_kit_song.ipynb' else
                     guitar_bytes if name=='18_colab_clean_electric_guitar.ipynb' else
                     guitar_chunk_bytes if name=='19_colab_guitar_context_90.ipynb' else
-                    guitar_articulation_bytes if name=='20_colab_guitar_articulation.ipynb' else (ROOT/source_path).read_bytes())
+                    guitar_articulation_bytes if name=='20_colab_guitar_articulation.ipynb' else
+                    guitar_layers_bytes if name=='21_colab_guitar_layers.ipynb' else (ROOT/source_path).read_bytes())
             info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
             archive.writestr(info, data)
     archive_bytes = buffer.getvalue()
     if check:
-        if NOTEBOOK.read_bytes() != notebook_bytes or FRESH_NOTEBOOK.read_bytes()!=fresh_bytes or DRUM_NOTEBOOK.read_bytes()!=drum_bytes or DRUM_FULL_NOTEBOOK.read_bytes()!=drum_full_bytes or DRUM_CHUNK_NOTEBOOK.read_bytes()!=drum_chunk_bytes or DRUM_KIT_NOTEBOOK.read_bytes()!=drum_kit_bytes or DRUM_KIT_SONG_NOTEBOOK.read_bytes()!=drum_kit_song_bytes or GUITAR_NOTEBOOK.read_bytes()!=guitar_bytes or GUITAR_CHUNK_NOTEBOOK.read_bytes()!=guitar_chunk_bytes or GUITAR_ARTICULATION_NOTEBOOK.read_bytes()!=guitar_articulation_bytes or not ARCHIVE.is_file() or ARCHIVE.read_bytes() != archive_bytes:
+        if NOTEBOOK.read_bytes() != notebook_bytes or FRESH_NOTEBOOK.read_bytes()!=fresh_bytes or DRUM_NOTEBOOK.read_bytes()!=drum_bytes or DRUM_FULL_NOTEBOOK.read_bytes()!=drum_full_bytes or DRUM_CHUNK_NOTEBOOK.read_bytes()!=drum_chunk_bytes or DRUM_KIT_NOTEBOOK.read_bytes()!=drum_kit_bytes or DRUM_KIT_SONG_NOTEBOOK.read_bytes()!=drum_kit_song_bytes or GUITAR_NOTEBOOK.read_bytes()!=guitar_bytes or GUITAR_CHUNK_NOTEBOOK.read_bytes()!=guitar_chunk_bytes or GUITAR_ARTICULATION_NOTEBOOK.read_bytes()!=guitar_articulation_bytes or GUITAR_LAYERS_NOTEBOOK.read_bytes()!=guitar_layers_bytes or not ARCHIVE.is_file() or ARCHIVE.read_bytes() != archive_bytes:
             raise ValueError('Bridge artifacts are stale; run scripts/build_context_bridge.py')
     else:
         NOTEBOOK.write_bytes(notebook_bytes)
@@ -158,6 +177,7 @@ def build(check=False):
         GUITAR_NOTEBOOK.write_bytes(guitar_bytes)
         GUITAR_CHUNK_NOTEBOOK.write_bytes(guitar_chunk_bytes)
         GUITAR_ARTICULATION_NOTEBOOK.write_bytes(guitar_articulation_bytes)
+        GUITAR_LAYERS_NOTEBOOK.write_bytes(guitar_layers_bytes)
         ARCHIVE.parent.mkdir(parents=True, exist_ok=True)
         ARCHIVE.write_bytes(archive_bytes)
     print(('Verified' if check else 'Built'), ARCHIVE.relative_to(ROOT), len(archive_bytes), 'bytes')

@@ -210,6 +210,21 @@ class SinglePassTests(unittest.TestCase):
             probe=json.loads((picked_out/'generation/probe.json').read_text())
             self.assertEqual(probe['caption'],guitar_probe.PICKED_PRESET['caption'])
             self.assertEqual(probe['instrument'],'guitar')
+            layer_out=root/'guitar_strum_reference';layer_out.mkdir()
+            shutil.copytree(output/'prepared',layer_out/'prepared')
+            layer_ref=layer_out/'reference.wav';shutil.copyfile(source,layer_ref)
+            (layer_out/'guitar_probe.json').write_text(json.dumps({'reference_audio':{'path':str(layer_ref),'sha256':sha256(layer_ref)}}))
+            command=[sys.executable,str(guitar_helpers/'guitar_probe.py'),'--worker',
+                '--root',str(bridge),'--out',str(layer_out),'--variant','strum-layer','--reference-audio',str(layer_ref)]
+            result=subprocess.run(command,cwd=elsewhere,capture_output=True,text=True,timeout=30)
+            self.assertEqual(result.returncode,0,result.stderr)
+            probe=json.loads((layer_out/'generation/probe.json').read_text())
+            self.assertEqual(probe['reference_audio'],str(layer_ref))
+            self.assertEqual(probe['caption'],guitar_probe.STRUM_LAYER_PRESET['caption'])
+            layer_ref.write_bytes(layer_ref.read_bytes()+b'changed')
+            result=subprocess.run(command,cwd=elsewhere,capture_output=True,text=True,timeout=30)
+            self.assertNotEqual(result.returncode,0)
+            self.assertIn('Worker guitar reference path/hash mismatch',result.stderr)
 
 
 if __name__ == "__main__": unittest.main()

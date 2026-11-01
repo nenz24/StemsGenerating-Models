@@ -1,27 +1,19 @@
-# Clean electric guitar: historical opening-tone reference
+# Selected guitar sound/style reference: opening 30 seconds
 
-**Current qualification:** the later original/picked comparison was rejected
-for harmonic mismatch and glitches. There is no harmony-approved guitar
-baseline. The initial favorable opening impression below is preserved as tone
-history; it did not establish correct chord/pitch agreement. The latest report
-does not separately identify the opening clip as the failed comparison input.
+The listener explicitly selected the latest `guitar_feedback.zip`: **"seperti
+ini enak didengarkan untuk gaya style audio gitarnya"**. The reupload is
+byte-identical to the initial opening-30s feedback archive. This approves the
+sound/style as a reference; it does not approve a new layered arrangement or
+establish hard pitch/chord following.
 
-The listener described `guitar_feedback.zip` as **"hasil kitar lumayan oke"**
-and requested the next stage using the existing 90-second chunk approach.
-This preserves the opening **30 seconds**, not a full-song guitar verdict.
+`baseline.json` records assessment history, archive/member hashes, preset,
+model input and reported raw WAV hashes. Actual reports match v1, CUDA FP32,
+seed 0, CFG 7, 50 steps. The piano model-input hash was reproduced exactly.
+The ZIP preserves MP3 previews and reports, not the original lossless WAVs.
 
-The actual report matches clean-electric-guitar-v1: ACE-Step Base / LEGO /
-CUDA FP32 / seed 0 / CFG 7 / 50 steps, with guitar instruction and the clean
-electric caption. The piano input WAV SHA-256 was reproduced exactly from the
-original piano upload. No bass/drum tracks or guitar reference were model inputs.
-
-`baseline.json` records the source/preset, reported WAV hashes and uploaded
-archive/member hashes. The ZIP contains MP3 previews and reports; keep
-`guitar_result.zip` from Colab for lossless WAVs. Reported raw guitar/mix WAV
-hashes cannot be verified here without those WAVs.
-
-Notebook 19's 90-second continuation was rejected for noise/strumming. Both
-notebook-20 articulation variants were subsequently rejected. See the
-[current review](../../reviews/guitar-articulation-listener-report/). Existing
-audio and bass/drum baselines are preserved; no further full-song guitar render
-is currently recommended.
+Notebook 21 embeds the approved guitar-only MP3 preview with a checksum as a
+common style reference. It generates strumming and picking performances on the
+same piano position, then mixes them. It offers preview30 and full90 modes.
+The user also considers the original 90s chunk result useful, particularly
+strumming in chunk 0 and picking in chunk 2. Those occur at different song
+times and cannot simply be shifted/overlaid against the same piano chords.

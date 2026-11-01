@@ -1,8 +1,8 @@
 {
   "id": "clean-electric-guitar-30-v1",
-  "status": "historical_tone_reference_harmonic_agreement_not_approved",
+  "status": "listener_selected_guitar_sound_style_reference",
   "listener_assessment_original": "hasil kitar lumayan oke",
-  "approval_scope": "Historical favorable impression of the opening 30s; does not establish correct chord/pitch agreement or a qualified guitar accompaniment baseline.",
+  "approval_scope": "Selected guitar tone/style from opening 30s. User requests simultaneous strumming and picked layers in this style; no claim that style reference enforces pitch/chord correctness.",
   "archive": {
     "path": "guitar_feedback.zip",
     "bytes": 1432072,
@@ -45,7 +45,7 @@
     "actual_guitar_instruction": true,
     "reported_cuda_fp32": true
   },
-  "next_step": "Obtain paired-run feedback ZIP; compare guitar with piano harmony/timing and verify a generation path with time-aligned harmonic guidance before another full-song render.",
+  "next_step": "Notebook 21: two referenced guitar performances at the same piano interval, strum and pick roles, separate exports and combined mix; review before a full-song render.",
   "member_sha256": {
     "guitar_probe.json": "d0f2e3a609681f23e67006c852af334b877986f597760a0c8d2a057f62e0c87f",
     "prepared/input.json": "d9d13727b1f2bf25651b1ec2d36c117b65f7bca78342404111b6b495fe91b2ae",
@@ -66,6 +66,21 @@
       "status": "no_current_harmony_approved_guitar",
       "listener_assessment_original": "ternyata original guitar juga tidak masuk denga akor dan nada piano, serta picked jadi glitch semua",
       "scope": "Later original/picked comparison rejected. Exact comparison input not verified; no separate claim that the opening excerpt was the compared source."
+    },
+    {
+      "status": "listener_selected_guitar_sound_style_reference",
+      "listener_assessment_original": "seperti ini enak didengarkan untuk gaya style audio gitarnya",
+      "scope": "Guitar tone and playing style; layered arrangement has not yet been generated or approved."
     }
-  ]
+  ],
+  "style_approval": {
+    "listener_quote": "seperti ini enak didengarkan untuk gaya style audio gitarnya",
+    "scope": "Guitar tone and playing style; layered arrangement has not yet been generated or approved.",
+    "reupload_byte_identical_to_original_archive": true
+  },
+  "style_reference": {
+    "member": "guitar_preview.mp3",
+    "sha256": "f511536669b3ebfd7aef2fe70213d51aae92c0ad5635844ea891cb194c37b9e3",
+    "format": "lossy MP3 preview; not the reported original lossless guitar WAV"
+  }
 }

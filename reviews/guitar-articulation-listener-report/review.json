@@ -4,10 +4,20 @@
   "listener_assessment_original": "ternyata original guitar juga tidak masuk denga akor dan nada piano, serta picked jadi glitch semua",
   "original_status": "rejected_harmonic_and_pitch_mismatch",
   "picked_status": "rejected_glitches",
-  "paired_run_archive_uploaded": false,
-  "exact_run_source_and_settings_verified": false,
-  "current_guitar_harmony_approved": false,
-  "opening_reference_scope": "Historical favorable impression of the opening 30s; does not establish correct chord/pitch agreement or a qualified guitar accompaniment baseline.",
+  "paired_run_archive_uploaded": true,
+  "exact_run_source_and_settings_verified": true,
+  "opening_reference_scope": "Selected guitar tone/style from opening 30s. User requests simultaneous strumming and picked layers in this style; no claim that style reference enforces pitch/chord correctness.",
   "current_conditioning": "Source audio plus caption; wrapper does not pass time-aligned chord/note events.",
-  "next_step": "Verify uploaded paired feedback and localize pitch/chord disagreements and glitches before selecting further generation work."
+  "next_step": "Notebook 21: two referenced guitar performances at the same piano interval, strum and pick roles, separate exports and combined mix; review before a full-song render.",
+  "archive": {
+    "path": "guitar_articulation_feedback.zip",
+    "bytes": 2882894,
+    "sha256": "2e005c3a75a978d2e39a6b22f70c7729601624916544b303a9e3e94e3b787061"
+  },
+  "start_seconds": 77.130625,
+  "duration_seconds": 30,
+  "input_sha256": "a69c75fa0bc4bfbeb5293f84af6170b2cc93f4c311a973bb0cc7978dce7401fa",
+  "latest_scope_note": "Rejection applies to this paired 30s trial at 77.130625s. User subsequently clarified that the original 90s chunk candidate is useful and supplied the opening-30s clip as the preferred sound style.",
+  "paired_trial_harmony_approved": false,
+  "current_direction": "Paired-run rejection remains scoped to notebook20. User reaffirms original90 candidate and chooses opening30 style for simultaneous strum+pick layering."
 }

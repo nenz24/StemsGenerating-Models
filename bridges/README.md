@@ -1,11 +1,16 @@
 # ACE-Step context bridge
 
-The listener rejects both guitar articulation variants: original does not fit
-the piano chords/pitches, picked glitches. See the
-[current review](../reviews/guitar-articulation-listener-report/). No guitar
-baseline currently qualifies for harmonic agreement; source/output analysis is
-the next step once the paired feedback ZIP is available. Notebooks 18–20 are
-retained for reproduction and default to plan-only.
+[Notebook 21](../notebooks/21_colab_guitar_layers.ipynb) implements the selected
+direction: simultaneous strumming and picking in the preferred opening-30s
+sound style. Two aligned performances share the same piano and frozen style
+reference. It offers preview30 (two calls) and full90 (two whole-song roles,
+six calls if uncached for this piano). The style MP3, helpers and compatible
+engine/chunk runner are embedded. See the [layering guide](../docs/guitar-layers.md).
+
+The user clarified that the original 90s candidate is useful, liking strumming
+in chunk 0 and picking in chunk 2. The failed original/picked-v2 trial is scoped
+to its own 30s interval; its uploaded archive is now verified and preserved.
+Notebooks 18–20 remain available for reproduction.
 
 [Notebook 20](../notebooks/20_colab_guitar_articulation.ipynb) records the paired
 experiment after the listener rejected the 90-second result for noise/strumming.
@@ -17,8 +22,9 @@ CUDA cache, no full-song regeneration. The original short tone history is preser
 30-second clean guitar candidate to the full piano song with contexts capped at
 90 seconds, 6-second margins and 0.58-second equal-power fades. Same guitar
 preset, existing runtime/weights, resumable chunks, no bass/drum regeneration.
-The uploaded output was rejected for noise and unnatural strumming. It is
-retained for opt-in reproduction and now defaults to DRY_RUN=True.
+The listener later clarified it is useful but changes sound across chunks.
+It is preserved as a candidate, with earlier feedback kept as history; it
+defaults to DRY_RUN=True so the existing result need not be regenerated.
 
 [Notebook 18](../notebooks/18_colab_clean_electric_guitar.ipynb) starts the selected
 clean electric guitar with one 30-second piano-conditioned probe. It embeds

@@ -1,17 +1,19 @@
 # StemsGenerating-Models
 
-POC JupyterLab untuk membuat bass/drum pengiring dari audio memakai pretrained
+POC JupyterLab untuk membuat bass/drum/gitar pengiring dari audio memakai pretrained
 ACE-Step 1.5 Base. Model belum dilatih ulang atau dikonversi ke CoreAI/iPhone.
 
 **Baseline drum seluruh lagu sudah disetujui.** Hasil 4:03 memakai chunk maksimal
 90 detik dengan referensi kit yang sama; arsip, parameter, dan hash disimpan di
 [`acoustic-drums-shared-kit-full-v1`](baselines/acoustic-drums-shared-kit-full-v1/).
-**Gitar belum lolos harmoni.** Pengguna melaporkan original tidak mengikuti
-akor/nada piano dan picked glitch; hasil 90 detik juga sudah ditolak.
-Klip awal 30 detik disimpan sebagai [referensi tone historis](baselines/clean-electric-guitar-30-v1/),
-belum menjadi baseline harmoni. [Evaluasi dan langkah berikutnya](reviews/guitar-articulation-listener-report/)
-memerlukan audio/report uji terakhir untuk membandingkan piano dan gitar.
-Notebook 18–20 disimpan untuk reproduksi, default plan-only.
+**Gaya gitar dipilih dari contoh 30 detik.** Pengguna memperjelas bahwa chunk
+90 detik tetap berguna: strumming chunk 0 dan petikan chunk 2 disukai, tetapi
+suaranya berubah antar-chunk. Target sekarang adalah kedua teknik **dilapis
+bersamaan**, dengan [referensi suara yang dipilih](baselines/clean-electric-guitar-30-v1/).
+[Notebook 21](notebooks/21_colab_guitar_layers.ipynb) membuat dua track pada piano
+yang sama dengan referensi suara bersama, mode preview30 atau seluruh lagu full90.
+Lihat [panduan layering](docs/guitar-layers.md). Uji original/picked-v2 yang gagal
+adalah eksperimen terpisah; notebook 18–20 disimpan untuk reproduksi.
 Hasil bass/drum lama tetap disimpan untuk mix gabungan.
 
 **Target produk: seluruh inferensi lokal di iPhone / iOS 27 / CoreAI.** Rekaman

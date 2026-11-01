@@ -23,7 +23,7 @@ class GuitarProbeTests(unittest.TestCase):
         write_pcm(source, [100, -100] * (10 * RATE + RATE // 8))
         return source
 
-    def fake_worker(self, output, *, wrong_instruction=False, wrong_dtype=False, variant='original'):
+    def fake_worker(self, output, *, wrong_instruction=False, wrong_dtype=False, variant='original', reference_audio=None):
         engine = guitar.load_engine(ROOT)
         prepared = output / 'prepared'
         folder = output / 'generation/000_A_guitar_seed0'
@@ -36,7 +36,8 @@ class GuitarProbeTests(unittest.TestCase):
         params = {'caption': guitar.PRESETS[variant]['caption'], 'src_audio': str(prepared / 'source.wav'), 'seed': 0, 'guidance_scale': 7,
                   'inference_steps': 50, 'duration': experiment['jobs'][0]['duration'],
                   'task_type': 'lego', 'instrumental': True, 'enable_normalization': False,
-                  'reference_audio': None, 'thinking': False, 'use_cot_caption': False,
+                  'reference_audio': str(reference_audio) if reference_audio is not None else None,
+                  'thinking': False, 'use_cot_caption': False,
                   'use_cot_metas': False, 'use_cot_language': False,
                   'instruction': 'Generate the bass track based on the audio context:' if wrong_instruction else 'Generate the guitar track based on the audio context:'}
         result = dict(experiment['jobs'][0], status='generated', device='cuda',
@@ -199,6 +200,26 @@ assert scope['report']['start_seconds'] == 77.130625
 assert scope['report']['preset_differences'] == ['caption', 'id']
 assert engine.read_text() == old
 assert not list(scope['ARTICULATION_OUT'].rglob('guitar.wav'))
+book = json.loads((repo / 'notebooks/21_colab_guitar_layers.ipynb').read_text())
+with contextlib.redirect_stdout(io.StringIO()):
+ for c in book['cells']:
+  if c['cell_type'] == 'code':
+   exec(compile(''.join(c['source']).replace('DRY_RUN = False', 'DRY_RUN = True'), 'guitar-layers-notebook', 'exec'), scope)
+assert scope['report']['status'] == 'planned' and scope['report']['start_seconds'] == 0
+assert scope['report']['reference_audio_sha256'] == scope['hashlib'].sha256(scope['STYLE_REFERENCE'].read_bytes()).hexdigest()
+assert scope['report']['model_calls_requested'] == 2
+assert engine.read_text() == old
+assert not list(scope['LAYERS_OUT'].rglob('guitar.wav'))
+with contextlib.redirect_stdout(io.StringIO()):
+ for c in book['cells']:
+  if c['cell_type'] == 'code':
+   text = ''.join(c['source']).replace('DRY_RUN = False', 'DRY_RUN = True').replace('MODE = "preview30"', 'MODE = "full90"')
+   exec(compile(text, 'guitar-full-layers-notebook', 'exec'), scope)
+assert scope['report']['status'] == 'planned'
+assert scope['report']['export_frames'] == 121 * RATE
+assert scope['report']['model_calls_total_if_uncached'] == 4
+assert engine.read_text() == old
+assert not list(scope['LAYERS_OUT'].rglob('guitar.wav'))
 '''
         with tempfile.TemporaryDirectory() as tmp:
             result = subprocess.run([sys.executable, '-c', script, str(ROOT), tmp],

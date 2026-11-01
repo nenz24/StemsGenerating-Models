@@ -112,10 +112,21 @@ def files_for(plan):
             'bass':('single_pass.json','electric_bass.wav','electric_bass')}[instrument_of(plan)]
 
 
-def prepare(source, output, context=90, margin=6, fade=.58, cues_file=None, *, instrument='bass', reference_audio=None):
+def preset_for(plan):
+    worker=worker_for(instrument_of(plan))
+    if instrument_of(plan)=='guitar':
+        variant=plan.get('guitar_variant','original')
+        if variant not in worker.PRESETS:raise ValueError('Unknown planned guitar variant')
+        return worker.PRESETS[variant]
+    return worker.PRESET
+
+
+def prepare(source, output, context=90, margin=6, fade=.58, cues_file=None, *, instrument='bass', reference_audio=None, guitar_variant='original'):
     worker=worker_for(instrument)
     if instrument=='guitar' and context>90:raise ValueError('Guitar context cap cannot exceed 90 seconds')
-    if reference_audio is not None and instrument!='drums':raise ValueError('Shared reference is supported for drums only')
+    if guitar_variant!='original' and instrument!='guitar':raise ValueError('Guitar variant requires a guitar plan')
+    preset=preset_for({'instrument':instrument,'guitar_variant':guitar_variant})
+    if reference_audio is not None and instrument not in ('drums','guitar'):raise ValueError('Shared reference requires drums or guitar')
     source,output=Path(source).resolve(),Path(output).resolve()
     output.mkdir(parents=True,exist_ok=False)
     original_hash=sha256(source)
@@ -141,9 +152,10 @@ def prepare(source, output, context=90, margin=6, fade=.58, cues_file=None, *, i
         return float(np.sqrt(np.mean(block**2)))
     plan=layout(len(audio),context,margin,fade,cues,energy)
     plan.update(schema_version=2,status='planned',original_sha256=original_hash,source_file='source.wav',
-                source_sha256=sha256(clean),preset=worker.PRESET,instrument=instrument,
+                source_sha256=sha256(clean),preset=preset,instrument=instrument,
                 generation_source_file=generation_input.name,generation_source_sha256=original_hash,
                 note='No inferred meter/downbeats. Context cap includes margins and integer end padding. Independent chunks; continuity and musical quality unverified.')
+    if instrument=='guitar' and guitar_variant!='original':plan['guitar_variant']=guitar_variant
     if reference_audio is not None:
         reference_audio=Path(reference_audio).resolve()
         frozen=output/('shared_reference'+reference_audio.suffix.lower())
@@ -165,7 +177,7 @@ def generation_source(folder,plan):
 def shared_reference(folder,plan):
     item=plan.get('shared_reference')
     if item is None:return None
-    if instrument_of(plan)!='drums':raise ValueError('Shared reference requires drums')
+    if instrument_of(plan) not in ('drums','guitar'):raise ValueError('Shared reference requires drums or guitar')
     path=(folder/item['file']).resolve()
     if not path.is_relative_to(folder.resolve()) or sha256(path)!=item['sha256']:
         raise ValueError('Shared reference path/hash changed')
@@ -178,7 +190,7 @@ def load_plan(path):
     source=path.parent/plan['source_file']
     if not source.resolve().is_relative_to(path.parent) or sha256(source)!=plan['source_sha256']:
         raise ValueError('Canonical source changed or escapes the run')
-    if plan['preset']!=worker_for(instrument_of(plan)).PRESET or single.frames(source)!=plan['total_frames']:
+    if plan['preset']!=preset_for(plan) or single.frames(source)!=plan['total_frames']:
         raise ValueError('Preset or source duration differs from plan')
     generation_source(path.parent,plan)
     shared_reference(path.parent,plan)
@@ -195,7 +207,8 @@ def verify_chunk(folder,plan,chunk):
         expected={'instruction':'Generate the guitar track based on the audio context:',
                   'caption':plan['preset']['caption'],'seed':0,'guidance_scale':7,
                   'inference_steps':50,'duration':chunk['model_duration'],'task_type':'lego'}
-        if report.get('instrument')!='guitar' or any(params.get(k)!=v for k,v in expected.items()) or params.get('reference_audio') is not None:
+        expected['reference_audio']=actual_ref.get('path') if expected_ref and actual_ref else None
+        if report.get('instrument')!='guitar' or any(params.get(k)!=v for k,v in expected.items()):
             raise ValueError('Actual guitar chunk settings mismatch')
     if expected_ref:
         if not actual_ref or actual_ref.get('sha256')!=expected_ref['sha256'] or report.get('settings',{}).get('params',{}).get('reference_audio')!=actual_ref.get('path'):
@@ -244,6 +257,7 @@ def run_chunks(root,plan_path):
                 completed=parent/f'attempt_{number:03d}'
                 worker.generate(root,source,completed,start=chunk['input_start']/RATE,
                     duration=(chunk['input_end']-chunk['input_start'])/RATE,execute=True,
+                    **({'variant':plan.get('guitar_variant','original')} if instrument_of(plan)=='guitar' and 'guitar_variant' in plan else {}),
                     **({'reference_audio':reference} if reference is not None else {}))
                 verify_chunk(completed,plan,chunk)
             progress[key]=str(completed.relative_to(folder));write_json(progress_file,progress)
@@ -383,6 +397,7 @@ def main():
     plan.add_argument('--context-seconds',type=float,default=90);plan.add_argument('--margin-seconds',type=float,default=6)
     plan.add_argument('--fade-seconds',type=float,default=.58);plan.add_argument('--cues',type=Path)
     plan.add_argument('--instrument',choices=['bass','drums','guitar'],default='bass')
+    plan.add_argument('--guitar-variant',choices=['original','picked','strum-layer','pick-layer'],default='original')
     plan.add_argument('--reference-audio',type=Path)
     for name in ['probe','run','stitch']:
         s=sub.add_parser(name);s.add_argument('--plan',type=Path,required=True)
@@ -390,7 +405,7 @@ def main():
         if name=='probe':s.add_argument('--duration',type=int,choices=[60,90,120],required=True);s.add_argument('--start',type=float,default=0)
     args=p.parse_args()
     if args.command=='plan':
-        result=prepare(args.source,args.out,args.context_seconds,args.margin_seconds,args.fade_seconds,args.cues,instrument=args.instrument,reference_audio=args.reference_audio)
+        result=prepare(args.source,args.out,args.context_seconds,args.margin_seconds,args.fade_seconds,args.cues,instrument=args.instrument,reference_audio=args.reference_audio,guitar_variant=args.guitar_variant)
     elif args.command=='probe':
         folder,plan,source=load_plan(args.plan)
         parent=folder/f'probe_{args.duration:03d}';parent.mkdir(exist_ok=True)
@@ -398,6 +413,7 @@ def main():
         while (parent/f'attempt_{index:03d}').exists():index+=1
         reference=shared_reference(folder,plan)
         result=worker_for(instrument_of(plan)).generate(args.root,generation_source(folder,plan),parent/f'attempt_{index:03d}',start=args.start,duration=args.duration,execute=args.execute,
+            **({'variant':plan['guitar_variant']} if instrument_of(plan)=='guitar' and 'guitar_variant' in plan else {}),
             **({'reference_audio':reference} if reference is not None else {}))
     elif args.command=='run':
         if args.execute:result=run_chunks(args.root,args.plan)
