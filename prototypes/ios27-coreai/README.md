@@ -238,7 +238,15 @@ Tidak ada penghapusan cache atau restart antar percobaan.
 4,68 / 3,46 / 2,04 detik, dengan kedua pembandingan lolos tiap percobaan.
 Latensi masih berfluktuasi per bagian dan footprint proses tersampel meningkat;
 kebutuhan RAM total dan plateau jangka panjang belum terukur. Hasil ini belum uji
-cold launch, loop diffusion atau generasi pengiring dari piano. Gate selanjutnya
-adalah loop multi-timestep pendek dengan referensi latent per langkah; belum
-diimplementasikan. Tidak ada perubahan model atau kode probe dalam pencatatan
-laporan ini.
+cold launch, loop diffusion atau generasi pengiring dari piano.
+
+## Loop denoising empat langkah
+
+Tombol **Uji loop denoising 4 langkah** sekarang tersedia. Pull dan build ulang;
+tidak perlu ekspor model atau unduh checkpoint ulang jika paket 14 asset sudah
+ada. Referensi kecil di `ModelCandidates/denoiser-loop-4/` ikut GitHub.
+Jadwal `1 → 0,75 → 0,5 → 0,25 → 0`, Euler ODE, guidance=1, shift=1, timestep_r=timestep.
+Setiap langkah memakai latent hasil aktual langkah sebelumnya dan memeriksa
+velocity serta latent terhadap kedua referensi. Harus selesai 4/4 langkah dan
+56/56 tahap. Referensi host lolos; kode Swift baru perlu build dan pengujian
+CoreAI di iPhone. [Panduan dan batas pengujian](../../docs/coreai-denoiser-loop.md).

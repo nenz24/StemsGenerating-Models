@@ -46,5 +46,6 @@ The next numerical gate is a short multi-timestep denoising loop: feed each
 updated latent into the next full forward, use the pinned ACE timestep/update
 semantics and compare intermediate/final latents against host references. Record
 per-step timing and process footprint to assess drift and accumulation. This
-requires new loop fixtures/caller work; it is not implemented by this report.
+was not implemented by this report. [Subsequent implementation and host references](../coreai-four-step-denoiser-loop/README.md)
+now prepare four feedback steps; on-device loop parity remains pending.
 Conditioning from piano/text and waveform generation remain subsequent work.

@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "profile": "denoiser-loop-4",
+  "method": "euler_ode",
+  "timesteps": [
+    1.0,
+    0.75,
+    0.5,
+    0.25,
+    0.0
+  ],
+  "steps": [
+    {
+      "index": 1,
+      "timestep": 1.0,
+      "next_timestep": 0.75,
+      "timestep_r": 1.0,
+      "velocity_file": "step-1-velocity.f32le",
+      "latent_file": "step-1-latent.f32le",
+      "original_velocity_file": "step-1-velocity-fp32.f32le",
+      "original_latent_file": "step-1-latent-fp32.f32le"
+    },
+    {
+      "index": 2,
+      "timestep": 0.75,
+      "next_timestep": 0.5,
+      "timestep_r": 0.75,
+      "velocity_file": "step-2-velocity.f32le",
+      "latent_file": "step-2-latent.f32le",
+      "original_velocity_file": "step-2-velocity-fp32.f32le",
+      "original_latent_file": "step-2-latent-fp32.f32le"
+    },
+    {
+      "index": 3,
+      "timestep": 0.5,
+      "next_timestep": 0.25,
+      "timestep_r": 0.5,
+      "velocity_file": "step-3-velocity.f32le",
+      "latent_file": "step-3-latent.f32le",
+      "original_velocity_file": "step-3-velocity-fp32.f32le",
+      "original_latent_file": "step-3-latent-fp32.f32le"
+    },
+    {
+      "index": 4,
+      "timestep": 0.25,
+      "next_timestep": 0.0,
+      "timestep_r": 0.25,
+      "velocity_file": "step-4-velocity.f32le",
+      "latent_file": "step-4-latent.f32le",
+      "original_velocity_file": "step-4-velocity-fp32.f32le",
+      "original_latent_file": "step-4-latent-fp32.f32le"
+    }
+  ],
+  "shift": 1,
+  "guidance_scale": 1,
+  "kv_cache_enabled": false,
+  "input_shapes": {
+    "noise": [
+      1,
+      25,
+      64
+    ],
+    "condition": [
+      1,
+      64,
+      2048
+    ],
+    "context": [
+      1,
+      25,
+      128
+    ],
+    "timestep": [
+      1
+    ],
+    "timestep_r": [
+      1
+    ]
+  },
+  "output_shape": [
+    1,
+    25,
+    64
+  ],
+  "weight_storage_dtype": "float16",
+  "compute_dtype": "float32",
+  "scalar_type": "float32",
+  "byte_order": "little",
+  "checkpoint_digest": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b",
+  "checkpoint_full_sha256_verified": true,
+  "publisher_source_digest": "0f8cf5060b75a246f70f805133737a3b421e4483",
+  "publisher_sampling_semantics": {
+    "schedule": "torch.linspace(1.0, 0.0, infer_steps + 1)",
+    "timestep_r": "t_curr_tensor",
+    "ode_statements": [
+      "dt = t_curr - t_prev",
+      "dt_tensor = dt * torch.ones((bsz,), device=device, dtype=dtype).unsqueeze(-1).unsqueeze(-1)",
+      "xt = xt - vt * dt_tensor"
+    ],
+    "scope": "ODE update and timestep semantics only; no conditioning/CFG/cache parity claim"
+  },
+  "shared_input_sha256": {
+    "noise": "36b957ea048d809cd54eea8ad32f6641804eecb9c1e9438a8162f64fd1b02615",
+    "condition": "397246108efedb5f6486d306c2fd00cafb60f0909764d3a2fe8a02dd4fc403ff",
+    "context": "d6a2f796806d470c608f597ed796ddec003917e8b574e9ec6e1bf30ec819dfbe"
+  },
+  "artifact_sha256": {
+    "step-1-latent-fp32.f32le": "16ba4dd660795f9639f7607d03d7b51dca417eee24497f977b6fac4ba498ad08",
+    "step-1-latent.f32le": "dde7e64294f93dd3c184355526f20870fc39484c16dbbe1c5025869a00a34e44",
+    "step-1-velocity-fp32.f32le": "93b17270060e7bde935f4325b6ae8c84a9cc9b8f1996316ec3b5239e7e8a906a",
+    "step-1-velocity.f32le": "dff9c9eda0648ff1c22c5521e5bcc3ed9300979e4bd8d8f7551b7614663bfbe4",
+    "step-2-latent-fp32.f32le": "7d06145bd411e1fccea2dc7e0854e3e3cfa43f8f216459ec684c6ec7f2ff8f74",
+    "step-2-latent.f32le": "6220f596f862b9bf8abcf7f5714ddb9db6d5b4dd9eb731764f683b228ac6dd94",
+    "step-2-velocity-fp32.f32le": "da85dd20c81c6d95d51b3fb8b76057137c467ed9b93caf305d9ff7fc4602d817",
+    "step-2-velocity.f32le": "75b73c6f1c95e3cfcc375693cde6f9109618da6386e4d8c9cb021e25b9011163",
+    "step-3-latent-fp32.f32le": "03a27893fd390301a0257ded9dc157445fd535b7b45772804d8327d6122ec153",
+    "step-3-latent.f32le": "af23b1d2cd3f0abaafc6bd4a6188a37057819fef3d5fa613deac4d128b805261",
+    "step-3-velocity-fp32.f32le": "832e0a85535493912a0e6292dd6095979021fe79fffebf5c704e5cd23d24a601",
+    "step-3-velocity.f32le": "c4ad73794a3fa8861f2eef89091f12090c7538c5c9689506e972811f7e1ff741",
+    "step-4-latent-fp32.f32le": "b32dd51fe50a5ac60713333788d49af661952f85ce8d14d747d920799819ac1e",
+    "step-4-latent.f32le": "1c24c89d23573d4f837f845f6a310bf8bab46f79c6facefdacea2e18a9362621",
+    "step-4-velocity-fp32.f32le": "ce5e716f1ba9fd34c74483c8e9831cfd76414a973f895a04dda0bb8b54c0ff91",
+    "step-4-velocity.f32le": "97a287d77a2ac4ffdf366a0234628e6d3b60ac224ffd3315809632a0b4a74687"
+  },
+  "host_comparisons": [
+    {
+      "step": 1,
+      "velocity": {
+        "finite": true,
+        "max_absolute_error": 5.455315113067627e-05,
+        "rmse": 1.2981357602742326e-05,
+        "normalized_rmse": 9.984628515773543e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 1.3828277587890625e-05,
+        "rmse": 3.246025120254676e-06,
+        "normalized_rmse": 3.2498602890612725e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    },
+    {
+      "step": 2,
+      "velocity": {
+        "finite": true,
+        "max_absolute_error": 5.9157609939575195e-05,
+        "rmse": 1.3083581077429554e-05,
+        "normalized_rmse": 9.050986091166844e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 2.4557113647460938e-05,
+        "rmse": 5.870398479380345e-06,
+        "normalized_rmse": 4.501056869784889e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    },
+    {
+      "step": 3,
+      "velocity": {
+        "finite": true,
+        "max_absolute_error": 0.00014445185661315918,
+        "rmse": 3.251921862024359e-05,
+        "normalized_rmse": 2.028213118582973e-05,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 3.7670135498046875e-05,
+        "rmse": 1.033994709130428e-05,
+        "normalized_rmse": 6.15208767712758e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    },
+    {
+      "step": 4,
+      "velocity": {
+        "finite": true,
+        "max_absolute_error": 1.055002212524414e-05,
+        "rmse": 2.5511903507857935e-06,
+        "normalized_rmse": 5.770971927188117e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 3.552436828613281e-05,
+        "rmse": 9.757066005560697e-06,
+        "normalized_rmse": 6.127525046300984e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    }
+  ],
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "scope": "Four feedback Euler steps, synthetic context/condition, no CFG/recording/waveform generation",
+  "device_parity_verified": false,
+  "reference_versions": {
+    "torch": "2.8.0+cpu",
+    "transformers": "4.57.3",
+    "safetensors": "0.8.0",
+    "numpy": "2.4.6"
+  }
+}

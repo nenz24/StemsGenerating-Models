@@ -127,6 +127,165 @@ enum CoreAIDecoderProbe {
         case invalidManifest, missingPreparedBundle, memoryBudgetReached, footprintUnavailable
     }
 
+    private struct LoopContract: Decodable {
+        struct Step: Decodable {
+            let index: Int
+            let timestep: Float
+            let nextTimestep: Float
+            let timestepR: Float
+            let velocityFile: String
+            let latentFile: String
+            let originalVelocityFile: String
+            let originalLatentFile: String
+        }
+        let schemaVersion: Int
+        let profile: String
+        let method: String
+        let timesteps: [Float]
+        let steps: [Step]
+        let shift: Float
+        let guidanceScale: Float
+        let kvCacheEnabled: Bool
+        let inputShapes: [String: [Int]]
+        let outputShape: [Int]
+        let weightStorageDtype: String
+        let computeDtype: String
+        let scalarType: String
+        let byteOrder: String
+        let checkpointDigest: String
+        let checkpointFullSha256Verified: Bool
+        let sharedInputSha256: [String: String]
+        let artifactSha256: [String: String]
+        let absoluteTolerance: Double
+        let relativeTolerance: Double
+        let relativeRmseTolerance: Double
+    }
+
+    static func runDenoiserLoop(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+                     "CoreAI architecture: \(AIModel.deviceArchitectureName)",
+                     "Test: COMPLETE 24-layer denoiser / 4 feedback Euler ODE steps / NOT instrument generation",
+                     "Requested compute policy: cpuOnly; accelerator placement NOT MEASURED",
+                     "Schedule: 1 -> 0.75 -> 0.5 -> 0.25 -> 0; shift=1; guidance=1; timestep_r=timestep",
+                     "Synthetic conditioning; no CFG, KV cache, recording or waveform generation",
+                     "Existing 14 assets per step; detached CPU copies; native cache eviction NOT GUARANTEED",
+                     "Process footprint stop before each stage: 2000 MiB; NOT an OS peak-memory guarantee"]
+        #if targetEnvironment(simulator)
+        lines.append("Target: Simulator; not physical-device evidence")
+        #else
+        lines.append("Target: iOS device build")
+        #endif
+        let clock = ContinuousClock(); let start = clock.now
+        let memory = CoreAIProcessFootprintSampler()
+        var completedSteps = 0; var completedStages = 0
+        do {
+            guard let resources = Bundle.main.resourceURL else { throw ShardError.missingPreparedBundle }
+            let folder = resources.appendingPathComponent("ModelCandidates/denoiser-sharded")
+            let fixture = resources.appendingPathComponent("ModelCandidates/denoiser-loop-4")
+            let contract = try readShardedContract(folder: folder)
+            guard let stages = contract.stages else { throw ShardError.invalidManifest }
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let loop = try decoder.decode(LoopContract.self, from: Data(contentsOf: fixture.appendingPathComponent("reference.json")))
+            let schedule: [Float] = [1, 0.75, 0.5, 0.25, 0]
+            guard loop.schemaVersion == 1, loop.profile == "denoiser-loop-4", loop.method == "euler_ode",
+                  loop.timesteps == schedule, loop.steps.count == 4, loop.shift == 1, loop.guidanceScale == 1,
+                  !loop.kvCacheEnabled, loop.inputShapes == Profile.denoiser.inputShapes, loop.outputShape == [1,25,64],
+                  loop.weightStorageDtype == "float16", loop.computeDtype == "float32",
+                  loop.scalarType == "float32", loop.byteOrder == "little", loop.checkpointFullSha256Verified,
+                  loop.checkpointDigest == contract.checkpoint.digest,
+                  loop.absoluteTolerance == contract.absoluteTolerance, loop.relativeTolerance == contract.relativeTolerance,
+                  loop.relativeRmseTolerance == contract.relativeRmseTolerance,
+                  Set(loop.sharedInputSha256.keys) == Set(["noise", "condition", "context"]) else {
+                throw ShardError.invalidManifest
+            }
+            var expectedFiles = Set<String>()
+            for (index, step) in loop.steps.enumerated() {
+                let n = index + 1
+                guard step.index == n, step.timestep == schedule[index], step.nextTimestep == schedule[index+1],
+                      step.timestepR == step.timestep, step.velocityFile == "step-\(n)-velocity.f32le",
+                      step.latentFile == "step-\(n)-latent.f32le", step.originalVelocityFile == "step-\(n)-velocity-fp32.f32le",
+                      step.originalLatentFile == "step-\(n)-latent-fp32.f32le" else { throw ShardError.invalidManifest }
+                expectedFiles.formUnion([step.velocityFile, step.latentFile, step.originalVelocityFile, step.originalLatentFile])
+            }
+            guard Set(loop.artifactSha256.keys) == expectedFiles else { throw ShardError.invalidManifest }
+            var references: [String: [Float]] = [:]
+            for name in expectedFiles {
+                references[name] = try readFloats(folder: fixture, name: name, count: 1600, hashes: loop.artifactSha256)
+            }
+            var shared: [String: NDArray] = [:]
+            var latent: [Float] = []
+            for name in ["noise", "condition", "context"] {
+                guard loop.sharedInputSha256[name] == contract.artifactSha256["\(name).f32le"],
+                      let shape = Profile.denoiser.inputShapes[name] else { throw ShardError.invalidManifest }
+                let values = try readFloats(folder: folder, name: "\(name).f32le", count: shape.reduce(1,*), hashes: contract.artifactSha256)
+                if name == "noise" { latent = values }
+                else { shared[name] = NDArray(scalars: values, shape: shape) }
+            }
+            lines.append("SHA-256: VERIFIED all 16 loop references and shared synthetic inputs; checkpoint contract matched")
+            for step in loop.steps {
+                let stepStart = clock.now
+                var state = shared
+                state["noise"] = NDArray(scalars: latent, shape: [1,25,64])
+                state["timestep"] = NDArray(scalars: [step.timestep], shape: [1])
+                state["timestep_r"] = NDArray(scalars: [step.timestepR], shape: [1])
+                lines.append("Step \(step.index)/4: t=\(step.timestep), next=\(step.nextTimestep), timestep_r=\(step.timestepR)")
+                for (index, stage) in stages.enumerated() {
+                    guard let footprint = CoreAIProcessFootprintSampler.currentFootprint() else { throw ShardError.footprintUnavailable }
+                    lines.append("Before step \(step.index) stage \(index+1)/14 footprint MiB: \(Double(footprint)/1048576)")
+                    guard footprint < 2000 * 1048576 else { throw ShardError.memoryBudgetReached }
+                    let phase = "Phase: step \(step.index)/4 stage \(index+1)/14 \(stage.assetFile) loading/running"
+                    saveProgress(lines + [phase], profile: .denoiser)
+                    await progress((lines + [phase]).joined(separator: "\n"))
+                    var inputs: [String: NDArray] = [:]
+                    for name in stage.inputShapes.keys { inputs[name] = state[name] }
+                    let result = try await runDetachedStage(stage, folder: folder, inputs: inputs)
+                    for (name, tensor) in result.values {
+                        guard let target = stage.outputBindings?[name] else { throw ShardError.invalidManifest }
+                        state[target] = tensor
+                    }
+                    completedStages += 1
+                    lines.append("Step \(step.index) stage \(index+1)/14 \(stage.assetFile): load ms \(result.loadMs); run+detached-copy ms \(result.runMs)")
+                    saveProgress(lines, profile: .denoiser)
+                    await progress(lines.joined(separator: "\n"))
+                    await Task.yield()
+                }
+                guard let tensor = state["velocity"] else { throw ProbeError.invalidOutputTensor }
+                let view = tensor.view(as: Float.self)
+                let velocity = view.withUnsafePointer { pointer, _, _ in Array(UnsafeBufferPointer(start: pointer, count: 1600)) }
+                let dt = step.timestep - step.nextTimestep
+                // Float32 multiply then subtract; feed THIS result back, never a host reference.
+                latent = zip(latent, velocity).map { x, v in
+                    let delta = v * dt
+                    return x - delta
+                }
+                for (label, actual, file) in [("velocity partition", velocity, step.velocityFile),
+                                               ("velocity original FP32", velocity, step.originalVelocityFile),
+                                               ("latent partition", latent, step.latentFile),
+                                               ("latent original FP32", latent, step.originalLatentFile)] {
+                    guard let expected = references[file] else { throw ShardError.invalidManifest }
+                    let stats = try compare(actual: actual, expected: expected, contract: contract)
+                    lines.append("Step \(step.index) \(label): max abs error \(stats.maxError); RMSE \(stats.rmse); normalized RMSE \(stats.normalizedRmse); \(stats.passed ? "PASS" : "NOT PASSED")")
+                    guard stats.passed else { throw ProbeError.numericalParityFailed }
+                }
+                completedSteps += 1
+                lines.append("Step \(step.index)/4 dual velocity+latent parity: PASS; total step ms: \(ms(stepStart.duration(to: clock.now)))")
+                saveProgress(lines, profile: .denoiser)
+                await progress(lines.joined(separator: "\n"))
+            }
+            lines.append("Four-step Euler loop dual parity: PASS (feedback at all four steps)")
+        } catch {
+            lines.append("Four-step Euler loop dual parity: NOT PASSED")
+            lines.append("Error: \(String(reflecting: error))")
+        }
+        let usage = memory.finish()
+        if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
+        lines.append("Completed parity steps: \(completedSteps)/4; completed stages: \(completedStages)/56; total loop probe ms: \(ms(start.duration(to: clock.now)))")
+        lines.append("Memory scope: sampled app process footprint, NOT total model/device RAM or exact peak; cache behavior unverified")
+        saveProgress(lines, profile: .denoiser)
+        return lines.joined(separator: "\n")
+    }
+
     static func runShardedDenoiser(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
         let result = await runShardedDenoiserAttempt(priorReports: [], progress: progress)
         return result.report
@@ -184,40 +343,8 @@ enum CoreAIDecoderProbe {
                 lines.append("Prepare on Mac: bash scripts/prepare_coreai_denoiser.sh; rebuild app.")
                 throw ShardError.missingPreparedBundle
             }
-            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
-            let contract = try decoder.decode(Contract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
-            let pairInputs = ["hidden": [1,13,2048], "condition": [1,64,2048], "temb": [1,6,2048],
-                              "rope_cos": [1,13,128], "rope_sin": [1,13,128], "self_mask": [1,1,13,13],
-                              "local_mask": [1,1,13,13], "cross_mask": [1,1,13,64]]
-            var frontOutputs = pairInputs; frontOutputs.removeValue(forKey: "condition")
-            frontOutputs["condition_projected"] = [1,64,2048]; frontOutputs["final_temb"] = [1,2048]
-            var frontBindings: [String: String] = [:]
-            for name in frontOutputs.keys { frontBindings[name] = name == "condition_projected" ? "condition" : name }
-            let assets = ["front.aimodel"] + stride(from: 0, to: 24, by: 2).map {
-                String(format: "blocks-%02d-%02d.aimodel", $0, $0 + 1)
-            } + ["tail.aimodel"]
-            guard contract.schemaVersion == 1, contract.profile == "denoiser-sharded", contract.assetFile == "sharded-pipeline",
-                  contract.layerCount == 24, contract.outputName == "velocity", contract.outputShape == [1,25,64],
-                  contract.scalarType == "float32", contract.byteOrder == "little", contract.latentFrames == 25,
-                  contract.inputShapes == Profile.denoiser.inputShapes, contract.weightStorageDtype == "float16",
-                  contract.computeDtype == "float32", contract.originalFp32ReferenceFile == "velocity-fp32-reference.f32le",
-                  contract.checkpointFullSha256Verified, contract.checkpoint.digest == Profile.denoiser.checkpointDigest,
-                  contract.absoluteTolerance == 1e-4, contract.relativeTolerance == 1e-3, contract.relativeRmseTolerance == 1e-3,
-                  let stages = contract.stages, stages.count == 14, stages.map({ $0.assetFile }) == assets else {
-                throw ShardError.invalidManifest
-            }
-            for (index, stage) in stages.enumerated() {
-                if index == 0 {
-                    guard stage.layerIndices.isEmpty, stage.inputShapes == Profile.denoiser.inputShapes,
-                          stage.outputShapes == frontOutputs, stage.outputBindings == frontBindings else { throw ShardError.invalidManifest }
-                } else if index == 13 {
-                    guard stage.layerIndices.isEmpty, stage.inputShapes == ["hidden":[1,13,2048],"final_temb":[1,2048]],
-                          stage.outputShapes == ["velocity":[1,25,64]], stage.outputBindings == ["velocity":"velocity"] else { throw ShardError.invalidManifest }
-                } else {
-                    guard stage.layerIndices == [(index-1)*2,(index-1)*2+1], stage.inputShapes == pairInputs,
-                          stage.outputShapes == ["hidden_out":[1,13,2048]], stage.outputBindings == ["hidden_out":"hidden"] else { throw ShardError.invalidManifest }
-                }
-            }
+            let contract = try readShardedContract(folder: folder)
+            guard let stages = contract.stages else { throw ShardError.invalidManifest }
             var state: [String: NDArray] = [:]
             for (name, shape) in Profile.denoiser.inputShapes {
                 let values = try readFloats(folder: folder, name: "\(name).f32le", count: shape.reduce(1,*), hashes: contract.artifactSha256)
@@ -268,6 +395,44 @@ enum CoreAIDecoderProbe {
         lines.append("Memory scope: whole process; sampled, not exact peak; native cache behavior unverified")
         saveProgress(priorReports + lines, profile: .denoiser)
         return (lines.joined(separator: "\n"), passed, stopRepeating)
+    }
+
+    private static func readShardedContract(folder: URL) throws -> Contract {
+        let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let contract = try decoder.decode(Contract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
+        let pairInputs = ["hidden": [1,13,2048], "condition": [1,64,2048], "temb": [1,6,2048],
+                          "rope_cos": [1,13,128], "rope_sin": [1,13,128], "self_mask": [1,1,13,13],
+                          "local_mask": [1,1,13,13], "cross_mask": [1,1,13,64]]
+        var frontOutputs = pairInputs; frontOutputs.removeValue(forKey: "condition")
+        frontOutputs["condition_projected"] = [1,64,2048]; frontOutputs["final_temb"] = [1,2048]
+        var frontBindings: [String: String] = [:]
+        for name in frontOutputs.keys { frontBindings[name] = name == "condition_projected" ? "condition" : name }
+        let assets = ["front.aimodel"] + stride(from: 0, to: 24, by: 2).map {
+            String(format: "blocks-%02d-%02d.aimodel", $0, $0 + 1)
+        } + ["tail.aimodel"]
+        guard contract.schemaVersion == 1, contract.profile == "denoiser-sharded", contract.assetFile == "sharded-pipeline",
+              contract.layerCount == 24, contract.outputName == "velocity", contract.outputShape == [1,25,64],
+              contract.scalarType == "float32", contract.byteOrder == "little", contract.latentFrames == 25,
+              contract.inputShapes == Profile.denoiser.inputShapes, contract.weightStorageDtype == "float16",
+              contract.computeDtype == "float32", contract.originalFp32ReferenceFile == "velocity-fp32-reference.f32le",
+              contract.checkpointFullSha256Verified, contract.checkpoint.digest == Profile.denoiser.checkpointDigest,
+              contract.absoluteTolerance == 1e-4, contract.relativeTolerance == 1e-3, contract.relativeRmseTolerance == 1e-3,
+              let stages = contract.stages, stages.count == 14, stages.map({ $0.assetFile }) == assets else {
+            throw ShardError.invalidManifest
+        }
+        for (index, stage) in stages.enumerated() {
+            if index == 0 {
+                guard stage.layerIndices.isEmpty, stage.inputShapes == Profile.denoiser.inputShapes,
+                      stage.outputShapes == frontOutputs, stage.outputBindings == frontBindings else { throw ShardError.invalidManifest }
+            } else if index == 13 {
+                guard stage.layerIndices.isEmpty, stage.inputShapes == ["hidden":[1,13,2048],"final_temb":[1,2048]],
+                      stage.outputShapes == ["velocity":[1,25,64]], stage.outputBindings == ["velocity":"velocity"] else { throw ShardError.invalidManifest }
+            } else {
+                guard stage.layerIndices == [(index-1)*2,(index-1)*2+1], stage.inputShapes == pairInputs,
+                      stage.outputShapes == ["hidden_out":[1,13,2048]], stage.outputBindings == ["hidden_out":"hidden"] else { throw ShardError.invalidManifest }
+            }
+        }
+        return contract
     }
 
     // All model/function/output references stay inside this async scope. Fresh

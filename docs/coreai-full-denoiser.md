@@ -85,11 +85,11 @@ yang berbeda antar percobaan. Footprint proses maksimum tersampel naik
 kenaikan; angka tersebut bukan seluruh RAM model. Tidak perlu mengulang uji yang
 sama atau menyiapkan bobot ulang untuk mengesahkan hasil ini.
 
-Gate berikutnya memerlukan loop denoising pendek dengan beberapa timestep dan
-latent yang diperbarui lalu dimasukkan kembali, mengikuti jadwal/update ACE yang
-dipin. Bandingkan latent setiap langkah terhadap referensi host dan catat timing
-serta footprint untuk memeriksa drift/akumulasi. Loop dan fixture itu belum
-diimplementasikan; conditioning piano/teks serta generasi waveform menyusul.
+Gate berikutnya sudah disiapkan: [loop denoising empat langkah](coreai-denoiser-loop.md)
+memakai latent hasil sebelumnya dan jadwal/update ACE yang dipin. Referensi host
+lolos pembandingan FP32; hasil CoreAI di iPhone masih menunggu. Referensi kecil
+ikut GitHub, sehingga cukup pull dan build tanpa ekspor model ulang, lalu tekan
+**Uji loop denoising 4 langkah**. Conditioning piano/teks dan waveform menyusul.
 
 ## Cakupan dan pembandingan
 

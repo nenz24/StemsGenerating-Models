@@ -107,7 +107,7 @@
     "accelerator_and_precision_support": "Float32 affine and VAE encoder/decoder parity verified under requested CPU-only policy; actual placement and GPU/Neural Engine inference unmeasured",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
-    "model_conversion_training_and_device_benchmarks": "Monolithic denoiser hit memory limit; 14-part denoiser repeatability passed 3/3 for same synthetic case in one process; latency, cold launches and long-run memory unverified; conditioning/diffusion loop unimplemented"
+    "model_conversion_training_and_device_benchmarks": "Monolithic denoiser hit memory limit; 14-part denoiser repeatability passed 3/3 for same synthetic case in one process; four-step Euler loop host dual references passed, device loop pending; recording conditioning and full generation unimplemented"
   },
   "local_prototype_status": {
     "source_directory": "prototypes/ios27-coreai",
@@ -154,7 +154,7 @@
     "native_model_reference": "prototypes/ios27-coreai/ModelCandidates/affine-native-reference.json",
     "current_native_probe_apple_compilation_verified": true,
     "native_inference_report": "reviews/coreai-iphone17pro-native-affine/report.json",
-    "checkpoint_conversion_scope": "VAE and complete 24-layer Base denoiser FP16-storage/FP32-math exported; source conditioning and full generation loop unimplemented"
+    "checkpoint_conversion_scope": "VAE and complete 24-layer Base denoiser FP16-storage/FP32-math exported; four-step synthetic Euler loop prepared with host dual references; recording conditioning/full generation unimplemented"
   },
   "audio_component_audit": {
     "report": "reviews/coreai-ace-component-audit/report.json",
@@ -425,6 +425,39 @@
     "stability_dual_parity_pass_count": 3,
     "latency_stability_verified": false,
     "long_run_memory_plateau_verified": false,
-    "next_gate": "Short multi-timestep diffusion loop with numerical references and per-step resource logging; conditioning from recordings still unimplemented"
+    "next_gate": "Four-step feedback Euler loop prepared with real host dual references; CoreAI device execution pending"
+  },
+  "pretrained_denoiser_loop_probe": {
+    "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
+    "button": "Uji loop denoising 4 langkah",
+    "reference_generator": "scripts/prepare_coreai_denoiser_loop.py",
+    "reference_manifest": "prototypes/ios27-coreai/ModelCandidates/denoiser-loop-4/reference.json",
+    "review": "reviews/coreai-four-step-denoiser-loop/README.md",
+    "method": "euler_ode",
+    "timesteps": [
+      1,
+      0.75,
+      0.5,
+      0.25,
+      0
+    ],
+    "timestep_r": "current timestep",
+    "shift": 1,
+    "guidance_scale": 1,
+    "kv_cache_enabled": false,
+    "step_count": 4,
+    "assets_per_step": 14,
+    "host_original_fp32_velocity_and_latent_parity_passed_each_step": true,
+    "host_final_latent_normalized_rmse": 6.127525046300984e-06,
+    "host_final_latent_max_abs_error": 3.552436828613281e-05,
+    "reference_binary_bytes": 102400,
+    "new_model_export_required": false,
+    "checkpoint_download_required_if_existing_assets_present": false,
+    "new_swift_apple_build_verified": false,
+    "device_loop_execution_verified": false,
+    "device_loop_parity_verified": false,
+    "conditioning_from_recording_verified": false,
+    "waveform_generation_verified": false,
+    "memory_scope": "10 ms sampled process footprint with pre-asset 2000 MiB guard; not full-device/model RAM or exact peak"
   }
 }

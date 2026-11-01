@@ -71,44 +71,10 @@ def verify_bundle(folder,record):
     return ref
 
 
-def main():
-    parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--out',type=Path,default=ROOT/'prototypes/ios27-coreai/ModelCandidates/denoiser-sharded')
-    parser.add_argument('--checkpoint',type=Path)
-    parser.add_argument('--verify-only',action='store_true')
-    parser.add_argument('--retire-monolith',action='store_true',help='Move the failed resource to ignored cache; preserve every file')
-    args=parser.parse_args()
-    if args.retire_monolith:retire_monolith();return
-    publisher=records();record=publisher['model.safetensors']
-    if args.verify_only:verify_bundle(args.out,record);print('Sharded denoiser: VERIFIED');return
-    if args.out.exists():raise FileExistsError(f'Output already exists: {args.out}; preserved')
-    checkpoint=checkpoint_path(record,args.checkpoint)
-    sources=ROOT/'.runtime-cache/coreai-generator-source-publisher';sources.mkdir(parents=True,exist_ok=True)
-    paths={n:verified_source(publisher[n],sources) for n in ['modeling_acestep_v15_base.py','configuration_acestep_v15.py','config.json']}
-    cfg,kind,rotary_type=load_full_upstream(paths)
-    make_mask=sys.modules[kind.__module__].create_4d_mask
+def make_partitions(root, make_mask):
+    """Exact shared front/pair/tail modules for native export and loop references."""
     import torch
     import torch.nn.functional as F
-    import numpy as np
-    from safetensors import safe_open
-    from coreai_torch import TorchConverter,get_decomp_table
-    torch.set_num_threads(2)
-    with torch.device('meta'):root=kind(cfg).eval()
-    with safe_open(str(checkpoint),framework='pt',device='cpu') as source:
-        state={k[len('decoder.'):]:source.get_tensor(k) for k in source.keys() if k.startswith('decoder.')}
-    root.load_state_dict(state,strict=True,assign=True);del state
-    root.rotary_emb=rotary_type(cfg,device='cpu');root.to(dtype=torch.float32,device='cpu').requires_grad_(False)
-    generator=torch.Generator(device='cpu').manual_seed(0)
-    values={'noise':torch.randn(INPUT_SHAPES['noise'],generator=generator),
-            'condition':torch.randn(INPUT_SHAPES['condition'],generator=generator)*0.1,
-            'context':torch.randn(INPUT_SHAPES['context'],generator=generator)*0.1,
-            'timestep':torch.tensor([0.5]),'timestep_r':torch.tensor([0.25])}
-    def full():return root(hidden_states=values['noise'],encoder_hidden_states=values['condition'],context_latents=values['context'],
-                           timestep=values['timestep'],timestep_r=values['timestep_r'],attention_mask=None,encoder_attention_mask=None,use_cache=False)[0]
-    with torch.no_grad():original=full().detach().clone()
-    convert_storage16(root)
-    with torch.no_grad():monolithic=full().detach().clone()
-
     class Front(torch.nn.Module):
         def __init__(self):
             super().__init__()
@@ -138,7 +104,47 @@ def main():
             shift,scale=(self.table+final_temb.unsqueeze(1)).chunk(2,dim=1)
             return self.proj(self.norm(hidden)*(1+scale)+shift)[:,:25,:].contiguous()
 
-    parts=[Front()]+[Pair(i) for i in range(0,24,2)]+[Tail()]
+    return [Front()]+[Pair(i) for i in range(0,24,2)]+[Tail()]
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--out',type=Path,default=ROOT/'prototypes/ios27-coreai/ModelCandidates/denoiser-sharded')
+    parser.add_argument('--checkpoint',type=Path)
+    parser.add_argument('--verify-only',action='store_true')
+    parser.add_argument('--retire-monolith',action='store_true',help='Move the failed resource to ignored cache; preserve every file')
+    args=parser.parse_args()
+    if args.retire_monolith:retire_monolith();return
+    publisher=records();record=publisher['model.safetensors']
+    if args.verify_only:verify_bundle(args.out,record);print('Sharded denoiser: VERIFIED');return
+    if args.out.exists():raise FileExistsError(f'Output already exists: {args.out}; preserved')
+    checkpoint=checkpoint_path(record,args.checkpoint)
+    sources=ROOT/'.runtime-cache/coreai-generator-source-publisher';sources.mkdir(parents=True,exist_ok=True)
+    paths={n:verified_source(publisher[n],sources) for n in ['modeling_acestep_v15_base.py','configuration_acestep_v15.py','config.json']}
+    cfg,kind,rotary_type=load_full_upstream(paths)
+    make_mask=sys.modules[kind.__module__].create_4d_mask
+    import torch
+    import numpy as np
+    from safetensors import safe_open
+    from coreai_torch import TorchConverter,get_decomp_table
+    torch.set_num_threads(2)
+    with torch.device('meta'):root=kind(cfg).eval()
+    with safe_open(str(checkpoint),framework='pt',device='cpu') as source:
+        state={k[len('decoder.'):]:source.get_tensor(k) for k in source.keys() if k.startswith('decoder.')}
+    root.load_state_dict(state,strict=True,assign=True);del state
+    root.rotary_emb=rotary_type(cfg,device='cpu');root.to(dtype=torch.float32,device='cpu').requires_grad_(False)
+    generator=torch.Generator(device='cpu').manual_seed(0)
+    values={'noise':torch.randn(INPUT_SHAPES['noise'],generator=generator),
+            'condition':torch.randn(INPUT_SHAPES['condition'],generator=generator)*0.1,
+            'context':torch.randn(INPUT_SHAPES['context'],generator=generator)*0.1,
+            'timestep':torch.tensor([0.5]),'timestep_r':torch.tensor([0.25])}
+    def full():return root(hidden_states=values['noise'],encoder_hidden_states=values['condition'],context_latents=values['context'],
+                           timestep=values['timestep'],timestep_r=values['timestep_r'],attention_mask=None,encoder_attention_mask=None,use_cache=False)[0]
+    with torch.no_grad():original=full().detach().clone()
+    convert_storage16(root)
+    with torch.no_grad():monolithic=full().detach().clone()
+
+    parts=make_partitions(root,make_mask)
     root_ids={id(p) for p in root.parameters()};part_ids=[id(p) for part in parts for p in part.parameters()]
     if set(part_ids)!=root_ids or len(part_ids)!=len(root_ids):raise ValueError('Partition lost or duplicated learned parameters')
     plan=stage_plan();stage_inputs=[];state=dict(values)

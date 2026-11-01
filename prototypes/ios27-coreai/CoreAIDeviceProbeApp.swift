@@ -106,6 +106,15 @@ struct CoreAIDeviceProbeApp: App {
                             }
                         }
                         .disabled(runningModel)
+                        Button("Uji loop denoising 4 langkah") {
+                            runningModel = true
+                            report = "Menjalankan empat langkah Euler dengan feedback latent…"
+                            Task {
+                                report = await CoreAIDecoderProbe.runDenoiserLoop { text in self.report = text }
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
                         Text(report)
                             .font(.system(.footnote, design: .monospaced))
                             .textSelection(.enabled)

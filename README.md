@@ -70,7 +70,10 @@ setelah run pertama gagal di BNNS. Penyebab kegagalan pertama belum pasti.
 [laporan lengkap](reviews/coreai-iphone17pro-sharded-denoiser-stability/README.md).
 Waktu total 4,68 / 3,46 / 2,04 detik untuk kasus sintetis yang sama; latensi,
 cold launch dan kebutuhan RAM model belum tervalidasi sebagai anggaran produksi.
-Tahap berikutnya adalah loop denoising pendek dengan referensi numerik per langkah.
+**Uji loop denoising 4 langkah sudah disiapkan:**
+[panduan iPhone](docs/coreai-denoiser-loop.md). Referensi host lolos; hasil CoreAI
+di perangkat masih menunggu. Cukup pull, build, lalu tekan **Uji loop denoising 4 langkah**;
+14 asset yang sama dipakai ulang dan referensi kecil ikut GitHub.
 Ini belum generasi instrumen lengkap.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
