@@ -185,6 +185,23 @@ class SinglePassTests(unittest.TestCase):
             probe=json.loads((ref_out/'generation/probe.json').read_text())
             self.assertEqual(probe['reference_audio'],str(ref))
             self.assertEqual(probe['instrument'],'drums')
+            # A current guitar engine beside the helper must work on an old
+            # cached bridge without replacing its run.py or its weights.
+            import guitar_probe
+            guitar_helpers=root/'guitar_helpers';guitar_helpers.mkdir()
+            for name in ('guitar_probe.py','electric_full_song.py'):
+                shutil.copyfile(ROOT/'scripts'/name,guitar_helpers/name)
+            shutil.copyfile(tools/'run.py',guitar_helpers/'guitar_run.py')
+            (tools/'run.py').write_text("raise RuntimeError('old bridge engine must not be used for guitar')\n")
+            guitar_out=root/'guitar';guitar_out.mkdir()
+            shutil.copytree(output/'prepared',guitar_out/'prepared')
+            result=subprocess.run([sys.executable,str(guitar_helpers/'guitar_probe.py'),'--worker',
+                '--root',str(bridge),'--out',str(guitar_out)],cwd=elsewhere,capture_output=True,text=True,timeout=30)
+            self.assertEqual(result.returncode,0,result.stderr)
+            probe=json.loads((guitar_out/'generation/probe.json').read_text())
+            self.assertEqual(probe,{'reference_audio':None,'instrument':'guitar','caption':guitar_probe.PRESET['caption'],
+                'dtype':'float32','vae_dtype':'float32','limit':600,'calls':1})
+            self.assertIn('old bridge engine must not be used', (tools/'run.py').read_text())
 
 
 if __name__ == "__main__": unittest.main()

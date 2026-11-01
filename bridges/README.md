@@ -1,5 +1,14 @@
 # ACE-Step context bridge
 
+[Notebook 18](../notebooks/18_colab_clean_electric_guitar.ipynb) starts the selected
+clean electric guitar with one 30-second piano-conditioned probe. It embeds
+helpers and a compatible guitar engine for old bridges, reuses the active CUDA
+runtime/weights and preserves bass/drum outputs. See the
+[guitar guide](../docs/clean-electric-guitar.md). Guitar tone is not yet approved.
+
+The complete notebook-17 output has been listener-approved and frozen in
+[`acoustic-drums-shared-kit-full-v1`](../baselines/acoustic-drums-shared-kit-full-v1/).
+
 [Notebook 17](../notebooks/17_colab_drum_shared_kit_song.ipynb) extends the approved
 kit-reference comparison across the song. It reuses approved chunk 0, generates
 only chunks 1/2 with the exact same reference WAV, and stitches the result. Cached

@@ -1,0 +1,14 @@
+{
+  "id": "clean-electric-guitar-v1",
+  "model": "acestep-v15-base",
+  "device": "cuda",
+  "precision": "float32",
+  "instrument": "guitar",
+  "seeds": [
+    0
+  ],
+  "guidance_scale": 7.0,
+  "inference_steps": 50,
+  "offload_to_cpu": true,
+  "caption": "Isolated clean electric guitar accompaniment. A warm, clear, undistorted electric guitar played naturally with gentle picked chord voicings and sparse rhythmic strums. Follow the piano performance chords, timing, phrasing and dynamics, leaving space for the piano melody. Subtle pick attack, natural note decay and expressive articulation. Electric guitar only, no bass guitar, drums, piano or vocals."
+}

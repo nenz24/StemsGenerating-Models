@@ -23,8 +23,10 @@ def plan(prepared, backend, instrument, seeds):
         raise ValueError("Unsupported preparation schema")
     if sha256(prepared / "conditioning.json") != manifest["conditioning_sha256"]:
         raise ValueError("Conditioning changed after preparation")
-    if instrument not in ("bass", "drums"):
-        raise ValueError("Baseline instruments are bass or drums")
+    if instrument not in ("bass", "drums", "guitar"):
+        raise ValueError("Supported instruments are bass, drums or guitar")
+    if instrument == "guitar" and backend != "ace":
+        raise ValueError("Guitar currently requires the ACE-Step backend")
     if not seeds or len(set(seeds)) != len(seeds) or any(not 0 <= seed < 2**31 for seed in seeds):
         raise ValueError("Use unique seeds between 0 and 2147483647")
     conditions = ["A"] if backend == "ace" else list(manifest["conditions"])
@@ -72,7 +74,8 @@ def execute(args, experiment):
     from backends import AceBackend, StageBackend, weight_inventory, validate_guidance
     guidance = validate_guidance(getattr(args, "guidance_scale", 7.0))
     require_audio_tools()
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+    bridge_root = Path(getattr(args, "bridge_root", Path(__file__).resolve().parents[2]))
+    sys.path.insert(0, str(bridge_root / "scripts"))
     from runtime_environment import runtime_environment
     environment = runtime_environment()
     for name in ("HF_HUB_CACHE", "HF_XET_CACHE", "MPLBACKEND", "MPLCONFIGDIR"):
@@ -89,7 +92,7 @@ def execute(args, experiment):
         raise RuntimeError("The inspected STAGE adapter requires CUDA. Use ACE-Step on Apple Silicon.")
     inventory = weight_inventory(args.upstream, args.backend, args.checkpoint, args.ace_model)
     if args.backend == "ace":
-        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+        sys.path.insert(0, str(bridge_root / "scripts"))
         from model_assets import materialize, process
         process(args.assets_manifest, args.upstream)
         runtime_name = "runtime_" + uuid.uuid4().hex[:8] if getattr(args, "resume", False) else "runtime"
@@ -174,7 +177,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepared", type=Path, required=True)
     parser.add_argument("--backend", choices=COMMITS, required=True)
-    parser.add_argument("--instrument", choices=("bass", "drums"), default="bass")
+    parser.add_argument("--instrument", choices=("bass", "drums", "guitar"), default="bass")
     parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--max-job-seconds", type=int, choices=(10, 30), default=10, help="Explicitly opt into the 30-second unchunked context test")

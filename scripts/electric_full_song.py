@@ -139,10 +139,10 @@ def prepare(source, output, start=0, duration=None):
     return metadata
 
 
-def execute_worker(root, output, *, preset=None, instrument="bass", reference_audio=None):
+def execute_worker(root, output, *, preset=None, instrument="bass", reference_audio=None, engine=None):
     """Reuse the inspected engine directly, with process-local caption/FP32/export overrides."""
     preset = PRESET if preset is None else preset
-    if instrument not in ("bass", "drums") or preset.get("instrument") != instrument:
+    if instrument not in ("bass", "drums", "guitar") or preset.get("instrument") != instrument:
         raise ValueError("Worker instrument must match the requested preset")
     attach(root)
     from provenance import check_upstream, write_json
@@ -158,7 +158,8 @@ def execute_worker(root, output, *, preset=None, instrument="bass", reference_au
         raise RuntimeError("CUDA unavailable in model runtime; no CPU/MPS fallback")
     import acestep.handler as ace_handler
     import backends
-    import run as engine
+    if engine is None:
+        import run as engine
 
     class Float32Handler(ace_handler.AceStepHandler):
         def _load_main_model_from_checkpoint(self, *args, **kwargs):
@@ -192,7 +193,7 @@ def execute_worker(root, output, *, preset=None, instrument="bass", reference_au
     args = SimpleNamespace(upstream=root / "vendor/ACE-Step-1.5", backend="ace", checkpoint=None,
         ace_model=preset["model"], assets_manifest=root / "configs/assets-base.json", device="cuda",
         offload=True, out=generation, prepared=prepared, max_job_seconds=600,
-        guidance_scale=7.0, capture_decoder=output / "capture")
+        guidance_scale=7.0, capture_decoder=output / "capture", bridge_root=root)
     try:
         engine.execute(args, experiment)
     except BaseException as error:
