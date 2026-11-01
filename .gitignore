@@ -34,3 +34,4 @@ DerivedData/
 /prototypes/ios27-coreai/ModelCandidates/dit-context-pretrained/
 /prototypes/ios27-coreai/ModelCandidates/dit-storage16-pretrained/
 /prototypes/ios27-coreai/ModelCandidates/denoiser-pretrained/
+/prototypes/ios27-coreai/ModelCandidates/denoiser-sharded/

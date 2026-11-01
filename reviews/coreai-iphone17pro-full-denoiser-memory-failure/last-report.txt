@@ -1,0 +1,23 @@
+Laporan denoiser tersimpan dari percobaan sebelumnya:
+
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: pretrained ACE Base COMPLETE 24-layer denoiser / one velocity prediction / synthetic latents / NOT instrument generation
+Requested compute policy: cpuOnly
+Accelerator used by a model: NOT MEASURED
+Denoiser scope: all 24 layers + input/time/condition/output projections; 25 latent frames; no diffusion loop or waveform generation
+Precision profile: FP16 stored weights; FP32 calculations, masks and input/output
+Original FP32 baseline parity: REQUIRED; runtime RAM savings NOT MEASURED
+Target: iOS device build
+Input condition: [1, 64, 2048]
+Input context: [1, 25, 128]
+Input noise: [1, 25, 64]
+Input timestep: [1]
+Input timestep_r: [1]
+Output velocity: [1, 25, 64]
+Reference binary SHA-256: VERIFIED; pretrained checkpoint verified by Mac preparation
+Tolerances: abs 0.0001, rel 0.001, normalized RMSE 0.001
+Source asset validation: true
+Source asset validation ms: 1.24475
+Phase: loading/specializing complete model

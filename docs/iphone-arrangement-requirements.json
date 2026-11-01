@@ -107,7 +107,7 @@
     "accelerator_and_precision_support": "Float32 affine and VAE encoder/decoder parity verified under requested CPU-only policy; actual placement and GPU/Neural Engine inference unmeasured",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
-    "model_conversion_training_and_device_benchmarks": "Complete 24-layer one-forward denoiser exported; device load/parity/memory pending; full conditioning and diffusion generation loop unimplemented"
+    "model_conversion_training_and_device_benchmarks": "Monolithic denoiser hit memory limit; 14 partitions exported and numerically verified on host, sequential iPhone gate pending; conditioning/diffusion loop unimplemented"
   },
   "local_prototype_status": {
     "source_directory": "prototypes/ios27-coreai",
@@ -119,8 +119,8 @@
     "apple_compilation_verified": true,
     "apple_compilation_evidence": "User reported successful execution of the device probe app; not independently compiled in this Linux workspace",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-pretrained-dit-storage16/report.json",
-    "device_execution_scope": "Both storage16 references pass for two blocks; complete denoiser and end-to-end accompaniment unverified",
+    "device_execution_report": "reviews/coreai-iphone17pro-full-denoiser-memory-failure/report.json",
+    "device_execution_scope": "Component gates passed; monolithic loading hit memory exception; sequential 14-asset device gate pending",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -380,6 +380,32 @@
     "device_parity_verified": false,
     "persistent_progress": "Best-effort local Documents log, shown with previous-session label after app relaunch; not termination-cause evidence",
     "runtime_ram_savings_verified": false,
-    "validation_manifest": "reviews/coreai-pretrained-full-denoiser-export/reference.json"
+    "validation_manifest": "reviews/coreai-pretrained-full-denoiser-export/reference.json",
+    "device_load_status": "reported EXC_RESOURCE; last persisted loading/specializing phase",
+    "device_report": "reviews/coreai-iphone17pro-full-denoiser-memory-failure/report.json",
+    "monolithic_device_loading_disabled": true,
+    "default_preparation_route": "14 ordered assets, monolithic resource retired to ignored cache"
+  },
+  "pretrained_sharded_denoiser_probe": {
+    "preparation_script": "scripts/prepare_coreai_denoiser.sh",
+    "exporter_script": "scripts/export_coreai_denoiser_sharded.py",
+    "local_ignored_bundle": "prototypes/ios27-coreai/ModelCandidates/denoiser-sharded",
+    "stage_count": 14,
+    "layer_count": 24,
+    "parameter_count": 1575458880,
+    "parameter_coverage_exactly_once": true,
+    "host_partition_vs_monolithic_parity_verified": true,
+    "host_original_fp32_parity_verified": true,
+    "weight_storage_dtype": "float16",
+    "compute_dtype": "float32",
+    "stage_output_handoff": "Independent CPU NDArray copies; one Swift-held model scope at a time",
+    "native_cache_eviction_guaranteed": false,
+    "pre_stage_process_footprint_stop_mib": 2000,
+    "in_stage_peak_memory_bound_guaranteed": false,
+    "monolith_preserved_under": ".runtime-cache/coreai-retired-bundles/",
+    "new_swift_apple_build_verified": false,
+    "device_parity_verified": false,
+    "validation_manifest": "reviews/coreai-sharded-denoiser-export/reference.json",
+    "scope": "One complete synthetic velocity forward; not diffusion/music generation"
   }
 }

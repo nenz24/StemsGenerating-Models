@@ -1,0 +1,3 @@
+llvm-worker-0: EXC_RESOURCE (RESOURCE_TYPE_MEMORY: high watermark memory limit exceeded) (limit=3376 MB)
+
+User observation: aplikasi tidak tertutup tapi apps ngehang

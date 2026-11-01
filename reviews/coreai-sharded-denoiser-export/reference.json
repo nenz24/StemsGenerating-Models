@@ -1,0 +1,990 @@
+{
+  "schema_version": 1,
+  "profile": "denoiser-sharded",
+  "asset_file": "sharded-pipeline",
+  "function_name": "main",
+  "output_name": "velocity",
+  "input_shapes": {
+    "noise": [
+      1,
+      25,
+      64
+    ],
+    "condition": [
+      1,
+      64,
+      2048
+    ],
+    "context": [
+      1,
+      25,
+      128
+    ],
+    "timestep": [
+      1
+    ],
+    "timestep_r": [
+      1
+    ]
+  },
+  "output_shape": [
+    1,
+    25,
+    64
+  ],
+  "stages": [
+    {
+      "asset_file": "front.aimodel",
+      "layer_indices": [],
+      "input_shapes": {
+        "noise": [
+          1,
+          25,
+          64
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "context": [
+          1,
+          25,
+          128
+        ],
+        "timestep": [
+          1
+        ],
+        "timestep_r": [
+          1
+        ]
+      },
+      "output_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition_projected": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ],
+        "final_temb": [
+          1,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden": "hidden",
+        "condition_projected": "condition",
+        "temb": "temb",
+        "rope_cos": "rope_cos",
+        "rope_sin": "rope_sin",
+        "self_mask": "self_mask",
+        "local_mask": "local_mask",
+        "cross_mask": "cross_mask",
+        "final_temb": "final_temb"
+      }
+    },
+    {
+      "asset_file": "blocks-00-01.aimodel",
+      "layer_indices": [
+        0,
+        1
+      ],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          13,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-02-03.aimodel",
+      "layer_indices": [
+        2,
+        3
+      ],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          13,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-04-05.aimodel",
+      "layer_indices": [
+        4,
+        5
+      ],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          13,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-06-07.aimodel",
+      "layer_indices": [
+        6,
+        7
+      ],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          13,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-08-09.aimodel",
+      "layer_indices": [
+        8,
+        9
+      ],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          13,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-10-11.aimodel",
+      "layer_indices": [
+        10,
+        11
+      ],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          13,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-12-13.aimodel",
+      "layer_indices": [
+        12,
+        13
+      ],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          13,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-14-15.aimodel",
+      "layer_indices": [
+        14,
+        15
+      ],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          13,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-16-17.aimodel",
+      "layer_indices": [
+        16,
+        17
+      ],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          13,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-18-19.aimodel",
+      "layer_indices": [
+        18,
+        19
+      ],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          13,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-20-21.aimodel",
+      "layer_indices": [
+        20,
+        21
+      ],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          13,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-22-23.aimodel",
+      "layer_indices": [
+        22,
+        23
+      ],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "condition": [
+          1,
+          64,
+          2048
+        ],
+        "temb": [
+          1,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          13,
+          128
+        ],
+        "rope_sin": [
+          1,
+          13,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "local_mask": [
+          1,
+          1,
+          13,
+          13
+        ],
+        "cross_mask": [
+          1,
+          1,
+          13,
+          64
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          13,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "tail.aimodel",
+      "layer_indices": [],
+      "input_shapes": {
+        "hidden": [
+          1,
+          13,
+          2048
+        ],
+        "final_temb": [
+          1,
+          2048
+        ]
+      },
+      "output_shapes": {
+        "velocity": [
+          1,
+          25,
+          64
+        ]
+      },
+      "output_bindings": {
+        "velocity": "velocity"
+      }
+    }
+  ],
+  "layer_count": 24,
+  "latent_frames": 25,
+  "checkpoint_prefix": "decoder.",
+  "weight_storage_dtype": "float16",
+  "compute_dtype": "float32",
+  "scalar_type": "float32",
+  "byte_order": "little",
+  "original_fp32_reference_file": "velocity-fp32-reference.f32le",
+  "partition_vs_monolithic": {
+    "finite": true,
+    "max_absolute_error": 6.079673767089844e-06,
+    "rmse": 1.4389352057938194e-06,
+    "normalized_rmse": 1.228056488467816e-06,
+    "elementwise_fraction_over_bound": 0.0,
+    "parity_passed": true
+  },
+  "storage16_vs_original_fp32": {
+    "finite": true,
+    "max_absolute_error": 5.9604644775390625e-06,
+    "rmse": 1.428780654066116e-06,
+    "normalized_rmse": 1.219390067065476e-06,
+    "elementwise_fraction_over_bound": 0.0,
+    "parity_passed": true
+  },
+  "checkpoint": {
+    "repo_id": "ACE-Step/acestep-v15-base",
+    "revision": "e432212fec32b8965a14ffa57ae653438d6abd14",
+    "filename": "model.safetensors",
+    "size": 4787825604,
+    "digest": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b"
+  },
+  "checkpoint_full_sha256_verified": true,
+  "parameter_count": 1575458880,
+  "parameter_coverage_exactly_once": true,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "scope": "One complete 24-layer velocity forward partitioned into 14 assets; not instrument generation",
+  "versions": {
+    "torch": "2.8.0+cpu",
+    "transformers": "4.57.3",
+    "coreai-torch": "0.4.3",
+    "coreai-core": "1.0.0b3"
+  },
+  "artifact_sha256": {
+    "blocks-00-01.aimodel/main.hash": "e9b2e6898a04f8c0b2baab98ca35587396040f7f390f2659e38c0f0b377ee457",
+    "blocks-00-01.aimodel/main.mlirb": "9f2eb4e833d1d949f54f7984fa1e74bcd9b0f00fff84b7abeb73f7be91d3c05a",
+    "blocks-00-01.aimodel/metadata.json": "b5e9126c3e115919aa642dde1ca50ec306ab67ced8c288ef2199770b05896763",
+    "blocks-02-03.aimodel/main.hash": "e06d9b7e13d269b27b39a652ea985834a4cebe23547306b854287a079e208cf1",
+    "blocks-02-03.aimodel/main.mlirb": "358e107edd4621a74e26c4e52555c6e144a245568a9486ab565ea6e7f2f140e8",
+    "blocks-02-03.aimodel/metadata.json": "c1d7571292e23e078ee67759dd7f0302ce5174b9e63b6fd279d34441fe98e340",
+    "blocks-04-05.aimodel/main.hash": "7d17be1f4cac8902374226db7cc8cded55dd72d730b09c29c04bc716bc52f930",
+    "blocks-04-05.aimodel/main.mlirb": "32f3b7525f1b9f23746b571a41586be4ce6e9a71f55e2729731184cd5e612edb",
+    "blocks-04-05.aimodel/metadata.json": "211cc5201c120b1d751847d60bccda8992933e56b928d32317c8a4cf3edd131c",
+    "blocks-06-07.aimodel/main.hash": "aa7435c750597b087461c2b0cec22d73aa143889d5061376953df2905eb45f60",
+    "blocks-06-07.aimodel/main.mlirb": "d2941449ccbcc1d6d3ed9c90e2d1eee1de70debf65be00ddf62de42cc60fc7b1",
+    "blocks-06-07.aimodel/metadata.json": "4a05403ad12e5adb48e86fc2a59cde59f2211bde260e01448b4118023aa30325",
+    "blocks-08-09.aimodel/main.hash": "b7406e15dcc4561daa4658e8491d4beaccce6219a2c2c8b81667dc91b31374f7",
+    "blocks-08-09.aimodel/main.mlirb": "1d4d9cfd93f9c92cc45de6549219cfc6e53336c700b16bfb69ab981276f63242",
+    "blocks-08-09.aimodel/metadata.json": "0778ee9ef57ea7a1f1a4569f1c0cfe23413a13e1050f9658396faa3d0fae1e2a",
+    "blocks-10-11.aimodel/main.hash": "24db09fa3774e1138002be166c39db8687b2908ba8ea50edcc6774d639cb1a55",
+    "blocks-10-11.aimodel/main.mlirb": "9156ada05dd61eeb8434269677b8466e85a85c3d7a4fadf52625bdc98f694d0f",
+    "blocks-10-11.aimodel/metadata.json": "ca60ea524dd0c2c4b12d9c96c5c9ff849fa0dc115b025afef875833591af5eae",
+    "blocks-12-13.aimodel/main.hash": "fc2a7f4328890f7004d966f453ef6205abdab9657f6b95404dede978cc324144",
+    "blocks-12-13.aimodel/main.mlirb": "63fa01bc92d13cd286013f9541b6eb0a3a8aa1e20e44eaf3b4894ee4d3cda525",
+    "blocks-12-13.aimodel/metadata.json": "fab6da54d04c37532af31fb16a2a99cf55365b83bf97f4048ec56b964b7fac28",
+    "blocks-14-15.aimodel/main.hash": "56a1627abafca386d48113f2eb95ca3e447ef4dd1e1e152de86ca0df9b4d1b7d",
+    "blocks-14-15.aimodel/main.mlirb": "263256506db4556b67e18e9bc3eba8dee7b49e7b3abd8e10a4fd9d2ce1c8fa1e",
+    "blocks-14-15.aimodel/metadata.json": "cdb63e4855a02437885d19bbe36ab6758f68322b02515f0e5429161d528a060d",
+    "blocks-16-17.aimodel/main.hash": "932c82e7ec6fc756f54cf4dcc5f9b8b64b7fee0b98173b65bfd3f3a87018333a",
+    "blocks-16-17.aimodel/main.mlirb": "d7375da4135312e58f029c11873011a6666a52e50958a6b936a9450cd9ca8bf9",
+    "blocks-16-17.aimodel/metadata.json": "8b637131c2f0062af6cafc590b9d53288f7af604ff252d0b41beb86f09468aac",
+    "blocks-18-19.aimodel/main.hash": "e3c16156f264b449847f783772167da4aba9754e2184b03fb6e1a19cd556778c",
+    "blocks-18-19.aimodel/main.mlirb": "28beab8b292ec734a206d68ffb41bb1158f9466dfd484889e501f7c61a6c401a",
+    "blocks-18-19.aimodel/metadata.json": "033e7ff4274fe777612969ea6ee2974424e4f5170cbb4566275b271426e26f5b",
+    "blocks-20-21.aimodel/main.hash": "24db208501a3e3a52c50aadcc658f31dfc4938565edf8880ab53bcd35d3fa614",
+    "blocks-20-21.aimodel/main.mlirb": "3e0dcceacd56146753a020908968c92a92efceb65dbbf87cacde38a4f5cef2f6",
+    "blocks-20-21.aimodel/metadata.json": "05b9ce100317a371b82ec2b70f2cd82b45e1cd2ca388b5ca765b130f9df99c19",
+    "blocks-22-23.aimodel/main.hash": "226633362e860f3662f1895f4b5f6b60496133ae0cabf825c4ec6822997e89e1",
+    "blocks-22-23.aimodel/main.mlirb": "1cc0a176882fc61faedb272384f0cbd978c25e7d207dc9ff64eb0e88910dabd0",
+    "blocks-22-23.aimodel/metadata.json": "8b56a400ffc71a4b9d44fd6876aba7e06eb418fea835eb11a1ad5014c2214313",
+    "condition.f32le": "397246108efedb5f6486d306c2fd00cafb60f0909764d3a2fe8a02dd4fc403ff",
+    "context.f32le": "d6a2f796806d470c608f597ed796ddec003917e8b574e9ec6e1bf30ec819dfbe",
+    "front.aimodel/main.hash": "e521165165714853c3d491740f37a3e417be28c037ddc34cd948dd5321a24042",
+    "front.aimodel/main.mlirb": "925cb5b060f3043c048e96a5f16de10fda5f060abad9b6bf23d675fcc665699a",
+    "front.aimodel/metadata.json": "a4cd858b6844fe674d394a3366e169e4ae34582c5cdf29276b0a061d222bcfaf",
+    "noise.f32le": "36b957ea048d809cd54eea8ad32f6641804eecb9c1e9438a8162f64fd1b02615",
+    "tail.aimodel/main.hash": "8f82dca8f6da6c9c2d0204a55e9c9d55bf6c4c6f5e0623613cbeffb897b30793",
+    "tail.aimodel/main.mlirb": "7b0e7d6925c94a2d834b0cf03ccb4211a3aac35cfaa26d02c5111c129d579b41",
+    "tail.aimodel/metadata.json": "f0332553a14340c48c5be31d3a5e8bdc20251585be1127f5685ca9eeed59d4b0",
+    "timestep.f32le": "d99e58435243d9fef9c88273b8d553b4fba4d0baf8009d29eae74fa99e0d9f57",
+    "timestep_r.f32le": "75e253f50979177eba47b2d0805ad36038789108924514d2a761a70de057d16f",
+    "velocity-fp32-reference.f32le": "bdc964e508b63911dff79d8a5948aa368b2f2dd0288066079f9d39bac3e4faa4",
+    "velocity-reference.f32le": "d9d23491d6d3f4519d9ad5a926025132e87f1a5b0d2bee1566c8e874dac35394"
+  },
+  "device_parity_verified": false,
+  "runtime_cache_eviction_guaranteed": false
+}

@@ -88,11 +88,11 @@ struct CoreAIDeviceProbeApp: App {
                             }
                         }
                         .disabled(runningModel)
-                        Button("Uji denoiser lengkap") {
+                        Button("Uji denoiser bertahap") {
                             runningModel = true
-                            report = "Memuat denoiser 24 layer untuk satu prediksi velocity…"
+                            report = "Menjalankan denoiser per bagian…"
                             Task {
-                                report = await CoreAIDecoderProbe.runDenoiser()
+                                report = await CoreAIDecoderProbe.runShardedDenoiser { text in self.report = text }
                                 runningModel = false
                             }
                         }

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "source": "User-reported Xcode exception and persisted partial report",
+    "independently_reproduced": false,
+    "source_commit": null
+  },
+  "runtime": "CoreAI",
+  "os": "Version 27.0.1 (Build 24A446)",
+  "architecture": "h18p",
+  "target": "iOS device build",
+  "error": "EXC_RESOURCE",
+  "resource_type": "RESOURCE_TYPE_MEMORY",
+  "diagnostic_thread_label": "llvm-worker-0",
+  "reported_limit_mb": 3376,
+  "last_persisted_phase": "loading/specializing complete model",
+  "source_asset_validation": true,
+  "source_asset_validation_ms": 1.24475,
+  "model_load_completed": null,
+  "inference_executed": null,
+  "numerical_parity": "not reported",
+  "user_observation": "App remained open but appeared hung",
+  "interpretation": "Reported resource limit is not total device RAM; thread label does not establish a separate worker process; debugger pause possible but not confirmed",
+  "disposition": "Monolithic device loading disabled; default preparation/caller use 14 sequential stages with a pre-stage process-footprint guard"
+}

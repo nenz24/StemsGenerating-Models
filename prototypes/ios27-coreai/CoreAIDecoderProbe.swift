@@ -46,6 +46,13 @@ enum CoreAIDecoderProbe {
     }
 
     private struct Contract: Decodable {
+        struct Stage: Decodable {
+            let assetFile: String
+            let layerIndices: [Int]
+            let inputShapes: [String: [Int]]
+            let outputShapes: [String: [Int]]
+            let outputBindings: [String: String]?
+        }
         struct Checkpoint: Decodable { let digest: String }
         let schemaVersion: Int
         let component: String?
@@ -64,6 +71,7 @@ enum CoreAIDecoderProbe {
         let layerCount: Int?
         let checkpointPrefix: String?
         let latentFrames: Int?
+        let stages: [Stage]?
         let weightStorageDtype: String?
         let computeDtype: String?
         let originalFp32ReferenceFile: String?
@@ -112,7 +120,155 @@ enum CoreAIDecoderProbe {
     }
 
     static func runDenoiser() async -> String {
-        await run(profile: .denoiser)
+        "Monolithic denoiser disabled after EXC_RESOURCE at loading/specializing (reported limit 3376 MB). Prepare and run Uji denoiser bertahap."
+    }
+
+    private enum ShardError: Error {
+        case invalidManifest, missingPreparedBundle, memoryBudgetReached, footprintUnavailable
+    }
+
+    static func runShardedDenoiser(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+                     "CoreAI architecture: \(AIModel.deviceArchitectureName)",
+                     "Test: COMPLETE 24-layer denoiser / 14 sequential assets / synthetic latents / NOT instrument generation",
+                     "Requested compute policy: cpuOnly; accelerator placement NOT MEASURED",
+                     "Execution: one forward; detached CPU copies between assets; native cache eviction NOT GUARANTEED",
+                     "Process footprint stop before next stage: 2000 MiB; not an OS peak-memory guarantee"]
+        #if targetEnvironment(simulator)
+        lines.append("Target: Simulator; not physical-device evidence")
+        #else
+        lines.append("Target: iOS device build")
+        #endif
+        let clock = ContinuousClock()
+        let start = clock.now
+        let memory = CoreAIProcessFootprintSampler()
+        var completed = 0
+        do {
+            guard let folder = Bundle.main.resourceURL?.appendingPathComponent("ModelCandidates/denoiser-sharded"),
+                  FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
+                lines.append("Prepare on Mac: bash scripts/prepare_coreai_denoiser.sh; rebuild app.")
+                throw ShardError.missingPreparedBundle
+            }
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let contract = try decoder.decode(Contract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
+            let pairInputs = ["hidden": [1,13,2048], "condition": [1,64,2048], "temb": [1,6,2048],
+                              "rope_cos": [1,13,128], "rope_sin": [1,13,128], "self_mask": [1,1,13,13],
+                              "local_mask": [1,1,13,13], "cross_mask": [1,1,13,64]]
+            var frontOutputs = pairInputs; frontOutputs.removeValue(forKey: "condition")
+            frontOutputs["condition_projected"] = [1,64,2048]; frontOutputs["final_temb"] = [1,2048]
+            var frontBindings: [String: String] = [:]
+            for name in frontOutputs.keys { frontBindings[name] = name == "condition_projected" ? "condition" : name }
+            let assets = ["front.aimodel"] + stride(from: 0, to: 24, by: 2).map {
+                String(format: "blocks-%02d-%02d.aimodel", $0, $0 + 1)
+            } + ["tail.aimodel"]
+            guard contract.schemaVersion == 1, contract.profile == "denoiser-sharded", contract.assetFile == "sharded-pipeline",
+                  contract.layerCount == 24, contract.outputName == "velocity", contract.outputShape == [1,25,64],
+                  contract.scalarType == "float32", contract.byteOrder == "little", contract.latentFrames == 25,
+                  contract.inputShapes == Profile.denoiser.inputShapes, contract.weightStorageDtype == "float16",
+                  contract.computeDtype == "float32", contract.originalFp32ReferenceFile == "velocity-fp32-reference.f32le",
+                  contract.checkpointFullSha256Verified, contract.checkpoint.digest == Profile.denoiser.checkpointDigest,
+                  contract.absoluteTolerance == 1e-4, contract.relativeTolerance == 1e-3, contract.relativeRmseTolerance == 1e-3,
+                  let stages = contract.stages, stages.count == 14, stages.map({ $0.assetFile }) == assets else {
+                throw ShardError.invalidManifest
+            }
+            for (index, stage) in stages.enumerated() {
+                if index == 0 {
+                    guard stage.layerIndices.isEmpty, stage.inputShapes == Profile.denoiser.inputShapes,
+                          stage.outputShapes == frontOutputs, stage.outputBindings == frontBindings else { throw ShardError.invalidManifest }
+                } else if index == 13 {
+                    guard stage.layerIndices.isEmpty, stage.inputShapes == ["hidden":[1,13,2048],"final_temb":[1,2048]],
+                          stage.outputShapes == ["velocity":[1,25,64]], stage.outputBindings == ["velocity":"velocity"] else { throw ShardError.invalidManifest }
+                } else {
+                    guard stage.layerIndices == [(index-1)*2,(index-1)*2+1], stage.inputShapes == pairInputs,
+                          stage.outputShapes == ["hidden_out":[1,13,2048]], stage.outputBindings == ["hidden_out":"hidden"] else { throw ShardError.invalidManifest }
+                }
+            }
+            var state: [String: NDArray] = [:]
+            for (name, shape) in Profile.denoiser.inputShapes {
+                let values = try readFloats(folder: folder, name: "\(name).f32le", count: shape.reduce(1,*), hashes: contract.artifactSha256)
+                state[name] = NDArray(scalars: values, shape: shape)
+            }
+            let expected = try readFloats(folder: folder, name: "velocity-reference.f32le", count: 1600, hashes: contract.artifactSha256)
+            let original = try readFloats(folder: folder, name: "velocity-fp32-reference.f32le", count: 1600, hashes: contract.artifactSha256)
+            lines.append("Reference binary SHA-256: VERIFIED; both FP32 references; all 24 layers in ordered pairs")
+            for (index, stage) in stages.enumerated() {
+                guard let footprint = CoreAIProcessFootprintSampler.currentFootprint() else { throw ShardError.footprintUnavailable }
+                lines.append("Before stage \(index+1)/14 footprint MiB: \(Double(footprint)/1048576)")
+                guard footprint < 2000 * 1048576 else { throw ShardError.memoryBudgetReached }
+                let phase = "Phase: stage \(index+1)/14 \(stage.assetFile) loading/running"
+                saveProgress(lines + [phase], profile: .denoiser)
+                await progress((lines + [phase]).joined(separator: "\n"))
+                var inputs: [String: NDArray] = [:]
+                for name in stage.inputShapes.keys { inputs[name] = state[name] }
+                let result = try await runDetachedStage(stage, folder: folder, inputs: inputs)
+                for (name, tensor) in result.values {
+                    guard let target = stage.outputBindings?[name] else { throw ShardError.invalidManifest }
+                    state[target] = tensor
+                }
+                completed += 1
+                lines.append("Stage \(completed)/14 \(stage.assetFile): load ms \(result.loadMs); run+detached-copy ms \(result.runMs)")
+                saveProgress(lines, profile: .denoiser)
+                await progress(lines.joined(separator: "\n"))
+                await Task.yield()
+            }
+            guard let output = state["velocity"] else { throw ProbeError.invalidOutputTensor }
+            let view = output.view(as: Float.self)
+            let actual = view.withUnsafePointer { pointer, _, _ in Array(UnsafeBufferPointer(start: pointer, count: 1600)) }
+            let stats = try compare(actual: actual, expected: expected, contract: contract)
+            let baseline = try compare(actual: actual, expected: original, contract: contract)
+            lines.append("Partition reference max abs error: \(stats.maxError); RMSE: \(stats.rmse); normalized RMSE: \(stats.normalizedRmse)")
+            lines.append("Original FP32 baseline max abs error: \(baseline.maxError); RMSE: \(baseline.rmse); normalized RMSE: \(baseline.normalizedRmse)")
+            guard stats.passed, baseline.passed else { throw ProbeError.numericalParityFailed }
+            lines.append("Sharded denoiser dual parity: PASS (one complete forward, all 24 layers)")
+        } catch {
+            lines.append("Sharded denoiser dual parity: NOT PASSED")
+            lines.append("Error: \(String(reflecting: error))")
+        }
+        let usage = memory.finish()
+        if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
+        lines.append("Completed stages: \(completed)/14; complete forward executed: \(completed == 14 ? "YES" : "NO"); total probe ms: \(ms(start.duration(to: clock.now)))")
+        lines.append("Memory scope: whole process; sampled, not exact peak; native cache behavior unverified")
+        saveProgress(lines, profile: .denoiser)
+        return lines.joined(separator: "\n")
+    }
+
+    // All model/function/output references stay inside this async scope. Fresh
+    // CPU-owned NDArrays cross its boundary, not model-backed output buffers.
+    private static func runDetachedStage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray]) async throws
+        -> (values: [String: NDArray], loadMs: Double, runMs: Double) {
+        let clock = ContinuousClock(); let loadStart = clock.now
+        let probe = try await CoreAIModelProbe(contentsOf: folder.appendingPathComponent(stage.assetFile), options: .cpuOnly)
+        let loadMs = ms(loadStart.duration(to: clock.now)); let runStart = clock.now
+        var outputs = try await probe.runStateless(functionNamed: "main", inputs: inputs)
+        var detached: [String: NDArray] = [:]
+        for (name, shape) in stage.outputShapes {
+            guard let value = outputs.remove(name), let tensor = value.ndArray, tensor.scalarType == .float32,
+                  tensor.shape == shape, tensor.interleaveLayout == nil else { throw ProbeError.invalidOutputTensor }
+            let view = tensor.view(as: Float.self)
+            let contiguous = view.isContiguous
+            let count = shape.reduce(1,*)
+            let values = try view.withUnsafePointer { pointer, _, strides in
+                if contiguous { return Array(UnsafeBufferPointer(start: pointer, count: count)) }
+                guard strides.count == shape.count else { throw ProbeError.invalidOutputTensor }
+                for axis in 0..<shape.count {
+                    guard strides[axis] >= 0 else { throw ProbeError.invalidOutputTensor }
+                }
+                var copied: [Float] = []; copied.reserveCapacity(count)
+                for index in 0..<count {
+                    var remaining = index; var offset = 0
+                    for axis in (0..<shape.count).reversed() {
+                        offset += (remaining % shape[axis]) * strides[axis]
+                        remaining /= shape[axis]
+                    }
+                    copied.append(pointer[offset])
+                }
+                return copied
+            }
+            guard values.allSatisfy({ $0.isFinite }) else { throw ProbeError.invalidOutputTensor }
+            detached[name] = NDArray(scalars: values, shape: shape)
+        }
+        return (detached, loadMs, ms(runStart.duration(to: clock.now)))
     }
 
     static func savedDenoiserReport() -> String? {
@@ -395,7 +551,7 @@ private final class CoreAIProcessFootprintSampler: @unchecked Sendable {
         if let value = Self.currentFootprint() { peak = max(peak ?? value, value) }
     }
 
-    private static func currentFootprint() -> UInt64? {
+    fileprivate static func currentFootprint() -> UInt64? {
         var info = task_vm_info_data_t()
         var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)
         let capacity = Int(count)

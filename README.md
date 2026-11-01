@@ -56,11 +56,15 @@ rata-rata dua run hangat 31,10 ms.
 [laporan iPhone](reviews/coreai-iphone17pro-pretrained-dit-storage16/README.md),
 dua run hangat rata-rata 32,46 ms. Footprint tersampel 638,2 MiB tidak menunjukkan
 penghematan RAM dibanding profil FP32 sebelumnya.
-**Uji berikutnya:** [denoiser lengkap 24 layer, satu velocity forward](docs/coreai-full-denoiser.md).
+**Denoiser monolitik mencapai limit memori saat loading/specializing:**
+[laporan perangkat](reviews/coreai-iphone17pro-full-denoiser-memory-failure/README.md).
+Jalur itu dinonaktifkan. [Uji denoiser bertahap](docs/coreai-full-denoiser.md)
+memakai 14 asset berurutan, masing-masing sekitar 252 MB atau kurang, dengan
+copy tensor CPU antar bagian dan guard footprint sebelum tahap berikutnya.
 Jalankan `bash scripts/prepare_coreai_denoiser.sh`, build ulang, lalu tekan
-**Uji denoiser lengkap**. Paket tambahan sekitar 3,15 GB, checkpoint cache dipakai
-ulang dan semua baseline disimpan. Ekspor penuh Linux berhasil; hasil iPhone
-masih menunggu. Belum ada loop diffusion atau audio instrumen yang dihasilkan.
+**Uji denoiser bertahap**. Checkpoint cache dipakai ulang; paket monolitik diarsipkan
+di luar resource aplikasi. Ekspor dan parity partisi Linux berhasil, hasil iPhone
+masih menunggu. Ini satu velocity forward, belum generasi instrumen lengkap.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:

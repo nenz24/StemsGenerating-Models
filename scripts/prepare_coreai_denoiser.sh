@@ -13,10 +13,11 @@ if command -v uv >/dev/null 2>&1; then
 else
     "$environment_dir/bin/python" -m pip install -r requirements-coreai-generator.txt
 fi
-bundle="$repo_root/prototypes/ios27-coreai/ModelCandidates/denoiser-pretrained"
+"$environment_dir/bin/python" scripts/export_coreai_denoiser_sharded.py --retire-monolith
+bundle="$repo_root/prototypes/ios27-coreai/ModelCandidates/denoiser-sharded"
 if [ -e "$bundle" ]; then
-    "$environment_dir/bin/python" scripts/export_coreai_denoiser.py --out "$bundle" --verify-only
+    "$environment_dir/bin/python" scripts/export_coreai_denoiser_sharded.py --out "$bundle" --verify-only
 else
-    "$environment_dir/bin/python" -u scripts/export_coreai_denoiser.py --out "$bundle"
+    "$environment_dir/bin/python" -u scripts/export_coreai_denoiser_sharded.py --out "$bundle"
 fi
-printf '\nReady: rebuild on iPhone, then tap Uji denoiser lengkap. This is one velocity forward, not instrument generation.\n'
+printf '\nReady: rebuild on iPhone, then tap Uji denoiser bertahap. Monolithic loading is disabled.\n'

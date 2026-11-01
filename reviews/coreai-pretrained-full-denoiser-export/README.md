@@ -49,3 +49,10 @@ total 6,301,835,520 bytes before activations/workspaces. FP16 file storage does
 not establish a runtime RAM reduction or that the whole pipeline fits. See
 [device steps](../../docs/coreai-full-denoiser.md) and the separate
 [two-block storage16 report](../coreai-iphone17pro-pretrained-dit-storage16/README.md).
+
+**Subsequent device evidence:** monolithic loading/specialization reached
+[a reported memory-resource limit](../coreai-iphone17pro-full-denoiser-memory-failure/README.md).
+No completed device inference/parity was reported. The default preparation now
+uses [14 ordered native assets](../coreai-sharded-denoiser-export/README.md);
+the monolithic device entry point is disabled and its old resource is preserved
+outside the app's copied resource tree.

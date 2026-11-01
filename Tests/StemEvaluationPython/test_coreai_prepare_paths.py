@@ -73,7 +73,7 @@ if sys.argv[1]=='venv':
                     storage_marker=candidates/'dit-storage16-pretrained/baseline-marker'
                     storage_marker.parent.mkdir(parents=True)
                     storage_marker.write_text('preserve storage16')
-                    bundle_name='denoiser-pretrained'
+                    bundle_name='denoiser-sharded'
             if reuse:
                 target = repo / '.runtime-cache/coreai-decoder-venv/bin/python';target.parent.mkdir(parents=True)
                 target.write_text(prefix + python_fixture);target.chmod(0o755)
@@ -95,8 +95,10 @@ if sys.argv[1]=='venv':
             calls = [json.loads(line) for line in log.read_text().splitlines()]
             self.assertEqual(sum(a[0]=='uv' and a[1][0]=='venv' for a in calls), 0 if reuse else 1)
             self.assertEqual(sum(a[0]=='uv' and a[1][:2]==['pip','install'] for a in calls), 2 if dit else 1)
-            python_args = next(a[1] for a in calls if a[0]=='python')
-            self.assertEqual(sum(a[0]=='python' for a in calls), 1)
+            python_calls=[a[1] for a in calls if a[0]=='python']
+            python_args=python_calls[-1]
+            self.assertEqual(len(python_calls),2 if denoiser else 1)
+            if denoiser:self.assertIn('--retire-monolith',python_calls[0])
             self.assertEqual('--verify-only' in python_args, reuse)
             if not dit:self.assertEqual(python_args[python_args.index('--frames') + 1], str(frames))
             self.assertEqual(Path(python_args[python_args.index('--out') + 1]),
@@ -105,13 +107,13 @@ if sys.argv[1]=='venv':
             if frames == 25:
                 self.assertEqual(baseline.read_text(), 'preserve 0.2 s baseline')
                 button = {'short':'Uji blok generator','context':'Uji DiT konteks panjang','storage16':'Uji bobot FP16'}[dit_profile] if dit else f'Uji {component} 1 detik'
-                if denoiser:button='Uji denoiser lengkap'
+                if denoiser:button='Uji denoiser bertahap'
                 self.assertIn(button, result.stdout)
             if component == 'encoder':
                 self.assertEqual(decoder_one_second.read_text(), 'preserve 1 s decoder')
             if dit:
                 self.assertEqual(encoder_marker.read_text(), 'preserve encoder')
-                self.assertIn('scripts/export_coreai_denoiser.py' if denoiser else 'scripts/export_coreai_dit_block.py', python_args)
+                self.assertIn('scripts/export_coreai_denoiser_sharded.py' if denoiser else 'scripts/export_coreai_dit_block.py', python_args)
                 if not denoiser:self.assertEqual(python_args[python_args.index('--profile') + 1], dit_profile)
                 if dit_profile != 'short':self.assertEqual(short_marker.read_text(), 'preserve short DiT block')
                 if dit_profile == 'storage16':self.assertEqual(context_marker.read_text(), 'preserve FP32 context')

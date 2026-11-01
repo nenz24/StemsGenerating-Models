@@ -207,15 +207,22 @@ menunjukkan penghematan RAM.
 
 ## Denoiser lengkap, satu forward
 
+Jalur monolitik gagal pada loading/specializing dengan `EXC_RESOURCE`, limit
+3376 MB, dan kini dinonaktifkan. Tekan Stop (■) jika Xcode paused pada exception.
 Jalankan `bash scripts/prepare_coreai_denoiser.sh`, build ulang, lalu tekan
-**Uji denoiser lengkap**. Semua 24 layer, input/time/condition/output projections
-dan pad/crop asli ikut berjalan pada 25 latent frame sintetis. Paket lokal baru
-sekitar 3,15 GB memakai FP16 stored weights/FP32 math, dengan dua referensi.
-Checkpoint Base dipakai ulang dan semua baseline tetap tersimpan.
+**Uji denoiser bertahap**. Semua 24 layer serta proyeksi/pad/crop asli dijalankan
+melalui 14 asset berurutan. Masing-masing asset sekitar 252 MB atau kurang;
+total paket sekitar 3,15 GB memakai FP16 stored weights/FP32 math.
+Checkpoint Base dipakai ulang. Paket monolitik disimpan di cache di luar folder
+resource aplikasi, dan keenam baseline komponen tetap tersedia.
 
 [Panduan denoiser lengkap](../../docs/coreai-full-denoiser.md) menjelaskan kontrak
 dan batas memorinya. Tahap validasi/load/inference disimpan secara best effort;
 setelah aplikasi dibuka ulang, laporan denoiser terakhir dapat muncul kembali.
-Laporan lama diberi label dan tidak otomatis menjalankan model. Ekspor Linux
-berhasil; build Swift terbaru, load/parity/latensi/memori iPhone masih menunggu.
+Laporan lama diberi label dan tidak otomatis menjalankan model. Output tiap
+bagian disalin menjadi tensor CPU mandiri sebelum scope model berakhir; cache
+internal CoreAI belum tentu dievikt. Guard berhenti sebelum bagian berikutnya
+jika footprint proses mencapai 2000 MiB, tanpa menjamin peak di dalam tahap.
+Ekspor dan parity seluruh partisi Linux berhasil; build Swift terbaru,
+load/parity/latensi/memori iPhone masih menunggu.
 Ini belum loop diffusion atau generasi pengiring dari piano.
