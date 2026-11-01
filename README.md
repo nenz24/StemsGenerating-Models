@@ -1,7 +1,13 @@
 # StemsGenerating-Models
 
 POC JupyterLab untuk membuat bass/drum pengiring dari audio memakai pretrained
-ACE-Step 1.5 Base. Model belum dilatih ulang atau dikonversi ke Core AI/iPhone.
+ACE-Step 1.5 Base. Model belum dilatih ulang atau dikonversi ke CoreAI/iPhone.
+
+**Target produk: seluruh inferensi lokal di iPhone / iOS 27 / CoreAI.** Rekaman
+piano menghasilkan gitar+bass+drum; rekaman gitar menghasilkan piano+bass+drum.
+Rekaman asli tetap disimpan. [Kebutuhan dan rancangan on-device](docs/iphone-coreai.md)
+memisahkan target produk dari eksperimen CUDA; dukungan SDK/model CoreAI belum
+diverifikasi dan belum ada implementasi iPhone di repository ini.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:

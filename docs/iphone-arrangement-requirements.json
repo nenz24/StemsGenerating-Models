@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "status": "confirmed_product_requirements_with_proposed_design",
+  "confirmed_requirements": {
+    "device_family": "iPhone",
+    "ios_target": "27",
+    "runtime_target": "CoreAI",
+    "all_inference_on_device": true,
+    "server_inference_allowed": false,
+    "preserve_recorded_track": true,
+    "initial_recorded_roles": ["piano", "guitar"],
+    "generated_roles_by_source": {
+      "piano": ["guitar", "bass", "drums"],
+      "guitar": ["piano", "bass", "drums"]
+    },
+    "output": "original recording plus three separate synchronized accompaniment tracks"
+  },
+  "proposed_design_not_yet_implemented": {
+    "source_role_selection": "user-selected",
+    "workflow_assumption": "record_then_generate",
+    "shared_arrangement_plan": true,
+    "candidate_model_family": "compact multi-instrument conditional audio generator",
+    "weight_reuse": true,
+    "generation_schedule_candidate": "sequential"
+  },
+  "unverified": {
+    "coreai_sdk_custom_audio_model_support": "not_verified",
+    "model_import_format_and_operators": "not_verified",
+    "accelerator_and_precision_support": "not_verified",
+    "minimum_iphone_model": null,
+    "ram_latency_thermal_budgets": null,
+    "model_conversion_training_and_device_benchmarks": "not implemented"
+  }
+}
