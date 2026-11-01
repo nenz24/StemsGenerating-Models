@@ -82,9 +82,12 @@ satu pasangan layer/fungsi tetap dimuat. [Panduan profiling](docs/coreai-loop-ti
 **Uji reuse satu pasangan layer PASS 4/4:**
 [laporan iPhone](reviews/coreai-iphone17pro-retained-pair/README.md), 1042,53 ms
 pertama versus rata-rata 8,52 ms pada run ulang. Rasio ini berlaku pada komponen.
-Uji kedua tahap 1 sudah disiapkan: **Uji loop 24 layer dengan reuse** menyimpan
-14 model/fungsi selama empat langkah dengan guard memori dan referensi yang sama.
-[Cara menjalankan](docs/coreai-retained-loop.md).
+**Uji kedua tahap 1 juga PASS:** [laporan full-loop reuse](reviews/coreai-iphone17pro-retained-loop/README.md),
+4/4 langkah, 56/56 tahap, 16 pembandingan dan 14 open / 14 bind / 42 reuse.
+Total 18,52 detik; langkah 3–4 sekitar 0,50 / 0,53 detik pada run ini.
+Kedua uji utama tahap 1 selesai untuk keputusan jalur prototipe: gunakan reuse
+model/fungsi selama sampling, lalu beralih ke conditioning rekaman. Kelayakan
+lagu panjang dan seluruh RAM model belum tervalidasi.
 [Empat tahap besar menuju generasi dari rekaman](docs/iphone-generation-roadmap.md)
 memisahkan pekerjaan eksekusi, conditioning, pipeline WAV pendek dan kualitas pengiring.
 Ini belum generasi instrumen lengkap.

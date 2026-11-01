@@ -30,5 +30,6 @@ under requested CPU-only policy.
 This completes the **first of two planned main stage-1 experiments** for this
 synthetic case. [The second experiment](../../docs/coreai-retained-loop.md) retains
 all 14 handles across the full four-step loop, loading lazily with footprint
-checks and unchanged references. It is prepared, not yet device-tested. No
-native model export is needed. Recording conditioning and music remain later work.
+checks and unchanged references. [The full-loop experiment now also passes](../coreai-iphone17pro-retained-loop/README.md),
+completing both planned main prototype stage-1 tests. No native model export is
+needed. Recording conditioning and music remain later work.

@@ -117,10 +117,10 @@
     "shared_scheme": "CoreAIProbe",
     "signing_team_selection": "Apple Team stored in ignored Signing.local.xcconfig; shared Debug/Release configurations include it",
     "apple_compilation_verified": true,
-    "apple_compilation_evidence": "User executed retained-pair caller successfully; full-loop retention change still needs Apple build/device test; no independent Apple SDK build on Linux",
+    "apple_compilation_evidence": "User executed full retained-loop caller successfully on iPhone; no independent Apple SDK compilation on Linux",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-retained-pair/report.json",
-    "device_execution_scope": "Retained pair first vs repeated calls PASS 4/4 against two host references; full-loop retention not yet measured; existing nonretained four-step loop passes",
+    "device_execution_report": "reviews/coreai-iphone17pro-retained-loop/report.json",
+    "device_execution_scope": "Full retained four-step denoiser loop PASS, all 24 layers/56 calls/16 reference checks, prototype retention route selected; real recording conditioning and WAV still unimplemented",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -425,7 +425,7 @@
     "stability_dual_parity_pass_count": 3,
     "latency_stability_verified": false,
     "long_run_memory_plateau_verified": false,
-    "next_gate": "Retained-pair component PASS; full four-step loop with all 14 model/function handles retained prepared, memory/time/parity pending device test"
+    "next_gate": "Stage 1 prototype route selected from two passing main tests; proceed to real recording/target conditioning, not another synthetic execution benchmark"
   },
   "pretrained_denoiser_loop_probe": {
     "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
@@ -477,7 +477,7 @@
     "device_total_loop_probe_ms": 53001.064667,
     "device_sampled_process_maximum_mib": 74.01760864257812,
     "first_manifest_failure_exact_field_confirmed": false,
-    "next_gate": "Retained-pair component PASS; full four-step loop with all 14 model/function handles retained prepared, memory/time/parity pending device test"
+    "next_gate": "Stage 1 prototype route selected from two passing main tests; proceed to real recording/target conditioning, not another synthetic execution benchmark"
   },
   "pretrained_denoiser_loop_timing_probe": {
     "source_files": [
@@ -525,7 +525,7 @@
     "backend_await_percent_of_completed_stage_time": 99.36218308679913,
     "pure_kernel_time_measured": false,
     "backend_initialization_vs_steady_state_cost_isolated": false,
-    "next_gate": "Retained-pair component PASS; full four-step loop with all 14 model/function handles retained prepared, memory/time/parity pending device test"
+    "next_gate": "Stage 1 prototype route selected from two passing main tests; proceed to real recording/target conditioning, not another synthetic execution benchmark"
   },
   "pretrained_pair_reuse_probe": {
     "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
@@ -559,7 +559,8 @@
     "device_report": "reviews/coreai-iphone17pro-retained-pair/report.json",
     "first_backend_await_ms": 1042.534584,
     "repeated_backend_await_mean_ms": 8.521180666666668,
-    "first_to_repeated_component_ratio": 122.34625984145701
+    "first_to_repeated_component_ratio": 122.34625984145701,
+    "next_gate": "Stage 1 prototype route selected from two passing main tests; proceed to real recording/target conditioning, not another synthetic execution benchmark"
   },
   "generation_roadmap": {
     "guide": "docs/iphone-generation-roadmap.md",
@@ -570,15 +571,19 @@
       "short sampling-to-WAV pipeline",
       "musical quality and three-instrument arrangement"
     ],
-    "current_major_stage": 1,
+    "current_major_stage": 2,
     "iteration_count_guaranteed": false,
     "production_full_song_and_thermal_work_follows": true,
     "stage1_planned_main_tests": {
       "retained_pair": "PASS 4/4 calls and all 8 reference checks; first 1042.53 ms, subsequent mean 8.52 ms",
-      "retained_full_loop": "Prepared; device memory/parity/time pending",
-      "stage1_complete": false,
-      "additional_alternative_tests_conditional_on_failure": true
-    }
+      "retained_full_loop": "PASS 4/4 steps, 56/56 stages, 16 reference checks; 14 opens, 14 binds, 42 hits; 18.522 s",
+      "stage1_complete": true,
+      "additional_alternative_tests_conditional_on_failure": true,
+      "completion_scope": "Prototype execution route decision for tested synthetic four-step shape/case, not production/long-song certification"
+    },
+    "selected_prototype_execution_route": "Separate native assets, retain model AND function lazily across denoising steps, copy outputs to fresh CPU NDArrays, release Swift pool before subsequent components",
+    "stage2_scope_doc": "docs/coreai-recording-conditioning.md",
+    "stage2_first_path": "piano recording -> electric bass, short clip, accepted CUDA preset as reference"
   },
   "pretrained_retained_denoiser_loop_probe": {
     "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
@@ -598,9 +603,29 @@
     "pre_stage_and_pre_backend_process_footprint_stop_mib": 2000,
     "in_stage_peak_bound_guaranteed": false,
     "new_model_export_required": false,
-    "new_swift_apple_build_verified": false,
-    "device_execution_verified": false,
-    "device_dual_parity_verified": false,
-    "full_loop_speedup_verified": false
+    "new_swift_apple_build_verified": true,
+    "device_execution_verified": true,
+    "device_dual_parity_verified": true,
+    "full_loop_speedup_verified": false,
+    "device_report": "reviews/coreai-iphone17pro-retained-loop/report.json",
+    "device_total_loop_probe_ms": 18521.768875,
+    "device_step_totals_ms": [
+      13427.741208,
+      3930.8716249999998,
+      502.560458,
+      526.3455
+    ],
+    "device_retention_counts": {
+      "model_opens": 14,
+      "function_binds": 14,
+      "cache_hits": 42,
+      "completed_calls": 56,
+      "cached_entries_before_release": 14
+    },
+    "device_sampled_process_maximum_mib": 174.27179718017578,
+    "device_memory_guard_triggered": false,
+    "selected_for_prototype": true,
+    "controlled_repeatable_speedup_verified": false,
+    "production_full_song_feasibility_verified": false
   }
 }

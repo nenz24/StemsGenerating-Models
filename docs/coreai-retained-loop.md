@@ -5,6 +5,13 @@ backend-await pertama 1042,53 ms dan rata-rata run ulang 8,52 ms. Uji berikutnya
 mempertahankan model/fungsi pada loop penuh. Rasio komponen 122× tidak berlaku
 otomatis untuk seluruh loop.
 
+**Hasil iPhone sudah PASS:** [laporan lengkap](../reviews/coreai-iphone17pro-retained-loop/README.md),
+4/4 langkah, 56/56 tahap, 16 pembandingan dan seluruh penghitung retention
+sesuai target. Total 18,52 detik; langkah 1–4 adalah 13,43 / 3,93 / 0,50 / 0,53
+detik. Guard tidak terpicu pada kasus ini. Kedua uji utama tahap 1 selesai untuk
+memilih jalur prototipe; pekerjaan berikutnya adalah conditioning rekaman.
+Tidak perlu mengulang uji ini untuk mencatat hasilnya.
+
 ```bash
 git pull --ff-only &&
 open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
@@ -51,6 +58,6 @@ untuk masuk conditioning rekaman. Jika guard menghentikan uji, proses gagal atau
 reuse tetap mahal, perlu keputusan alternatif yang spesifik. Keberhasilan satu
 pasangan layer saja belum cukup untuk menyelesaikan tahap 1.
 
-Kode baru masih perlu build dan pengujian di iPhone; workspace Linux tidak
-memiliki Apple SDK. Ini belum conditioning rekaman, waveform atau lagu panjang.
+Pengguna sudah membuild dan menjalankan mode ini di iPhone; workspace Linux
+tidak memiliki Apple SDK untuk kompilasi independen. Ini belum conditioning rekaman, waveform atau lagu panjang.
 Tombol loop lama tetap tersedia dengan model dilepas setelah setiap tahap.

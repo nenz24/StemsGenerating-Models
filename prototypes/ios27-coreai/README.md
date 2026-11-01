@@ -278,5 +278,7 @@ menyiapkan atau mengekspor model ulang. [Uji ini sudah PASS di iPhone](../../rev
 **Uji loop 24 layer dengan reuse** menyimpan setiap model/fungsi pada penggunaan
 pertama untuk dipakai lagi di langkah berikutnya. Targetnya 14 open, 14 bind,
 42 hit reuse, 56 call dan seluruh 16 pembandingan lolos. Footprint diperiksa
-sebelum setiap tahap dan backend. Tidak perlu ekspor baru; kode mode baru perlu
-build dan uji perangkat. [Panduan uji kedua](../../docs/coreai-retained-loop.md).
+sebelum setiap tahap dan backend. [Mode ini sudah PASS di iPhone](../../reviews/coreai-iphone17pro-retained-loop/README.md):
+18,52 detik total, langkah 3/4 sekitar 0,50/0,53 detik pada run itu.
+Kedua uji utama tahap 1 selesai untuk keputusan prototipe. Berikutnya conditioning
+rekaman; kelayakan lagu panjang tetap terbuka. [Panduan uji kedua](../../docs/coreai-retained-loop.md).
