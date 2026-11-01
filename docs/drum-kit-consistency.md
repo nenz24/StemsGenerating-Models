@@ -1,5 +1,19 @@
 # Drum-kit identity across independently generated contexts
 
+## Frozen full-song baseline
+
+The listener has now approved the complete notebook-17 output: "sudah bagus,
+simpan ini sebagai basline". The uploaded `drum_shared_kit_feedback.zip` is
+preserved in [`acoustic-drums-shared-kit-full-v1`](../baselines/acoustic-drums-shared-kit-full-v1/)
+with source, reference, per-chunk and export hashes. It covers 243.330625 seconds,
+reuses approved chunk 0 and reports the same reference for all three chunks.
+The original seam flags remain recorded; approval is the listener's assessment
+of this full song. Complete lossless exports/reference still require the Colab
+`drum_shared_kit_result.zip`, which has not been uploaded here.
+
+No additional drum tuning blocks a clean electric guitar probe. Other songs,
+the combined arrangement and offline iPhone/CoreAI remain separate validation.
+
 ## Approved comparison and full-song continuation
 
 The listener approved the chunk-0 reference-conditioned result as sufficiently
@@ -25,9 +39,9 @@ upload `drum_shared_kit_feedback.zip`. The latter includes actual per-chunk
 reports, before-stitch previews and seam excerpts. Consistent reference bytes
 do not by themselves prove consistent musical results; assess the finished song.
 
-Only the initial comparison has listener approval. Full-song reference-conditioned
-GPU execution and consistency are not yet validated on the chat machine. No
-independent kick replacement or EQ is part of this continuation.
+Both the initial comparison and the full-song continuation now have listener
+approval. GPU inference was performed in Colab; uploaded reports and previews
+are preserved here. No independent kick replacement or EQ is part of this run.
 
 ## Original candidate
 

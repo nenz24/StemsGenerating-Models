@@ -1,0 +1,140 @@
+{
+  "id": "acoustic-drums-shared-kit-full-v1",
+  "status": "listener_approved_full_song_baseline",
+  "listener_assessment_original": "sudah bagus, simpan ini sebagai basline",
+  "approval_recorded_on": "2026-11-01",
+  "approval_scope": "Complete shared-reference drum arrangement for this piano recording.",
+  "archive": {
+    "path": "drum_shared_kit_feedback.zip",
+    "sha256": "6e4a022dadcd59a43490121469585e3ff0d039d0c7f71ac2175c5fae28015cd7",
+    "bytes": 13778375
+  },
+  "workflow": "notebooks/17_colab_drum_shared_kit_song.ipynb",
+  "source_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "sample_rate": 32000,
+  "total_frames": 7786580,
+  "duration_seconds": 243.330625,
+  "preset": {
+    "id": "acoustic-drums-v1",
+    "model": "acestep-v15-base",
+    "device": "cuda",
+    "precision": "float32",
+    "instrument": "drums",
+    "seeds": [
+      0
+    ],
+    "guidance_scale": 7.0,
+    "inference_steps": 50,
+    "offload_to_cpu": true,
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments."
+  },
+  "context_cap_seconds": 90,
+  "margin_seconds": 6,
+  "fade_seconds": 0.58,
+  "shared_reference": {
+    "file": "shared_reference.wav",
+    "sha256": "275afb8a23a7fbcc1c06a8e72baa47a77149a2d6cb0f3a82214ebfe2e07b9c53"
+  },
+  "approved_chunk_0_reused": true,
+  "chunks": [
+    {
+      "index": 0,
+      "core_start": 0,
+      "core_end": 2660180,
+      "input_start": 0,
+      "input_end": 2852180,
+      "model_duration": 90,
+      "reported_stem_sha256": "a881a18704c322e8325a933345870f08174baa6b55bf4e5d942368fea4d20b8b"
+    },
+    {
+      "index": 1,
+      "core_start": 2660180,
+      "core_end": 5120980,
+      "input_start": 2468180,
+      "input_end": 5312980,
+      "model_duration": 89,
+      "reported_stem_sha256": "78c2422434fcd5b820201f91f6dafa1b1d21626e46c9da577aceb35a6b7af60d"
+    },
+    {
+      "index": 2,
+      "core_start": 5120980,
+      "core_end": 7786580,
+      "input_start": 4928980,
+      "input_end": 7786580,
+      "model_duration": 90,
+      "reported_stem_sha256": "c16e8e12f7c6c33e4bcfa7459586bd73aae9ee50f93a15ecddd63d1bab0ec1fb"
+    }
+  ],
+  "reported_full_stem_sha256": "8f790799364b8b9b039d71cdbac9719b5a4796c92d7ca7828732c6ec507cad4c",
+  "global_headroom_gain": 0.95,
+  "seam_diagnostics": {
+    "listener_approved": true,
+    "automatic_flags_retained": true,
+    "centers_seconds": [
+      84.030625,
+      159.580625
+    ],
+    "note": "Original manual-review flags remain in the archived report; listener approval does not rewrite signal diagnostics."
+  },
+  "preservation_scope": "Uploaded full-song MP3s, seam WAV excerpts and reports. Full lossless stem, raw chunk WAVs and reference WAV were not uploaded; retain drum_shared_kit_result.zip from Colab.",
+  "scope_limit": "One listener-approved song on CUDA FP32; no claim of generalization to other recordings or iPhone/CoreAI readiness.",
+  "next_instrument": "clean electric guitar",
+  "members": {
+    "plan.json": {
+      "bytes": 2027,
+      "sha256": "d2bbbc385f994a5cf2dd9bed88fe9dac2489c812483089afb1164a0740e87278"
+    },
+    "progress.json": {
+      "bytes": 99,
+      "sha256": "09e13b4fa78fb4d5457e44601e712aaf1c0b0cd22c51a20414e1a60dd9c2af35"
+    },
+    "approved_kit.json": {
+      "bytes": 500,
+      "sha256": "e3e99e5a6ddfd1b9d7a056280433078157762942457f6e1e6be23d5c9fe862be"
+    },
+    "stitched/chunk_000_before_stitch.mp3": {
+      "bytes": 194445,
+      "sha256": "eae5c47499ee55a8fc11a9148f3cbd3243446fef9ce343c63a0dfa8617201a57"
+    },
+    "stitched/chunk_001_before_stitch.mp3": {
+      "bytes": 194445,
+      "sha256": "d9628f708c0d6cb92db70b52d2ddae36ebd57ea8cd4699af4a3348d992eb4d39"
+    },
+    "stitched/chunk_002_before_stitch.mp3": {
+      "bytes": 194445,
+      "sha256": "93c3009408ea80b8f6e43b8a0d3ac502622f8488bb54bb0f6e0fe4b4d800a578"
+    },
+    "stitched/chunk_reports/000.json": {
+      "bytes": 11624,
+      "sha256": "1ecf41e4a93cf3df37ea679e4d3e7def62cf8c6293071c154e852399f0e002ec"
+    },
+    "stitched/chunk_reports/001.json": {
+      "bytes": 11518,
+      "sha256": "7df103cbbfa92ac671a655b877a67901eb7312f8dceaa9ebd96866312ee15da2"
+    },
+    "stitched/chunk_reports/002.json": {
+      "bytes": 11675,
+      "sha256": "a1189e5e3a1f416b16c1abb57482079c87ae9a9b06d1f2588b6ec8423ff3cc29"
+    },
+    "stitched/drums_full.mp3": {
+      "bytes": 5842413,
+      "sha256": "f0aa5bca43c13efb429c79236b40b8fc3094568c9d7110ca8831b8d67eaf55e7"
+    },
+    "stitched/mix_full.mp3": {
+      "bytes": 5842413,
+      "sha256": "5ae5f0a124938b3e999a18d394e69b4b879e6fe5eb9289cce334bb1ba70b68b5"
+    },
+    "stitched/seam_001.wav": {
+      "bytes": 1152044,
+      "sha256": "6c0c97c3d3d89edc63a18cdaea63d5dc2748fc27824c8a654a204c72d727899e"
+    },
+    "stitched/seam_002.wav": {
+      "bytes": 1152044,
+      "sha256": "4d1a1e62e0022c42b08c6751b9e7e8229c6c79a66886c97ad52d3090c91503e2"
+    },
+    "stitched/seams.json": {
+      "bytes": 2272,
+      "sha256": "4bb9d50aa9f0dd9f3132e94cf9879fcba1d13a9335e98c32fd6e6835383cb076"
+    }
+  }
+}

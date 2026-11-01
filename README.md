@@ -3,6 +3,11 @@
 POC JupyterLab untuk membuat bass/drum pengiring dari audio memakai pretrained
 ACE-Step 1.5 Base. Model belum dilatih ulang atau dikonversi ke CoreAI/iPhone.
 
+**Baseline drum seluruh lagu sudah disetujui.** Hasil 4:03 memakai chunk maksimal
+90 detik dengan referensi kit yang sama; arsip, parameter, dan hash disimpan di
+[`acoustic-drums-shared-kit-full-v1`](baselines/acoustic-drums-shared-kit-full-v1/).
+Tahap berikutnya adalah uji gitar elektrik clean yang mengiringi piano.
+
 **Target produk: seluruh inferensi lokal di iPhone / iOS 27 / CoreAI.** Rekaman
 piano menghasilkan gitar+bass+drum; rekaman gitar menghasilkan piano+bass+drum.
 Rekaman asli tetap disimpan. [Kebutuhan dan rancangan on-device](docs/iphone-coreai.md)
