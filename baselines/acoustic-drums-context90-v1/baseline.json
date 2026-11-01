@@ -1,0 +1,63 @@
+{
+  "id": "acoustic-drums-context90-v1",
+  "status": "useful_candidate_with_timbre_drift_not_final_unified_kit",
+  "archive": {
+    "path": "drum_chunked_feedback.zip",
+    "sha256": "e52b539bc715d0db9bf1181e33bb33c43b2ee592c09580b63d6332667eed326a",
+    "bytes": 14007969
+  },
+  "original_source_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "preset": {
+    "id": "acoustic-drums-v1",
+    "model": "acestep-v15-base",
+    "device": "cuda",
+    "precision": "float32",
+    "instrument": "drums",
+    "seeds": [
+      0
+    ],
+    "guidance_scale": 7.0,
+    "inference_steps": 50,
+    "offload_to_cpu": true,
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments."
+  },
+  "context_cap_seconds": 90,
+  "model_durations": [
+    90,
+    89,
+    90
+  ],
+  "margin_seconds": 6,
+  "fade_seconds": 0.58,
+  "index_convention": "zero-based, matching chunk_000/001/002",
+  "listener_observations": {
+    "overall": "Reasonably good; drum sound changes across chunks 0, 1, 2.",
+    "preferred_overall_kit": "chunk 1, lighter character",
+    "preferred_kick": [
+      "chunk 0",
+      "chunk 2"
+    ],
+    "bass_term_clarified_as": "kick / bass drum, not bass guitar"
+  },
+  "target_for_next_experiment": {
+    "kit_character_reference_chunk": 1,
+    "kick_character_reference_chunks": [
+      0,
+      2
+    ],
+    "preserve_timing_and_groove": true,
+    "status": "preference recorded; no composite kit or reference-conditioned audio generated"
+  },
+  "provenance": {
+    "all_actual_captions_seeds_cfg_steps_match": true,
+    "all_model_input_hashes_reproduced": true,
+    "actual_reference_audio_parameter": null,
+    "raw_generated_chunk_wavs_available_in_upload": false
+  },
+  "next_controlled_test": "Evaluate shared reference from chunk 1 on one existing piano chunk with other settings fixed, before any full-song regeneration. Reference conditioning effectiveness and a stronger kick remain unvalidated.",
+  "limitations": [
+    "Feedback contains MP3s and seam WAV excerpts, not full raw generated chunk WAVs.",
+    "Same seed and caption do not establish identical drum-kit identity for different source contexts.",
+    "EQ or crossfades do not replace/lock individual kit pieces; kick is not isolated from snare/hats in these outputs."
+  ]
+}

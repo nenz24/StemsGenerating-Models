@@ -1,0 +1,45 @@
+{
+  "source_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "all_generation_presets_match": true,
+  "decoded_frames": 7786580,
+  "decoded_peak": 0.916296660900116,
+  "regions": [
+    {
+      "chunk": 0,
+      "measurement_start_seconds": 0,
+      "measurement_end_seconds": 79.090625,
+      "rms_dbfs": -16.429758064210144,
+      "relative_band_power": {
+        "sub_low": 0.8823112884488462,
+        "body": 0.11025701702803586,
+        "mid": 0.0036480810179310846,
+        "high": 0.0037836135051866272
+      }
+    },
+    {
+      "chunk": 1,
+      "measurement_start_seconds": 85.670625,
+      "measurement_end_seconds": 157.190625,
+      "rms_dbfs": -23.816227569797217,
+      "relative_band_power": {
+        "sub_low": 0.8261333731628568,
+        "body": 0.04927217066541965,
+        "mid": 0.10003122317785769,
+        "high": 0.02456323299386574
+      }
+    },
+    {
+      "chunk": 2,
+      "measurement_start_seconds": 163.770625,
+      "measurement_end_seconds": 243.330625,
+      "rms_dbfs": -20.32509586220135,
+      "relative_band_power": {
+        "sub_low": 0.48132566512681163,
+        "body": 0.46675049970815186,
+        "mid": 0.027776107514091992,
+        "high": 0.024147727650944407
+      }
+    }
+  ],
+  "interpretation": "Different musical sections/arrangements affect spectra. These measurements describe tonal energy, not proof of kit identity or a noise percentage. No kick separation or timbre processing applied."
+}

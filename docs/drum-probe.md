@@ -1,5 +1,11 @@
 # Acoustic drum probe
 
+The uploaded 90-second chunk candidate is now preserved in
+`baselines/acoustic-drums-context90-v1/`. The listener prefers chunk 1's lighter
+kit and chunks 0/2's kick. [Kit-consistency review](drum-kit-consistency.md)
+records this preference and a proposed reference-conditioning control test;
+no unified-kit result has been generated yet.
+
 ## 90-second contexts followed by stitching
 
 Notebook 15 is the listener-requested controlled alternative to the rejected
