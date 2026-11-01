@@ -5,6 +5,11 @@ menjalankan empat prediksi velocity berurutan dan memperbarui latent, sehingga
 setiap langkah menerima hasil aktual langkah sebelumnya. Input tetap sintetis;
 ini belum menghasilkan pengiring dari rekaman piano atau audio instrumen.
 
+**Hasil terbaru sudah PASS di iPhone:** [laporan lengkap](../reviews/coreai-iphone17pro-denoiser-loop/README.md).
+Seluruh 4/4 langkah, 56/56 tahap dan 16 pembandingan lolos. Total 53,00 detik;
+normalized RMSE latent akhir terhadap FP32 asli `7,0143e-6`. Tidak perlu mengulang
+uji yang sama untuk mencatat hasil ini. Instruksi berikut tersedia untuk reproduksi.
+
 ## Jalankan
 
 Untuk iPhone yang sudah berhasil menjalankan 14 asset denoiser:
@@ -63,10 +68,19 @@ model/perangkat dan peak di antara sampel 10 ms tetap belum diukur.
 [Referensi host sudah PASS](../reviews/coreai-four-step-denoiser-loop/README.md).
 Percobaan perangkat pertama [berhenti saat validasi manifest, 0/56 tahap](../reviews/coreai-iphone17pro-denoiser-loop-manifest-failure/README.md).
 Field penyebabnya belum diketahui dari pesan generik lama. Paket input mandiri
-dan diagnostik field disiapkan untuk percobaan berikutnya, tanpa mengubah referensi.
-Kode Swift baru belum dikompilasi dengan Apple SDK di workspace Linux; hasil
-CoreAI empat langkah perlu diuji di iPhone. Ini bukan pengujian kualitas musik,
+dan diagnostik field kemudian berhasil melewati validasi dan seluruh loop di
+iPhone, tanpa mengubah referensi. Build/eksekusi itu dilaporkan pengguna;
+workspace Linux tidak menyediakan Apple SDK untuk kompilasi independen.
+Ini bukan pengujian kualitas musik,
 CFG, conditioning dari rekaman, atau jaminan stabil untuk lagu 90 detik.
+
+Pada laporan PASS, seluruh 48 pasangan layer memerlukan sekitar 1,01–1,14 detik
+per interval run+copy. Constructor model hanya sekitar 1,6–1,9 ms pada kebanyakan
+tahap. Interval run+copy juga memuat binding fungsi dan validasi, sehingga belum
+diketahui apakah biaya utamanya berasal dari binding, backend, paging atau copy.
+Tahap berikutnya adalah memisahkan pengukuran tersebut sebelum memilih optimisasi;
+instrumentasi itu belum dibuat dalam pembaruan laporan ini. Footprint maksimum
+tersampel 74,02 MiB tetap bukan seluruh RAM model/perangkat.
 
 Untuk audit ulang referensi yang sudah ikut repository, tanpa model/bobot:
 

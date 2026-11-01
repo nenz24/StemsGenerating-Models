@@ -87,9 +87,11 @@ sama atau menyiapkan bobot ulang untuk mengesahkan hasil ini.
 
 Gate berikutnya sudah disiapkan: [loop denoising empat langkah](coreai-denoiser-loop.md)
 memakai latent hasil sebelumnya dan jadwal/update ACE yang dipin. Referensi host
-lolos pembandingan FP32; hasil CoreAI di iPhone masih menunggu. Referensi kecil
-ikut GitHub, sehingga cukup pull dan build tanpa ekspor model ulang, lalu tekan
-**Uji loop denoising 4 langkah**. Conditioning piano/teks dan waveform menyusul.
+lolos pembandingan FP32. [Hasil CoreAI di iPhone kini juga PASS](../reviews/coreai-iphone17pro-denoiser-loop/README.md):
+4/4 langkah, 56/56 tahap dan 16 pembandingan lolos, total 53,00 detik. Referensi
+dan input uji ikut GitHub tanpa ekspor model ulang. Pengukuran biaya binding
+fungsi versus eksekusi/copy menjadi langkah berikutnya. Conditioning piano/teks
+dan waveform menyusul.
 
 ## Cakupan dan pembandingan
 

@@ -248,5 +248,9 @@ ada. Referensi kecil di `ModelCandidates/denoiser-loop-4/` ikut GitHub.
 Jadwal `1 → 0,75 → 0,5 → 0,25 → 0`, Euler ODE, guidance=1, shift=1, timestep_r=timestep.
 Setiap langkah memakai latent hasil aktual langkah sebelumnya dan memeriksa
 velocity serta latent terhadap kedua referensi. Harus selesai 4/4 langkah dan
-56/56 tahap. Referensi host lolos; kode Swift baru perlu build dan pengujian
-CoreAI di iPhone. [Panduan dan batas pengujian](../../docs/coreai-denoiser-loop.md).
+56/56 tahap. [Hasil iPhone sudah PASS](../../reviews/coreai-iphone17pro-denoiser-loop/README.md):
+seluruh 16 pembandingan lolos, total 53,00 detik, normalized RMSE latent akhir
+terhadap FP32 asli `7,0143e-6`. Mayoritas biaya ada di interval run+copy pasangan
+layer; interval itu juga mencakup binding fungsi, sehingga penyebab waktunya
+belum terisolasi. Pengukuran fase tersebut menjadi langkah berikutnya.
+[Panduan dan batas pengujian](../../docs/coreai-denoiser-loop.md).

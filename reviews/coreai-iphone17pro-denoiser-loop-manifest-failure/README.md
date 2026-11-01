@@ -1,5 +1,8 @@
 # Initial four-step device attempt: manifest validation failed
 
+Subsequent evidence: [the schema-v2 caller completes the loop with dual parity PASS](../coreai-iphone17pro-denoiser-loop/README.md).
+The initial failure below remains preserved; its exact failed field is unknown.
+
 The [user-supplied report](report.txt) shows `ShardError.invalidManifest`, zero
 completed steps/stages and a total of 23.277916 ms. It contains no stage-loading
 phase or model execution. This is a validation failure before inference, not a
@@ -26,5 +29,6 @@ cache deletion, checkpoint download or new random case is needed.
 
 Every sharded/loop manifest value check now names its field and expected/actual
 values. This preserves rejection of incompatible/corrupt inputs and makes any
-remaining validation failure actionable. The v2 caller still requires an Apple
-SDK build and a new device run. See [updated instructions](../../docs/coreai-denoiser-loop.md).
+remaining validation failure actionable. The later linked report provides user
+evidence of its Apple build and successful device execution. See
+[updated instructions](../../docs/coreai-denoiser-loop.md).

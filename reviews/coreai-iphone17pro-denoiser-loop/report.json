@@ -1,0 +1,593 @@
+{
+  "schema_version": 1,
+  "evidence_source": "User-uploaded physical-device report; not independently executed on Linux",
+  "reported_device": "iPhone 17 Pro",
+  "os": "27.0.1 (24A446)",
+  "architecture": "h18p",
+  "runtime": "CoreAI",
+  "raw_report": "report.txt",
+  "raw_report_sha256": "53b375eaeb478934d83598b0387e7123d5ab1d0ff1cc188f3814f9882ca4c50a",
+  "requested_compute_policy": "cpuOnly",
+  "accelerator_placement_measured": false,
+  "scope": "One four-step synthetic feedback Euler loop, 24 layers / 14 assets per step; shift=1 guidance=1 timestep_r=timestep; no CFG, KV cache, recording conditioning or waveform generation",
+  "fixture_schema_version_inferred_from_caller": 2,
+  "fixture_hash_validation_reported": true,
+  "exact_asset_hashes_emitted": false,
+  "source_commit_emitted": false,
+  "steps": [
+    {
+      "step": 1,
+      "timestep": 1.0,
+      "next_timestep": 0.75,
+      "timestep_r": 1.0,
+      "completed_stages": 14,
+      "dual_velocity_and_latent_parity_passed": true,
+      "total_step_ms": 13406.313916,
+      "comparisons": {
+        "velocity_partition": {
+          "max_absolute_error": 2.5987625122070312e-05,
+          "rmse": 6.387478908186318e-06,
+          "normalized_rmse": 4.9129423959675265e-06,
+          "parity_passed": true
+        },
+        "velocity_original_fp32": {
+          "max_absolute_error": 5.894899368286133e-05,
+          "rmse": 1.5138293638407116e-05,
+          "normalized_rmse": 1.1643638744707437e-05,
+          "parity_passed": true
+        },
+        "latent_partition": {
+          "max_absolute_error": 6.496906280517578e-06,
+          "rmse": 1.5974237998387752e-06,
+          "normalized_rmse": 1.5993086268284254e-06,
+          "parity_passed": true
+        },
+        "latent_original_fp32": {
+          "max_absolute_error": 1.4781951904296875e-05,
+          "rmse": 3.7856202365884083e-06,
+          "normalized_rmse": 3.7900929353837417e-06,
+          "parity_passed": true
+        }
+      },
+      "stages": [
+        {
+          "stage": 1,
+          "asset": "front.aimodel",
+          "load_ms": 4.320375,
+          "run_and_detached_copy_ms": 322.87275,
+          "before_process_footprint_mib": 21.423629760742188
+        },
+        {
+          "stage": 2,
+          "asset": "blocks-00-01.aimodel",
+          "load_ms": 1.648,
+          "run_and_detached_copy_ms": 1070.594375,
+          "before_process_footprint_mib": 22.40802764892578
+        },
+        {
+          "stage": 3,
+          "asset": "blocks-02-03.aimodel",
+          "load_ms": 1.598208,
+          "run_and_detached_copy_ms": 1057.945666,
+          "before_process_footprint_mib": 22.26740264892578
+        },
+        {
+          "stage": 4,
+          "asset": "blocks-04-05.aimodel",
+          "load_ms": 1.629167,
+          "run_and_detached_copy_ms": 1075.102833,
+          "before_process_footprint_mib": 21.73615264892578
+        },
+        {
+          "stage": 5,
+          "asset": "blocks-06-07.aimodel",
+          "load_ms": 1.580125,
+          "run_and_detached_copy_ms": 1058.896625,
+          "before_process_footprint_mib": 21.98615264892578
+        },
+        {
+          "stage": 6,
+          "asset": "blocks-08-09.aimodel",
+          "load_ms": 1.603167,
+          "run_and_detached_copy_ms": 1075.747209,
+          "before_process_footprint_mib": 22.23615264892578
+        },
+        {
+          "stage": 7,
+          "asset": "blocks-10-11.aimodel",
+          "load_ms": 1.620333,
+          "run_and_detached_copy_ms": 1129.984625,
+          "before_process_footprint_mib": 22.37677764892578
+        },
+        {
+          "stage": 8,
+          "asset": "blocks-12-13.aimodel",
+          "load_ms": 1.809125,
+          "run_and_detached_copy_ms": 1143.875916,
+          "before_process_footprint_mib": 22.595550537109375
+        },
+        {
+          "stage": 9,
+          "asset": "blocks-14-15.aimodel",
+          "load_ms": 1.947333,
+          "run_and_detached_copy_ms": 1118.460542,
+          "before_process_footprint_mib": 22.876800537109375
+        },
+        {
+          "stage": 10,
+          "asset": "blocks-16-17.aimodel",
+          "load_ms": 1.912417,
+          "run_and_detached_copy_ms": 1082.9609580000001,
+          "before_process_footprint_mib": 23.126800537109375
+        },
+        {
+          "stage": 11,
+          "asset": "blocks-18-19.aimodel",
+          "load_ms": 1.8485,
+          "run_and_detached_copy_ms": 1074.087375,
+          "before_process_footprint_mib": 23.376800537109375
+        },
+        {
+          "stage": 12,
+          "asset": "blocks-20-21.aimodel",
+          "load_ms": 1.793958,
+          "run_and_detached_copy_ms": 1099.472875,
+          "before_process_footprint_mib": 23.658050537109375
+        },
+        {
+          "stage": 13,
+          "asset": "blocks-22-23.aimodel",
+          "load_ms": 1.764542,
+          "run_and_detached_copy_ms": 1019.590208,
+          "before_process_footprint_mib": 23.908050537109375
+        },
+        {
+          "stage": 14,
+          "asset": "tail.aimodel",
+          "load_ms": 1.682625,
+          "run_and_detached_copy_ms": 2.512833,
+          "before_process_footprint_mib": 28.376800537109375
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "timestep": 0.75,
+      "next_timestep": 0.5,
+      "timestep_r": 0.75,
+      "completed_stages": 14,
+      "dual_velocity_and_latent_parity_passed": true,
+      "total_step_ms": 13360.312459,
+      "comparisons": {
+        "velocity_partition": {
+          "max_absolute_error": 3.0040740966796875e-05,
+          "rmse": 6.791075465845882e-06,
+          "normalized_rmse": 4.697934369535394e-06,
+          "parity_passed": true
+        },
+        "velocity_original_fp32": {
+          "max_absolute_error": 5.555152893066406e-05,
+          "rmse": 1.3712388720968981e-05,
+          "normalized_rmse": 9.485983910342884e-06,
+          "parity_passed": true
+        },
+        "latent_partition": {
+          "max_absolute_error": 1.0192394256591797e-05,
+          "rmse": 2.701563184092372e-06,
+          "normalized_rmse": 2.0713861063673776e-06,
+          "parity_passed": true
+        },
+        "latent_original_fp32": {
+          "max_absolute_error": 2.5272369384765625e-05,
+          "rmse": 6.420954538992525e-06,
+          "normalized_rmse": 4.923189054341582e-06,
+          "parity_passed": true
+        }
+      },
+      "stages": [
+        {
+          "stage": 1,
+          "asset": "front.aimodel",
+          "load_ms": 1.76375,
+          "run_and_detached_copy_ms": 261.664375,
+          "before_process_footprint_mib": 32.033050537109375
+        },
+        {
+          "stage": 2,
+          "asset": "blocks-00-01.aimodel",
+          "load_ms": 1.86425,
+          "run_and_detached_copy_ms": 1044.093791,
+          "before_process_footprint_mib": 30.548675537109375
+        },
+        {
+          "stage": 3,
+          "asset": "blocks-02-03.aimodel",
+          "load_ms": 1.76,
+          "run_and_detached_copy_ms": 1051.738792,
+          "before_process_footprint_mib": 32.095550537109375
+        },
+        {
+          "stage": 4,
+          "asset": "blocks-04-05.aimodel",
+          "load_ms": 1.8815,
+          "run_and_detached_copy_ms": 1100.057167,
+          "before_process_footprint_mib": 26.314300537109375
+        },
+        {
+          "stage": 5,
+          "asset": "blocks-06-07.aimodel",
+          "load_ms": 1.767125,
+          "run_and_detached_copy_ms": 1087.698333,
+          "before_process_footprint_mib": 26.611175537109375
+        },
+        {
+          "stage": 6,
+          "asset": "blocks-08-09.aimodel",
+          "load_ms": 1.725,
+          "run_and_detached_copy_ms": 1072.999958,
+          "before_process_footprint_mib": 26.829925537109375
+        },
+        {
+          "stage": 7,
+          "asset": "blocks-10-11.aimodel",
+          "load_ms": 1.777333,
+          "run_and_detached_copy_ms": 1049.294958,
+          "before_process_footprint_mib": 27.189300537109375
+        },
+        {
+          "stage": 8,
+          "asset": "blocks-12-13.aimodel",
+          "load_ms": 1.783458,
+          "run_and_detached_copy_ms": 1109.599625,
+          "before_process_footprint_mib": 27.454925537109375
+        },
+        {
+          "stage": 9,
+          "asset": "blocks-14-15.aimodel",
+          "load_ms": 1.75775,
+          "run_and_detached_copy_ms": 1082.340416,
+          "before_process_footprint_mib": 27.704925537109375
+        },
+        {
+          "stage": 10,
+          "asset": "blocks-16-17.aimodel",
+          "load_ms": 1.779625,
+          "run_and_detached_copy_ms": 1113.063,
+          "before_process_footprint_mib": 27.939300537109375
+        },
+        {
+          "stage": 11,
+          "asset": "blocks-18-19.aimodel",
+          "load_ms": 1.767042,
+          "run_and_detached_copy_ms": 1121.278708,
+          "before_process_footprint_mib": 28.267425537109375
+        },
+        {
+          "stage": 12,
+          "asset": "blocks-20-21.aimodel",
+          "load_ms": 1.748625,
+          "run_and_detached_copy_ms": 1097.920083,
+          "before_process_footprint_mib": 28.533050537109375
+        },
+        {
+          "stage": 13,
+          "asset": "blocks-22-23.aimodel",
+          "load_ms": 1.799,
+          "run_and_detached_copy_ms": 1078.271708,
+          "before_process_footprint_mib": 28.658050537109375
+        },
+        {
+          "stage": 14,
+          "asset": "tail.aimodel",
+          "load_ms": 1.770334,
+          "run_and_detached_copy_ms": 2.608333,
+          "before_process_footprint_mib": 29.033050537109375
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "timestep": 0.5,
+      "next_timestep": 0.25,
+      "timestep_r": 0.5,
+      "completed_stages": 14,
+      "dual_velocity_and_latent_parity_passed": true,
+      "total_step_ms": 13112.8025,
+      "comparisons": {
+        "velocity_partition": {
+          "max_absolute_error": 3.337860107421875e-05,
+          "rmse": 7.861121064529939e-06,
+          "normalized_rmse": 4.902968003233772e-06,
+          "parity_passed": true
+        },
+        "velocity_original_fp32": {
+          "max_absolute_error": 0.00017407536506652832,
+          "rmse": 3.886561016235919e-05,
+          "normalized_rmse": 2.424035500777915e-05,
+          "parity_passed": true
+        },
+        "latent_partition": {
+          "max_absolute_error": 1.633167266845703e-05,
+          "rmse": 3.903720417501994e-06,
+          "normalized_rmse": 2.3226428990409264e-06,
+          "parity_passed": true
+        },
+        "latent_original_fp32": {
+          "max_absolute_error": 4.1484832763671875e-05,
+          "rmse": 1.1855732858823736e-05,
+          "normalized_rmse": 7.053953698218171e-06,
+          "parity_passed": true
+        }
+      },
+      "stages": [
+        {
+          "stage": 1,
+          "asset": "front.aimodel",
+          "load_ms": 1.717666,
+          "run_and_detached_copy_ms": 265.112958,
+          "before_process_footprint_mib": 36.704925537109375
+        },
+        {
+          "stage": 2,
+          "asset": "blocks-00-01.aimodel",
+          "load_ms": 1.757125,
+          "run_and_detached_copy_ms": 1045.468042,
+          "before_process_footprint_mib": 48.361175537109375
+        },
+        {
+          "stage": 3,
+          "asset": "blocks-02-03.aimodel",
+          "load_ms": 1.791375,
+          "run_and_detached_copy_ms": 1036.011042,
+          "before_process_footprint_mib": 31.142425537109375
+        },
+        {
+          "stage": 4,
+          "asset": "blocks-04-05.aimodel",
+          "load_ms": 1.787333,
+          "run_and_detached_copy_ms": 1067.74475,
+          "before_process_footprint_mib": 31.204925537109375
+        },
+        {
+          "stage": 5,
+          "asset": "blocks-06-07.aimodel",
+          "load_ms": 1.788666,
+          "run_and_detached_copy_ms": 1094.335459,
+          "before_process_footprint_mib": 31.564300537109375
+        },
+        {
+          "stage": 6,
+          "asset": "blocks-08-09.aimodel",
+          "load_ms": 1.719917,
+          "run_and_detached_copy_ms": 1086.224458,
+          "before_process_footprint_mib": 31.564300537109375
+        },
+        {
+          "stage": 7,
+          "asset": "blocks-10-11.aimodel",
+          "load_ms": 1.795042,
+          "run_and_detached_copy_ms": 1063.076292,
+          "before_process_footprint_mib": 31.751800537109375
+        },
+        {
+          "stage": 8,
+          "asset": "blocks-12-13.aimodel",
+          "load_ms": 1.790209,
+          "run_and_detached_copy_ms": 1073.719167,
+          "before_process_footprint_mib": 32.111175537109375
+        },
+        {
+          "stage": 9,
+          "asset": "blocks-14-15.aimodel",
+          "load_ms": 1.799,
+          "run_and_detached_copy_ms": 1056.371041,
+          "before_process_footprint_mib": 32.376800537109375
+        },
+        {
+          "stage": 10,
+          "asset": "blocks-16-17.aimodel",
+          "load_ms": 1.812083,
+          "run_and_detached_copy_ms": 1057.483375,
+          "before_process_footprint_mib": 32.642425537109375
+        },
+        {
+          "stage": 11,
+          "asset": "blocks-18-19.aimodel",
+          "load_ms": 1.794209,
+          "run_and_detached_copy_ms": 1035.94075,
+          "before_process_footprint_mib": 32.908050537109375
+        },
+        {
+          "stage": 12,
+          "asset": "blocks-20-21.aimodel",
+          "load_ms": 1.792416,
+          "run_and_detached_copy_ms": 1055.17075,
+          "before_process_footprint_mib": 33.158050537109375
+        },
+        {
+          "stage": 13,
+          "asset": "blocks-22-23.aimodel",
+          "load_ms": 1.805875,
+          "run_and_detached_copy_ms": 1033.071125,
+          "before_process_footprint_mib": 33.454925537109375
+        },
+        {
+          "stage": 14,
+          "asset": "tail.aimodel",
+          "load_ms": 1.819542,
+          "run_and_detached_copy_ms": 1.641167,
+          "before_process_footprint_mib": 33.736175537109375
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "timestep": 0.25,
+      "next_timestep": 0.0,
+      "timestep_r": 0.25,
+      "completed_stages": 14,
+      "dual_velocity_and_latent_parity_passed": true,
+      "total_step_ms": 13030.97375,
+      "comparisons": {
+        "velocity_partition": {
+          "max_absolute_error": 4.649162292480469e-06,
+          "rmse": 1.0732778236593032e-06,
+          "normalized_rmse": 2.4278277445513843e-06,
+          "parity_passed": true
+        },
+        "velocity_original_fp32": {
+          "max_absolute_error": 1.1473894119262695e-05,
+          "rmse": 2.993270331976901e-06,
+          "normalized_rmse": 6.770987923736527e-06,
+          "parity_passed": true
+        },
+        "latent_partition": {
+          "max_absolute_error": 1.537799835205078e-05,
+          "rmse": 3.6841426132548933e-06,
+          "normalized_rmse": 2.3136722672839948e-06,
+          "parity_passed": true
+        },
+        "latent_original_fp32": {
+          "max_absolute_error": 3.933906555175781e-05,
+          "rmse": 1.1169150928405818e-05,
+          "normalized_rmse": 7.014327054948485e-06,
+          "parity_passed": true
+        }
+      },
+      "stages": [
+        {
+          "stage": 1,
+          "asset": "front.aimodel",
+          "load_ms": 1.740708,
+          "run_and_detached_copy_ms": 259.364292,
+          "before_process_footprint_mib": 58.454925537109375
+        },
+        {
+          "stage": 2,
+          "asset": "blocks-00-01.aimodel",
+          "load_ms": 1.787958,
+          "run_and_detached_copy_ms": 1033.591625,
+          "before_process_footprint_mib": 48.65807342529297
+        },
+        {
+          "stage": 3,
+          "asset": "blocks-02-03.aimodel",
+          "load_ms": 1.682292,
+          "run_and_detached_copy_ms": 1010.045709,
+          "before_process_footprint_mib": 35.72057342529297
+        },
+        {
+          "stage": 4,
+          "asset": "blocks-04-05.aimodel",
+          "load_ms": 1.827417,
+          "run_and_detached_copy_ms": 1061.269542,
+          "before_process_footprint_mib": 35.84557342529297
+        },
+        {
+          "stage": 5,
+          "asset": "blocks-06-07.aimodel",
+          "load_ms": 1.730917,
+          "run_and_detached_copy_ms": 1076.343584,
+          "before_process_footprint_mib": 51.09557342529297
+        },
+        {
+          "stage": 6,
+          "asset": "blocks-08-09.aimodel",
+          "load_ms": 1.709208,
+          "run_and_detached_copy_ms": 1082.420375,
+          "before_process_footprint_mib": 36.39244842529297
+        },
+        {
+          "stage": 7,
+          "asset": "blocks-10-11.aimodel",
+          "load_ms": 1.764167,
+          "run_and_detached_copy_ms": 1040.6045,
+          "before_process_footprint_mib": 36.57994842529297
+        },
+        {
+          "stage": 8,
+          "asset": "blocks-12-13.aimodel",
+          "load_ms": 1.772625,
+          "run_and_detached_copy_ms": 1086.339041,
+          "before_process_footprint_mib": 37.00182342529297
+        },
+        {
+          "stage": 9,
+          "asset": "blocks-14-15.aimodel",
+          "load_ms": 1.840208,
+          "run_and_detached_copy_ms": 1075.756,
+          "before_process_footprint_mib": 37.28307342529297
+        },
+        {
+          "stage": 10,
+          "asset": "blocks-16-17.aimodel",
+          "load_ms": 1.729375,
+          "run_and_detached_copy_ms": 1048.717666,
+          "before_process_footprint_mib": 37.57994842529297
+        },
+        {
+          "stage": 11,
+          "asset": "blocks-18-19.aimodel",
+          "load_ms": 1.789917,
+          "run_and_detached_copy_ms": 1034.276417,
+          "before_process_footprint_mib": 37.82994842529297
+        },
+        {
+          "stage": 12,
+          "asset": "blocks-20-21.aimodel",
+          "load_ms": 1.772583,
+          "run_and_detached_copy_ms": 1028.348917,
+          "before_process_footprint_mib": 54.84559631347656
+        },
+        {
+          "stage": 13,
+          "asset": "blocks-22-23.aimodel",
+          "load_ms": 1.795416,
+          "run_and_detached_copy_ms": 1019.0405,
+          "before_process_footprint_mib": 38.45494842529297
+        },
+        {
+          "stage": 14,
+          "asset": "tail.aimodel",
+          "load_ms": 1.778958,
+          "run_and_detached_copy_ms": 2.580917,
+          "before_process_footprint_mib": 38.79869842529297
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "completed_parity_steps": 4,
+    "completed_stages": 56,
+    "numerical_comparisons_passed": 16,
+    "four_step_dual_parity_passed": true,
+    "total_loop_probe_ms": 53001.064667,
+    "process_baseline_mib": 19.173629760742188,
+    "sampled_process_maximum_mib": 74.01760864257812,
+    "pair_stage_count": 48,
+    "pair_run_and_copy_ms_min": 1010.045709,
+    "pair_run_and_copy_ms_max": 1143.875916,
+    "pair_run_and_copy_ms_sum": 51316.445873,
+    "final_latent_original_fp32": {
+      "max_absolute_error": 3.933906555175781e-05,
+      "rmse": 1.1169150928405818e-05,
+      "normalized_rmse": 7.014327054948485e-06,
+      "parity_passed": true
+    }
+  },
+  "limits": {
+    "cold_launch_reliability_verified": false,
+    "long_run_memory_plateau_verified": false,
+    "total_model_ram_measured": false,
+    "memory_scope": "10 ms sampled app process footprint, not exact peak or total model/device RAM",
+    "first_manifest_failure_exact_field_confirmed": false,
+    "latency_root_cause_measured": false,
+    "load_function_bind_time_isolated": false,
+    "run_time_isolated_from_binding_and_copy": false,
+    "conditioning_from_recording_verified": false,
+    "cfg_verified": false,
+    "waveform_generation_verified": false,
+    "instrument_generation_verified": false
+  },
+  "next_gate": "Separate constructor, function binding, backend execution and output-copy timings before choosing performance changes; do not treat run+copy as kernel-only time"
+}

@@ -42,8 +42,9 @@ Tests cover analytic feedback decay, the actual retained publisher update,
 wrong-sign/timestep rejection, exact binary update consistency for both real
 trajectories, corruption/tolerance rejection and output preservation. Existing
 bundle integrity/coverage/setup tests remain applicable. These host checks do
-not emulate CoreAI or compile Swift against an Apple SDK. Four-step on-device
-parity, latency and memory remain pending. The [first device attempt](../coreai-iphone17pro-denoiser-loop-manifest-failure/README.md)
+not emulate CoreAI or compile Swift against an Apple SDK. A [later device report](../coreai-iphone17pro-denoiser-loop/README.md)
+now passes all four feedback steps and all 16 comparisons, taking 53.001 s.
+The [first device attempt](../coreai-iphone17pro-denoiser-loop-manifest-failure/README.md)
 failed manifest validation before any inference; its generic error cannot locate
 the failed field. Schema v2 removes the unnecessary cross-platform random-input
 hash equality and reports mismatched manifest fields explicitly.

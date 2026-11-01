@@ -1,0 +1,154 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: COMPLETE 24-layer denoiser / 4 feedback Euler ODE steps / NOT instrument generation
+Requested compute policy: cpuOnly; accelerator placement NOT MEASURED
+Schedule: 1 -> 0.75 -> 0.5 -> 0.25 -> 0; shift=1; guidance=1; timestep_r=timestep
+Synthetic conditioning; no CFG, KV cache, recording or waveform generation
+Existing 14 assets per step; detached CPU copies; native cache eviction NOT GUARANTEED
+Process footprint stop before each stage: 2000 MiB; NOT an OS peak-memory guarantee
+Target: iOS device build
+Phase: validating sharded model manifest
+Sharded model manifest: PASS; decoding self-contained loop fixture
+SHA-256: VERIFIED 16 references + 3 self-contained inputs; checkpoint contract matched
+Step 1/4: t=1.0, next=0.75, timestep_r=1.0
+Before step 1 stage 1/14 footprint MiB: 21.423629760742188
+Step 1 stage 1/14 front.aimodel: load ms 4.320375; run+detached-copy ms 322.87275
+Before step 1 stage 2/14 footprint MiB: 22.40802764892578
+Step 1 stage 2/14 blocks-00-01.aimodel: load ms 1.648; run+detached-copy ms 1070.594375
+Before step 1 stage 3/14 footprint MiB: 22.26740264892578
+Step 1 stage 3/14 blocks-02-03.aimodel: load ms 1.598208; run+detached-copy ms 1057.945666
+Before step 1 stage 4/14 footprint MiB: 21.73615264892578
+Step 1 stage 4/14 blocks-04-05.aimodel: load ms 1.629167; run+detached-copy ms 1075.102833
+Before step 1 stage 5/14 footprint MiB: 21.98615264892578
+Step 1 stage 5/14 blocks-06-07.aimodel: load ms 1.580125; run+detached-copy ms 1058.896625
+Before step 1 stage 6/14 footprint MiB: 22.23615264892578
+Step 1 stage 6/14 blocks-08-09.aimodel: load ms 1.603167; run+detached-copy ms 1075.747209
+Before step 1 stage 7/14 footprint MiB: 22.37677764892578
+Step 1 stage 7/14 blocks-10-11.aimodel: load ms 1.620333; run+detached-copy ms 1129.984625
+Before step 1 stage 8/14 footprint MiB: 22.595550537109375
+Step 1 stage 8/14 blocks-12-13.aimodel: load ms 1.809125; run+detached-copy ms 1143.875916
+Before step 1 stage 9/14 footprint MiB: 22.876800537109375
+Step 1 stage 9/14 blocks-14-15.aimodel: load ms 1.947333; run+detached-copy ms 1118.460542
+Before step 1 stage 10/14 footprint MiB: 23.126800537109375
+Step 1 stage 10/14 blocks-16-17.aimodel: load ms 1.912417; run+detached-copy ms 1082.9609580000001
+Before step 1 stage 11/14 footprint MiB: 23.376800537109375
+Step 1 stage 11/14 blocks-18-19.aimodel: load ms 1.8485; run+detached-copy ms 1074.087375
+Before step 1 stage 12/14 footprint MiB: 23.658050537109375
+Step 1 stage 12/14 blocks-20-21.aimodel: load ms 1.793958; run+detached-copy ms 1099.472875
+Before step 1 stage 13/14 footprint MiB: 23.908050537109375
+Step 1 stage 13/14 blocks-22-23.aimodel: load ms 1.764542; run+detached-copy ms 1019.590208
+Before step 1 stage 14/14 footprint MiB: 28.376800537109375
+Step 1 stage 14/14 tail.aimodel: load ms 1.682625; run+detached-copy ms 2.512833
+Step 1 velocity partition: max abs error 2.5987625122070312e-05; RMSE 6.387478908186318e-06; normalized RMSE 4.9129423959675265e-06; PASS
+Step 1 velocity original FP32: max abs error 5.894899368286133e-05; RMSE 1.5138293638407116e-05; normalized RMSE 1.1643638744707437e-05; PASS
+Step 1 latent partition: max abs error 6.496906280517578e-06; RMSE 1.5974237998387752e-06; normalized RMSE 1.5993086268284254e-06; PASS
+Step 1 latent original FP32: max abs error 1.4781951904296875e-05; RMSE 3.7856202365884083e-06; normalized RMSE 3.7900929353837417e-06; PASS
+Step 1/4 dual velocity+latent parity: PASS; total step ms: 13406.313916
+Step 2/4: t=0.75, next=0.5, timestep_r=0.75
+Before step 2 stage 1/14 footprint MiB: 32.033050537109375
+Step 2 stage 1/14 front.aimodel: load ms 1.76375; run+detached-copy ms 261.664375
+Before step 2 stage 2/14 footprint MiB: 30.548675537109375
+Step 2 stage 2/14 blocks-00-01.aimodel: load ms 1.86425; run+detached-copy ms 1044.093791
+Before step 2 stage 3/14 footprint MiB: 32.095550537109375
+Step 2 stage 3/14 blocks-02-03.aimodel: load ms 1.76; run+detached-copy ms 1051.738792
+Before step 2 stage 4/14 footprint MiB: 26.314300537109375
+Step 2 stage 4/14 blocks-04-05.aimodel: load ms 1.8815; run+detached-copy ms 1100.057167
+Before step 2 stage 5/14 footprint MiB: 26.611175537109375
+Step 2 stage 5/14 blocks-06-07.aimodel: load ms 1.767125; run+detached-copy ms 1087.698333
+Before step 2 stage 6/14 footprint MiB: 26.829925537109375
+Step 2 stage 6/14 blocks-08-09.aimodel: load ms 1.725; run+detached-copy ms 1072.999958
+Before step 2 stage 7/14 footprint MiB: 27.189300537109375
+Step 2 stage 7/14 blocks-10-11.aimodel: load ms 1.777333; run+detached-copy ms 1049.294958
+Before step 2 stage 8/14 footprint MiB: 27.454925537109375
+Step 2 stage 8/14 blocks-12-13.aimodel: load ms 1.783458; run+detached-copy ms 1109.599625
+Before step 2 stage 9/14 footprint MiB: 27.704925537109375
+Step 2 stage 9/14 blocks-14-15.aimodel: load ms 1.75775; run+detached-copy ms 1082.340416
+Before step 2 stage 10/14 footprint MiB: 27.939300537109375
+Step 2 stage 10/14 blocks-16-17.aimodel: load ms 1.779625; run+detached-copy ms 1113.063
+Before step 2 stage 11/14 footprint MiB: 28.267425537109375
+Step 2 stage 11/14 blocks-18-19.aimodel: load ms 1.767042; run+detached-copy ms 1121.278708
+Before step 2 stage 12/14 footprint MiB: 28.533050537109375
+Step 2 stage 12/14 blocks-20-21.aimodel: load ms 1.748625; run+detached-copy ms 1097.920083
+Before step 2 stage 13/14 footprint MiB: 28.658050537109375
+Step 2 stage 13/14 blocks-22-23.aimodel: load ms 1.799; run+detached-copy ms 1078.271708
+Before step 2 stage 14/14 footprint MiB: 29.033050537109375
+Step 2 stage 14/14 tail.aimodel: load ms 1.770334; run+detached-copy ms 2.608333
+Step 2 velocity partition: max abs error 3.0040740966796875e-05; RMSE 6.791075465845882e-06; normalized RMSE 4.697934369535394e-06; PASS
+Step 2 velocity original FP32: max abs error 5.555152893066406e-05; RMSE 1.3712388720968981e-05; normalized RMSE 9.485983910342884e-06; PASS
+Step 2 latent partition: max abs error 1.0192394256591797e-05; RMSE 2.701563184092372e-06; normalized RMSE 2.0713861063673776e-06; PASS
+Step 2 latent original FP32: max abs error 2.5272369384765625e-05; RMSE 6.420954538992525e-06; normalized RMSE 4.923189054341582e-06; PASS
+Step 2/4 dual velocity+latent parity: PASS; total step ms: 13360.312459
+Step 3/4: t=0.5, next=0.25, timestep_r=0.5
+Before step 3 stage 1/14 footprint MiB: 36.704925537109375
+Step 3 stage 1/14 front.aimodel: load ms 1.717666; run+detached-copy ms 265.112958
+Before step 3 stage 2/14 footprint MiB: 48.361175537109375
+Step 3 stage 2/14 blocks-00-01.aimodel: load ms 1.757125; run+detached-copy ms 1045.468042
+Before step 3 stage 3/14 footprint MiB: 31.142425537109375
+Step 3 stage 3/14 blocks-02-03.aimodel: load ms 1.791375; run+detached-copy ms 1036.011042
+Before step 3 stage 4/14 footprint MiB: 31.204925537109375
+Step 3 stage 4/14 blocks-04-05.aimodel: load ms 1.787333; run+detached-copy ms 1067.74475
+Before step 3 stage 5/14 footprint MiB: 31.564300537109375
+Step 3 stage 5/14 blocks-06-07.aimodel: load ms 1.788666; run+detached-copy ms 1094.335459
+Before step 3 stage 6/14 footprint MiB: 31.564300537109375
+Step 3 stage 6/14 blocks-08-09.aimodel: load ms 1.719917; run+detached-copy ms 1086.224458
+Before step 3 stage 7/14 footprint MiB: 31.751800537109375
+Step 3 stage 7/14 blocks-10-11.aimodel: load ms 1.795042; run+detached-copy ms 1063.076292
+Before step 3 stage 8/14 footprint MiB: 32.111175537109375
+Step 3 stage 8/14 blocks-12-13.aimodel: load ms 1.790209; run+detached-copy ms 1073.719167
+Before step 3 stage 9/14 footprint MiB: 32.376800537109375
+Step 3 stage 9/14 blocks-14-15.aimodel: load ms 1.799; run+detached-copy ms 1056.371041
+Before step 3 stage 10/14 footprint MiB: 32.642425537109375
+Step 3 stage 10/14 blocks-16-17.aimodel: load ms 1.812083; run+detached-copy ms 1057.483375
+Before step 3 stage 11/14 footprint MiB: 32.908050537109375
+Step 3 stage 11/14 blocks-18-19.aimodel: load ms 1.794209; run+detached-copy ms 1035.94075
+Before step 3 stage 12/14 footprint MiB: 33.158050537109375
+Step 3 stage 12/14 blocks-20-21.aimodel: load ms 1.792416; run+detached-copy ms 1055.17075
+Before step 3 stage 13/14 footprint MiB: 33.454925537109375
+Step 3 stage 13/14 blocks-22-23.aimodel: load ms 1.805875; run+detached-copy ms 1033.071125
+Before step 3 stage 14/14 footprint MiB: 33.736175537109375
+Step 3 stage 14/14 tail.aimodel: load ms 1.819542; run+detached-copy ms 1.641167
+Step 3 velocity partition: max abs error 3.337860107421875e-05; RMSE 7.861121064529939e-06; normalized RMSE 4.902968003233772e-06; PASS
+Step 3 velocity original FP32: max abs error 0.00017407536506652832; RMSE 3.886561016235919e-05; normalized RMSE 2.424035500777915e-05; PASS
+Step 3 latent partition: max abs error 1.633167266845703e-05; RMSE 3.903720417501994e-06; normalized RMSE 2.3226428990409264e-06; PASS
+Step 3 latent original FP32: max abs error 4.1484832763671875e-05; RMSE 1.1855732858823736e-05; normalized RMSE 7.053953698218171e-06; PASS
+Step 3/4 dual velocity+latent parity: PASS; total step ms: 13112.8025
+Step 4/4: t=0.25, next=0.0, timestep_r=0.25
+Before step 4 stage 1/14 footprint MiB: 58.454925537109375
+Step 4 stage 1/14 front.aimodel: load ms 1.740708; run+detached-copy ms 259.364292
+Before step 4 stage 2/14 footprint MiB: 48.65807342529297
+Step 4 stage 2/14 blocks-00-01.aimodel: load ms 1.787958; run+detached-copy ms 1033.591625
+Before step 4 stage 3/14 footprint MiB: 35.72057342529297
+Step 4 stage 3/14 blocks-02-03.aimodel: load ms 1.682292; run+detached-copy ms 1010.045709
+Before step 4 stage 4/14 footprint MiB: 35.84557342529297
+Step 4 stage 4/14 blocks-04-05.aimodel: load ms 1.827417; run+detached-copy ms 1061.269542
+Before step 4 stage 5/14 footprint MiB: 51.09557342529297
+Step 4 stage 5/14 blocks-06-07.aimodel: load ms 1.730917; run+detached-copy ms 1076.343584
+Before step 4 stage 6/14 footprint MiB: 36.39244842529297
+Step 4 stage 6/14 blocks-08-09.aimodel: load ms 1.709208; run+detached-copy ms 1082.420375
+Before step 4 stage 7/14 footprint MiB: 36.57994842529297
+Step 4 stage 7/14 blocks-10-11.aimodel: load ms 1.764167; run+detached-copy ms 1040.6045
+Before step 4 stage 8/14 footprint MiB: 37.00182342529297
+Step 4 stage 8/14 blocks-12-13.aimodel: load ms 1.772625; run+detached-copy ms 1086.339041
+Before step 4 stage 9/14 footprint MiB: 37.28307342529297
+Step 4 stage 9/14 blocks-14-15.aimodel: load ms 1.840208; run+detached-copy ms 1075.756
+Before step 4 stage 10/14 footprint MiB: 37.57994842529297
+Step 4 stage 10/14 blocks-16-17.aimodel: load ms 1.729375; run+detached-copy ms 1048.717666
+Before step 4 stage 11/14 footprint MiB: 37.82994842529297
+Step 4 stage 11/14 blocks-18-19.aimodel: load ms 1.789917; run+detached-copy ms 1034.276417
+Before step 4 stage 12/14 footprint MiB: 54.84559631347656
+Step 4 stage 12/14 blocks-20-21.aimodel: load ms 1.772583; run+detached-copy ms 1028.348917
+Before step 4 stage 13/14 footprint MiB: 38.45494842529297
+Step 4 stage 13/14 blocks-22-23.aimodel: load ms 1.795416; run+detached-copy ms 1019.0405
+Before step 4 stage 14/14 footprint MiB: 38.79869842529297
+Step 4 stage 14/14 tail.aimodel: load ms 1.778958; run+detached-copy ms 2.580917
+Step 4 velocity partition: max abs error 4.649162292480469e-06; RMSE 1.0732778236593032e-06; normalized RMSE 2.4278277445513843e-06; PASS
+Step 4 velocity original FP32: max abs error 1.1473894119262695e-05; RMSE 2.993270331976901e-06; normalized RMSE 6.770987923736527e-06; PASS
+Step 4 latent partition: max abs error 1.537799835205078e-05; RMSE 3.6841426132548933e-06; normalized RMSE 2.3136722672839948e-06; PASS
+Step 4 latent original FP32: max abs error 3.933906555175781e-05; RMSE 1.1169150928405818e-05; normalized RMSE 7.014327054948485e-06; PASS
+Step 4/4 dual velocity+latent parity: PASS; total step ms: 13030.97375
+Four-step Euler loop dual parity: PASS (feedback at all four steps)
+Process baseline MiB: 19.173629760742188
+Sampled process maximum MiB (10 ms): 74.01760864257812
+Completed parity steps: 4/4; completed stages: 56/56; total loop probe ms: 53001.064667
+Memory scope: sampled app process footprint, NOT total model/device RAM or exact peak; cache behavior unverified

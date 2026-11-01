@@ -107,7 +107,7 @@
     "accelerator_and_precision_support": "Float32 affine and VAE encoder/decoder parity verified under requested CPU-only policy; actual placement and GPU/Neural Engine inference unmeasured",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
-    "model_conversion_training_and_device_benchmarks": "Monolithic denoiser hit memory limit; 14-part denoiser repeatability passed 3/3 for same synthetic case in one process; four-step Euler loop host dual references passed, device loop pending; recording conditioning and full generation unimplemented"
+    "model_conversion_training_and_device_benchmarks": "Four-step synthetic sharded Euler loop passes dual velocity/latent parity on iPhone, 53.001 s; performance causes, cold launches, long-run memory and recording conditioning/full music generation remain unverified"
   },
   "local_prototype_status": {
     "source_directory": "prototypes/ios27-coreai",
@@ -117,10 +117,10 @@
     "shared_scheme": "CoreAIProbe",
     "signing_team_selection": "Apple Team stored in ignored Signing.local.xcconfig; shared Debug/Release configurations include it",
     "apple_compilation_verified": true,
-    "apple_compilation_evidence": "User executed initial four-step app, which failed before inference; schema-v2 fixture correction still pending Apple build; no independent SDK compilation on Linux",
+    "apple_compilation_evidence": "User ran the schema-v2 four-step app to completion on iPhone; not independently compiled in this Linux workspace",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-denoiser-loop-manifest-failure/report.json",
-    "device_execution_scope": "Sharded denoiser single-forward repeatability PASS 3/3 previously; initial four-step caller launched but failed manifest validation before inference; corrected fixture/caller not device-tested",
+    "device_execution_report": "reviews/coreai-iphone17pro-denoiser-loop/report.json",
+    "device_execution_scope": "Four-step synthetic feedback Euler loop, all 24 layers at every step, 56/56 stages, 16 dual-reference velocity/latent comparisons PASS; no recording conditioning or waveform generation",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -425,7 +425,7 @@
     "stability_dual_parity_pass_count": 3,
     "latency_stability_verified": false,
     "long_run_memory_plateau_verified": false,
-    "next_gate": "Four-step feedback Euler loop prepared with real host dual references; CoreAI device execution pending"
+    "next_gate": "Four-step device loop passed; profile function binding vs backend execution/output copy before performance changes"
   },
   "pretrained_denoiser_loop_probe": {
     "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
@@ -453,9 +453,9 @@
     "reference_binary_bytes": 102400,
     "new_model_export_required": false,
     "checkpoint_download_required_if_existing_assets_present": false,
-    "new_swift_apple_build_verified": false,
-    "device_loop_execution_verified": false,
-    "device_loop_parity_verified": false,
+    "new_swift_apple_build_verified": true,
+    "device_loop_execution_verified": true,
+    "device_loop_parity_verified": true,
     "conditioning_from_recording_verified": false,
     "waveform_generation_verified": false,
     "memory_scope": "10 ms sampled process footprint with pre-asset 2000 MiB guard; not full-device/model RAM or exact peak",
@@ -466,9 +466,17 @@
     "requires_mac_random_input_hashes_match_linux": false,
     "manifest_field_diagnostics": true,
     "initial_wrapper_apple_build_reported": true,
-    "latest_device_status": "Initial schema-v1 attempt failed manifest validation at 0/56 stages; exact field unknown; schema-v2 correction pending device test",
-    "device_report": "reviews/coreai-iphone17pro-denoiser-loop-manifest-failure/report.json",
-    "manifest_correction_apple_build_verified": false,
-    "manifest_correction_device_execution_verified": false
+    "latest_device_status": "Schema-v2 four-step feedback Euler loop PASS, 4/4 steps, 56/56 stages, all 16 comparisons; total 53.001 s, same synthetic case only",
+    "device_report": "reviews/coreai-iphone17pro-denoiser-loop/report.json",
+    "manifest_correction_apple_build_verified": true,
+    "manifest_correction_device_execution_verified": true,
+    "device_completed_steps": 4,
+    "device_completed_stages": 56,
+    "device_final_latent_original_fp32_normalized_rmse": 7.014327054948485e-06,
+    "device_final_latent_original_fp32_max_abs_error": 3.933906555175781e-05,
+    "device_total_loop_probe_ms": 53001.064667,
+    "device_sampled_process_maximum_mib": 74.01760864257812,
+    "first_manifest_failure_exact_field_confirmed": false,
+    "next_gate": "Separate constructor, function binding, backend execution and output-copy timings before choosing performance changes; do not treat run+copy as kernel-only time"
   }
 }
