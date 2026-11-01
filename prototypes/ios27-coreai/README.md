@@ -145,3 +145,17 @@ The project links the SDK's public CoreAI umbrella framework. SwiftUI/UIKit
 use normal SDK autolinking. No CocoaPods, package fetch, project generator,
 model download, audio assets or custom build script is required. Xcode build
 products and user-specific workspace files are excluded from Git.
+
+## Decoder audio pretrained
+
+[Paket uji decoder](../../docs/coreai-pretrained-decoder.md) sudah disiapkan:
+checkpoint asli diverifikasi seluruh SHA-256, reference PyTorch FP32 dibuat,
+dan ekspor native penuh berhasil diuji di Linux. Native decoder sekitar 338 MB
+bersifat lokal dan diabaikan Git.
+
+Dari Mac, jalankan `bash scripts/prepare_coreai_decoder.sh`, lalu build ulang
+aplikasi dan tekan **Uji decoder pretrained**. Skrip memakai cache bila tersedia.
+Paket akhir yang sudah ada diverifikasi dan dipakai ulang; versi rusak tidak
+ditimpa otomatis. Pengujian memakai latent seed tetap 0,2 detik, bukan rekaman
+piano atau generasi pengiring. Swift baru, parity decoder iPhone, latensi dan
+memori belum diverifikasi.

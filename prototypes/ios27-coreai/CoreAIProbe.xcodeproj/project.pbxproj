@@ -10,6 +10,7 @@
 		A10000000000000000000002 /* CoreAIModelProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* CoreAIModelProbe.swift */; };
 		A10000000000000000000003 /* CoreAI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* CoreAI.framework */; };
 		A10000000000000000000004 /* ModelCandidates in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* ModelCandidates */; };
+		A10000000000000000000005 /* CoreAIDecoderProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* CoreAIDecoderProbe.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +21,7 @@
 		A20000000000000000000005 /* CoreAI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAI.framework; path = System/Library/Frameworks/CoreAI.framework; sourceTree = SDKROOT; };
 		A20000000000000000000006 /* ModelCandidates */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ModelCandidates; sourceTree = "<group>"; };
 		A20000000000000000000007 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		A20000000000000000000008 /* CoreAIDecoderProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAIDecoderProbe.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,6 +39,7 @@
 			children = (
 				A20000000000000000000001 /* CoreAIDeviceProbeApp.swift */,
 				A20000000000000000000002 /* CoreAIModelProbe.swift */,
+				A20000000000000000000008 /* CoreAIDecoderProbe.swift */,
 				A20000000000000000000004 /* README.md */,
 				A20000000000000000000006 /* ModelCandidates */,
 				A20000000000000000000007 /* Signing.xcconfig */,
@@ -117,6 +120,7 @@
 			files = (
 				A10000000000000000000001 /* CoreAIDeviceProbeApp.swift in Sources */,
 				A10000000000000000000002 /* CoreAIModelProbe.swift in Sources */,
+				A10000000000000000000005 /* CoreAIDecoderProbe.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

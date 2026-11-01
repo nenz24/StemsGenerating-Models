@@ -27,3 +27,4 @@ xcuserdata/
 DerivedData/
 /prototypes/ios27-coreai/build/
 /prototypes/ios27-coreai/Signing.local.xcconfig
+/prototypes/ios27-coreai/ModelCandidates/decoder-pretrained/

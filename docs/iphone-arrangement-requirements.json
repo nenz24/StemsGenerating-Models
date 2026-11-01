@@ -168,5 +168,32 @@
     "audio_device_inference_verified": false,
     "selected_next_component": "pretrained VAE decoder, fixed 0.2-1 second window",
     "memory_scope": "Shape-derived logical tensor storage, not measured device peak RAM"
+  },
+  "pretrained_decoder_probe": {
+    "preparation_script": "scripts/prepare_coreai_decoder.sh",
+    "exporter_script": "scripts/export_coreai_decoder.py",
+    "local_ignored_bundle": "prototypes/ios27-coreai/ModelCandidates/decoder-pretrained",
+    "publisher_checkpoint_full_sha256_verified_in_development": true,
+    "pretrained_decoder_export_verified_in_development": true,
+    "reference_backend": "PyTorch CPU FP32",
+    "default_input_shape": [
+      1,
+      64,
+      5
+    ],
+    "default_output_shape": [
+      1,
+      2,
+      9600
+    ],
+    "sample_rate": 48000,
+    "duration_seconds": 0.2,
+    "input_provenance": "Seed-0 standard-normal latent; not a piano recording or accompaniment",
+    "weight_norm_fold_parity": "exact in development",
+    "requested_device_compute_policy": "cpuOnly",
+    "new_swift_apple_build_verified": false,
+    "device_decoder_parity_verified": false,
+    "memory_measurement": "10 ms sampled whole-process phys_footprint, not exact peak",
+    "validation_manifest": "reviews/coreai-pretrained-decoder-export/reference.json"
   }
 }

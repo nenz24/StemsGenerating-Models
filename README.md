@@ -42,6 +42,12 @@ Empat probe operator sintetis berhasil diekspor native. Decoder pretrained dan
 generasi audio pada iPhone belum diuji; ukuran bobot dan feature map diaudit
 terpisah dari waktu inference model numerik kecil.
 
+**Uji berikutnya di iPhone:** [decoder VAE pretrained](docs/coreai-pretrained-decoder.md).
+Jalankan `bash scripts/prepare_coreai_decoder.sh` di Mac sebelum build aplikasi;
+paket besar dibuat lokal, lalu tombol **Uji decoder pretrained** membandingkan
+output dan mencatat latensi serta sampel memori. Ekspor pretrained sudah diuji
+di Linux; hasil iPhone untuk decoder ini belum tersedia.
+
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:
 Base, seed 0, CFG 7, 50 langkah. Lihat

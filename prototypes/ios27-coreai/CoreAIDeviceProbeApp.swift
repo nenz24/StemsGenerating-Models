@@ -1,6 +1,6 @@
 // API declarations checked against the user's Xcode 27 SDK interfaces.
 // The user reported a successful tensor probe on iOS 27.0.1; see reviews/.
-// The raw legacy package was rejected; the native .aimodel test still needs device verification.
+// Native affine inference passed; the pretrained decoder still needs device verification.
 import CoreAI
 import SwiftUI
 import UIKit
@@ -30,6 +30,15 @@ struct CoreAIDeviceProbeApp: App {
                             report = "Memuat aset native .aimodel melalui CoreAI…"
                             Task {
                                 report = await CoreAINativeNumericalProbe.run()
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
+                        Button("Uji decoder pretrained") {
+                            runningModel = true
+                            report = "Memuat decoder pretrained dan membandingkan hasil dengan PyTorch…"
+                            Task {
+                                report = await CoreAIDecoderProbe.run()
                                 runningModel = false
                             }
                         }
