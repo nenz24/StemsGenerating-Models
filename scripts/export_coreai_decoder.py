@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare a checksum-verified pretrained ACE VAE decoder for an iPhone parity test.
+"""Prepare a checksum-verified pretrained ACE VAE component for an iPhone parity test.
 
 Only the pinned VAE checkpoint is needed. No generator/LM, new training, Core ML
 conversion, or musical quality claim. Output is an ignored, local app resource.
@@ -30,21 +30,28 @@ def verify_checkpoint(path, record):
         raise ValueError(f'Checkpoint size/SHA-256 mismatch: {path}; not used or overwritten')
 
 
-def verify_bundle(folder, checkpoint_record):
+def verify_bundle(folder, checkpoint_record, component='decoder'):
     reference = json.loads((folder / 'reference.json').read_text())
-    if reference.get('schema_version') != 1 or reference.get('asset_file') != 'decoder.aimodel':
-        raise ValueError('Unexpected decoder bundle contract')
-    frames = reference['input_shape'][-1]
-    if (reference['input_shape'] != [1, 64, frames] or not 1 <= frames <= 25
-            or reference['output_shape'] != [1, 2, frames * 1920]
-            or reference.get('input_file') != 'latent.f32le'
-            or reference.get('expected_file') != 'audio-reference.f32le'
+    encoding = component == 'encoder'
+    if component not in ('decoder', 'encoder'):
+        raise ValueError('Unknown VAE component')
+    input_name, output_name = ('audio', 'latent') if encoding else ('latent', 'audio')
+    if (reference.get('schema_version') != 1 or reference.get('asset_file') != f'{component}.aimodel'
+            or reference.get('component', 'decoder') != component):
+        raise ValueError('Unexpected VAE bundle contract')
+    frames = (reference['output_shape'] if encoding else reference['input_shape'])[-1]
+    input_shape, output_shape = ([1, 2, frames * 1920], [1, 64, frames]) if encoding else ([1, 64, frames], [1, 2, frames * 1920])
+    if (reference['input_shape'] != input_shape or not 1 <= frames <= 25
+            or reference['output_shape'] != output_shape
+            or (encoding and (frames != 25 or reference.get('posterior_mode') != 'mean'))
+            or reference.get('input_file') != f'{input_name}.f32le'
+            or reference.get('expected_file') != f'{output_name}-reference.f32le'
             or reference.get('scalar_type') != 'float32' or reference.get('byte_order') != 'little'
             or reference.get('checkpoint', {}).get('digest') != checkpoint_record['digest']
             or reference.get('checkpoint_full_sha256_verified') is not True):
-        raise ValueError('Decoder bundle shape/checkpoint mismatch')
-    required = {'latent.f32le', 'audio-reference.f32le', 'decoder.aimodel/main.hash',
-                'decoder.aimodel/main.mlirb', 'decoder.aimodel/metadata.json'}
+        raise ValueError('VAE bundle shape/checkpoint mismatch')
+    required = {reference['input_file'], reference['expected_file'], f'{component}.aimodel/main.hash',
+                f'{component}.aimodel/main.mlirb', f'{component}.aimodel/metadata.json'}
     hashes = reference['artifact_sha256']
     actual = {str(p.relative_to(folder)) for p in folder.rglob('*')
               if p.is_file() and p.name != '.DS_Store' and p != folder / 'reference.json'}
@@ -54,7 +61,8 @@ def verify_bundle(folder, checkpoint_record):
         path = (folder / name).resolve()
         if not path.is_relative_to(folder.resolve()) or sha256(path) != digest:
             raise ValueError(f'Decoder bundle integrity mismatch: {name}')
-    for name, count in [(reference['input_file'], 64 * frames), (reference['expected_file'], 2 * frames * 1920)]:
+    for name, shape in [(reference['input_file'], input_shape), (reference['expected_file'], output_shape)]:
+        count = shape[1] * shape[2]
         path = (folder / name).resolve()
         if not path.is_relative_to(folder.resolve()) or path.stat().st_size != count * 4:
             raise ValueError('Decoder reference binary size/path mismatch')
@@ -93,19 +101,26 @@ def checkpoint_path(record, explicit=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--checkpoint', type=Path, help='Optional existing exact VAE safetensors')
-    parser.add_argument('--out', type=Path, default=ROOT / 'prototypes/ios27-coreai/ModelCandidates/decoder-pretrained')
-    parser.add_argument('--frames', type=int, default=5, help='Fixed latent frames: 5 = 0.2 seconds, max 25')
+    parser.add_argument('--component', choices=['decoder', 'encoder'], default='decoder')
+    parser.add_argument('--out', type=Path, help='New local bundle directory; existing output is preserved')
+    parser.add_argument('--frames', type=int, help='Decoder: 1..25, default 5; encoder: fixed 25 (1 s)')
     parser.add_argument('--verify-only', action='store_true', help='Verify/reuse a previously prepared local bundle')
     args = parser.parse_args()
+    encoding = args.component == 'encoder'
+    if args.frames is None:args.frames = 25 if encoding else 5
+    if args.out is None:
+        args.out = ROOT / 'prototypes/ios27-coreai/ModelCandidates' / ('encoder-pretrained-1s' if encoding else 'decoder-pretrained')
     if not 1 <= args.frames <= 25:
         parser.error('--frames must be 1..25 (at most one second for the initial test)')
+    if encoding and args.frames != 25:
+        parser.error('Encoder probe requires --frames 25')
     manifest = json.loads((ROOT / 'configs/assets-base.json').read_text())
     record = next(r for r in manifest['files'] if r['filename'] == 'vae/diffusion_pytorch_model.safetensors')
     if args.verify_only:
-        reference = verify_bundle(args.out, record)
-        if reference['input_shape'][-1] != args.frames:
+        reference = verify_bundle(args.out, record, args.component)
+        if reference['output_shape' if encoding else 'input_shape'][-1] != args.frames:
             raise ValueError('Existing bundle has a different window; use the matching --frames value')
-        print('Existing pretrained decoder bundle: VERIFIED (no download/re-export)')
+        print(f'Existing pretrained {args.component} bundle: VERIFIED (no download/re-export)')
         return
     if args.out.exists():
         raise FileExistsError(f'Output already exists: {args.out}; preserve it or choose --out elsewhere')
@@ -119,27 +134,49 @@ def main():
     import numpy as np
     import torch
     from safetensors import safe_open
-    from diffusers.models.autoencoders.autoencoder_oobleck import OobleckDecoder
+    from diffusers.models.autoencoders.autoencoder_oobleck import OobleckDecoder, OobleckEncoder
     from coreai_torch import TorchConverter, get_decomp_table
 
     torch.set_num_threads(2)
     cfg = json.loads(raw_config)
     with torch.device('meta'):
-        model = OobleckDecoder(channels=cfg['decoder_channels'], input_channels=cfg['decoder_input_channels'],
-                               audio_channels=cfg['audio_channels'],
-                               upsampling_ratios=list(reversed(cfg['downsampling_ratios'])),
-                               channel_multiples=cfg['channel_multiples']).eval()
+        if encoding:
+            model = OobleckEncoder(encoder_hidden_size=cfg['encoder_hidden_size'], audio_channels=cfg['audio_channels'],
+                                   downsampling_ratios=cfg['downsampling_ratios'], channel_multiples=cfg['channel_multiples']).eval()
+        else:
+            model = OobleckDecoder(channels=cfg['decoder_channels'], input_channels=cfg['decoder_input_channels'],
+                                   audio_channels=cfg['audio_channels'],
+                                   upsampling_ratios=list(reversed(cfg['downsampling_ratios'])),
+                                   channel_multiples=cfg['channel_multiples']).eval()
     state = {}
     with safe_open(str(checkpoint), framework='pt', device='cpu') as source:
         for key in source.keys():
-            if key.startswith('decoder.'):
-                state[key[len('decoder.'):]] = source.get_tensor(key)
+            if key.startswith(args.component + '.'):
+                state[key[len(args.component) + 1:]] = source.get_tensor(key)
     model.load_state_dict(state, strict=True, assign=True)
     model.to(device='cpu', dtype=torch.float32).requires_grad_(False)
     del state
-    generator = torch.Generator(device='cpu').manual_seed(0)
-    x = torch.randn(1, cfg['decoder_input_channels'], args.frames, generator=generator, dtype=torch.float32)
-    print(f'CPU FP32 reference for {args.frames / 25:.2f} seconds; seeded latent, not instrument generation', flush=True)
+    if encoding:
+        # This is exactly the mean/mode half used by latent_dist.mode(), not a
+        # stochastic posterior sample. The checkpoint's complete encoder loads strictly.
+        class EncoderMean(torch.nn.Module):
+            def __init__(self, encoder):
+                super().__init__();self.encoder = encoder
+            def forward(self, audio):
+                return self.encoder(audio).chunk(2, dim=1)[0]
+        model = EncoderMean(model).eval()
+        t = torch.arange(48000, dtype=torch.float64) / 48000
+        envelope = torch.sin(torch.pi * t).square()
+        left = envelope * (0.15 * torch.sin(2 * torch.pi * 220 * t) + 0.075 * torch.sin(2 * torch.pi * 330 * t))
+        right = envelope * (0.15 * torch.sin(2 * torch.pi * 220 * t) + 0.075 * torch.sin(2 * torch.pi * 440 * t))
+        x = torch.stack([left, right]).unsqueeze(0).to(torch.float32)
+        provenance = 'Deterministic 1 s stereo multitone with sine-squared envelope; synthetic, not a user recording'
+    else:
+        generator = torch.Generator(device='cpu').manual_seed(0)
+        x = torch.randn(1, cfg['decoder_input_channels'], args.frames, generator=generator, dtype=torch.float32)
+        provenance = 'Seed-0 standard-normal latent for numerical decoder testing; not a recorded performance'
+    input_name, output_name = ('audio', 'latent') if encoding else ('latent', 'audio')
+    print(f'CPU FP32 {args.component} reference for {args.frames / 25:.2f} seconds; NOT instrument generation', flush=True)
     started = time.monotonic()
     with torch.no_grad():
         original = model(x).detach().clone()
@@ -156,26 +193,26 @@ def main():
     print('Weight-normalization folding parity: EXACT; reference seconds:', time.monotonic() - started, flush=True)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    stage_root = ROOT / '.runtime-cache/coreai-decoder-staging'
+    stage_root = ROOT / f'.runtime-cache/coreai-{args.component}-staging'
     stage_root.mkdir(parents=True, exist_ok=True)
-    stage = Path(tempfile.mkdtemp(prefix='decoder-', dir=stage_root))
+    stage = Path(tempfile.mkdtemp(prefix=args.component + '-', dir=stage_root))
     print('Staging folder (retained on failure):', stage, flush=True)
     array = expected.numpy().astype('<f4', copy=False)
-    x.numpy().astype('<f4', copy=False).tofile(stage / 'latent.f32le')
-    array.tofile(stage / 'audio-reference.f32le')
-    print('Exporting pretrained decoder through coreai-torch…', flush=True)
+    x.numpy().astype('<f4', copy=False).tofile(stage / f'{input_name}.f32le')
+    array.tofile(stage / f'{output_name}-reference.f32le')
+    print(f'Exporting pretrained {args.component} through coreai-torch…', flush=True)
     exported = torch.export.export(model, (x,)).run_decompositions(get_decomp_table())
-    program = TorchConverter().add_exported_program(exported, input_names=['latent'], output_names=['audio']).to_coreai()
-    program.save_asset(stage / 'decoder.aimodel')
+    program = TorchConverter().add_exported_program(exported, input_names=[input_name], output_names=[output_name]).to_coreai()
+    program.save_asset(stage / f'{args.component}.aimodel')
     files = sorted(p for p in stage.rglob('*') if p.is_file())
     reference = {
-        'schema_version': 1, 'asset_file': 'decoder.aimodel', 'function_name': 'main',
-        'input_name': 'latent', 'output_name': 'audio',
+        'schema_version': 1, 'component': args.component, 'asset_file': f'{args.component}.aimodel', 'function_name': 'main',
+        'input_name': input_name, 'output_name': output_name,
         'input_shape': list(x.shape), 'output_shape': list(expected.shape),
-        'input_file': 'latent.f32le', 'expected_file': 'audio-reference.f32le',
+        'input_file': f'{input_name}.f32le', 'expected_file': f'{output_name}-reference.f32le',
         'scalar_type': 'float32', 'byte_order': 'little',
-        'sample_rate': cfg['sampling_rate'], 'duration_seconds': expected.shape[-1] / cfg['sampling_rate'],
-        'input_provenance': 'Seed-0 standard-normal latent for numerical decoder testing; not a recorded performance',
+        'sample_rate': cfg['sampling_rate'], 'duration_seconds': args.frames / 25,
+        'input_provenance': provenance,
         'checkpoint': {k: record[k] for k in ['repo_id', 'revision', 'filename', 'size', 'digest']},
         'checkpoint_full_sha256_verified': True, 'reference_backend': 'PyTorch CPU Float32',
         'weight_norm_fold_max_abs_error': 0.0,
@@ -186,12 +223,13 @@ def main():
         'artifact_sha256': {str(p.relative_to(stage)): sha256(p) for p in files},
         'coreai_device_inference_verified': False,
     }
+    if encoding:reference['posterior_mode'] = 'mean'
     (stage / 'reference.json').write_text(json.dumps(reference, indent=2) + '\n')
     if args.out.exists():
         raise FileExistsError(f'Destination appeared during export; staged output preserved: {stage}')
-    verify_bundle(stage, record)
+    verify_bundle(stage, record, args.component)
     shutil.move(str(stage), str(args.out))
-    print('Prepared pretrained decoder bundle:', args.out, flush=True)
+    print(f'Prepared pretrained {args.component} bundle:', args.out, flush=True)
     print('iPhone compilation, model parity, timing and memory: NOT YET VERIFIED', flush=True)
 
 

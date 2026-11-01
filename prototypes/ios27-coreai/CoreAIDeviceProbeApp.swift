@@ -1,6 +1,6 @@
 // API declarations checked against the user's Xcode 27 SDK interfaces.
 // The user reported a successful tensor probe on iOS 27.0.1; see reviews/.
-// Native affine inference passed; the pretrained decoder still needs device verification.
+// Affine and pretrained decoder parity passed on device; encoder testing is next.
 import CoreAI
 import SwiftUI
 import UIKit
@@ -48,6 +48,15 @@ struct CoreAIDeviceProbeApp: App {
                             report = "Memuat profil decoder pretrained 1 detik…"
                             Task {
                                 report = await CoreAIDecoderProbe.run(oneSecond: true)
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
+                        Button("Uji encoder 1 detik") {
+                            runningModel = true
+                            report = "Memuat encoder pretrained dan memeriksa latent terhadap PyTorch…"
+                            Task {
+                                report = await CoreAIDecoderProbe.runEncoder()
                                 runningModel = false
                             }
                         }

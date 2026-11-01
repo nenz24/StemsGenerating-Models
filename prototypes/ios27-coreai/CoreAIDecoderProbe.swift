@@ -1,4 +1,4 @@
-// 0.2 s pretrained parity passed on device; the 1 s profile still needs verification.
+// Decoder 0.2 s and 1 s parity passed on device. Encoder device results pending.
 import CoreAI
 import CryptoKit
 import Darwin
@@ -6,9 +6,25 @@ import Dispatch
 import Foundation
 
 enum CoreAIDecoderProbe {
+    private enum Profile {
+        case decoderShort, decoderOneSecond, encoderOneSecond
+        var isEncoder: Bool { self == .encoderOneSecond }
+        var component: String { isEncoder ? "encoder" : "decoder" }
+        var frames: Int { self == .decoderShort ? 5 : 25 }
+        var folderName: String {
+            self == .decoderShort ? "decoder-pretrained" : "\(component)-pretrained-1s"
+        }
+        var inputName: String { isEncoder ? "audio" : "latent" }
+        var outputName: String { isEncoder ? "latent" : "audio" }
+        var inputShape: [Int] { isEncoder ? [1, 2, frames * 1920] : [1, 64, frames] }
+        var outputShape: [Int] { isEncoder ? [1, 64, frames] : [1, 2, frames * 1920] }
+    }
+
     private struct Contract: Decodable {
         struct Checkpoint: Decodable { let digest: String }
         let schemaVersion: Int
+        let component: String?
+        let posteriorMode: String?
         let assetFile: String
         let functionName: String
         let inputName: String
@@ -38,17 +54,24 @@ enum CoreAIDecoderProbe {
     }
 
     static func run(oneSecond: Bool = false) async -> String {
-        let folderName = oneSecond ? "decoder-pretrained-1s" : "decoder-pretrained"
-        let expectedFrames = oneSecond ? 25 : 5
+        await run(profile: oneSecond ? .decoderOneSecond : .decoderShort)
+    }
+
+    static func runEncoder() async -> String {
+        await run(profile: .encoderOneSecond)
+    }
+
+    private static func run(profile: Profile) async -> String {
+        let component = profile.component
         var lines = [
             "Runtime: CoreAI",
             "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
             "CoreAI architecture: \(AIModel.deviceArchitectureName)",
-            "Test: pretrained ACE VAE decoder / seeded latent / NOT instrument generation",
+            "Test: pretrained ACE VAE \(component) / \(profile.isEncoder ? "synthetic audio / posterior mean" : "seeded latent") / NOT instrument generation",
             "Requested compute policy: cpuOnly",
             "Accelerator used by a model: NOT MEASURED"
         ]
-        lines.append("Window profile: \(oneSecond ? "1.0 s" : "0.2 s")")
+        lines.append("Window profile: \(profile.frames == 25 ? "1.0 s" : "0.2 s")")
         #if targetEnvironment(simulator)
         lines.append("Target: Simulator; not physical-device evidence")
         #else
@@ -61,22 +84,22 @@ enum CoreAIDecoderProbe {
         var executed = false
         do {
             guard let folder = Bundle.main.resourceURL?
-                .appendingPathComponent("ModelCandidates/\(folderName)"),
+                .appendingPathComponent("ModelCandidates/\(profile.folderName)"),
                 FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
-                lines.append("Prepare on Mac: bash scripts/prepare_coreai_decoder.sh --frames \(expectedFrames); then rebuild the app.")
+                lines.append("Prepare on Mac: bash scripts/prepare_coreai_decoder.sh --component \(component) --frames \(profile.frames); then rebuild the app.")
                 throw ProbeError.missingPreparedBundle
             }
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase
             let contract = try decoder.decode(Contract.self, from:
                 Data(contentsOf: folder.appendingPathComponent("reference.json")))
-            guard contract.schemaVersion == 1, contract.assetFile == "decoder.aimodel",
-                  contract.functionName == "main", contract.inputName == "latent", contract.outputName == "audio",
-                  contract.inputShape.count == 3, contract.inputShape[0] == 1, contract.inputShape[1] == 64,
-                  contract.inputShape[2] == expectedFrames,
-                  contract.outputShape == [1, 2, contract.inputShape[2] * 1920],
+            guard contract.schemaVersion == 1, contract.assetFile == "\(component).aimodel",
+                  (contract.component ?? "decoder") == component,
+                  (!profile.isEncoder || contract.posteriorMode == "mean"),
+                  contract.functionName == "main", contract.inputName == profile.inputName, contract.outputName == profile.outputName,
+                  contract.inputShape == profile.inputShape, contract.outputShape == profile.outputShape,
                   contract.sampleRate == 48000, contract.scalarType == "float32", contract.byteOrder == "little",
-                  contract.inputFile == "latent.f32le", contract.expectedFile == "audio-reference.f32le",
+                  contract.inputFile == "\(profile.inputName).f32le", contract.expectedFile == "\(profile.outputName)-reference.f32le",
                   contract.checkpointFullSha256Verified,
                   contract.checkpoint.digest == "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
                   contract.absoluteTolerance > 0, contract.absoluteTolerance <= 0.001,
@@ -88,7 +111,7 @@ enum CoreAIDecoderProbe {
                                        count: contract.inputShape.reduce(1, *), hashes: contract.artifactSha256)
             let expected = try readFloats(folder: folder, name: contract.expectedFile,
                                           count: contract.outputShape.reduce(1, *), hashes: contract.artifactSha256)
-            let duration = Double(contract.outputShape[2]) / Double(contract.sampleRate)
+            let duration = Double(profile.frames) / 25
             lines.append("Audio duration / sample rate: \(duration) s / \(contract.sampleRate) Hz stereo")
             lines.append("Input/output shapes: \(contract.inputShape) -> \(contract.outputShape)")
             lines.append("Reference binary SHA-256: VERIFIED; pretrained checkpoint verified by Mac preparation")
@@ -149,10 +172,10 @@ enum CoreAIDecoderProbe {
                     throw ProbeError.numericalParityFailed
                 }
             }
-            lines.append("Pretrained decoder parity: PASS (three runs)")
+            lines.append("Pretrained \(component) parity: PASS (three runs)")
         } catch {
             let detail = error as NSError
-            lines.append("Pretrained decoder parity: NOT PASSED")
+            lines.append("Pretrained \(component) parity: NOT PASSED")
             lines.append("Error: \(String(reflecting: error))")
             lines.append("Error domain/code: \(detail.domain) / \(detail.code)")
             lines.append("Description: \(detail.localizedDescription)")
@@ -162,7 +185,7 @@ enum CoreAIDecoderProbe {
         if let peak = usage.peak { lines.append("Sampled process footprint peak MiB (10 ms sampling): \(Double(peak) / 1048576)") }
         if usage.peak == nil { lines.append("Process footprint: unavailable (task_info failed)") }
         lines.append("Memory scope: whole process; sampled maximum, NOT exact peak or isolated model allocation")
-        lines.append("Total decoder probe ms: \(ms(totalStart.duration(to: clock.now)))")
+        lines.append("Total \(component) probe ms: \(ms(totalStart.duration(to: clock.now)))")
         lines.append("Model loaded: \(loaded ? "YES" : "NO")")
         lines.append("Model inference executed: \(executed ? "YES" : "NO")")
         return lines.joined(separator: "\n")

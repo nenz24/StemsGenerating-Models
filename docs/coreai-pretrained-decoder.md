@@ -6,8 +6,11 @@ instrumen dari piano atau penilaian groove/akor. Tidak perlu GPU CUDA atau train
 
 [Hasil iPhone 0,2 detik sudah PASS](../reviews/coreai-iphone17pro-pretrained-decoder-02s/README.md):
 tiga run cocok dengan referensi, rata-rata dua run hangat 33,88 ms, dan maksimum
-footprint proses tersampel 792,3 MiB. Tahap berikutnya mengukur jendela **1 detik**;
-hasil 0,2 detik belum membuktikan latensi/memori jendela yang lebih panjang.
+footprint proses tersampel 792,3 MiB.
+[Hasil 1 detik juga PASS](../reviews/coreai-iphone17pro-pretrained-decoder-1s/README.md):
+rata-rata dua run hangat 159,77 ms dan maksimum tersampel 849,3 MiB.
+Tahap berikutnya adalah [encoder pretrained](coreai-pretrained-encoder.md).
+Langkah di bawah tetap tersedia untuk mengulang pengujian decoder.
 
 ## Jalankan di Mac
 
@@ -68,7 +71,8 @@ jalankan profil yang ingin diukur terlebih dahulu; hasil tetap dipengaruhi cache
 Signing Team tetap dibaca dari `Signing.local.xcconfig`. Folder resource yang
 sudah ada menyalin paket lokal beserta referensinya ke aplikasi saat build.
 Bagikan laporan lengkap setelah pengujian. Jika compile gagal, kirim error Xcode;
-perubahan profil 1 detik belum dikompilasi dengan Apple SDK di workspace Linux ini.
+profil decoder sudah dijalankan pengguna di perangkat, tetapi perubahan terbaru
+untuk menambahkan encoder belum dikompilasi dengan Apple SDK di workspace Linux ini.
 
 Jika laporan menyebut paket belum disiapkan, pastikan skrip Mac selesai dan
 aplikasi dibuild ulang setelah persiapan. Paket besar tidak tersedia hanya dari
@@ -113,7 +117,6 @@ mencatat checkpoint lengkap terverifikasi, reference FP32 dan ekspor native yang
 berhasil. Hash ekspor/timestamp dapat berbeda pada Mac; aplikasi membaca manifest
 paket lokalnya sendiri, bukan memaksa hash ekspor Linux.
 [Ekspor 1 detik](../reviews/coreai-pretrained-decoder-export-1s/README.md) juga sudah
-berhasil dan diverifikasi di Linux. Hasil iPhone baru tersedia untuk 0,2 detik;
-parity, latensi dan memori 1 detik masih menunggu pengujian perangkat. Encoder,
-conditioning dan diffusion generator belum diuji di iPhone. Angka decoder ini
+berhasil dan diverifikasi di Linux. Hasil iPhone tersedia untuk 0,2 dan 1 detik.
+Encoder, conditioning dan diffusion generator belum diuji di iPhone. Angka decoder ini
 belum menunjukkan kecepatan generasi pengiring lengkap atau kelayakan real-time.

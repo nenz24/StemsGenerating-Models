@@ -41,7 +41,7 @@
       "scope": "This import evidence establishes module type-check only; see the later device report for app/tensor execution"
     },
     "physical_device_execution_verified": true,
-    "physical_device_execution_scope": "User-reported tensor, native affine and 0.2 s pretrained VAE decoder parity; actual hardware placement not measured",
+    "physical_device_execution_scope": "User-reported tensor, native affine and pretrained VAE decoder parity at 0.2 s and 1 s; actual hardware placement not measured",
     "public_sdk_interface_review": {
       "archive_name": "coreai-api.apDMX4.zip",
       "archive_sha256": "7c8d1c8cde67d4f062032c0704fc0991d958ceb17e0952defd2d7c4daa5cb597",
@@ -102,12 +102,12 @@
     "generation_schedule_candidate": "sequential"
   },
   "unverified": {
-    "coreai_sdk_custom_audio_model_support": "Pretrained VAE decoder fixed 0.2 s Float32 device parity reported; encoder and full conditional generator unverified",
-    "model_import_format_and_operators": "Native .aimodel affine and pretrained decoder 0.2 s verified on iPhone; full ACE-Step operators unverified",
+    "coreai_sdk_custom_audio_model_support": "Pretrained VAE decoder Float32 device parity reported at 0.2 s and 1 s; encoder and full conditional generator unverified",
+    "model_import_format_and_operators": "Native .aimodel affine and pretrained decoder at 0.2 s and 1 s verified on iPhone; encoder and full ACE-Step operators unverified",
     "accelerator_and_precision_support": "Float32 affine and decoder parity verified under requested CPU-only policy; actual placement and GPU/Neural Engine inference unmeasured",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
-    "model_conversion_training_and_device_benchmarks": "Pretrained decoder 0.2 s export and device parity/timings reported; 1 s device gate pending, full generator conversion/training unimplemented"
+    "model_conversion_training_and_device_benchmarks": "Pretrained decoder device parity/timings at 0.2 s and 1 s reported; encoder exported with device gate pending, full generator conversion/training unimplemented"
   },
   "local_prototype_status": {
     "source_directory": "prototypes/ios27-coreai",
@@ -119,8 +119,8 @@
     "apple_compilation_verified": true,
     "apple_compilation_evidence": "User reported successful execution of the device probe app; not independently compiled in this Linux workspace",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-pretrained-decoder-02s/report.json",
-    "device_execution_scope": "Native affine and 0.2 s pretrained decoder validate/load/run with parity; full accompaniment and hardware placement unverified",
+    "device_execution_report": "reviews/coreai-iphone17pro-pretrained-decoder-1s/report.json",
+    "device_execution_scope": "Native affine and pretrained decoder 0.2 s/1 s validate/load/run with parity; encoder, full accompaniment and hardware placement unverified",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -154,7 +154,7 @@
     "native_model_reference": "prototypes/ios27-coreai/ModelCandidates/affine-native-reference.json",
     "current_native_probe_apple_compilation_verified": true,
     "native_inference_report": "reviews/coreai-iphone17pro-native-affine/report.json",
-    "checkpoint_conversion_scope": "Pretrained VAE decoder FP32 fixed 0.2 s and 1 s exports only; full generator unimplemented"
+    "checkpoint_conversion_scope": "Pretrained VAE decoder FP32 fixed 0.2 s and 1 s, plus encoder posterior mean fixed 1 s; full generator unimplemented"
   },
   "audio_component_audit": {
     "report": "reviews/coreai-ace-component-audit/report.json",
@@ -215,8 +215,38 @@
       "local_ignored_bundle": "prototypes/ios27-coreai/ModelCandidates/decoder-pretrained-1s",
       "pretrained_export_verified_in_development": true,
       "validation_manifest": "reviews/coreai-pretrained-decoder-export-1s/reference.json",
-      "updated_swift_apple_build_verified": false,
-      "device_decoder_parity_verified": false
+      "updated_swift_apple_build_verified": true,
+      "device_decoder_parity_verified": true,
+      "device_report": "reviews/coreai-iphone17pro-pretrained-decoder-1s/report.json",
+      "device_evidence_source": "User-pasted report; not independently reproduced"
     }
+  },
+  "pretrained_encoder_probe": {
+    "preparation_command": "bash scripts/prepare_coreai_decoder.sh --component encoder --frames 25",
+    "exporter_script": "scripts/export_coreai_decoder.py --component encoder",
+    "local_ignored_bundle": "prototypes/ios27-coreai/ModelCandidates/encoder-pretrained-1s",
+    "publisher_checkpoint_full_sha256_verified_in_development": true,
+    "pretrained_export_verified_in_development": true,
+    "reference_backend": "PyTorch CPU FP32",
+    "input_shape": [
+      1,
+      2,
+      48000
+    ],
+    "output_shape": [
+      1,
+      64,
+      25
+    ],
+    "sample_rate": 48000,
+    "duration_seconds": 1.0,
+    "posterior_mode": "mean",
+    "input_provenance": "Fixed synthetic stereo multitone with sine-squared envelope; not user recording",
+    "weight_norm_fold_parity": "exact in development",
+    "requested_device_compute_policy": "cpuOnly",
+    "updated_swift_apple_build_verified": false,
+    "device_encoder_parity_verified": false,
+    "memory_measurement": "10 ms sampled whole-process phys_footprint, not exact peak",
+    "validation_manifest": "reviews/coreai-pretrained-encoder-export-1s/reference.json"
   }
 }

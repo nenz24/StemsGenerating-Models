@@ -26,7 +26,11 @@ the requested policy.
 This establishes one pretrained decoder's numerical parity for one repeated
 input, not full VAE coverage, musical quality, accompaniment generation or an
 end-to-end real-time claim. Encoder, diffusion generator and conditioning remain
-separate work. The next device gate is the independently prepared
+separate work. At the time of this result, the next device gate was the independently prepared
 [one-second profile](../../docs/coreai-pretrained-decoder.md); the 0.2 s package
-is retained. The new profile's Swift changes have not yet been built with the
-Apple SDK in this Linux workspace.
+is retained. The profile's Swift changes were not compiled with the Apple SDK
+in this Linux workspace.
+
+The user subsequently reported
+[one-second decoder parity PASS](../coreai-iphone17pro-pretrained-decoder-1s/README.md).
+The next component is the [encoder](../../docs/coreai-pretrained-encoder.md).

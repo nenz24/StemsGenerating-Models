@@ -1,0 +1,31 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: pretrained ACE VAE decoder / seeded latent / NOT instrument generation
+Requested compute policy: cpuOnly
+Accelerator used by a model: NOT MEASURED
+Window profile: 1.0 s
+Target: iOS device build
+Audio duration / sample rate: 1.0 s / 48000 Hz stereo
+Input/output shapes: [1, 64, 25] -> [1, 2, 48000]
+Reference binary SHA-256: VERIFIED; pretrained checkpoint verified by Mac preparation
+Tolerances: abs 0.0001, rel 0.001, normalized RMSE 0.001
+Source asset validation: true
+Source asset validation ms: 0.367667
+Validated load/specialization ms: 754.2645
+Function names: ["main"]
+Runtime input descriptor: [1, 64, 25], float32, interleave nil
+Runtime output descriptor: [1, 2, 48000], float32, interleave nil
+First inference run+read-back ms: 178.696542
+Max abs error: 7.502734661102295e-06; RMSE: 7.518138395368918e-07; normalized RMSE: 3.1238491721560804e-06
+Warm inference 1 run+read-back ms: 157.995833
+Max abs error: 7.502734661102295e-06; RMSE: 7.518138395368918e-07; normalized RMSE: 3.1238491721560804e-06
+Warm inference 2 run+read-back ms: 161.5515
+Max abs error: 7.502734661102295e-06; RMSE: 7.518138395368918e-07; normalized RMSE: 3.1238491721560804e-06
+Pretrained decoder parity: PASS (three runs)
+Process footprint baseline MiB: 19.75177764892578
+Sampled process footprint peak MiB (10 ms sampling): 849.2684326171875
+Memory scope: whole process; sampled maximum, NOT exact peak or isolated model allocation
+Total decoder probe ms: 1329.297208
+Model loaded: YES
+Model inference executed: YES

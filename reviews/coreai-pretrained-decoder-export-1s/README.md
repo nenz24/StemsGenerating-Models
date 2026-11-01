@@ -18,7 +18,13 @@ The ignored local folder is
 The existing 0.2 s bundle also passed integrity verification and is preserved.
 Checkpoint and exported weights are not committed.
 
-This is export evidence only. Apple compilation of the updated profile,
-CoreAI device parity, timings and memory for this one-second window are pending.
+This is export evidence only. At export time, Apple compilation of the updated profile,
+CoreAI device parity, timings and memory for this one-second window were pending.
 The [0.2 s device result](../coreai-iphone17pro-pretrained-decoder-02s/README.md)
 does not establish these. Follow the [Mac/device steps](../../docs/coreai-pretrained-decoder.md).
+
+**Subsequent evidence:** the user has now reported successful one-second
+device parity and timings in the
+[one-second iPhone report](../coreai-iphone17pro-pretrained-decoder-1s/README.md).
+That device evidence does not contain the Mac asset hashes; this Linux manifest
+remains independent export evidence.

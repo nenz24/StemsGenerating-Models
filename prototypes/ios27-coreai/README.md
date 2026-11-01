@@ -157,11 +157,16 @@ bersifat lokal dan diabaikan Git.
 tiga run cocok, rata-rata dua run hangat 33,88 ms, footprint proses maksimum
 tersampel 792,3 MiB (bukan peak persis atau alokasi model saja).
 
-Berikutnya di Mac, jalankan `bash scripts/prepare_coreai_decoder.sh --frames 25`,
-lalu build ulang aplikasi dan tekan **Uji decoder 1 detik**. Skrip memakai cache bila tersedia.
+[Profil 1 detik juga PASS](../../reviews/coreai-iphone17pro-pretrained-decoder-1s/README.md):
+rata-rata dua run hangat 159,77 ms, footprint proses maksimum tersampel 849,3 MiB.
+Berikutnya di Mac, jalankan
+`bash scripts/prepare_coreai_decoder.sh --component encoder --frames 25`,
+lalu build ulang aplikasi dan tekan **Uji encoder 1 detik**. Skrip memakai cache bila tersedia.
 Paket akhir yang sudah ada diverifikasi dan dipakai ulang; versi rusak tidak
 ditimpa otomatis. Paket 1 detik dibuat terpisah; tombol **Uji decoder pretrained**
 tetap memakai baseline 0,2 detik. Kedua paket memakai latent seed tetap, bukan
-rekaman piano atau generasi pengiring. Ekspor 1 detik berhasil di Linux;
-kompilasi Swift yang diperbarui, parity dan pengukuran profil 1 detik di iPhone
-belum diverifikasi. Pengujian ini belum menjalankan encoder atau generator.
+rekaman piano atau generasi pengiring. Ekspor encoder 1 detik juga berhasil di
+Linux. Encoder memakai audio multitone sintetis dan menghasilkan posterior mean
+latent; [panduan encoder](../../docs/coreai-pretrained-encoder.md) menjelaskan kontrak.
+Kompilasi Swift terbaru, parity dan pengukuran encoder di iPhone masih menunggu.
+Pengujian ini belum menjalankan diffusion generator.

@@ -3,14 +3,25 @@
 set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
-frames=5
-if [ "$#" -gt 0 ]; then
-    if [ "$#" -ne 2 ] || [ "$1" != --frames ] || { [ "$2" != 5 ] && [ "$2" != 25 ]; }; then
-        printf 'Usage: bash scripts/prepare_coreai_decoder.sh [--frames 5|25]\n' >&2
-        exit 2
-    fi
-    frames="$2"
+component=decoder
+frames=""
+usage() {
+    printf 'Usage: bash scripts/prepare_coreai_decoder.sh [--component decoder|encoder] [--frames 5|25]\n' >&2
+    exit 2
+}
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --component) [ "$#" -ge 2 ] || usage; component="$2"; shift 2 ;;
+        --frames) [ "$#" -ge 2 ] || usage; frames="$2"; shift 2 ;;
+        *) usage ;;
+    esac
+done
+case "$component" in decoder|encoder) ;; *) usage ;; esac
+if [ -z "$frames" ]; then
+    if [ "$component" = encoder ]; then frames=25; else frames=5; fi
 fi
+case "$frames" in 5|25) ;; *) usage ;; esac
+if [ "$component" = encoder ] && [ "$frames" != 25 ]; then usage; fi
 if [ "$(uname -s)" != Darwin ] || [ "$(uname -m)" != arm64 ]; then
     printf 'Run this Mac preparation script in a native Apple Silicon terminal.\n' >&2
     printf 'Linux development can use export_coreai_decoder.py with CPU dependencies.\n' >&2
@@ -48,13 +59,16 @@ else
 fi
 bundle_name=decoder-pretrained
 if [ "$frames" = 25 ]; then bundle_name=decoder-pretrained-1s; fi
+if [ "$component" = encoder ]; then bundle_name=encoder-pretrained-1s; fi
 bundle="$repo_root/prototypes/ios27-coreai/ModelCandidates/$bundle_name"
 if [ -e "$bundle" ]; then
-    "$environment_dir/bin/python" scripts/export_coreai_decoder.py --out "$bundle" --frames "$frames" --verify-only
+    "$environment_dir/bin/python" scripts/export_coreai_decoder.py --component "$component" --out "$bundle" --frames "$frames" --verify-only
 else
-    "$environment_dir/bin/python" -u scripts/export_coreai_decoder.py --out "$bundle" --frames "$frames"
+    "$environment_dir/bin/python" -u scripts/export_coreai_decoder.py --component "$component" --out "$bundle" --frames "$frames"
 fi
-if [ "$frames" = 25 ]; then
+if [ "$component" = encoder ]; then
+    printf '\nReady: rebuild on iPhone, then tap Uji encoder 1 detik. Decoder bundles are retained.\n'
+elif [ "$frames" = 25 ]; then
     printf '\nReady: rebuild on iPhone, then tap Uji decoder 1 detik. The 0.2 s bundle is retained.\n'
 else
     printf '\nReady: rebuild on iPhone, then tap Uji decoder pretrained.\n'
