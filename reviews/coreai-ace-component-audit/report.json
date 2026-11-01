@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "upstream_commit": "ca1e85fe9430179831e6bc6be790c332190a3866",
+  "scope": "Meta-device architecture/shape audit and synthetic block native export only",
+  "versions": {
+    "torch": "2.8.0+cpu",
+    "diffusers": "0.37.0",
+    "coreai-torch": "0.4.3",
+    "coreai-core": "1.0.0b3"
+  },
+  "vae_config_verified_against_publisher_manifest": true,
+  "sample_rate": 48000,
+  "audio_channels": 2,
+  "latent_channels": 64,
+  "latent_rate_hz": 25,
+  "downsampling_factor": 1920,
+  "vae_parameter_counts": {
+    "full": 168695426,
+    "encoder": 84281344,
+    "decoder": 84414082
+  },
+  "raw_weight_storage_estimates": {
+    "bf16_or_fp16": {
+      "full": 337390852,
+      "encoder": 168562688,
+      "decoder": 168828164
+    },
+    "fp32": {
+      "full": 674781704,
+      "encoder": 337125376,
+      "decoder": 337656328
+    }
+  },
+  "one_second_decoder_output_shape": [
+    1,
+    2,
+    48000
+  ],
+  "largest_observed_decoder_tensor_one_second": {
+    "module": "block.4.conv_t1",
+    "class": "ConvTranspose1d",
+    "shape": [
+      1,
+      128,
+      48000
+    ],
+    "elements": 6144000
+  },
+  "single_tensor_fp32_bytes_by_seconds": {
+    "0.2": 4915200,
+    "1": 24576000,
+    "10": 245760000,
+    "90": 2211840000
+  },
+  "memory_estimate_limit": "Logical unfused tensor storage, NOT measured device peak RAM; fusion may avoid materialization; excludes weights, simultaneous tensors and runtime buffers",
+  "checkpoint_headers": {
+    "vae": {
+      "http_status": 206,
+      "header_bytes": 40528,
+      "prefix_bytes_read": 1048576,
+      "scope": "Bounded prefix may include partial tensor bytes; no full weights loaded or complete checkpoint checksum verified",
+      "header_sha256": "ee65a4b1609150f6be18b8b164c77f340a326c3a5912acc686ea5227f60c9528",
+      "parameters_by_dtype": {
+        "BF16": 168695426
+      },
+      "full_checkpoint_checksum_verified": false,
+      "provenance": {
+        "repo_id": "ACE-Step/Ace-Step1.5",
+        "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+        "filename": "vae/diffusion_pytorch_model.safetensors",
+        "size": 337431388,
+        "algorithm": "sha256",
+        "digest": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0"
+      }
+    },
+    "base_generator": {
+      "http_status": 206,
+      "header_bytes": 80560,
+      "prefix_bytes_read": 1048576,
+      "scope": "Bounded prefix may include partial tensor bytes; no full weights loaded or complete checkpoint checksum verified",
+      "header_sha256": "1b5ffdcb5660c9ca5bf91ad3867afc266b2697ba962e6580fd5675f82ca344f1",
+      "parameters_by_dtype": {
+        "BF16": 2393872518
+      },
+      "full_checkpoint_checksum_verified": false,
+      "provenance": {
+        "repo_id": "ACE-Step/acestep-v15-base",
+        "revision": "e432212fec32b8965a14ffa57ae653438d6abd14",
+        "filename": "model.safetensors",
+        "size": 4787825604,
+        "algorithm": "sha256",
+        "digest": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b"
+      }
+    }
+  },
+  "synthetic_operator_probes": [
+    {
+      "module": "OobleckDecoderBlock",
+      "channels": 128,
+      "stride": 2,
+      "input_shape": [
+        1,
+        128,
+        64
+      ],
+      "output_shape": [
+        1,
+        128,
+        128
+      ],
+      "parameters": 462336,
+      "weight_provenance": "Synthetic seed 0, not pretrained; reduced channels except final-stage width 128 probe",
+      "device_execution": "not_run",
+      "operators": {
+        "aten.exp.default": 14,
+        "aten.view.default": 14,
+        "aten.add.Tensor": 17,
+        "aten.reciprocal.default": 7,
+        "aten.mul.Tensor": 21,
+        "aten.sin.default": 7,
+        "aten.pow.Tensor_Scalar": 7,
+        "aten.linalg_vector_norm.default": 7,
+        "aten.div.Tensor": 7,
+        "aten.convolution.default": 7
+      },
+      "native_export": "passed",
+      "asset": "block-c128-s2.aimodel"
+    },
+    {
+      "module": "OobleckDecoderBlock",
+      "channels": 16,
+      "stride": 4,
+      "input_shape": [
+        1,
+        16,
+        64
+      ],
+      "output_shape": [
+        1,
+        16,
+        256
+      ],
+      "parameters": 8640,
+      "weight_provenance": "Synthetic seed 0, not pretrained; reduced channels except final-stage width 128 probe",
+      "device_execution": "not_run",
+      "operators": {
+        "aten.exp.default": 14,
+        "aten.view.default": 14,
+        "aten.add.Tensor": 17,
+        "aten.reciprocal.default": 7,
+        "aten.mul.Tensor": 21,
+        "aten.sin.default": 7,
+        "aten.pow.Tensor_Scalar": 7,
+        "aten.linalg_vector_norm.default": 7,
+        "aten.div.Tensor": 7,
+        "aten.convolution.default": 7
+      },
+      "native_export": "passed",
+      "asset": "block-c16-s4.aimodel"
+    },
+    {
+      "module": "OobleckDecoderBlock",
+      "channels": 16,
+      "stride": 6,
+      "input_shape": [
+        1,
+        16,
+        64
+      ],
+      "output_shape": [
+        1,
+        16,
+        384
+      ],
+      "parameters": 9664,
+      "weight_provenance": "Synthetic seed 0, not pretrained; reduced channels except final-stage width 128 probe",
+      "device_execution": "not_run",
+      "operators": {
+        "aten.exp.default": 14,
+        "aten.view.default": 14,
+        "aten.add.Tensor": 17,
+        "aten.reciprocal.default": 7,
+        "aten.mul.Tensor": 21,
+        "aten.sin.default": 7,
+        "aten.pow.Tensor_Scalar": 7,
+        "aten.linalg_vector_norm.default": 7,
+        "aten.div.Tensor": 7,
+        "aten.convolution.default": 7
+      },
+      "native_export": "passed",
+      "asset": "block-c16-s6.aimodel"
+    },
+    {
+      "module": "OobleckDecoderBlock",
+      "channels": 16,
+      "stride": 10,
+      "input_shape": [
+        1,
+        16,
+        64
+      ],
+      "output_shape": [
+        1,
+        16,
+        640
+      ],
+      "parameters": 11712,
+      "weight_provenance": "Synthetic seed 0, not pretrained; reduced channels except final-stage width 128 probe",
+      "device_execution": "not_run",
+      "operators": {
+        "aten.exp.default": 14,
+        "aten.view.default": 14,
+        "aten.add.Tensor": 17,
+        "aten.reciprocal.default": 7,
+        "aten.mul.Tensor": 21,
+        "aten.sin.default": 7,
+        "aten.pow.Tensor_Scalar": 7,
+        "aten.linalg_vector_norm.default": 7,
+        "aten.div.Tensor": 7,
+        "aten.convolution.default": 7
+      },
+      "native_export": "passed",
+      "asset": "block-c16-s10.aimodel"
+    }
+  ],
+  "full_pretrained_checkpoints_downloaded": false,
+  "pretrained_weights_loaded": false,
+  "coreai_device_execution_verified": false
+}

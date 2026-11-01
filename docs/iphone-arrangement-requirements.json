@@ -154,5 +154,19 @@
     "native_model_reference": "prototypes/ios27-coreai/ModelCandidates/affine-native-reference.json",
     "current_native_probe_apple_compilation_verified": true,
     "native_inference_report": "reviews/coreai-iphone17pro-native-affine/report.json"
+  },
+  "audio_component_audit": {
+    "report": "reviews/coreai-ace-component-audit/report.json",
+    "pretrained_weights_loaded": false,
+    "full_checkpoint_downloaded": false,
+    "vae_architecture_parameter_count": 168695426,
+    "checkpoint_precision": "BF16 (bounded header inspection)",
+    "vae_full_fp32_dense_bytes": 674781704,
+    "vae_decoder_fp32_dense_bytes": 337656328,
+    "generator_checkpoint_bf16_tensor_elements": 2393872518,
+    "synthetic_decoder_block_native_exports_passed": 4,
+    "audio_device_inference_verified": false,
+    "selected_next_component": "pretrained VAE decoder, fixed 0.2-1 second window",
+    "memory_scope": "Shape-derived logical tensor storage, not measured device peak RAM"
   }
 }

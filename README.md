@@ -37,6 +37,11 @@ sudah diganti dengan export native `.aimodel` melalui `coreai-torch` resmi.
 Lihat [jalur native](docs/coreai-native-export.md). Ekspor dan referensi PyTorch
 sudah dibuat dan inference model numerik native pada iPhone sudah dilaporkan lulus.
 
+**Audit komponen audio CoreAI:** [hasil dan rencana decoder VAE](reviews/coreai-ace-component-audit/README.md).
+Empat probe operator sintetis berhasil diekspor native. Decoder pretrained dan
+generasi audio pada iPhone belum diuji; ukuran bobot dan feature map diaudit
+terpisah dari waktu inference model numerik kecil.
+
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:
 Base, seed 0, CFG 7, 50 langkah. Lihat

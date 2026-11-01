@@ -139,3 +139,16 @@ ACE-Step dan bukan sekadar mengubah ekstensi file checkpoint.
 
 Pekerjaan drum full-song CUDA yang sedang dicoba tetap menjadi eksperimen
 referensi. Belum ada perubahan pada preset atau baseline audio yang disetujui.
+
+## Audit audio setelah smoke test native
+
+[Audit komponen](../reviews/coreai-ace-component-audit/README.md) mencatat VAE
+168.695.426 parameter BF16, storage dense FP32 sekitar 675 MB untuk seluruh VAE
+atau 338 MB untuk decoder. Empat blok sintetis dengan pola upsampling 2/4/6/10
+berhasil diekspor ke CoreAI. Ini bukan bobot pretrained atau uji audio perangkat.
+
+Komponen berikutnya dipilih: decoder VAE pretrained dengan jendela 0,2–1 detik,
+input latent identik pada PyTorch/CoreAI dan verifikasi error/latensi/peak RAM.
+Feature map logis 90 detik dapat sangat besar; jendela codec perlu ditentukan
+terpisah dari baseline konteks generasi musikal 90 detik. Seluruh generator
+Base, conditioning, sampling dan kualitas instrumen tetap belum terverifikasi.
