@@ -1,5 +1,11 @@
 # ACE-Step context bridge
 
+[Notebook 22](../notebooks/22_colab_cache_transfer.ipynb) backs up verified model
+assets on CPU and restores them on a destination GPU VM, then offers the same
+guitar layering modes as notebook 21. Source/engine/style are embedded. It checks
+actual cache presence after CPU reconnection; old VM disks and GPU quota do not
+transfer automatically. See the [cache-transfer guide](../docs/colab-cache-transfer.md).
+
 [Notebook 21](../notebooks/21_colab_guitar_layers.ipynb) implements the selected
 direction: simultaneous strumming and picking in the preferred opening-30s
 sound style. Two aligned performances share the same piano and frozen style

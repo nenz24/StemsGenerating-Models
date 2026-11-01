@@ -1,5 +1,10 @@
 # Simultaneous strumming and picked guitar in the selected sound style
 
+For an account/VM change, use [notebook 22 and the cache-transfer guide](colab-cache-transfer.md):
+CPU backup if old checkpoint files remain, then prepare/restore on the new GPU
+VM. It includes this same preview30/full90 layering workflow. A new notebook
+does not by itself restore files from an erased Colab VM.
+
 The user wants **both techniques playing together**, and selected the uploaded
 opening-30s guitar clip for its sound/style. The latest upload is byte-identical
 to the original `guitar_feedback.zip` (SHA-256

@@ -3,6 +3,12 @@
 POC JupyterLab untuk membuat bass/drum/gitar pengiring dari audio memakai pretrained
 ACE-Step 1.5 Base. Model belum dilatih ulang atau dikonversi ke CoreAI/iPhone.
 
+**Pindah akun/VM Colab:** [notebook 22](notebooks/22_colab_cache_transfer.ipynb)
+memisahkan backup bobot via CPU (`ACTION="backup"`) dan restore pada VM GPU
+tujuan (`ACTION="prepare"`), lalu melanjutkan gitar berlapis. Cache lama harus
+masih ada atau sudah dibackup; VM yang terhapus tidak dapat dipulihkan lewat
+notebook. Lihat [panduan transfer cache](docs/colab-cache-transfer.md).
+
 **Baseline drum seluruh lagu sudah disetujui.** Hasil 4:03 memakai chunk maksimal
 90 detik dengan referensi kit yang sama; arsip, parameter, dan hash disimpan di
 [`acoustic-drums-shared-kit-full-v1`](baselines/acoustic-drums-shared-kit-full-v1/).
