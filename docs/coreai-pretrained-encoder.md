@@ -6,6 +6,12 @@ Decoder asli sudah lulus parity untuk
 Tahap ini memeriksa arah sebaliknya: **audio → latent** memakai encoder asli
 dari checkpoint VAE yang sama. Ini belum menjalankan diffusion generator.
 
+[Hasil encoder iPhone sudah PASS](../reviews/coreai-iphone17pro-pretrained-encoder-1s/README.md):
+rata-rata dua run hangat 131,33 ms. Footprint proses maksimum tersampel 97 MiB
+tidak mengukur ukuran model atau peak persis. Tahap berikutnya adalah
+[satu blok diffusion transformer](coreai-pretrained-dit-block.md).
+Langkah di bawah tetap tersedia untuk mengulang baseline encoder.
+
 ## Jalankan di Mac
 
 Dari folder repository:
@@ -39,8 +45,9 @@ CoreAI tetap dapat memengaruhi waktu load. Signing Team tetap memakai pengaturan
 lokal yang sudah ada. Kirim laporan lengkap dari tombol **Bagikan laporan**.
 
 Paket harus disiapkan sebelum build aplikasi. `git pull` saja tidak memasukkan
-bobot besar ke resource Xcode. Source Swift profil encoder belum dikompilasi
-dengan Apple SDK di workspace Linux ini.
+bobot besar ke resource Xcode. Pengguna telah menjalankan profil encoder di
+perangkat; perubahan Swift terbaru untuk blok DiT belum dikompilasi dengan
+Apple SDK di workspace Linux ini.
 
 ## Kontrak numerik
 
@@ -54,7 +61,7 @@ dengan Apple SDK di workspace Linux ini.
 
 [Ekspor encoder berhasil di Linux](../reviews/coreai-pretrained-encoder-export-1s/README.md),
 dengan checkpoint penuh terverifikasi dan hasil identik sebelum/sesudah folding
-weight normalization. Hasil iPhone masih diperlukan untuk memverifikasi parity,
-latensi dan memori encoder. Kelulusan tes ini kelak belum membuktikan kualitas
+weight normalization. Hasil iPhone mengonfirmasi parity pada satu input tetap,
+beserta latensi dan footprint proses tersampel. Kelulusan tes ini belum membuktikan kualitas
 rekonstruksi, sinkronisasi atau generasi tiga instrumen; tahap generasi masih
 memerlukan conditioning dan model generatif.

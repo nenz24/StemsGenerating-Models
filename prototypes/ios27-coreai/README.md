@@ -159,14 +159,29 @@ tersampel 792,3 MiB (bukan peak persis atau alokasi model saja).
 
 [Profil 1 detik juga PASS](../../reviews/coreai-iphone17pro-pretrained-decoder-1s/README.md):
 rata-rata dua run hangat 159,77 ms, footprint proses maksimum tersampel 849,3 MiB.
-Berikutnya di Mac, jalankan
-`bash scripts/prepare_coreai_decoder.sh --component encoder --frames 25`,
-lalu build ulang aplikasi dan tekan **Uji encoder 1 detik**. Skrip memakai cache bila tersedia.
+Encoder posterior mean 1 detik juga sudah
+[PASS di iPhone](../../reviews/coreai-iphone17pro-pretrained-encoder-1s/README.md),
+dengan rata-rata dua run hangat 131,33 ms. Footprint proses tersampel 97 MiB
+bukan alokasi model terisolasi atau bukti encoder hanya membutuhkan RAM sebesar itu.
+Skrip memakai cache bila tersedia.
 Paket akhir yang sudah ada diverifikasi dan dipakai ulang; versi rusak tidak
 ditimpa otomatis. Paket 1 detik dibuat terpisah; tombol **Uji decoder pretrained**
 tetap memakai baseline 0,2 detik. Kedua paket memakai latent seed tetap, bukan
 rekaman piano atau generasi pengiring. Ekspor encoder 1 detik juga berhasil di
 Linux. Encoder memakai audio multitone sintetis dan menghasilkan posterior mean
 latent; [panduan encoder](../../docs/coreai-pretrained-encoder.md) menjelaskan kontrak.
-Kompilasi Swift terbaru, parity dan pengukuran encoder di iPhone masih menunggu.
-Pengujian ini belum menjalankan diffusion generator.
+Pengujian ini belum menjalankan diffusion generator lengkap.
+
+## Blok diffusion transformer pretrained
+
+Berikutnya jalankan `bash scripts/prepare_coreai_dit_block.sh`, build ulang,
+lalu tekan **Uji blok generator**. Skrip memverifikasi checkpoint Base lengkap
+(unduhan 4,79 GB bila belum ada), lalu mengekspor hanya `decoder.layers.0.*`
+dengan self/cross-attention dan MLP asli. Native block sekitar 252 MB;
+semua paket codec tetap tersimpan. Tujuh input runtime mencakup hidden states,
+conditioning, timestep modulation, RoPE dan masks.
+
+[Panduan blok DiT](../../docs/coreai-pretrained-dit-block.md) menjelaskan batas
+uji 16 token sintetis ini. Ekspor Linux berhasil; build Swift terbaru dan
+parity/timing/memori blok pada iPhone masih menunggu. Belum ada generasi instrumen
+lengkap, loop diffusion atau pengukuran end-to-end di iPhone.

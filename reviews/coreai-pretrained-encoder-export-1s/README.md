@@ -32,3 +32,8 @@ The app's updated Swift profile has not been compiled against the Apple SDK
 here. Encoder device parity, memory and timings are pending. This evidence
 does not establish reconstruction quality, conditioning behavior or full
 instrument generation. Follow the [Mac and iPhone steps](../../docs/coreai-pretrained-encoder.md).
+
+**Subsequent evidence:** the user reported
+[encoder posterior-mean parity PASS on iPhone](../coreai-iphone17pro-pretrained-encoder-1s/README.md).
+The Linux manifest remains independent export evidence; the device report does
+not emit its exact source commit or Mac artifact hashes.

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "source": "User-pasted device report",
+    "independently_reproduced": false,
+    "device_model": "iPhone 17 Pro",
+    "device_model_evidence": "Previously identified by user; model identifier not emitted in report",
+    "source_commit": null,
+    "local_asset_hashes_in_report": false,
+    "cache_state": "unmeasured"
+  },
+  "runtime": "CoreAI",
+  "os": "Version 27.0.1 (Build 24A446)",
+  "architecture": "h18p",
+  "target": "iOS device build",
+  "test": "pretrained ACE VAE encoder / synthetic audio / posterior mean / NOT instrument generation",
+  "requested_compute_policy": "cpuOnly",
+  "actual_accelerator": "not measured",
+  "input_shape": [
+    1,
+    2,
+    48000
+  ],
+  "output_shape": [
+    1,
+    64,
+    25
+  ],
+  "scalar_type": "float32",
+  "sample_rate": 48000,
+  "duration_seconds": 1.0,
+  "reference_binary_sha256_verified": true,
+  "publisher_checkpoint_verified_by_mac_preparation": true,
+  "tolerances": {
+    "absolute": 0.0001,
+    "relative": 0.001,
+    "normalized_rmse": 0.001
+  },
+  "source_asset_validation": true,
+  "source_asset_validation_ms": 0.254833,
+  "validated_load_specialization_ms": 424.414375,
+  "function_names": [
+    "main"
+  ],
+  "runs": [
+    {
+      "kind": "first",
+      "run_and_read_back_ms": 149.549792,
+      "max_absolute_error": 6.597861647605896e-05,
+      "rmse": 1.197700916225508e-05,
+      "normalized_rmse": 1.169841896856174e-05
+    },
+    {
+      "kind": "warm_1",
+      "run_and_read_back_ms": 129.006,
+      "max_absolute_error": 6.597861647605896e-05,
+      "rmse": 1.197700916225508e-05,
+      "normalized_rmse": 1.169841896856174e-05
+    },
+    {
+      "kind": "warm_2",
+      "run_and_read_back_ms": 133.645917,
+      "max_absolute_error": 6.597861647605896e-05,
+      "rmse": 1.197700916225508e-05,
+      "normalized_rmse": 1.169841896856174e-05
+    }
+  ],
+  "derived_warm_mean_ms": 131.3259585,
+  "parity": "PASS (three runs)",
+  "memory": {
+    "baseline_mib": 20.43927764892578,
+    "sampled_maximum_mib": 97.0020751953125,
+    "sampling_interval_ms": 10,
+    "scope": "Whole process; not exact peak or isolated model allocation; residency/mapping/sharing unmeasured"
+  },
+  "total_probe_ms": 875.614958,
+  "model_loaded": true,
+  "model_inference_executed": true,
+  "scope": "One repeated synthetic stereo input, posterior mean only; stochastic posterior, reconstruction quality, full generator and actual hardware placement unverified",
+  "window_profile": "1.0 s",
+  "posterior_mode": "mean"
+}

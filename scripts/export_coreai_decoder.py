@@ -91,7 +91,7 @@ def checkpoint_path(record, explicit=None):
             continue
         verify_checkpoint(candidate, record)
         return candidate
-    print(f'Downloading only pinned VAE: {record["size"] / 1e6:.1f} MB', flush=True)
+    print(f'Downloading pinned checkpoint: {record["size"] / 1e6:.1f} MB', flush=True)
     candidate = Path(hf_hub_download(record['repo_id'], record['filename'], revision=record['revision'],
                                     cache_dir=str(caches[-1])))
     verify_checkpoint(candidate, record)

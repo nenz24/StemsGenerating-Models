@@ -45,10 +45,14 @@ terpisah dari waktu inference model numerik kecil.
 
 **Decoder pretrained 1 detik PASS:** [laporan iPhone](reviews/coreai-iphone17pro-pretrained-decoder-1s/README.md),
 rata-rata dua run hangat 159,77 ms dan maksimum footprint proses tersampel 849,3 MiB.
-**Uji berikutnya:** [encoder pretrained 1 detik](docs/coreai-pretrained-encoder.md).
-Jalankan `bash scripts/prepare_coreai_decoder.sh --component encoder --frames 25`
-di Mac sebelum build; lalu tekan **Uji encoder 1 detik**. Kedua baseline decoder
-tetap disimpan. Ekspor encoder sudah diuji di Linux; hasil iPhone masih menunggu.
+**Encoder pretrained 1 detik juga PASS:** [laporan iPhone](reviews/coreai-iphone17pro-pretrained-encoder-1s/README.md),
+rata-rata dua run hangat 131,33 ms. Footprint proses tersampel 97 MiB bukan ukuran
+alokasi model; encoder FP32 yang diekspor tetap sekitar 338 MB.
+**Uji berikutnya:** [satu blok generator DiT pretrained](docs/coreai-pretrained-dit-block.md).
+Jalankan `bash scripts/prepare_coreai_dit_block.sh`, build ulang, lalu tekan
+**Uji blok generator**. Jika checkpoint Base belum ada, unduhannya 4,79 GB;
+native block sekitar 252 MB. Ekspor blok berhasil di Linux; hasil iPhone masih
+menunggu. Semua baseline codec tetap disimpan.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:

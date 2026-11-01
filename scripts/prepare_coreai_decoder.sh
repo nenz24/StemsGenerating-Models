@@ -5,14 +5,16 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 component=decoder
 frames=""
+environment_only=false
 usage() {
-    printf 'Usage: bash scripts/prepare_coreai_decoder.sh [--component decoder|encoder] [--frames 5|25]\n' >&2
+    printf 'Usage: bash scripts/prepare_coreai_decoder.sh [--component decoder|encoder] [--frames 5|25] [--environment-only]\n' >&2
     exit 2
 }
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --component) [ "$#" -ge 2 ] || usage; component="$2"; shift 2 ;;
         --frames) [ "$#" -ge 2 ] || usage; frames="$2"; shift 2 ;;
+        --environment-only) environment_only=true; shift ;;
         *) usage ;;
     esac
 done
@@ -56,6 +58,10 @@ else
         "$selected_python" -m venv "$environment_dir"
     fi
     "$environment_dir/bin/python" -m pip install -r requirements-coreai-audit.txt
+fi
+if [ "$environment_only" = true ]; then
+    printf 'CoreAI Python environment ready. Existing model bundles are retained.\n'
+    exit 0
 fi
 bundle_name=decoder-pretrained
 if [ "$frames" = 25 ]; then bundle_name=decoder-pretrained-1s; fi

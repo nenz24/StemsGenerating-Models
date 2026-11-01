@@ -1,6 +1,6 @@
 // API declarations checked against the user's Xcode 27 SDK interfaces.
 // The user reported a successful tensor probe on iOS 27.0.1; see reviews/.
-// Affine and pretrained decoder parity passed on device; encoder testing is next.
+// Affine and pretrained VAE encoder/decoder parity passed; DiT-block testing is next.
 import CoreAI
 import SwiftUI
 import UIKit
@@ -57,6 +57,15 @@ struct CoreAIDeviceProbeApp: App {
                             report = "Memuat encoder pretrained dan memeriksa latent terhadap PyTorch…"
                             Task {
                                 report = await CoreAIDecoderProbe.runEncoder()
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
+                        Button("Uji blok generator") {
+                            runningModel = true
+                            report = "Memuat blok DiT pretrained dan membandingkan activations dengan PyTorch…"
+                            Task {
+                                report = await CoreAIDecoderProbe.runDiTBlock()
                                 runningModel = false
                             }
                         }

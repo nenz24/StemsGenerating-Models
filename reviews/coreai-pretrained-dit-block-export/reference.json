@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "asset_file": "dit-block.aimodel",
+  "function_name": "main",
+  "output_name": "hidden_out",
+  "input_shapes": {
+    "hidden": [
+      1,
+      16,
+      2048
+    ],
+    "condition": [
+      1,
+      8,
+      2048
+    ],
+    "temb": [
+      1,
+      6,
+      2048
+    ],
+    "rope_cos": [
+      1,
+      16,
+      128
+    ],
+    "rope_sin": [
+      1,
+      16,
+      128
+    ],
+    "self_mask": [
+      1,
+      1,
+      16,
+      16
+    ],
+    "cross_mask": [
+      1,
+      1,
+      16,
+      8
+    ]
+  },
+  "output_shape": [
+    1,
+    16,
+    2048
+  ],
+  "scalar_type": "float32",
+  "byte_order": "little",
+  "layer_prefix": "decoder.layers.0.",
+  "checkpoint": {
+    "repo_id": "ACE-Step/acestep-v15-base",
+    "revision": "e432212fec32b8965a14ffa57ae653438d6abd14",
+    "filename": "model.safetensors",
+    "size": 4787825604,
+    "digest": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b"
+  },
+  "checkpoint_full_sha256_verified": true,
+  "publisher_source_digests": {
+    "modeling_acestep_v15_base.py": "0f8cf5060b75a246f70f805133737a3b421e4483",
+    "configuration_acestep_v15.py": "965a1b73afb1c89d0959c7d80691e487fdfde505",
+    "config.json": "ba68842e7207fe015ef7bca698e40f12dc13241d"
+  },
+  "input_provenance": "Seed-0 synthetic hidden/condition/timestep activations; RoPE positions 0..15; finite additive key masks",
+  "scope": "One complete pretrained block, self/cross-attention, RoPE, RMSNorm, AdaLN and MLP; NOT full denoiser or instrument generation",
+  "parameter_count": 62933504,
+  "reference_backend": "PyTorch CPU Float32 / publisher eager attention",
+  "reference_peak": 77.36112976074219,
+  "reference_rms": 7.238686164152646,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "versions": {
+    "torch": "2.8.0+cpu",
+    "transformers": "4.57.3",
+    "coreai-torch": "0.4.3",
+    "coreai-core": "1.0.0b3"
+  },
+  "artifact_sha256": {
+    "condition.f32le": "fdccb6f132a3aa55e0d064ed3708928b570c8b3b0c6521629717dc605671971e",
+    "cross_mask.f32le": "ac8e65bd9304d9ea3d0fe75cd82f292515c1c8e3bdde3622e6742a9ef3846d44",
+    "dit-block.aimodel/main.hash": "b8181fd98cb263cb0dc31fe9326ea122d389a0f69210a254e25b160e64881955",
+    "dit-block.aimodel/main.mlirb": "70a632467424161022c21fbd99aa246dff330bc2c2705c5b2f31e7d3af1d72f1",
+    "dit-block.aimodel/metadata.json": "52f7bd48921f21f3570638e605972f6b783e39a938690cf5694fcfcc71324767",
+    "hidden-reference.f32le": "9ffb85eb2874113317828f930a62a203537050c546632de6972ed68b719cefb9",
+    "hidden.f32le": "fd18cee91c44ee4231f83556f99add119f25cd4c6d32a28fbdea6f9ce5bc248f",
+    "rope_cos.f32le": "02f8ee554480f186bdd1da04f8723e6d3ad64d42b5d5e4b77edabb42f03c8a24",
+    "rope_sin.f32le": "9fd5f0eadea155d46d24c874a73d14cfb50b030595b4fabd2f3806a7c4aaea4c",
+    "self_mask.f32le": "32e190d6666c78696a058bd155332125cb6e5eb90d5963a82606c42a0481c642",
+    "temb.f32le": "6c6328c8c933f4057cacb33bdd6c75c91b2eac77abac23f4cc70caa7dbced403"
+  },
+  "coreai_device_inference_verified": false
+}

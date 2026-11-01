@@ -1,4 +1,4 @@
-// Decoder 0.2 s and 1 s parity passed on device. Encoder device results pending.
+// Encoder/decoder parity passed on device. DiT-block device results pending.
 import CoreAI
 import CryptoKit
 import Darwin
@@ -7,17 +7,28 @@ import Foundation
 
 enum CoreAIDecoderProbe {
     private enum Profile {
-        case decoderShort, decoderOneSecond, encoderOneSecond
+        case decoderShort, decoderOneSecond, encoderOneSecond, ditBlock
         var isEncoder: Bool { self == .encoderOneSecond }
-        var component: String { isEncoder ? "encoder" : "decoder" }
+        var isDiT: Bool { self == .ditBlock }
+        var component: String { isDiT ? "dit-block" : (isEncoder ? "encoder" : "decoder") }
         var frames: Int { self == .decoderShort ? 5 : 25 }
         var folderName: String {
-            self == .decoderShort ? "decoder-pretrained" : "\(component)-pretrained-1s"
+            isDiT ? "dit-block-pretrained" : (self == .decoderShort ? "decoder-pretrained" : "\(component)-pretrained-1s")
         }
         var inputName: String { isEncoder ? "audio" : "latent" }
-        var outputName: String { isEncoder ? "latent" : "audio" }
+        var outputName: String { isDiT ? "hidden_out" : (isEncoder ? "latent" : "audio") }
         var inputShape: [Int] { isEncoder ? [1, 2, frames * 1920] : [1, 64, frames] }
-        var outputShape: [Int] { isEncoder ? [1, 64, frames] : [1, 2, frames * 1920] }
+        var outputShape: [Int] { isDiT ? [1, 16, 2048] : (isEncoder ? [1, 64, frames] : [1, 2, frames * 1920]) }
+        var inputShapes: [String: [Int]] {
+            isDiT ? ["hidden": [1, 16, 2048], "condition": [1, 8, 2048], "temb": [1, 6, 2048],
+                     "rope_cos": [1, 16, 128], "rope_sin": [1, 16, 128],
+                     "self_mask": [1, 1, 16, 16], "cross_mask": [1, 1, 16, 8]] : [inputName: inputShape]
+        }
+        var expectedFile: String { isDiT ? "hidden-reference.f32le" : "\(outputName)-reference.f32le" }
+        var checkpointDigest: String {
+            isDiT ? "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b" :
+                "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0"
+        }
     }
 
     private struct Contract: Decodable {
@@ -27,15 +38,17 @@ enum CoreAIDecoderProbe {
         let posteriorMode: String?
         let assetFile: String
         let functionName: String
-        let inputName: String
+        let inputName: String?
         let outputName: String
-        let inputShape: [Int]
+        let inputShape: [Int]?
+        let inputShapes: [String: [Int]]?
+        let layerPrefix: String?
         let outputShape: [Int]
-        let inputFile: String
-        let expectedFile: String
+        let inputFile: String?
+        let expectedFile: String?
         let scalarType: String
         let byteOrder: String
-        let sampleRate: Int
+        let sampleRate: Int?
         let checkpoint: Checkpoint
         let checkpointFullSha256Verified: Bool
         let artifactSha256: [String: String]
@@ -61,17 +74,32 @@ enum CoreAIDecoderProbe {
         await run(profile: .encoderOneSecond)
     }
 
+    static func runDiTBlock() async -> String {
+        await run(profile: .ditBlock)
+    }
+
     private static func run(profile: Profile) async -> String {
         let component = profile.component
+        let testDescription: String
+        if profile.isDiT {
+            testDescription = "pretrained ACE Base DiT block 0 / synthetic activations"
+        } else {
+            let inputDescription = profile.isEncoder ? "synthetic audio / posterior mean" : "seeded latent"
+            testDescription = "pretrained ACE VAE \(component) / \(inputDescription)"
+        }
         var lines = [
             "Runtime: CoreAI",
             "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
             "CoreAI architecture: \(AIModel.deviceArchitectureName)",
-            "Test: pretrained ACE VAE \(component) / \(profile.isEncoder ? "synthetic audio / posterior mean" : "seeded latent") / NOT instrument generation",
+            "Test: \(testDescription) / NOT instrument generation",
             "Requested compute policy: cpuOnly",
             "Accelerator used by a model: NOT MEASURED"
         ]
-        lines.append("Window profile: \(profile.frames == 25 ? "1.0 s" : "0.2 s")")
+        if profile.isDiT {
+            lines.append("Block scope: decoder.layers.0.; 16 hidden tokens / 8 condition tokens; no audio duration claim")
+        } else {
+            lines.append("Window profile: \(profile.frames == 25 ? "1.0 s" : "0.2 s")")
+        }
         #if targetEnvironment(simulator)
         lines.append("Target: Simulator; not physical-device evidence")
         #else
@@ -86,7 +114,9 @@ enum CoreAIDecoderProbe {
             guard let folder = Bundle.main.resourceURL?
                 .appendingPathComponent("ModelCandidates/\(profile.folderName)"),
                 FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
-                lines.append("Prepare on Mac: bash scripts/prepare_coreai_decoder.sh --component \(component) --frames \(profile.frames); then rebuild the app.")
+                let script = profile.isDiT ? "bash scripts/prepare_coreai_dit_block.sh" :
+                    "bash scripts/prepare_coreai_decoder.sh --component \(component) --frames \(profile.frames)"
+                lines.append("Prepare on Mac: \(script); then rebuild the app.")
                 throw ProbeError.missingPreparedBundle
             }
             let decoder = JSONDecoder()
@@ -94,26 +124,42 @@ enum CoreAIDecoderProbe {
             let contract = try decoder.decode(Contract.self, from:
                 Data(contentsOf: folder.appendingPathComponent("reference.json")))
             guard contract.schemaVersion == 1, contract.assetFile == "\(component).aimodel",
-                  (contract.component ?? "decoder") == component,
-                  (!profile.isEncoder || contract.posteriorMode == "mean"),
-                  contract.functionName == "main", contract.inputName == profile.inputName, contract.outputName == profile.outputName,
-                  contract.inputShape == profile.inputShape, contract.outputShape == profile.outputShape,
-                  contract.sampleRate == 48000, contract.scalarType == "float32", contract.byteOrder == "little",
-                  contract.inputFile == "\(profile.inputName).f32le", contract.expectedFile == "\(profile.outputName)-reference.f32le",
+                  contract.functionName == "main", contract.outputName == profile.outputName,
+                  contract.outputShape == profile.outputShape,
+                  contract.scalarType == "float32", contract.byteOrder == "little",
                   contract.checkpointFullSha256Verified,
-                  contract.checkpoint.digest == "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+                  contract.checkpoint.digest == profile.checkpointDigest,
                   contract.absoluteTolerance > 0, contract.absoluteTolerance <= 0.001,
                   contract.relativeTolerance > 0, contract.relativeTolerance <= 0.01,
                   contract.relativeRmseTolerance > 0, contract.relativeRmseTolerance <= 0.01 else {
                 throw ProbeError.invalidContract
             }
-            let input = try readFloats(folder: folder, name: contract.inputFile,
-                                       count: contract.inputShape.reduce(1, *), hashes: contract.artifactSha256)
-            let expected = try readFloats(folder: folder, name: contract.expectedFile,
+            if profile.isDiT {
+                guard contract.inputShapes == profile.inputShapes, contract.layerPrefix == "decoder.layers.0." else {
+                    throw ProbeError.invalidContract
+                }
+            } else {
+                guard (contract.component ?? "decoder") == component,
+                      (!profile.isEncoder || contract.posteriorMode == "mean"),
+                      contract.inputName == profile.inputName, contract.inputShape == profile.inputShape,
+                      contract.sampleRate == 48000, contract.inputFile == "\(profile.inputName).f32le",
+                      contract.expectedFile == profile.expectedFile else { throw ProbeError.invalidContract }
+            }
+            var tensorInputs: [String: NDArray] = [:]
+            for (name, shape) in profile.inputShapes {
+                let input = try readFloats(folder: folder, name: "\(name).f32le",
+                                           count: shape.reduce(1, *), hashes: contract.artifactSha256)
+                tensorInputs[name] = NDArray(scalars: input, shape: shape)
+            }
+            let expected = try readFloats(folder: folder, name: profile.expectedFile,
                                           count: contract.outputShape.reduce(1, *), hashes: contract.artifactSha256)
-            let duration = Double(profile.frames) / 25
-            lines.append("Audio duration / sample rate: \(duration) s / \(contract.sampleRate) Hz stereo")
-            lines.append("Input/output shapes: \(contract.inputShape) -> \(contract.outputShape)")
+            if !profile.isDiT {
+                lines.append("Audio duration / sample rate: \(Double(profile.frames) / 25) s / 48000 Hz stereo")
+                lines.append("Input/output shapes: \(profile.inputShape) -> \(contract.outputShape)")
+            } else {
+                for name in profile.inputShapes.keys.sorted() { lines.append("Input \(name): \(profile.inputShapes[name]!)") }
+                lines.append("Output \(profile.outputName): \(contract.outputShape)")
+            }
             lines.append("Reference binary SHA-256: VERIFIED; pretrained checkpoint verified by Mac preparation")
             lines.append("Tolerances: abs \(contract.absoluteTolerance), rel \(contract.relativeTolerance), normalized RMSE \(contract.relativeRmseTolerance)")
             let url = folder.appendingPathComponent(contract.assetFile)
@@ -126,18 +172,19 @@ enum CoreAIDecoderProbe {
             lines.append("Validated load/specialization ms: \(ms(loadStart.duration(to: clock.now)))")
             lines.append("Function names: \(probe.model.functionNames)")
             if let descriptor = probe.model.functionDescriptor(for: contract.functionName) {
-                if let value = descriptor.inputDescriptor(of: contract.inputName), case .ndArray(let array) = value {
-                    lines.append("Runtime input descriptor: \(array.shape), \(array.scalarType), interleave \(String(describing: array.interleaveLayout))")
+                for name in profile.inputShapes.keys.sorted() {
+                    if let value = descriptor.inputDescriptor(of: name), case .ndArray(let array) = value {
+                        lines.append("Runtime input \(name) descriptor: \(array.shape), \(array.scalarType), interleave \(String(describing: array.interleaveLayout))")
+                    }
                 }
                 if let value = descriptor.outputDescriptor(of: contract.outputName), case .ndArray(let array) = value {
                     lines.append("Runtime output descriptor: \(array.shape), \(array.scalarType), interleave \(String(describing: array.interleaveLayout))")
                 }
             }
-            let tensorInput = NDArray(scalars: input, shape: contract.inputShape)
             for iteration in 0..<3 {
                 let start = clock.now
                 var outputs = try await probe.runStateless(functionNamed: contract.functionName,
-                                                           inputs: [contract.inputName: tensorInput])
+                                                           inputs: tensorInputs)
                 executed = true
                 guard let value = outputs.remove(contract.outputName), let tensor = value.ndArray,
                       tensor.scalarType == .float32, tensor.shape == contract.outputShape,
