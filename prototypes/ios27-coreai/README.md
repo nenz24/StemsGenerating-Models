@@ -259,5 +259,10 @@ Tombol **Profil waktu loop 4 langkah** menambahkan timer untuk pembukaan model,
 binding fungsi, validasi input, await backend, copy output dan sisa overhead.
 Laporan merangkum seluruh fase dan interval di luar tahap model. Model, input,
 referensi dan semua pemeriksaan parity tetap sama; tidak ada unduhan atau ekspor
-baru. Ini menyiapkan pengukuran, belum optimisasi. Kode timer baru perlu build
-dan pengujian iPhone. [Panduan profiling](../../docs/coreai-loop-timing.md).
+baru. [Hasil iPhone sudah PASS](../../reviews/coreai-iphone17pro-denoiser-loop-timing/README.md):
+51,88 detik total, dengan 50,75 detik di `backend-await` (99,36% waktu tahap
+terukur); opening/binding/copy hanya sekitar 0,10–0,12 detik masing-masing.
+Penyebab di dalam `function.run` belum terpisah antara inisialisasi dan eksekusi
+steady-state. Langkah berikutnya adalah uji satu pasangan layer/fungsi yang
+dipertahankan untuk beberapa run. Belum diimplementasikan dalam pencatatan ini.
+[Panduan profiling](../../docs/coreai-loop-timing.md).

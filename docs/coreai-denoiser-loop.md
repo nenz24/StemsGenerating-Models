@@ -79,8 +79,10 @@ per interval run+copy. Constructor model hanya sekitar 1,6–1,9 ms pada kebanya
 tahap. Interval run+copy juga memuat binding fungsi dan validasi, sehingga belum
 diketahui apakah biaya utamanya berasal dari binding, backend, paging atau copy.
 Pengukuran terpisah kini tersedia melalui **Profil waktu loop 4 langkah**:
-[panduan dan arti fase](coreai-loop-timing.md). Instrumen baru perlu build dan
-pengujian di iPhone; belum ada klaim penyebab atau percepatan. Footprint maksimum
+[panduan dan arti fase](coreai-loop-timing.md). [Hasil iPhone](../reviews/coreai-iphone17pro-denoiser-loop-timing/README.md)
+menunjukkan interval backend-await dominan: 50,75 dari total 51,88 detik.
+Run pertama versus eksekusi steady-state masih perlu dipisahkan; belum ada
+klaim mekanisme penyebab atau percepatan. Footprint maksimum pada baseline awal
 tersampel 74,02 MiB tetap bukan seluruh RAM model/perangkat.
 
 Untuk audit ulang referensi yang sudah ikut repository, tanpa model/bobot:

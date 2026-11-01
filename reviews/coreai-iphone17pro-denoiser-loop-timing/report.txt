@@ -1,0 +1,224 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: COMPLETE 24-layer denoiser / 4 feedback Euler ODE steps / NOT instrument generation
+Requested compute policy: cpuOnly; accelerator placement NOT MEASURED
+Schedule: 1 -> 0.75 -> 0.5 -> 0.25 -> 0; shift=1; guidance=1; timestep_r=timestep
+Synthetic conditioning; no CFG, KV cache, recording or waveform generation
+Existing 14 assets per step; detached CPU copies; native cache eviction NOT GUARANTEED
+Process footprint stop before each stage: 2000 MiB; NOT an OS peak-memory guarantee
+Target: iOS device build
+Timing profile: API boundaries / same four-step case / no extra warmup or stage retries
+model-open includes asset validation + AIModel init; function-bind measures loadFunction
+backend-await measures function.run await, NOT isolated kernel time; deferred work may appear in output-copy
+output-copy includes output validation, Float read-back, finite checks and fresh CPU NDArray creation
+Phase totals cover completed stages only; outside-stage includes logging, UI waits, resource release and any unfinished stage
+Phase: validating sharded model manifest
+Sharded model manifest: PASS; decoding self-contained loop fixture
+SHA-256: VERIFIED 16 references + 3 self-contained inputs; checkpoint contract matched
+Step 1/4: t=1.0, next=0.75, timestep_r=1.0
+Before step 1 stage 1/14 footprint MiB: 21.439254760742188
+Step 1 stage 1/14 front.aimodel: load ms 3.545625; run+detached-copy ms 324.494042
+Timing step 1 stage 1/14: model-open ms 3.545625; function-bind ms 60.437875; input-validation ms 0.043708; backend-await ms 253.815792; output-copy ms 10.152334; run-other ms 0.044332999999991074
+Before step 1 stage 2/14 footprint MiB: 24.68927764892578
+Step 1 stage 2/14 blocks-00-01.aimodel: load ms 1.486875; run+detached-copy ms 1043.679083
+Timing step 1 stage 2/14: model-open ms 1.486875; function-bind ms 0.670125; input-validation ms 0.009291; backend-await ms 1041.349458; output-copy ms 1.612542; run-other ms 0.037666999999904416
+Before step 1 stage 3/14 footprint MiB: 25.54865264892578
+Step 1 stage 3/14 blocks-02-03.aimodel: load ms 1.462167; run+detached-copy ms 1046.876333
+Timing step 1 stage 3/14: model-open ms 1.462167; function-bind ms 0.661667; input-validation ms 0.009083; backend-await ms 1044.52425; output-copy ms 1.634333; run-other ms 0.046999999999995046
+Before step 1 stage 4/14 footprint MiB: 24.82990264892578
+Step 1 stage 4/14 blocks-04-05.aimodel: load ms 1.5275; run+detached-copy ms 1044.430959
+Timing step 1 stage 4/14: model-open ms 1.5275; function-bind ms 0.668125; input-validation ms 0.009125; backend-await ms 1042.0545; output-copy ms 1.655584; run-other ms 0.04362500000010994
+Before step 1 stage 5/14 footprint MiB: 24.82990264892578
+Step 1 stage 5/14 blocks-06-07.aimodel: load ms 1.467292; run+detached-copy ms 1103.03375
+Timing step 1 stage 5/14: model-open ms 1.467292; function-bind ms 0.6605; input-validation ms 0.009; backend-await ms 1100.721292; output-copy ms 1.604375; run-other ms 0.03858300000013504
+Before step 1 stage 6/14 footprint MiB: 25.36115264892578
+Step 1 stage 6/14 blocks-08-09.aimodel: load ms 1.500125; run+detached-copy ms 1062.482459
+Timing step 1 stage 6/14: model-open ms 1.500125; function-bind ms 0.647875; input-validation ms 0.009125; backend-await ms 1060.167917; output-copy ms 1.617375; run-other ms 0.04016699999992124
+Before step 1 stage 7/14 footprint MiB: 25.845550537109375
+Step 1 stage 7/14 blocks-10-11.aimodel: load ms 1.517; run+detached-copy ms 1115.048416
+Timing step 1 stage 7/14: model-open ms 1.517; function-bind ms 0.671083; input-validation ms 0.009125; backend-await ms 1112.662917; output-copy ms 1.65875; run-other ms 0.0465409999999884
+Before step 1 stage 8/14 footprint MiB: 26.32990264892578
+Step 1 stage 8/14 blocks-12-13.aimodel: load ms 1.664; run+detached-copy ms 1130.602959
+Timing step 1 stage 8/14: model-open ms 1.664; function-bind ms 0.597208; input-validation ms 0.008792; backend-await ms 1128.368917; output-copy ms 1.590709; run-other ms 0.037333000000050465
+Before step 1 stage 9/14 footprint MiB: 26.86115264892578
+Step 1 stage 9/14 blocks-14-15.aimodel: load ms 1.802; run+detached-copy ms 1100.995584
+Timing step 1 stage 9/14: model-open ms 1.802; function-bind ms 0.605416; input-validation ms 0.009125; backend-await ms 1098.393209; output-copy ms 1.950459; run-other ms 0.037374999999793435
+Before step 1 stage 10/14 footprint MiB: 27.48615264892578
+Step 1 stage 10/14 blocks-16-17.aimodel: load ms 1.839708; run+detached-copy ms 1050.725
+Timing step 1 stage 10/14: model-open ms 1.839708; function-bind ms 0.6235; input-validation ms 0.009083; backend-await ms 1048.083583; output-copy ms 1.957792; run-other ms 0.05104199999997894
+Before step 1 stage 11/14 footprint MiB: 28.095550537109375
+Step 1 stage 11/14 blocks-18-19.aimodel: load ms 1.783917; run+detached-copy ms 1042.265875
+Timing step 1 stage 11/14: model-open ms 1.783917; function-bind ms 0.625; input-validation ms 0.0095; backend-await ms 1039.971625; output-copy ms 1.621958; run-other ms 0.037792000000258286
+Before step 1 stage 12/14 footprint MiB: 28.611175537109375
+Step 1 stage 12/14 blocks-20-21.aimodel: load ms 1.782083; run+detached-copy ms 1038.967584
+Timing step 1 stage 12/14: model-open ms 1.782083; function-bind ms 0.670667; input-validation ms 0.009041; backend-await ms 1036.5635; output-copy ms 1.670292; run-other ms 0.05408399999989277
+Before step 1 stage 13/14 footprint MiB: 29.142425537109375
+Step 1 stage 13/14 blocks-22-23.aimodel: load ms 1.790417; run+detached-copy ms 1045.87675
+Timing step 1 stage 13/14: model-open ms 1.790417; function-bind ms 0.617708; input-validation ms 0.008417; backend-await ms 1043.5125; output-copy ms 1.697458; run-other ms 0.04066699999985457
+Before step 1 stage 14/14 footprint MiB: 29.673675537109375
+Step 1 stage 14/14 tail.aimodel: load ms 1.734917; run+detached-copy ms 2.26025
+Timing step 1 stage 14/14: model-open ms 1.734917; function-bind ms 0.530417; input-validation ms 0.006292; backend-await ms 1.571208; output-copy ms 0.14125; run-other ms 0.011083000000000287
+Step 1 velocity partition: max abs error 2.5987625122070312e-05; RMSE 6.387478908186318e-06; normalized RMSE 4.9129423959675265e-06; PASS
+Step 1 velocity original FP32: max abs error 5.894899368286133e-05; RMSE 1.5138293638407116e-05; normalized RMSE 1.1643638744707437e-05; PASS
+Step 1 latent partition: max abs error 6.496906280517578e-06; RMSE 1.5974237998387752e-06; normalized RMSE 1.5993086268284254e-06; PASS
+Step 1 latent original FP32: max abs error 1.4781951904296875e-05; RMSE 3.7856202365884083e-06; normalized RMSE 3.7900929353837417e-06; PASS
+Step 1/4 dual velocity+latent parity: PASS; total step ms: 13267.104834
+Timing step 1 totals (14/14 completed stages): model-open ms 24.903626; function-bind ms 68.68716599999999; input-validation ms 0.15870699999999996; backend-await ms 13051.760667999999; output-copy ms 30.565210999999998; run-other ms 0.5672919999998739
+Step 2/4: t=0.75, next=0.5, timestep_r=0.75
+Before step 2 stage 1/14 footprint MiB: 37.50177764892578
+Step 2 stage 1/14 front.aimodel: load ms 1.679916; run+detached-copy ms 253.911
+Timing step 2 stage 1/14: model-open ms 1.679916; function-bind ms 0.993542; input-validation ms 0.006792; backend-await ms 242.441083; output-copy ms 10.450916; run-other ms 0.018667000000029077
+Before step 2 stage 2/14 footprint MiB: 32.28302764892578
+Step 2 stage 2/14 blocks-00-01.aimodel: load ms 1.804042; run+detached-copy ms 1038.507208
+Timing step 2 stage 2/14: model-open ms 1.804042; function-bind ms 0.628208; input-validation ms 0.0095; backend-await ms 1035.91075; output-copy ms 1.918708; run-other ms 0.040042000000009015
+Before step 2 stage 3/14 footprint MiB: 32.954925537109375
+Step 2 stage 3/14 blocks-02-03.aimodel: load ms 1.742208; run+detached-copy ms 1041.970542
+Timing step 2 stage 3/14: model-open ms 1.742208; function-bind ms 0.668875; input-validation ms 0.009125; backend-await ms 1039.512625; output-copy ms 1.680709; run-other ms 0.0992079999998412
+Before step 2 stage 4/14 footprint MiB: 44.923675537109375
+Step 2 stage 4/14 blocks-04-05.aimodel: load ms 1.881083; run+detached-copy ms 1045.220667
+Timing step 2 stage 4/14: model-open ms 1.881083; function-bind ms 0.627583; input-validation ms 0.009292; backend-await ms 1042.878375; output-copy ms 1.654417; run-other ms 0.051000000000124945
+Before step 2 stage 5/14 footprint MiB: 45.908050537109375
+Step 2 stage 5/14 blocks-06-07.aimodel: load ms 1.791; run+detached-copy ms 1064.603416
+Timing step 2 stage 5/14: model-open ms 1.791; function-bind ms 0.859959; input-validation ms 0.01; backend-await ms 1062.082167; output-copy ms 1.607083; run-other ms 0.044207000000017205
+Before step 2 stage 6/14 footprint MiB: 47.329925537109375
+Step 2 stage 6/14 blocks-08-09.aimodel: load ms 1.77075; run+detached-copy ms 1049.588709
+Timing step 2 stage 6/14: model-open ms 1.77075; function-bind ms 0.629167; input-validation ms 0.009125; backend-await ms 1047.293834; output-copy ms 1.608834; run-other ms 0.047748999999954966
+Before step 2 stage 7/14 footprint MiB: 34.954925537109375
+Step 2 stage 7/14 blocks-10-11.aimodel: load ms 1.722583; run+detached-copy ms 1039.165167
+Timing step 2 stage 7/14: model-open ms 1.722583; function-bind ms 0.631625; input-validation ms 0.009333; backend-await ms 1036.848584; output-copy ms 1.626667; run-other ms 0.04895800000008177
+Before step 2 stage 8/14 footprint MiB: 35.54869842529297
+Step 2 stage 8/14 blocks-12-13.aimodel: load ms 1.805333; run+detached-copy ms 1034.026292
+Timing step 2 stage 8/14: model-open ms 1.805333; function-bind ms 0.614083; input-validation ms 0.009333; backend-await ms 1031.7399580000001; output-copy ms 1.620667; run-other ms 0.04225099999999049
+Before step 2 stage 9/14 footprint MiB: 36.07994842529297
+Step 2 stage 9/14 blocks-14-15.aimodel: load ms 1.815375; run+detached-copy ms 1040.729167
+Timing step 2 stage 9/14: model-open ms 1.815375; function-bind ms 0.59325; input-validation ms 0.008667; backend-await ms 1038.09575; output-copy ms 1.983584; run-other ms 0.04791600000005092
+Before step 2 stage 10/14 footprint MiB: 36.67369842529297
+Step 2 stage 10/14 blocks-16-17.aimodel: load ms 1.800875; run+detached-copy ms 1058.798416
+Timing step 2 stage 10/14: model-open ms 1.800875; function-bind ms 0.579875; input-validation ms 0.009292; backend-await ms 1056.321792; output-copy ms 1.837166; run-other ms 0.05029100000026765
+Before step 2 stage 11/14 footprint MiB: 52.42369842529297
+Step 2 stage 11/14 blocks-18-19.aimodel: load ms 1.771542; run+detached-copy ms 1004.725
+Timing step 2 stage 11/14: model-open ms 1.771542; function-bind ms 0.838541; input-validation ms 0.009; backend-await ms 1001.9665; output-copy ms 1.8645; run-other ms 0.04645900000004799
+Before step 2 stage 12/14 footprint MiB: 37.751800537109375
+Step 2 stage 12/14 blocks-20-21.aimodel: load ms 1.754708; run+detached-copy ms 1050.163917
+Timing step 2 stage 12/14: model-open ms 1.754708; function-bind ms 0.856125; input-validation ms 0.009541; backend-await ms 1047.596625; output-copy ms 1.663875; run-other ms 0.037751000000260326
+Before step 2 stage 13/14 footprint MiB: 38.29869842529297
+Step 2 stage 13/14 blocks-22-23.aimodel: load ms 1.764708; run+detached-copy ms 1007.02375
+Timing step 2 stage 13/14: model-open ms 1.764708; function-bind ms 0.687333; input-validation ms 0.009542; backend-await ms 1004.34225; output-copy ms 1.940792; run-other ms 0.04383299999993717
+Before step 2 stage 14/14 footprint MiB: 55.65807342529297
+Step 2 stage 14/14 tail.aimodel: load ms 1.738458; run+detached-copy ms 2.670792
+Timing step 2 stage 14/14: model-open ms 1.738458; function-bind ms 0.577791; input-validation ms 0.006292; backend-await ms 1.935625; output-copy ms 0.139959; run-other ms 0.011124999999999996
+Step 2 velocity partition: max abs error 3.0040740966796875e-05; RMSE 6.791075465845882e-06; normalized RMSE 4.697934369535394e-06; PASS
+Step 2 velocity original FP32: max abs error 5.555152893066406e-05; RMSE 1.3712388720968981e-05; normalized RMSE 9.485983910342884e-06; PASS
+Step 2 latent partition: max abs error 1.0192394256591797e-05; RMSE 2.701563184092372e-06; normalized RMSE 2.0713861063673776e-06; PASS
+Step 2 latent original FP32: max abs error 2.5272369384765625e-05; RMSE 6.420954538992525e-06; normalized RMSE 4.923189054341582e-06; PASS
+Step 2/4 dual velocity+latent parity: PASS; total step ms: 12929.019167
+Timing step 2 totals (14/14 completed stages): model-open ms 24.842581000000003; function-bind ms 9.785957; input-validation ms 0.12483399999999997; backend-await ms 12688.965918000002; output-copy ms 31.597877000000008; run-other ms 0.6294570000006128
+Step 3/4: t=0.5, next=0.25, timestep_r=0.5
+Before step 3 stage 1/14 footprint MiB: 90.59555053710938
+Step 3 stage 1/14 front.aimodel: load ms 1.875875; run+detached-copy ms 248.137625
+Timing step 3 stage 1/14: model-open ms 1.875875; function-bind ms 0.993625; input-validation ms 0.008625; backend-await ms 236.838208; output-copy ms 10.272833; run-other ms 0.02433400000000141
+Before step 3 stage 2/14 footprint MiB: 59.70494842529297
+Step 3 stage 2/14 blocks-00-01.aimodel: load ms 1.992083; run+detached-copy ms 996.173209
+Timing step 3 stage 2/14: model-open ms 1.992083; function-bind ms 0.849; input-validation ms 0.009084; backend-await ms 993.29725; output-copy ms 1.971; run-other ms 0.04687500000000355
+Before step 3 stage 3/14 footprint MiB: 42.20494842529297
+Step 3 stage 3/14 blocks-02-03.aimodel: load ms 1.704666; run+detached-copy ms 990.891584
+Timing step 3 stage 3/14: model-open ms 1.704666; function-bind ms 0.868916; input-validation ms 0.009042; backend-await ms 988.195334; output-copy ms 1.743375; run-other ms 0.07491699999992862
+Before step 3 stage 4/14 footprint MiB: 42.51744842529297
+Step 3 stage 4/14 blocks-04-05.aimodel: load ms 1.838208; run+detached-copy ms 1005.700209
+Timing step 3 stage 4/14: model-open ms 1.838208; function-bind ms 0.634792; input-validation ms 0.009334; backend-await ms 1003.315084; output-copy ms 1.679292; run-other ms 0.06170700000010165
+Before step 3 stage 5/14 footprint MiB: 43.04869842529297
+Step 3 stage 5/14 blocks-06-07.aimodel: load ms 1.8165; run+detached-copy ms 1056.458291
+Timing step 3 stage 5/14: model-open ms 1.8165; function-bind ms 0.85125; input-validation ms 0.009125; backend-await ms 1053.718333; output-copy ms 1.834708; run-other ms 0.0448749999999114
+Before step 3 stage 6/14 footprint MiB: 43.70494842529297
+Step 3 stage 6/14 blocks-08-09.aimodel: load ms 1.785084; run+detached-copy ms 999.427875
+Timing step 3 stage 6/14: model-open ms 1.785084; function-bind ms 0.621583; input-validation ms 0.009166; backend-await ms 996.962167; output-copy ms 1.790917; run-other ms 0.04404199999991243
+Before step 3 stage 7/14 footprint MiB: 44.23619842529297
+Step 3 stage 7/14 blocks-10-11.aimodel: load ms 1.741166; run+detached-copy ms 1049.429917
+Timing step 3 stage 7/14: model-open ms 1.741166; function-bind ms 0.631209; input-validation ms 0.009; backend-await ms 1047.162209; output-copy ms 1.589208; run-other ms 0.038290999999943454
+Before step 3 stage 8/14 footprint MiB: 67.48619842529297
+Step 3 stage 8/14 blocks-12-13.aimodel: load ms 1.785334; run+detached-copy ms 1021.006083
+Timing step 3 stage 8/14: model-open ms 1.785334; function-bind ms 0.8615; input-validation ms 0.009625; backend-await ms 1018.492625; output-copy ms 1.59925; run-other ms 0.043083000000007754
+Before step 3 stage 9/14 footprint MiB: 68.56432342529297
+Step 3 stage 9/14 blocks-14-15.aimodel: load ms 1.82375; run+detached-copy ms 1038.112083
+Timing step 3 stage 9/14: model-open ms 1.82375; function-bind ms 0.603834; input-validation ms 0.009458; backend-await ms 1035.859625; output-copy ms 1.596833; run-other ms 0.04233299999993201
+Before step 3 stage 10/14 footprint MiB: 69.64244842529297
+Step 3 stage 10/14 blocks-16-17.aimodel: load ms 1.757875; run+detached-copy ms 1050.414875
+Timing step 3 stage 10/14: model-open ms 1.757875; function-bind ms 0.883083; input-validation ms 0.009042; backend-await ms 1047.780583; output-copy ms 1.693958; run-other ms 0.048209000000108526
+Before step 3 stage 11/14 footprint MiB: 70.68932342529297
+Step 3 stage 11/14 blocks-18-19.aimodel: load ms 1.88225; run+detached-copy ms 972.320417
+Timing step 3 stage 11/14: model-open ms 1.88225; function-bind ms 0.648875; input-validation ms 0.009541; backend-await ms 969.962833; output-copy ms 1.655083; run-other ms 0.04408499999998594
+Before step 3 stage 12/14 footprint MiB: 47.09557342529297
+Step 3 stage 12/14 blocks-20-21.aimodel: load ms 1.818917; run+detached-copy ms 997.536125
+Timing step 3 stage 12/14: model-open ms 1.818917; function-bind ms 0.65375; input-validation ms 0.009292; backend-await ms 995.08875; output-copy ms 1.742167; run-other ms 0.042166000000060544
+Before step 3 stage 13/14 footprint MiB: 47.70494842529297
+Step 3 stage 13/14 blocks-22-23.aimodel: load ms 1.796542; run+detached-copy ms 978.204125
+Timing step 3 stage 13/14: model-open ms 1.796542; function-bind ms 0.632541; input-validation ms 0.009542; backend-await ms 975.895667; output-copy ms 1.616875; run-other ms 0.04950000000001631
+Before step 3 stage 14/14 footprint MiB: 48.29869842529297
+Step 3 stage 14/14 tail.aimodel: load ms 1.745625; run+detached-copy ms 1.63225
+Timing step 3 stage 14/14: model-open ms 1.745625; function-bind ms 0.53925; input-validation ms 0.006; backend-await ms 0.94425; output-copy ms 0.133708; run-other ms 0.009041999999999939
+Step 3 velocity partition: max abs error 3.337860107421875e-05; RMSE 7.861121064529939e-06; normalized RMSE 4.902968003233772e-06; PASS
+Step 3 velocity original FP32: max abs error 0.00017407536506652832; RMSE 3.886561016235919e-05; normalized RMSE 2.424035500777915e-05; PASS
+Step 3 latent partition: max abs error 1.633167266845703e-05; RMSE 3.903720417501994e-06; normalized RMSE 2.3226428990409264e-06; PASS
+Step 3 latent original FP32: max abs error 4.1484832763671875e-05; RMSE 1.1855732858823736e-05; normalized RMSE 7.053953698218171e-06; PASS
+Step 3/4 dual velocity+latent parity: PASS; total step ms: 12673.035
+Timing step 3 totals (14/14 completed stages): model-open ms 25.363874999999993; function-bind ms 10.273208; input-validation ms 0.12587599999999996; backend-await ms 12363.512918; output-copy ms 30.919207; run-other ms 0.6134589999999136
+Step 4/4: t=0.25, next=0.0, timestep_r=0.25
+Before step 4 stage 1/14 footprint MiB: 73.03302764892578
+Step 4 stage 1/14 front.aimodel: load ms 1.903375; run+detached-copy ms 255.566958
+Timing step 4 stage 1/14: model-open ms 1.903375; function-bind ms 0.864875; input-validation ms 0.008417; backend-await ms 244.386375; output-copy ms 10.2805; run-other ms 0.026790999999992238
+Before step 4 stage 2/14 footprint MiB: 51.59557342529297
+Step 4 stage 2/14 blocks-00-01.aimodel: load ms 1.741083; run+detached-copy ms 1030.58525
+Timing step 4 stage 2/14: model-open ms 1.741083; function-bind ms 0.866625; input-validation ms 0.011; backend-await ms 1028.085792; output-copy ms 1.576708; run-other ms 0.04512499999992414
+Before step 4 stage 3/14 footprint MiB: 52.142425537109375
+Step 4 stage 3/14 blocks-02-03.aimodel: load ms 1.758167; run+detached-copy ms 1027.751791
+Timing step 4 stage 3/14: model-open ms 1.758167; function-bind ms 0.868708; input-validation ms 0.009291; backend-await ms 1025.216875; output-copy ms 1.616708; run-other ms 0.04020899999979388
+Before step 4 stage 4/14 footprint MiB: 52.439300537109375
+Step 4 stage 4/14 blocks-04-05.aimodel: load ms 1.807792; run+detached-copy ms 1050.230208
+Timing step 4 stage 4/14: model-open ms 1.807792; function-bind ms 0.8845; input-validation ms 0.009584; backend-await ms 1047.71225; output-copy ms 1.588458; run-other ms 0.03541600000011447
+Before step 4 stage 5/14 footprint MiB: 52.57994842529297
+Step 4 stage 5/14 blocks-06-07.aimodel: load ms 1.75725; run+detached-copy ms 1097.833583
+Timing step 4 stage 5/14: model-open ms 1.75725; function-bind ms 0.631292; input-validation ms 0.009042; backend-await ms 1095.531709; output-copy ms 1.619916; run-other ms 0.04162400000005917
+Before step 4 stage 6/14 footprint MiB: 53.11119842529297
+Step 4 stage 6/14 blocks-08-09.aimodel: load ms 1.804; run+detached-copy ms 1021.936916
+Timing step 4 stage 6/14: model-open ms 1.804; function-bind ms 0.640167; input-validation ms 0.01075; backend-await ms 1019.607084; output-copy ms 1.636916; run-other ms 0.04199899999996082
+Before step 4 stage 7/14 footprint MiB: 53.75182342529297
+Step 4 stage 7/14 blocks-10-11.aimodel: load ms 1.6515; run+detached-copy ms 1046.366042
+Timing step 4 stage 7/14: model-open ms 1.6515; function-bind ms 0.61675; input-validation ms 0.009041; backend-await ms 1044.133125; output-copy ms 1.570375; run-other ms 0.03675100000010745
+Before step 4 stage 8/14 footprint MiB: 54.34557342529297
+Step 4 stage 8/14 blocks-12-13.aimodel: load ms 1.787875; run+detached-copy ms 1030.418666
+Timing step 4 stage 8/14: model-open ms 1.787875; function-bind ms 0.835167; input-validation ms 0.009333; backend-await ms 1027.920542; output-copy ms 1.608333; run-other ms 0.04529100000003616
+Before step 4 stage 9/14 footprint MiB: 54.92369842529297
+Step 4 stage 9/14 blocks-14-15.aimodel: load ms 1.881; run+detached-copy ms 1029.781417
+Timing step 4 stage 9/14: model-open ms 1.881; function-bind ms 0.605042; input-validation ms 0.009667; backend-await ms 1027.484542; output-copy ms 1.627792; run-other ms 0.0543740000000521
+Before step 4 stage 10/14 footprint MiB: 55.20494842529297
+Step 4 stage 10/14 blocks-16-17.aimodel: load ms 1.756375; run+detached-copy ms 1032.042875
+Timing step 4 stage 10/14: model-open ms 1.756375; function-bind ms 0.907875; input-validation ms 0.010792; backend-await ms 1029.484709; output-copy ms 1.597625; run-other ms 0.041873999999886946
+Before step 4 stage 11/14 footprint MiB: 55.47057342529297
+Step 4 stage 11/14 blocks-18-19.aimodel: load ms 1.768625; run+detached-copy ms 1040.710709
+Timing step 4 stage 11/14: model-open ms 1.768625; function-bind ms 0.643334; input-validation ms 0.008875; backend-await ms 1038.25825; output-copy ms 1.75875; run-other ms 0.04149999999977805
+Before step 4 stage 12/14 footprint MiB: 56.15807342529297
+Step 4 stage 12/14 blocks-20-21.aimodel: load ms 1.801833; run+detached-copy ms 1015.591125
+Timing step 4 stage 12/14: model-open ms 1.801833; function-bind ms 0.873459; input-validation ms 0.009958; backend-await ms 1012.871333; output-copy ms 1.798916; run-other ms 0.037458999999975484
+Before step 4 stage 13/14 footprint MiB: 56.68932342529297
+Step 4 stage 13/14 blocks-22-23.aimodel: load ms 1.830667; run+detached-copy ms 1002.180416
+Timing step 4 stage 13/14: model-open ms 1.830667; function-bind ms 0.649792; input-validation ms 0.0095; backend-await ms 999.469; output-copy ms 1.990541; run-other ms 0.06158299999993533
+Before step 4 stage 14/14 footprint MiB: 57.23619842529297
+Step 4 stage 14/14 tail.aimodel: load ms 1.80725; run+detached-copy ms 2.6435
+Timing step 4 stage 14/14: model-open ms 1.80725; function-bind ms 0.532167; input-validation ms 0.007; backend-await ms 1.946541; output-copy ms 0.146959; run-other ms 0.010832999999999926
+Step 4 velocity partition: max abs error 4.649162292480469e-06; RMSE 1.0732778236593032e-06; normalized RMSE 2.4278277445513843e-06; PASS
+Step 4 velocity original FP32: max abs error 1.1473894119262695e-05; RMSE 2.993270331976901e-06; normalized RMSE 6.770987923736527e-06; PASS
+Step 4 latent partition: max abs error 1.537799835205078e-05; RMSE 3.6841426132548933e-06; normalized RMSE 2.3136722672839948e-06; PASS
+Step 4 latent original FP32: max abs error 3.933906555175781e-05; RMSE 1.1169150928405818e-05; normalized RMSE 7.014327054948485e-06; PASS
+Step 4/4 dual velocity+latent parity: PASS; total step ms: 12896.463125
+Timing step 4 totals (14/14 completed stages): model-open ms 25.056791999999998; function-bind ms 10.419753; input-validation ms 0.13224999999999998; backend-await ms 12642.108127000001; output-copy ms 30.41849699999999; run-other ms 0.5608289999996161
+Four-step Euler loop dual parity: PASS (feedback at all four steps)
+Timing completed stages: 56/56
+Timing totals: model-open ms 100.16687400000002; function-bind ms 99.16608400000001; input-validation ms 0.5416669999999999; backend-await ms 50746.34763099999; output-copy ms 123.500792; run-other ms 2.371037000000016
+Timing completed-stage measured ms: 51072.09408499998
+Timing outside-stage ms: 808.6788730000189
+Largest measured phase: backend-await; 50746.34763099999 ms; 99.36218308679913% of completed-stage measured time
+Process baseline MiB: 38.18925476074219
+Sampled process maximum MiB (10 ms): 127.54878997802734
+Completed parity steps: 4/4; completed stages: 56/56; total loop probe ms: 51880.772958
+Memory scope: sampled app process footprint, NOT total model/device RAM or exact peak; cache behavior unverified

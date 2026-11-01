@@ -5,7 +5,20 @@ tetapi totalnya 53,00 detik. Sebanyak 48 interval pasangan layer memakan sekitar
 51,32 detik. Interval lama mencampur binding fungsi, validasi, eksekusi dan copy,
 sehingga belum menunjukkan operasi mana yang perlu dioptimalkan.
 
-## Jalankan pengukuran
+**Hasil profiling terbaru sudah diterima:** [laporan iPhone](../reviews/coreai-iphone17pro-denoiser-loop-timing/README.md).
+Seluruh 4/4 langkah, 56/56 tahap dan 16 pembandingan tetap PASS. Dari total
+51,88 detik, `backend-await` memakan 50,75 detik: 99,36% waktu tahap yang terukur
+atau 97,81% waktu seluruh loop. Pembukaan model sekitar 0,100 detik, binding
+0,099 detik dan copy output 0,124 detik. Pengukuran sudah konsisten secara
+akuntansi; tidak perlu mengulang profil yang sama untuk mencatat hasil ini.
+
+Fase dominan adalah interval `function.run`, tetapi komputasi steady-state dan
+pekerjaan inisialisasi/tertunda di dalamnya belum terpisah. Langkah berikutnya
+adalah uji run pertama versus run berulang pada satu pasangan layer dengan
+model dan fungsi tetap dimuat. Uji tersebut belum diimplementasikan. Ini
+menghindari keharusan memuat semua 14 model sekaligus saat menguji reuse.
+
+## Reproduksi pengukuran
 
 ```bash
 git pull --ff-only &&
@@ -58,7 +71,8 @@ menjadi cepat. Semua 16 pembandingan velocity/latent masih wajib PASS, dengan
 target 4/4 langkah dan 56/56 tahap. Guard footprint dan sampling memori tetap
 sama, tanpa klaim total RAM model atau peak OS.
 
-Kode pengukuran ini belum dibuild dengan Apple SDK di workspace Linux dan belum
-diukur di iPhone. Pemeriksaan host/fixture tidak menguji clock atau runtime
-CoreAI. Hasil profiling akan menentukan perubahan berikutnya; belum ada klaim
-percepatan atau generasi audio instrumen.
+Pengguna sudah membuild dan menjalankan kode pengukuran di iPhone. Workspace
+Linux tidak menyediakan Apple SDK untuk kompilasi independen; pemeriksaan
+host/fixture tidak menguji clock atau runtime CoreAI. Selisih total terhadap
+baseline 53,00 detik bukan bukti percepatan karena kondisi cache/perangkat tidak
+dikontrol dan tidak ada optimisasi eksekusi. Belum ada generasi audio instrumen.

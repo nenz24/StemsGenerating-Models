@@ -1,0 +1,1071 @@
+{
+  "schema_version": 1,
+  "evidence_source": "User-uploaded iPhone app report, not independently executed on Linux",
+  "reported_device": "iPhone 17 Pro",
+  "os": "27.0.1 (24A446)",
+  "architecture": "h18p",
+  "runtime": "CoreAI",
+  "requested_compute_policy": "cpuOnly",
+  "raw_report": "report.txt",
+  "raw_report_sha256": "fdb1fa835116f90c4a28530e75705409a926e8b901b2fd1122c6d077af5818bc",
+  "source_commit_emitted": false,
+  "exact_native_asset_hashes_emitted": false,
+  "scope": "One four-step synthetic feedback Euler loop using same v2 inputs/references and 14 sequential native assets per step; no CFG, KV cache or waveform generation",
+  "steps": [
+    {
+      "step": 1,
+      "timestep": 1.0,
+      "next_timestep": 0.75,
+      "timestep_r": 1.0,
+      "total_step_ms": 13267.104834,
+      "completed_stages": 14,
+      "comparisons": {
+        "velocity_partition": {
+          "max_absolute_error": 2.5987625122070312e-05,
+          "rmse": 6.387478908186318e-06,
+          "normalized_rmse": 4.9129423959675265e-06,
+          "parity_passed": true
+        },
+        "velocity_original_fp32": {
+          "max_absolute_error": 5.894899368286133e-05,
+          "rmse": 1.5138293638407116e-05,
+          "normalized_rmse": 1.1643638744707437e-05,
+          "parity_passed": true
+        },
+        "latent_partition": {
+          "max_absolute_error": 6.496906280517578e-06,
+          "rmse": 1.5974237998387752e-06,
+          "normalized_rmse": 1.5993086268284254e-06,
+          "parity_passed": true
+        },
+        "latent_original_fp32": {
+          "max_absolute_error": 1.4781951904296875e-05,
+          "rmse": 3.7856202365884083e-06,
+          "normalized_rmse": 3.7900929353837417e-06,
+          "parity_passed": true
+        }
+      },
+      "phases_ms": {
+        "model-open": 24.903626,
+        "function-bind": 68.68716599999999,
+        "input-validation": 0.15870699999999996,
+        "backend-await": 13051.760667999999,
+        "output-copy": 30.565210999999998,
+        "run-other": 0.5672919999998739
+      },
+      "stages": [
+        {
+          "stage": 1,
+          "asset": "front.aimodel",
+          "load_ms": 3.545625,
+          "run_and_detached_copy_ms": 324.494042,
+          "before_process_footprint_mib": 21.439254760742188,
+          "phases_ms": {
+            "model-open": 3.545625,
+            "function-bind": 60.437875,
+            "input-validation": 0.043708,
+            "backend-await": 253.815792,
+            "output-copy": 10.152334,
+            "run-other": 0.044332999999991074
+          }
+        },
+        {
+          "stage": 2,
+          "asset": "blocks-00-01.aimodel",
+          "load_ms": 1.486875,
+          "run_and_detached_copy_ms": 1043.679083,
+          "before_process_footprint_mib": 24.68927764892578,
+          "phases_ms": {
+            "model-open": 1.486875,
+            "function-bind": 0.670125,
+            "input-validation": 0.009291,
+            "backend-await": 1041.349458,
+            "output-copy": 1.612542,
+            "run-other": 0.037666999999904416
+          }
+        },
+        {
+          "stage": 3,
+          "asset": "blocks-02-03.aimodel",
+          "load_ms": 1.462167,
+          "run_and_detached_copy_ms": 1046.876333,
+          "before_process_footprint_mib": 25.54865264892578,
+          "phases_ms": {
+            "model-open": 1.462167,
+            "function-bind": 0.661667,
+            "input-validation": 0.009083,
+            "backend-await": 1044.52425,
+            "output-copy": 1.634333,
+            "run-other": 0.046999999999995046
+          }
+        },
+        {
+          "stage": 4,
+          "asset": "blocks-04-05.aimodel",
+          "load_ms": 1.5275,
+          "run_and_detached_copy_ms": 1044.430959,
+          "before_process_footprint_mib": 24.82990264892578,
+          "phases_ms": {
+            "model-open": 1.5275,
+            "function-bind": 0.668125,
+            "input-validation": 0.009125,
+            "backend-await": 1042.0545,
+            "output-copy": 1.655584,
+            "run-other": 0.04362500000010994
+          }
+        },
+        {
+          "stage": 5,
+          "asset": "blocks-06-07.aimodel",
+          "load_ms": 1.467292,
+          "run_and_detached_copy_ms": 1103.03375,
+          "before_process_footprint_mib": 24.82990264892578,
+          "phases_ms": {
+            "model-open": 1.467292,
+            "function-bind": 0.6605,
+            "input-validation": 0.009,
+            "backend-await": 1100.721292,
+            "output-copy": 1.604375,
+            "run-other": 0.03858300000013504
+          }
+        },
+        {
+          "stage": 6,
+          "asset": "blocks-08-09.aimodel",
+          "load_ms": 1.500125,
+          "run_and_detached_copy_ms": 1062.482459,
+          "before_process_footprint_mib": 25.36115264892578,
+          "phases_ms": {
+            "model-open": 1.500125,
+            "function-bind": 0.647875,
+            "input-validation": 0.009125,
+            "backend-await": 1060.167917,
+            "output-copy": 1.617375,
+            "run-other": 0.04016699999992124
+          }
+        },
+        {
+          "stage": 7,
+          "asset": "blocks-10-11.aimodel",
+          "load_ms": 1.517,
+          "run_and_detached_copy_ms": 1115.048416,
+          "before_process_footprint_mib": 25.845550537109375,
+          "phases_ms": {
+            "model-open": 1.517,
+            "function-bind": 0.671083,
+            "input-validation": 0.009125,
+            "backend-await": 1112.662917,
+            "output-copy": 1.65875,
+            "run-other": 0.0465409999999884
+          }
+        },
+        {
+          "stage": 8,
+          "asset": "blocks-12-13.aimodel",
+          "load_ms": 1.664,
+          "run_and_detached_copy_ms": 1130.602959,
+          "before_process_footprint_mib": 26.32990264892578,
+          "phases_ms": {
+            "model-open": 1.664,
+            "function-bind": 0.597208,
+            "input-validation": 0.008792,
+            "backend-await": 1128.368917,
+            "output-copy": 1.590709,
+            "run-other": 0.037333000000050465
+          }
+        },
+        {
+          "stage": 9,
+          "asset": "blocks-14-15.aimodel",
+          "load_ms": 1.802,
+          "run_and_detached_copy_ms": 1100.995584,
+          "before_process_footprint_mib": 26.86115264892578,
+          "phases_ms": {
+            "model-open": 1.802,
+            "function-bind": 0.605416,
+            "input-validation": 0.009125,
+            "backend-await": 1098.393209,
+            "output-copy": 1.950459,
+            "run-other": 0.037374999999793435
+          }
+        },
+        {
+          "stage": 10,
+          "asset": "blocks-16-17.aimodel",
+          "load_ms": 1.839708,
+          "run_and_detached_copy_ms": 1050.725,
+          "before_process_footprint_mib": 27.48615264892578,
+          "phases_ms": {
+            "model-open": 1.839708,
+            "function-bind": 0.6235,
+            "input-validation": 0.009083,
+            "backend-await": 1048.083583,
+            "output-copy": 1.957792,
+            "run-other": 0.05104199999997894
+          }
+        },
+        {
+          "stage": 11,
+          "asset": "blocks-18-19.aimodel",
+          "load_ms": 1.783917,
+          "run_and_detached_copy_ms": 1042.265875,
+          "before_process_footprint_mib": 28.095550537109375,
+          "phases_ms": {
+            "model-open": 1.783917,
+            "function-bind": 0.625,
+            "input-validation": 0.0095,
+            "backend-await": 1039.971625,
+            "output-copy": 1.621958,
+            "run-other": 0.037792000000258286
+          }
+        },
+        {
+          "stage": 12,
+          "asset": "blocks-20-21.aimodel",
+          "load_ms": 1.782083,
+          "run_and_detached_copy_ms": 1038.967584,
+          "before_process_footprint_mib": 28.611175537109375,
+          "phases_ms": {
+            "model-open": 1.782083,
+            "function-bind": 0.670667,
+            "input-validation": 0.009041,
+            "backend-await": 1036.5635,
+            "output-copy": 1.670292,
+            "run-other": 0.05408399999989277
+          }
+        },
+        {
+          "stage": 13,
+          "asset": "blocks-22-23.aimodel",
+          "load_ms": 1.790417,
+          "run_and_detached_copy_ms": 1045.87675,
+          "before_process_footprint_mib": 29.142425537109375,
+          "phases_ms": {
+            "model-open": 1.790417,
+            "function-bind": 0.617708,
+            "input-validation": 0.008417,
+            "backend-await": 1043.5125,
+            "output-copy": 1.697458,
+            "run-other": 0.04066699999985457
+          }
+        },
+        {
+          "stage": 14,
+          "asset": "tail.aimodel",
+          "load_ms": 1.734917,
+          "run_and_detached_copy_ms": 2.26025,
+          "before_process_footprint_mib": 29.673675537109375,
+          "phases_ms": {
+            "model-open": 1.734917,
+            "function-bind": 0.530417,
+            "input-validation": 0.006292,
+            "backend-await": 1.571208,
+            "output-copy": 0.14125,
+            "run-other": 0.011083000000000287
+          }
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "timestep": 0.75,
+      "next_timestep": 0.5,
+      "timestep_r": 0.75,
+      "total_step_ms": 12929.019167,
+      "completed_stages": 14,
+      "comparisons": {
+        "velocity_partition": {
+          "max_absolute_error": 3.0040740966796875e-05,
+          "rmse": 6.791075465845882e-06,
+          "normalized_rmse": 4.697934369535394e-06,
+          "parity_passed": true
+        },
+        "velocity_original_fp32": {
+          "max_absolute_error": 5.555152893066406e-05,
+          "rmse": 1.3712388720968981e-05,
+          "normalized_rmse": 9.485983910342884e-06,
+          "parity_passed": true
+        },
+        "latent_partition": {
+          "max_absolute_error": 1.0192394256591797e-05,
+          "rmse": 2.701563184092372e-06,
+          "normalized_rmse": 2.0713861063673776e-06,
+          "parity_passed": true
+        },
+        "latent_original_fp32": {
+          "max_absolute_error": 2.5272369384765625e-05,
+          "rmse": 6.420954538992525e-06,
+          "normalized_rmse": 4.923189054341582e-06,
+          "parity_passed": true
+        }
+      },
+      "phases_ms": {
+        "model-open": 24.842581000000003,
+        "function-bind": 9.785957,
+        "input-validation": 0.12483399999999997,
+        "backend-await": 12688.965918000002,
+        "output-copy": 31.597877000000008,
+        "run-other": 0.6294570000006128
+      },
+      "stages": [
+        {
+          "stage": 1,
+          "asset": "front.aimodel",
+          "load_ms": 1.679916,
+          "run_and_detached_copy_ms": 253.911,
+          "before_process_footprint_mib": 37.50177764892578,
+          "phases_ms": {
+            "model-open": 1.679916,
+            "function-bind": 0.993542,
+            "input-validation": 0.006792,
+            "backend-await": 242.441083,
+            "output-copy": 10.450916,
+            "run-other": 0.018667000000029077
+          }
+        },
+        {
+          "stage": 2,
+          "asset": "blocks-00-01.aimodel",
+          "load_ms": 1.804042,
+          "run_and_detached_copy_ms": 1038.507208,
+          "before_process_footprint_mib": 32.28302764892578,
+          "phases_ms": {
+            "model-open": 1.804042,
+            "function-bind": 0.628208,
+            "input-validation": 0.0095,
+            "backend-await": 1035.91075,
+            "output-copy": 1.918708,
+            "run-other": 0.040042000000009015
+          }
+        },
+        {
+          "stage": 3,
+          "asset": "blocks-02-03.aimodel",
+          "load_ms": 1.742208,
+          "run_and_detached_copy_ms": 1041.970542,
+          "before_process_footprint_mib": 32.954925537109375,
+          "phases_ms": {
+            "model-open": 1.742208,
+            "function-bind": 0.668875,
+            "input-validation": 0.009125,
+            "backend-await": 1039.512625,
+            "output-copy": 1.680709,
+            "run-other": 0.0992079999998412
+          }
+        },
+        {
+          "stage": 4,
+          "asset": "blocks-04-05.aimodel",
+          "load_ms": 1.881083,
+          "run_and_detached_copy_ms": 1045.220667,
+          "before_process_footprint_mib": 44.923675537109375,
+          "phases_ms": {
+            "model-open": 1.881083,
+            "function-bind": 0.627583,
+            "input-validation": 0.009292,
+            "backend-await": 1042.878375,
+            "output-copy": 1.654417,
+            "run-other": 0.051000000000124945
+          }
+        },
+        {
+          "stage": 5,
+          "asset": "blocks-06-07.aimodel",
+          "load_ms": 1.791,
+          "run_and_detached_copy_ms": 1064.603416,
+          "before_process_footprint_mib": 45.908050537109375,
+          "phases_ms": {
+            "model-open": 1.791,
+            "function-bind": 0.859959,
+            "input-validation": 0.01,
+            "backend-await": 1062.082167,
+            "output-copy": 1.607083,
+            "run-other": 0.044207000000017205
+          }
+        },
+        {
+          "stage": 6,
+          "asset": "blocks-08-09.aimodel",
+          "load_ms": 1.77075,
+          "run_and_detached_copy_ms": 1049.588709,
+          "before_process_footprint_mib": 47.329925537109375,
+          "phases_ms": {
+            "model-open": 1.77075,
+            "function-bind": 0.629167,
+            "input-validation": 0.009125,
+            "backend-await": 1047.293834,
+            "output-copy": 1.608834,
+            "run-other": 0.047748999999954966
+          }
+        },
+        {
+          "stage": 7,
+          "asset": "blocks-10-11.aimodel",
+          "load_ms": 1.722583,
+          "run_and_detached_copy_ms": 1039.165167,
+          "before_process_footprint_mib": 34.954925537109375,
+          "phases_ms": {
+            "model-open": 1.722583,
+            "function-bind": 0.631625,
+            "input-validation": 0.009333,
+            "backend-await": 1036.848584,
+            "output-copy": 1.626667,
+            "run-other": 0.04895800000008177
+          }
+        },
+        {
+          "stage": 8,
+          "asset": "blocks-12-13.aimodel",
+          "load_ms": 1.805333,
+          "run_and_detached_copy_ms": 1034.026292,
+          "before_process_footprint_mib": 35.54869842529297,
+          "phases_ms": {
+            "model-open": 1.805333,
+            "function-bind": 0.614083,
+            "input-validation": 0.009333,
+            "backend-await": 1031.7399580000001,
+            "output-copy": 1.620667,
+            "run-other": 0.04225099999999049
+          }
+        },
+        {
+          "stage": 9,
+          "asset": "blocks-14-15.aimodel",
+          "load_ms": 1.815375,
+          "run_and_detached_copy_ms": 1040.729167,
+          "before_process_footprint_mib": 36.07994842529297,
+          "phases_ms": {
+            "model-open": 1.815375,
+            "function-bind": 0.59325,
+            "input-validation": 0.008667,
+            "backend-await": 1038.09575,
+            "output-copy": 1.983584,
+            "run-other": 0.04791600000005092
+          }
+        },
+        {
+          "stage": 10,
+          "asset": "blocks-16-17.aimodel",
+          "load_ms": 1.800875,
+          "run_and_detached_copy_ms": 1058.798416,
+          "before_process_footprint_mib": 36.67369842529297,
+          "phases_ms": {
+            "model-open": 1.800875,
+            "function-bind": 0.579875,
+            "input-validation": 0.009292,
+            "backend-await": 1056.321792,
+            "output-copy": 1.837166,
+            "run-other": 0.05029100000026765
+          }
+        },
+        {
+          "stage": 11,
+          "asset": "blocks-18-19.aimodel",
+          "load_ms": 1.771542,
+          "run_and_detached_copy_ms": 1004.725,
+          "before_process_footprint_mib": 52.42369842529297,
+          "phases_ms": {
+            "model-open": 1.771542,
+            "function-bind": 0.838541,
+            "input-validation": 0.009,
+            "backend-await": 1001.9665,
+            "output-copy": 1.8645,
+            "run-other": 0.04645900000004799
+          }
+        },
+        {
+          "stage": 12,
+          "asset": "blocks-20-21.aimodel",
+          "load_ms": 1.754708,
+          "run_and_detached_copy_ms": 1050.163917,
+          "before_process_footprint_mib": 37.751800537109375,
+          "phases_ms": {
+            "model-open": 1.754708,
+            "function-bind": 0.856125,
+            "input-validation": 0.009541,
+            "backend-await": 1047.596625,
+            "output-copy": 1.663875,
+            "run-other": 0.037751000000260326
+          }
+        },
+        {
+          "stage": 13,
+          "asset": "blocks-22-23.aimodel",
+          "load_ms": 1.764708,
+          "run_and_detached_copy_ms": 1007.02375,
+          "before_process_footprint_mib": 38.29869842529297,
+          "phases_ms": {
+            "model-open": 1.764708,
+            "function-bind": 0.687333,
+            "input-validation": 0.009542,
+            "backend-await": 1004.34225,
+            "output-copy": 1.940792,
+            "run-other": 0.04383299999993717
+          }
+        },
+        {
+          "stage": 14,
+          "asset": "tail.aimodel",
+          "load_ms": 1.738458,
+          "run_and_detached_copy_ms": 2.670792,
+          "before_process_footprint_mib": 55.65807342529297,
+          "phases_ms": {
+            "model-open": 1.738458,
+            "function-bind": 0.577791,
+            "input-validation": 0.006292,
+            "backend-await": 1.935625,
+            "output-copy": 0.139959,
+            "run-other": 0.011124999999999996
+          }
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "timestep": 0.5,
+      "next_timestep": 0.25,
+      "timestep_r": 0.5,
+      "total_step_ms": 12673.035,
+      "completed_stages": 14,
+      "comparisons": {
+        "velocity_partition": {
+          "max_absolute_error": 3.337860107421875e-05,
+          "rmse": 7.861121064529939e-06,
+          "normalized_rmse": 4.902968003233772e-06,
+          "parity_passed": true
+        },
+        "velocity_original_fp32": {
+          "max_absolute_error": 0.00017407536506652832,
+          "rmse": 3.886561016235919e-05,
+          "normalized_rmse": 2.424035500777915e-05,
+          "parity_passed": true
+        },
+        "latent_partition": {
+          "max_absolute_error": 1.633167266845703e-05,
+          "rmse": 3.903720417501994e-06,
+          "normalized_rmse": 2.3226428990409264e-06,
+          "parity_passed": true
+        },
+        "latent_original_fp32": {
+          "max_absolute_error": 4.1484832763671875e-05,
+          "rmse": 1.1855732858823736e-05,
+          "normalized_rmse": 7.053953698218171e-06,
+          "parity_passed": true
+        }
+      },
+      "phases_ms": {
+        "model-open": 25.363874999999993,
+        "function-bind": 10.273208,
+        "input-validation": 0.12587599999999996,
+        "backend-await": 12363.512918,
+        "output-copy": 30.919207,
+        "run-other": 0.6134589999999136
+      },
+      "stages": [
+        {
+          "stage": 1,
+          "asset": "front.aimodel",
+          "load_ms": 1.875875,
+          "run_and_detached_copy_ms": 248.137625,
+          "before_process_footprint_mib": 90.59555053710938,
+          "phases_ms": {
+            "model-open": 1.875875,
+            "function-bind": 0.993625,
+            "input-validation": 0.008625,
+            "backend-await": 236.838208,
+            "output-copy": 10.272833,
+            "run-other": 0.02433400000000141
+          }
+        },
+        {
+          "stage": 2,
+          "asset": "blocks-00-01.aimodel",
+          "load_ms": 1.992083,
+          "run_and_detached_copy_ms": 996.173209,
+          "before_process_footprint_mib": 59.70494842529297,
+          "phases_ms": {
+            "model-open": 1.992083,
+            "function-bind": 0.849,
+            "input-validation": 0.009084,
+            "backend-await": 993.29725,
+            "output-copy": 1.971,
+            "run-other": 0.04687500000000355
+          }
+        },
+        {
+          "stage": 3,
+          "asset": "blocks-02-03.aimodel",
+          "load_ms": 1.704666,
+          "run_and_detached_copy_ms": 990.891584,
+          "before_process_footprint_mib": 42.20494842529297,
+          "phases_ms": {
+            "model-open": 1.704666,
+            "function-bind": 0.868916,
+            "input-validation": 0.009042,
+            "backend-await": 988.195334,
+            "output-copy": 1.743375,
+            "run-other": 0.07491699999992862
+          }
+        },
+        {
+          "stage": 4,
+          "asset": "blocks-04-05.aimodel",
+          "load_ms": 1.838208,
+          "run_and_detached_copy_ms": 1005.700209,
+          "before_process_footprint_mib": 42.51744842529297,
+          "phases_ms": {
+            "model-open": 1.838208,
+            "function-bind": 0.634792,
+            "input-validation": 0.009334,
+            "backend-await": 1003.315084,
+            "output-copy": 1.679292,
+            "run-other": 0.06170700000010165
+          }
+        },
+        {
+          "stage": 5,
+          "asset": "blocks-06-07.aimodel",
+          "load_ms": 1.8165,
+          "run_and_detached_copy_ms": 1056.458291,
+          "before_process_footprint_mib": 43.04869842529297,
+          "phases_ms": {
+            "model-open": 1.8165,
+            "function-bind": 0.85125,
+            "input-validation": 0.009125,
+            "backend-await": 1053.718333,
+            "output-copy": 1.834708,
+            "run-other": 0.0448749999999114
+          }
+        },
+        {
+          "stage": 6,
+          "asset": "blocks-08-09.aimodel",
+          "load_ms": 1.785084,
+          "run_and_detached_copy_ms": 999.427875,
+          "before_process_footprint_mib": 43.70494842529297,
+          "phases_ms": {
+            "model-open": 1.785084,
+            "function-bind": 0.621583,
+            "input-validation": 0.009166,
+            "backend-await": 996.962167,
+            "output-copy": 1.790917,
+            "run-other": 0.04404199999991243
+          }
+        },
+        {
+          "stage": 7,
+          "asset": "blocks-10-11.aimodel",
+          "load_ms": 1.741166,
+          "run_and_detached_copy_ms": 1049.429917,
+          "before_process_footprint_mib": 44.23619842529297,
+          "phases_ms": {
+            "model-open": 1.741166,
+            "function-bind": 0.631209,
+            "input-validation": 0.009,
+            "backend-await": 1047.162209,
+            "output-copy": 1.589208,
+            "run-other": 0.038290999999943454
+          }
+        },
+        {
+          "stage": 8,
+          "asset": "blocks-12-13.aimodel",
+          "load_ms": 1.785334,
+          "run_and_detached_copy_ms": 1021.006083,
+          "before_process_footprint_mib": 67.48619842529297,
+          "phases_ms": {
+            "model-open": 1.785334,
+            "function-bind": 0.8615,
+            "input-validation": 0.009625,
+            "backend-await": 1018.492625,
+            "output-copy": 1.59925,
+            "run-other": 0.043083000000007754
+          }
+        },
+        {
+          "stage": 9,
+          "asset": "blocks-14-15.aimodel",
+          "load_ms": 1.82375,
+          "run_and_detached_copy_ms": 1038.112083,
+          "before_process_footprint_mib": 68.56432342529297,
+          "phases_ms": {
+            "model-open": 1.82375,
+            "function-bind": 0.603834,
+            "input-validation": 0.009458,
+            "backend-await": 1035.859625,
+            "output-copy": 1.596833,
+            "run-other": 0.04233299999993201
+          }
+        },
+        {
+          "stage": 10,
+          "asset": "blocks-16-17.aimodel",
+          "load_ms": 1.757875,
+          "run_and_detached_copy_ms": 1050.414875,
+          "before_process_footprint_mib": 69.64244842529297,
+          "phases_ms": {
+            "model-open": 1.757875,
+            "function-bind": 0.883083,
+            "input-validation": 0.009042,
+            "backend-await": 1047.780583,
+            "output-copy": 1.693958,
+            "run-other": 0.048209000000108526
+          }
+        },
+        {
+          "stage": 11,
+          "asset": "blocks-18-19.aimodel",
+          "load_ms": 1.88225,
+          "run_and_detached_copy_ms": 972.320417,
+          "before_process_footprint_mib": 70.68932342529297,
+          "phases_ms": {
+            "model-open": 1.88225,
+            "function-bind": 0.648875,
+            "input-validation": 0.009541,
+            "backend-await": 969.962833,
+            "output-copy": 1.655083,
+            "run-other": 0.04408499999998594
+          }
+        },
+        {
+          "stage": 12,
+          "asset": "blocks-20-21.aimodel",
+          "load_ms": 1.818917,
+          "run_and_detached_copy_ms": 997.536125,
+          "before_process_footprint_mib": 47.09557342529297,
+          "phases_ms": {
+            "model-open": 1.818917,
+            "function-bind": 0.65375,
+            "input-validation": 0.009292,
+            "backend-await": 995.08875,
+            "output-copy": 1.742167,
+            "run-other": 0.042166000000060544
+          }
+        },
+        {
+          "stage": 13,
+          "asset": "blocks-22-23.aimodel",
+          "load_ms": 1.796542,
+          "run_and_detached_copy_ms": 978.204125,
+          "before_process_footprint_mib": 47.70494842529297,
+          "phases_ms": {
+            "model-open": 1.796542,
+            "function-bind": 0.632541,
+            "input-validation": 0.009542,
+            "backend-await": 975.895667,
+            "output-copy": 1.616875,
+            "run-other": 0.04950000000001631
+          }
+        },
+        {
+          "stage": 14,
+          "asset": "tail.aimodel",
+          "load_ms": 1.745625,
+          "run_and_detached_copy_ms": 1.63225,
+          "before_process_footprint_mib": 48.29869842529297,
+          "phases_ms": {
+            "model-open": 1.745625,
+            "function-bind": 0.53925,
+            "input-validation": 0.006,
+            "backend-await": 0.94425,
+            "output-copy": 0.133708,
+            "run-other": 0.009041999999999939
+          }
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "timestep": 0.25,
+      "next_timestep": 0.0,
+      "timestep_r": 0.25,
+      "total_step_ms": 12896.463125,
+      "completed_stages": 14,
+      "comparisons": {
+        "velocity_partition": {
+          "max_absolute_error": 4.649162292480469e-06,
+          "rmse": 1.0732778236593032e-06,
+          "normalized_rmse": 2.4278277445513843e-06,
+          "parity_passed": true
+        },
+        "velocity_original_fp32": {
+          "max_absolute_error": 1.1473894119262695e-05,
+          "rmse": 2.993270331976901e-06,
+          "normalized_rmse": 6.770987923736527e-06,
+          "parity_passed": true
+        },
+        "latent_partition": {
+          "max_absolute_error": 1.537799835205078e-05,
+          "rmse": 3.6841426132548933e-06,
+          "normalized_rmse": 2.3136722672839948e-06,
+          "parity_passed": true
+        },
+        "latent_original_fp32": {
+          "max_absolute_error": 3.933906555175781e-05,
+          "rmse": 1.1169150928405818e-05,
+          "normalized_rmse": 7.014327054948485e-06,
+          "parity_passed": true
+        }
+      },
+      "phases_ms": {
+        "model-open": 25.056791999999998,
+        "function-bind": 10.419753,
+        "input-validation": 0.13224999999999998,
+        "backend-await": 12642.108127000001,
+        "output-copy": 30.41849699999999,
+        "run-other": 0.5608289999996161
+      },
+      "stages": [
+        {
+          "stage": 1,
+          "asset": "front.aimodel",
+          "load_ms": 1.903375,
+          "run_and_detached_copy_ms": 255.566958,
+          "before_process_footprint_mib": 73.03302764892578,
+          "phases_ms": {
+            "model-open": 1.903375,
+            "function-bind": 0.864875,
+            "input-validation": 0.008417,
+            "backend-await": 244.386375,
+            "output-copy": 10.2805,
+            "run-other": 0.026790999999992238
+          }
+        },
+        {
+          "stage": 2,
+          "asset": "blocks-00-01.aimodel",
+          "load_ms": 1.741083,
+          "run_and_detached_copy_ms": 1030.58525,
+          "before_process_footprint_mib": 51.59557342529297,
+          "phases_ms": {
+            "model-open": 1.741083,
+            "function-bind": 0.866625,
+            "input-validation": 0.011,
+            "backend-await": 1028.085792,
+            "output-copy": 1.576708,
+            "run-other": 0.04512499999992414
+          }
+        },
+        {
+          "stage": 3,
+          "asset": "blocks-02-03.aimodel",
+          "load_ms": 1.758167,
+          "run_and_detached_copy_ms": 1027.751791,
+          "before_process_footprint_mib": 52.142425537109375,
+          "phases_ms": {
+            "model-open": 1.758167,
+            "function-bind": 0.868708,
+            "input-validation": 0.009291,
+            "backend-await": 1025.216875,
+            "output-copy": 1.616708,
+            "run-other": 0.04020899999979388
+          }
+        },
+        {
+          "stage": 4,
+          "asset": "blocks-04-05.aimodel",
+          "load_ms": 1.807792,
+          "run_and_detached_copy_ms": 1050.230208,
+          "before_process_footprint_mib": 52.439300537109375,
+          "phases_ms": {
+            "model-open": 1.807792,
+            "function-bind": 0.8845,
+            "input-validation": 0.009584,
+            "backend-await": 1047.71225,
+            "output-copy": 1.588458,
+            "run-other": 0.03541600000011447
+          }
+        },
+        {
+          "stage": 5,
+          "asset": "blocks-06-07.aimodel",
+          "load_ms": 1.75725,
+          "run_and_detached_copy_ms": 1097.833583,
+          "before_process_footprint_mib": 52.57994842529297,
+          "phases_ms": {
+            "model-open": 1.75725,
+            "function-bind": 0.631292,
+            "input-validation": 0.009042,
+            "backend-await": 1095.531709,
+            "output-copy": 1.619916,
+            "run-other": 0.04162400000005917
+          }
+        },
+        {
+          "stage": 6,
+          "asset": "blocks-08-09.aimodel",
+          "load_ms": 1.804,
+          "run_and_detached_copy_ms": 1021.936916,
+          "before_process_footprint_mib": 53.11119842529297,
+          "phases_ms": {
+            "model-open": 1.804,
+            "function-bind": 0.640167,
+            "input-validation": 0.01075,
+            "backend-await": 1019.607084,
+            "output-copy": 1.636916,
+            "run-other": 0.04199899999996082
+          }
+        },
+        {
+          "stage": 7,
+          "asset": "blocks-10-11.aimodel",
+          "load_ms": 1.6515,
+          "run_and_detached_copy_ms": 1046.366042,
+          "before_process_footprint_mib": 53.75182342529297,
+          "phases_ms": {
+            "model-open": 1.6515,
+            "function-bind": 0.61675,
+            "input-validation": 0.009041,
+            "backend-await": 1044.133125,
+            "output-copy": 1.570375,
+            "run-other": 0.03675100000010745
+          }
+        },
+        {
+          "stage": 8,
+          "asset": "blocks-12-13.aimodel",
+          "load_ms": 1.787875,
+          "run_and_detached_copy_ms": 1030.418666,
+          "before_process_footprint_mib": 54.34557342529297,
+          "phases_ms": {
+            "model-open": 1.787875,
+            "function-bind": 0.835167,
+            "input-validation": 0.009333,
+            "backend-await": 1027.920542,
+            "output-copy": 1.608333,
+            "run-other": 0.04529100000003616
+          }
+        },
+        {
+          "stage": 9,
+          "asset": "blocks-14-15.aimodel",
+          "load_ms": 1.881,
+          "run_and_detached_copy_ms": 1029.781417,
+          "before_process_footprint_mib": 54.92369842529297,
+          "phases_ms": {
+            "model-open": 1.881,
+            "function-bind": 0.605042,
+            "input-validation": 0.009667,
+            "backend-await": 1027.484542,
+            "output-copy": 1.627792,
+            "run-other": 0.0543740000000521
+          }
+        },
+        {
+          "stage": 10,
+          "asset": "blocks-16-17.aimodel",
+          "load_ms": 1.756375,
+          "run_and_detached_copy_ms": 1032.042875,
+          "before_process_footprint_mib": 55.20494842529297,
+          "phases_ms": {
+            "model-open": 1.756375,
+            "function-bind": 0.907875,
+            "input-validation": 0.010792,
+            "backend-await": 1029.484709,
+            "output-copy": 1.597625,
+            "run-other": 0.041873999999886946
+          }
+        },
+        {
+          "stage": 11,
+          "asset": "blocks-18-19.aimodel",
+          "load_ms": 1.768625,
+          "run_and_detached_copy_ms": 1040.710709,
+          "before_process_footprint_mib": 55.47057342529297,
+          "phases_ms": {
+            "model-open": 1.768625,
+            "function-bind": 0.643334,
+            "input-validation": 0.008875,
+            "backend-await": 1038.25825,
+            "output-copy": 1.75875,
+            "run-other": 0.04149999999977805
+          }
+        },
+        {
+          "stage": 12,
+          "asset": "blocks-20-21.aimodel",
+          "load_ms": 1.801833,
+          "run_and_detached_copy_ms": 1015.591125,
+          "before_process_footprint_mib": 56.15807342529297,
+          "phases_ms": {
+            "model-open": 1.801833,
+            "function-bind": 0.873459,
+            "input-validation": 0.009958,
+            "backend-await": 1012.871333,
+            "output-copy": 1.798916,
+            "run-other": 0.037458999999975484
+          }
+        },
+        {
+          "stage": 13,
+          "asset": "blocks-22-23.aimodel",
+          "load_ms": 1.830667,
+          "run_and_detached_copy_ms": 1002.180416,
+          "before_process_footprint_mib": 56.68932342529297,
+          "phases_ms": {
+            "model-open": 1.830667,
+            "function-bind": 0.649792,
+            "input-validation": 0.0095,
+            "backend-await": 999.469,
+            "output-copy": 1.990541,
+            "run-other": 0.06158299999993533
+          }
+        },
+        {
+          "stage": 14,
+          "asset": "tail.aimodel",
+          "load_ms": 1.80725,
+          "run_and_detached_copy_ms": 2.6435,
+          "before_process_footprint_mib": 57.23619842529297,
+          "phases_ms": {
+            "model-open": 1.80725,
+            "function-bind": 0.532167,
+            "input-validation": 0.007,
+            "backend-await": 1.946541,
+            "output-copy": 0.146959,
+            "run-other": 0.010832999999999926
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "completed_parity_steps": 4,
+    "completed_stages": 56,
+    "numerical_comparisons_passed": 16,
+    "four_step_dual_parity_passed": true,
+    "phases_ms": {
+      "model-open": 100.16687400000002,
+      "function-bind": 99.16608400000001,
+      "input-validation": 0.5416669999999999,
+      "backend-await": 50746.34763099999,
+      "output-copy": 123.500792,
+      "run-other": 2.371037000000016
+    },
+    "completed_stage_measured_ms": 51072.09408499998,
+    "outside_stage_ms": 808.6788730000189,
+    "total_loop_probe_ms": 51880.772958,
+    "dominant_measured_phase": "backend-await",
+    "backend_await_percent_of_completed_stage_time": 99.36218308679913,
+    "backend_await_percent_of_loop_wall_time": 97.81339933404928,
+    "process_baseline_mib": 38.18925476074219,
+    "sampled_process_maximum_mib": 127.54878997802734,
+    "final_latent_original_fp32": {
+      "max_absolute_error": 3.933906555175781e-05,
+      "rmse": 1.1169150928405818e-05,
+      "normalized_rmse": 7.014327054948485e-06,
+      "parity_passed": true
+    }
+  },
+  "interpretation": {
+    "dominant_api_interval_identified": true,
+    "pure_kernel_time_measured": false,
+    "backend_initialization_vs_steady_state_cost_isolated": false,
+    "cache_residency_measured": false,
+    "accelerator_placement_measured": false,
+    "controlled_speedup_demonstrated": false,
+    "memory_scope": "10 ms sampled app process phys_footprint; not exact peak or total model/device RAM",
+    "instrument_generation_verified": false
+  },
+  "next_gate": "Measure first versus repeated execution with one layer-pair model AND function kept loaded, fixed inputs and reference checks; do not retain all 14 assets or attribute backend-await to pure compute yet"
+}

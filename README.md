@@ -74,10 +74,11 @@ cold launch dan kebutuhan RAM model belum tervalidasi sebagai anggaran produksi.
 [laporan perangkat](reviews/coreai-iphone17pro-denoiser-loop/README.md), 4/4 langkah,
 56/56 tahap dan seluruh 16 pembandingan velocity/latent lolos. Waktu total
 53,00 detik; normalized RMSE latent akhir terhadap FP32 asli sekitar `7,01e-6`.
-Langkah berikutnya memisahkan waktu binding fungsi, eksekusi backend dan copy
-untuk menentukan sumber biaya. Tombol **Profil waktu loop 4 langkah** sudah
-disiapkan, memakai model dan referensi yang sama; hasil perangkat masih menunggu.
-[Panduan profiling](docs/coreai-loop-timing.md).
+**Profil waktu juga PASS:** [laporan iPhone](reviews/coreai-iphone17pro-denoiser-loop-timing/README.md).
+Total 51,88 detik; 50,75 detik berada di interval `function.run`, atau 99,36%
+waktu tahap terukur. Opening, binding dan copy masing-masing sekitar 0,10–0,12
+detik. Berikutnya perlu membedakan biaya run pertama dan run berulang dengan
+satu pasangan layer/fungsi tetap dimuat. [Panduan profiling](docs/coreai-loop-timing.md).
 Ini belum generasi instrumen lengkap.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan

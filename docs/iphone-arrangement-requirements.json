@@ -117,10 +117,10 @@
     "shared_scheme": "CoreAIProbe",
     "signing_team_selection": "Apple Team stored in ignored Signing.local.xcconfig; shared Debug/Release configurations include it",
     "apple_compilation_verified": true,
-    "apple_compilation_evidence": "User ran the schema-v2 four-step app to completion on iPhone; not independently compiled in this Linux workspace",
+    "apple_compilation_evidence": "User built and ran API-phase timing caller to completion on iPhone; not independently Apple-built on Linux",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-denoiser-loop/report.json",
-    "device_execution_scope": "Four-step synthetic feedback Euler loop, all 24 layers at every step, 56/56 stages, 16 dual-reference velocity/latent comparisons PASS; no recording conditioning or waveform generation",
+    "device_execution_report": "reviews/coreai-iphone17pro-denoiser-loop-timing/report.json",
+    "device_execution_scope": "Profiled four-step feedback Euler loop, 56/56 stages and all 16 parity checks PASS; backend-await accounts for 99.36% of completed-stage time; no recorded conditioning/waveform",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -477,7 +477,7 @@
     "device_total_loop_probe_ms": 53001.064667,
     "device_sampled_process_maximum_mib": 74.01760864257812,
     "first_manifest_failure_exact_field_confirmed": false,
-    "next_gate": "Phase timing caller prepared: same four-step case, constructor/function binding/input validation/backend-await/output copy and residuals; Apple build and device timing pending"
+    "next_gate": "Measure first versus repeated execution with one layer-pair model AND function kept loaded, fixed inputs and reference checks; do not retain all 14 assets or attribute backend-await to pure compute yet"
   },
   "pretrained_denoiser_loop_timing_probe": {
     "source_files": [
@@ -504,10 +504,27 @@
     "timing_scope": "Monotonic API-boundary wall intervals for completed stages; backend-await is not isolated kernel time; deferred work may enter copy; failed-stage work stays outside completed-stage totals",
     "original_dual_parity_required": true,
     "new_model_export_required": false,
-    "new_swift_apple_build_verified": false,
-    "device_phase_timing_verified": false,
+    "new_swift_apple_build_verified": true,
+    "device_phase_timing_verified": true,
     "speedup_verified": false,
     "accelerator_placement_verified": false,
-    "cache_residency_measured": false
+    "cache_residency_measured": false,
+    "device_report": "reviews/coreai-iphone17pro-denoiser-loop-timing/report.json",
+    "device_dual_parity_verified": true,
+    "device_total_loop_probe_ms": 51880.772958,
+    "device_phase_totals_ms": {
+      "model-open": 100.16687400000002,
+      "function-bind": 99.16608400000001,
+      "input-validation": 0.5416669999999999,
+      "backend-await": 50746.34763099999,
+      "output-copy": 123.500792,
+      "run-other": 2.371037000000016
+    },
+    "device_outside_stage_ms": 808.6788730000189,
+    "dominant_measured_phase": "backend-await",
+    "backend_await_percent_of_completed_stage_time": 99.36218308679913,
+    "pure_kernel_time_measured": false,
+    "backend_initialization_vs_steady_state_cost_isolated": false,
+    "next_gate": "Measure first versus repeated execution with one layer-pair model AND function kept loaded, fixed inputs and reference checks; do not retain all 14 assets or attribute backend-await to pure compute yet"
   }
 }

@@ -35,8 +35,10 @@ The next diagnostic gate is to separate constructor, function binding, backend
 execution and detached-output-copy timings before choosing an optimization.
 That instrumentation was not implemented by this evidence-only update.
 A [subsequent timing caller](../../docs/coreai-loop-timing.md) now exposes these
-API-boundary intervals; its on-device measurements remain pending. This baseline
-report and its raw timings are unchanged.
+API-boundary intervals; [device profiling now also passes](../coreai-iphone17pro-denoiser-loop-timing/README.md)
+and identifies backend-await as 99.36% of completed-stage time. The work inside
+that interval is not yet isolated. This baseline report and its raw timings
+are unchanged.
 
 Sampled app process maximum is **74.01760864257812 MiB**, baseline
 19.173629760742188 MiB. This is 10 ms sampled `phys_footprint`, not exact peak,
