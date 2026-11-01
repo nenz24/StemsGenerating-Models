@@ -42,6 +42,7 @@ accumulate; it cannot guarantee an upper bound for compilation peaks inside a
 stage. At export time, Apple compilation and device execution were unverified.
 [Subsequent user device evidence](../coreai-iphone17pro-sharded-denoiser/README.md)
 records an initial failure at stage 13 followed by all-stage completion and dual parity
-PASS on a same-process rerun. Actual cache behavior, repeatability and total model
-memory remain unverified. This is still one velocity forward, not a full
+PASS on a same-process rerun. A [later three-attempt report](../coreai-iphone17pro-sharded-denoiser-stability/README.md)
+also passes 3/3 for the same case in one process. Actual cache behavior,
+cold launches and total model memory remain unverified. This is still a velocity forward, not a full
 conditioning/diffusion/music pipeline. The export-time manifest remains unchanged.

@@ -75,8 +75,21 @@ tekan **Uji kestabilan 3x**, lalu bagikan laporan lengkap. Tombol ini mengulang
 forward tiga kali dalam proses yang sama, dengan tensor input baru, tanpa
 menghapus cache. Semua percobaan dipertahankan; PASS memerlukan tiga dual-parity
 PASS. Guard footprint atau kesalahan persiapan menghentikan percobaan berikutnya.
-Ini bukan uji tiga cold launch. Wrapper pengulangan baru belum dikompilasi dengan
-Apple SDK di workspace Linux dan perlu diuji di perangkat.
+Ini bukan uji tiga cold launch. Workspace Linux tidak menyediakan Apple SDK.
+
+**Hasil terbaru: [uji tiga kali PASS 3/3 pada iPhone](../reviews/coreai-iphone17pro-sharded-denoiser-stability/README.md).**
+Setiap percobaan menyelesaikan 14 bagian dan lolos kedua referensi; waktu total
+4,68 / 3,46 / 2,04 detik. Ada lonjakan run+copy sekitar satu detik pada pasangan
+yang berbeda antar percobaan. Footprint proses maksimum tersampel naik
+35,72 → 60,35 → 68,35 MiB. Belum ada bukti plateau jangka panjang atau penyebab
+kenaikan; angka tersebut bukan seluruh RAM model. Tidak perlu mengulang uji yang
+sama atau menyiapkan bobot ulang untuk mengesahkan hasil ini.
+
+Gate berikutnya memerlukan loop denoising pendek dengan beberapa timestep dan
+latent yang diperbarui lalu dimasukkan kembali, mengikuti jadwal/update ACE yang
+dipin. Bandingkan latent setiap langkah terhadap referensi host dan catat timing
+serta footprint untuk memeriksa drift/akumulasi. Loop dan fixture itu belum
+diimplementasikan; conditioning piano/teks serta generasi waveform menyusul.
 
 ## Cakupan dan pembandingan
 
@@ -95,5 +108,6 @@ Toleransi tetap `abs(error) <= 1e-4 + 1e-3 * abs(reference)`, normalized RMSE <=
 Probe iPhone awal menjalankan **satu forward penuh**, dengan dua pembandingan
 akhir terhadap referensi partisi dan FP32 asli. Laporan mencatat bagian yang
 selesai, load/run+copy per bagian, waktu total dan footprint proses tersampel
-tiap 10 ms. Laporan yang diterima belum membuktikan kestabilan berulang atau loop diffusion/CFG, belum
-conditioning dari piano/teks, dan belum menghasilkan waveform instrumen.
+tiap 10 ms. Uji berikutnya membuktikan tiga pengulangan kasus sintetis yang sama
+dalam satu proses. Belum ada loop diffusion/CFG, conditioning dari piano/teks,
+atau waveform instrumen.

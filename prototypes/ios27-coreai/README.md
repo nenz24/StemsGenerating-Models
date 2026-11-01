@@ -233,6 +233,12 @@ kebutuhan RAM model; cache dan penyebab kegagalan pertama belum terukur.
 Setelah `git pull --ff-only`, build ulang dan tekan **Uji kestabilan 3x**.
 Paket model yang sama dipakai; persiapan/unduhan ulang tidak diperlukan bila sudah
 tersedia. Ketiga percobaan disimpan bersama dan PASS hanya jika ketiganya lolos.
-Tidak ada penghapusan cache atau restart antar percobaan. Wrapper baru belum
-dikompilasi dengan Apple SDK di workspace Linux. Ini belum uji cold launch,
-loop diffusion atau generasi pengiring dari piano.
+Tidak ada penghapusan cache atau restart antar percobaan.
+[Wrapper sudah dilaporkan PASS 3/3 di iPhone](../../reviews/coreai-iphone17pro-sharded-denoiser-stability/README.md):
+4,68 / 3,46 / 2,04 detik, dengan kedua pembandingan lolos tiap percobaan.
+Latensi masih berfluktuasi per bagian dan footprint proses tersampel meningkat;
+kebutuhan RAM total dan plateau jangka panjang belum terukur. Hasil ini belum uji
+cold launch, loop diffusion atau generasi pengiring dari piano. Gate selanjutnya
+adalah loop multi-timestep pendek dengan referensi latent per langkah; belum
+diimplementasikan. Tidak ada perubahan model atau kode probe dalam pencatatan
+laporan ini.

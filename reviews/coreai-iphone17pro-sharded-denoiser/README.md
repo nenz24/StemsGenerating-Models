@@ -1,5 +1,8 @@
 # iPhone: complete sharded denoiser, failure followed by PASS
 
+Subsequent evidence: [the three-attempt wrapper passed 3/3 on iPhone](../coreai-iphone17pro-sharded-denoiser-stability/README.md).
+The reports below preserve the earlier failure and retry as originally supplied.
+
 The user supplied both reports and confirmed that the second attempt came from
 pressing the button again while the **same app stayed open**, without a relaunch.
 These are user-reported physical-device results, not Linux device emulation.
@@ -36,5 +39,5 @@ times within one process, with fresh input tensors and no cache clearing. All
 attempts and their errors are retained in the displayed/persisted report; a
 failed preparation/manifest or footprint guard stops remaining attempts. Three
 dual-parity passes are required for its PASS. This is a same-process repetition
-test, not three cold starts. This new wrapper still needs an Apple SDK build and
-device execution; the reports above predate that wrapper.
+test, not three cold starts. The reports above predate that wrapper; its later
+device execution is recorded in the subsequent evidence linked above.

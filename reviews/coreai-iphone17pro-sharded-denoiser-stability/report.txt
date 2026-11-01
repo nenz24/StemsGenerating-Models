@@ -1,0 +1,144 @@
+Test: sharded denoiser repeatability / 3 attempts in the SAME app process
+Same prepared assets and synthetic inputs; fresh input tensors each attempt
+No cache clearing, app restart or automatic retry of a stage
+Cache residency, compilation reuse and accelerator placement NOT MEASURED
+This is NOT cold-launch testing or instrument generation
+
+=== Attempt 1/3 ===
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: COMPLETE 24-layer denoiser / 14 sequential assets / synthetic latents / NOT instrument generation
+Requested compute policy: cpuOnly; accelerator placement NOT MEASURED
+Execution: one forward; detached CPU copies between assets; native cache eviction NOT GUARANTEED
+Process footprint stop before next stage: 2000 MiB; not an OS peak-memory guarantee
+Target: iOS device build
+Reference binary SHA-256: VERIFIED; both FP32 references; all 24 layers in ordered pairs
+Before stage 1/14 footprint MiB: 24.845481872558594
+Stage 1/14 front.aimodel: load ms 5.616291; run+detached-copy ms 119.588333
+Before stage 2/14 footprint MiB: 22.454925537109375
+Stage 2/14 blocks-00-01.aimodel: load ms 2.029583; run+detached-copy ms 33.633416
+Before stage 3/14 footprint MiB: 26.267425537109375
+Stage 3/14 blocks-02-03.aimodel: load ms 1.754875; run+detached-copy ms 35.531792
+Before stage 4/14 footprint MiB: 26.970550537109375
+Stage 4/14 blocks-04-05.aimodel: load ms 1.884458; run+detached-copy ms 35.536958
+Before stage 5/14 footprint MiB: 27.470550537109375
+Stage 5/14 blocks-06-07.aimodel: load ms 1.653208; run+detached-copy ms 35.7225
+Before stage 6/14 footprint MiB: 28.423675537109375
+Stage 6/14 blocks-08-09.aimodel: load ms 1.714208; run+detached-copy ms 38.545208
+Before stage 7/14 footprint MiB: 28.923675537109375
+Stage 7/14 blocks-10-11.aimodel: load ms 1.771875; run+detached-copy ms 39.954625
+Before stage 8/14 footprint MiB: 29.408050537109375
+Stage 8/14 blocks-12-13.aimodel: load ms 1.814625; run+detached-copy ms 40.932875
+Before stage 9/14 footprint MiB: 29.923675537109375
+Stage 9/14 blocks-14-15.aimodel: load ms 1.813875; run+detached-copy ms 40.0485
+Before stage 10/14 footprint MiB: 30.345550537109375
+Stage 10/14 blocks-16-17.aimodel: load ms 1.804917; run+detached-copy ms 1068.152416
+Before stage 11/14 footprint MiB: 24.283050537109375
+Stage 11/14 blocks-18-19.aimodel: load ms 1.868541; run+detached-copy ms 1039.599833
+Before stage 12/14 footprint MiB: 23.767425537109375
+Stage 12/14 blocks-20-21.aimodel: load ms 1.884375; run+detached-copy ms 990.839208
+Before stage 13/14 footprint MiB: 24.048675537109375
+Stage 13/14 blocks-22-23.aimodel: load ms 1.777; run+detached-copy ms 1024.605958
+Before stage 14/14 footprint MiB: 24.251800537109375
+Stage 14/14 tail.aimodel: load ms 1.962584; run+detached-copy ms 2.462833
+Partition reference max abs error: 1.3887882232666016e-05; RMSE: 3.861574325062525e-06; normalized RMSE: 3.295652767186769e-06
+Original FP32 baseline max abs error: 1.4349818229675293e-05; RMSE: 3.871427727681515e-06; normalized RMSE: 3.3040617978036044e-06
+Sharded denoiser dual parity: PASS (one complete forward, all 24 layers)
+Process baseline MiB: 22.783004760742188
+Sampled process maximum MiB (10 ms): 35.72075653076172
+Completed stages: 14/14; complete forward executed: YES; total probe ms: 4681.286333
+Memory scope: whole process; sampled, not exact peak; native cache behavior unverified
+
+=== Attempt 2/3 ===
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: COMPLETE 24-layer denoiser / 14 sequential assets / synthetic latents / NOT instrument generation
+Requested compute policy: cpuOnly; accelerator placement NOT MEASURED
+Execution: one forward; detached CPU copies between assets; native cache eviction NOT GUARANTEED
+Process footprint stop before next stage: 2000 MiB; not an OS peak-memory guarantee
+Target: iOS device build
+Reference binary SHA-256: VERIFIED; both FP32 references; all 24 layers in ordered pairs
+Before stage 1/14 footprint MiB: 33.25177764892578
+Stage 1/14 front.aimodel: load ms 1.522292; run+detached-copy ms 20.681125
+Before stage 2/14 footprint MiB: 40.501800537109375
+Stage 2/14 blocks-00-01.aimodel: load ms 1.591458; run+detached-copy ms 40.064792
+Before stage 3/14 footprint MiB: 39.26740264892578
+Stage 3/14 blocks-02-03.aimodel: load ms 1.639541; run+detached-copy ms 40.7195
+Before stage 4/14 footprint MiB: 42.251800537109375
+Stage 4/14 blocks-04-05.aimodel: load ms 1.688834; run+detached-copy ms 41.050041
+Before stage 5/14 footprint MiB: 42.908050537109375
+Stage 5/14 blocks-06-07.aimodel: load ms 1.72325; run+detached-copy ms 37.884917
+Before stage 6/14 footprint MiB: 43.626800537109375
+Stage 6/14 blocks-08-09.aimodel: load ms 1.701375; run+detached-copy ms 1062.935125
+Before stage 7/14 footprint MiB: 28.283050537109375
+Stage 7/14 blocks-10-11.aimodel: load ms 2.098917; run+detached-copy ms 1161.011833
+Before stage 8/14 footprint MiB: 30.79865264892578
+Stage 8/14 blocks-12-13.aimodel: load ms 1.668667; run+detached-copy ms 755.447125
+Before stage 9/14 footprint MiB: 31.09557342529297
+Stage 9/14 blocks-14-15.aimodel: load ms 1.70725; run+detached-copy ms 35.317
+Before stage 10/14 footprint MiB: 48.79869842529297
+Stage 10/14 blocks-16-17.aimodel: load ms 1.611417; run+detached-copy ms 33.909208
+Before stage 11/14 footprint MiB: 49.314300537109375
+Stage 11/14 blocks-18-19.aimodel: load ms 1.657167; run+detached-copy ms 34.660792
+Before stage 12/14 footprint MiB: 41.15807342529297
+Stage 12/14 blocks-20-21.aimodel: load ms 1.670375; run+detached-copy ms 37.849917
+Before stage 13/14 footprint MiB: 41.611175537109375
+Stage 13/14 blocks-22-23.aimodel: load ms 1.734125; run+detached-copy ms 37.438875
+Before stage 14/14 footprint MiB: 42.12682342529297
+Stage 14/14 tail.aimodel: load ms 1.722042; run+detached-copy ms 0.760458
+Partition reference max abs error: 1.3887882232666016e-05; RMSE: 3.861574325062525e-06; normalized RMSE: 3.295652767186769e-06
+Original FP32 baseline max abs error: 1.4349818229675293e-05; RMSE: 3.871427727681515e-06; normalized RMSE: 3.3040617978036044e-06
+Sharded denoiser dual parity: PASS (one complete forward, all 24 layers)
+Process baseline MiB: 27.79865264892578
+Sampled process maximum MiB (10 ms): 60.34568786621094
+Completed stages: 14/14; complete forward executed: YES; total probe ms: 3463.263459
+Memory scope: whole process; sampled, not exact peak; native cache behavior unverified
+
+=== Attempt 3/3 ===
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: COMPLETE 24-layer denoiser / 14 sequential assets / synthetic latents / NOT instrument generation
+Requested compute policy: cpuOnly; accelerator placement NOT MEASURED
+Execution: one forward; detached CPU copies between assets; native cache eviction NOT GUARANTEED
+Process footprint stop before next stage: 2000 MiB; not an OS peak-memory guarantee
+Target: iOS device build
+Reference binary SHA-256: VERIFIED; both FP32 references; all 24 layers in ordered pairs
+Before stage 1/14 footprint MiB: 51.236175537109375
+Stage 1/14 front.aimodel: load ms 1.6245; run+detached-copy ms 232.3505
+Before stage 2/14 footprint MiB: 35.14247131347656
+Stage 2/14 blocks-00-01.aimodel: load ms 1.65725; run+detached-copy ms 937.667334
+Before stage 3/14 footprint MiB: 35.517425537109375
+Stage 3/14 blocks-02-03.aimodel: load ms 1.654916; run+detached-copy ms 395.4645
+Before stage 4/14 footprint MiB: 34.59557342529297
+Stage 4/14 blocks-04-05.aimodel: load ms 1.638416; run+detached-copy ms 41.80975
+Before stage 5/14 footprint MiB: 47.658050537109375
+Stage 5/14 blocks-06-07.aimodel: load ms 1.567084; run+detached-copy ms 58.065958
+Before stage 6/14 footprint MiB: 48.14244842529297
+Stage 6/14 blocks-08-09.aimodel: load ms 1.650167; run+detached-copy ms 38.938375
+Before stage 7/14 footprint MiB: 48.611175537109375
+Stage 7/14 blocks-10-11.aimodel: load ms 1.434708; run+detached-copy ms 37.616625
+Before stage 8/14 footprint MiB: 49.14244842529297
+Stage 8/14 blocks-12-13.aimodel: load ms 1.37; run+detached-copy ms 37.87375
+Before stage 9/14 footprint MiB: 49.595550537109375
+Stage 9/14 blocks-14-15.aimodel: load ms 1.424792; run+detached-copy ms 37.4025
+Before stage 10/14 footprint MiB: 50.07994842529297
+Stage 10/14 blocks-16-17.aimodel: load ms 1.34375; run+detached-copy ms 36.9745
+Before stage 11/14 footprint MiB: 50.579925537109375
+Stage 11/14 blocks-18-19.aimodel: load ms 1.353084; run+detached-copy ms 36.615041
+Before stage 12/14 footprint MiB: 51.23619842529297
+Stage 12/14 blocks-20-21.aimodel: load ms 1.448334; run+detached-copy ms 37.819917
+Before stage 13/14 footprint MiB: 51.986175537109375
+Stage 13/14 blocks-22-23.aimodel: load ms 1.413667; run+detached-copy ms 37.5655
+Before stage 14/14 footprint MiB: 52.45494842529297
+Stage 14/14 tail.aimodel: load ms 1.405792; run+detached-copy ms 0.736
+Partition reference max abs error: 1.3887882232666016e-05; RMSE: 3.861574325062525e-06; normalized RMSE: 3.295652767186769e-06
+Original FP32 baseline max abs error: 1.4349818229675293e-05; RMSE: 3.871427727681515e-06; normalized RMSE: 3.3040617978036044e-06
+Sharded denoiser dual parity: PASS (one complete forward, all 24 layers)
+Process baseline MiB: 41.34557342529297
+Sampled process maximum MiB (10 ms): 68.34575653076172
+Completed stages: 14/14; complete forward executed: YES; total probe ms: 2044.489458
+Memory scope: whole process; sampled, not exact peak; native cache behavior unverified
+Repeatability: PASS; dual parity passed 3/3; attempted 3/3

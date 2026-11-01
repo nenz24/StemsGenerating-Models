@@ -65,9 +65,13 @@ Jalankan `bash scripts/prepare_coreai_denoiser.sh`, build ulang, lalu tekan
 **Uji denoiser bertahap**. Checkpoint cache dipakai ulang; paket monolitik diarsipkan
 di luar resource aplikasi. [Hasil iPhone](reviews/coreai-iphone17pro-sharded-denoiser/README.md)
 sudah PASS 14/14 dan kedua referensi pada pengulangan dalam aplikasi yang sama,
-setelah run pertama gagal di BNNS. Kestabilan dan penyebab kegagalan belum pasti.
-Tombol **Uji kestabilan 3x** memeriksa tiga forward tanpa menghapus cache;
-wrapper baru perlu diuji di perangkat. Ini belum generasi instrumen lengkap.
+setelah run pertama gagal di BNNS. Penyebab kegagalan pertama belum pasti.
+**Uji kestabilan 3x kini PASS 3/3 di iPhone:**
+[laporan lengkap](reviews/coreai-iphone17pro-sharded-denoiser-stability/README.md).
+Waktu total 4,68 / 3,46 / 2,04 detik untuk kasus sintetis yang sama; latensi,
+cold launch dan kebutuhan RAM model belum tervalidasi sebagai anggaran produksi.
+Tahap berikutnya adalah loop denoising pendek dengan referensi numerik per langkah.
+Ini belum generasi instrumen lengkap.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:
