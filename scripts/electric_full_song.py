@@ -139,7 +139,7 @@ def prepare(source, output, start=0, duration=None):
     return metadata
 
 
-def execute_worker(root, output, *, preset=None, instrument="bass"):
+def execute_worker(root, output, *, preset=None, instrument="bass", reference_audio=None):
     """Reuse the inspected engine directly, with process-local caption/FP32/export overrides."""
     preset = PRESET if preset is None else preset
     if instrument not in ("bass", "drums") or preset.get("instrument") != instrument:
@@ -175,6 +175,8 @@ def execute_worker(root, output, *, preset=None, instrument="bass"):
             original_params = self.params_type
             def params(*args, **kwargs):
                 kwargs["caption"] = preset["caption"]
+                if reference_audio is not None:
+                    kwargs["reference_audio"] = str(reference_audio)
                 return original_params(*args, **kwargs)
             self.params_type = params
     backends.AceBackend = ElectricBackend

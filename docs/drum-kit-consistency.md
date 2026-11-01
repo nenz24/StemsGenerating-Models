@@ -28,8 +28,10 @@ At commit `ca1e85fe9430179831e6bc6be790c332190a3866`:
   carries prepared references into the conditioning batch.
 
 These are static API/preparation-path observations, not a completed GPU test or
-proof of timbre locking for LEGO. The local bridge has not yet implemented or
-validated a reference-conditioned kit experiment. Do not present a caption-only
+proof of timbre locking for LEGO. Notebook 16 and `scripts/drum_kit_reference.py`
+now implement the controlled experiment. CPU tests cover reference injection,
+input/setting checks, archives and failure handling; audio behavior has not yet
+been tested on GPU. Do not present a caption-only
 change, reference parameter, or seed as a guaranteed identity constraint.
 
 ## Controlled next experiment
@@ -47,5 +49,26 @@ change, reference parameter, or seed as a guaranteed identity constraint.
    snare and hats are currently mixed together; replacing a kick is not the same
    as copying a low-frequency band, and EQ does not reproduce a different kit.
 
-No audio processing, kick separation, sample replacement, re-timing or new GPU
-inference was run in this review. Existing baselines/presets remain unchanged.
+## Run the comparison
+
+Use notebook 16 on the active VM. It embeds the helpers and finds the original
+notebook-15 result by the reviewed chunk 0/1 WAV hashes. If those files are gone,
+upload `drum_chunked_result.zip` and the original piano; no lossy preview fallback
+is used. Reference is a 30-second central excerpt of chunk 1's trusted core.
+Only chunk 0 is regenerated. Its piano interval, padded input hash, caption,
+seed, CFG, steps and precision must match the control. A different source-file
+path is allowed only with identical model-input bytes. The actual reference
+parameter/path and frozen reference hash must also be verified.
+
+Save `drum_kit_result.zip` (WAVs) and upload `drum_kit_feedback.zip` (control,
+reference and candidate previews, comparison metadata and model report). On
+OOM/failure the available comparison reports are retained. `DRY_RUN=True`
+prepares inputs and metadata without launching the model. Source/preset changes
+or picking different baseline WAV hashes fail instead of comparing silently.
+
+The reference alone may also change kick or groove. This experiment does not
+combine a separated 0/2 kick with a chunk-1 kit, and a successful parameter
+injection is not proof of timbre locking. No kick separation, replacement, EQ,
+re-timing or new GPU inference was performed during implementation. Existing
+baselines/presets remain unchanged. The isolated reference/control exports use
+the same fixed .7 listening gain; mixes use the same fixed source/drum gains.

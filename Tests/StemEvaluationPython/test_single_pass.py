@@ -154,7 +154,7 @@ class SinglePassTests(unittest.TestCase):
                 "def execute(args,experiment):\n    import backends\n    model=backends.AceBackend()\n"
                 "    params=model.params_type(caption='generic')\n"
                 "    canonicalize(args.prepared/'source.wav',args.out/'export.wav',duration=61,gain=1,max_duration=args.max_job_seconds)\n"
-                "    probe={'instrument':experiment['jobs'][0]['instrument'],'caption':params.caption,'dtype':model.handler.dtype,'vae_dtype':model.handler._get_vae_dtype('cuda'),'limit':args.max_job_seconds,'calls':1}\n"
+                "    probe={'reference_audio':getattr(params,'reference_audio',None),'instrument':experiment['jobs'][0]['instrument'],'caption':params.caption,'dtype':model.handler.dtype,'vae_dtype':model.handler._get_vae_dtype('cuda'),'limit':args.max_job_seconds,'calls':1}\n"
                 "    (args.out/'probe.json').write_text(json.dumps(probe))\n    experiment['status']='generated'\n")
             output = root / "output"; output.mkdir()
             source = self.fractional_source(root)
@@ -165,7 +165,7 @@ class SinglePassTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
             self.assertEqual(result.returncode, 0, result.stderr)
             probe = json.loads((output / "generation/probe.json").read_text())
-            self.assertEqual(probe, {"instrument":"bass", "caption": single.PRESET["caption"], "dtype": "float32", "vae_dtype": "float32", "limit": 600, "calls": 1})
+            self.assertEqual(probe, {"reference_audio":None,"instrument":"bass", "caption": single.PRESET["caption"], "dtype": "float32", "vae_dtype": "float32", "limit": 600, "calls": 1})
             self.assertEqual(single.frames(output / "generation/export.wav"), 61 * RATE)
             import drum_probe
             drums=root/'drums';drums.mkdir()
@@ -174,8 +174,17 @@ class SinglePassTests(unittest.TestCase):
                 '--root',str(bridge),'--out',str(drums)],cwd=elsewhere,capture_output=True,text=True,timeout=30)
             self.assertEqual(result.returncode,0,result.stderr)
             probe=json.loads((drums/'generation/probe.json').read_text())
-            self.assertEqual(probe,{'instrument':'drums','caption':drum_probe.PRESET['caption'],
+            self.assertEqual(probe,{'reference_audio':None,'instrument':'drums','caption':drum_probe.PRESET['caption'],
                 'dtype':'float32','vae_dtype':'float32','limit':600,'calls':1})
+            ref_out=root/'drums_ref';ref_out.mkdir();shutil.copytree(output/'prepared',ref_out/'prepared')
+            ref=ref_out/'reference.wav';shutil.copyfile(source,ref)
+            (ref_out/'drum_probe.json').write_text(json.dumps({'reference_audio':{'path':str(ref),'sha256':sha256(ref)}}))
+            result=subprocess.run([sys.executable,str(ROOT/'scripts/drum_probe.py'),'--worker',
+                '--root',str(bridge),'--out',str(ref_out)],cwd=elsewhere,capture_output=True,text=True,timeout=30)
+            self.assertEqual(result.returncode,0,result.stderr)
+            probe=json.loads((ref_out/'generation/probe.json').read_text())
+            self.assertEqual(probe['reference_audio'],str(ref))
+            self.assertEqual(probe['instrument'],'drums')
 
 
 if __name__ == "__main__": unittest.main()

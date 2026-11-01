@@ -120,5 +120,27 @@ class DrumProbeTests(unittest.TestCase):
             self.assertTrue((out/'drum_feedback.zip').is_file())
             self.assertFalse((out/'drums.wav').exists())
 
+    def test_reference_is_frozen_and_actual_parameter_must_match(self):
+        for wrong in [False,True]:
+            with self.subTest(wrong=wrong),tempfile.TemporaryDirectory() as tmp:
+                p=Path(tmp);source=self.source(p);reference=p/'reference.wav'
+                shutil.copyfile(source,reference);out=p/'probe'
+                def run(command,**kwargs):
+                    self.assertIn('--worker',command)
+                    self.fake(out)
+                    path=out/'generation/000_A_drums_seed0/result.json'
+                    result=json.loads(path.read_text())
+                    result['settings']['params']['reference_audio']=None if wrong else str(out/'reference.wav')
+                    path.write_text(json.dumps(result))
+                with patch.object(drum.single,'model_python',return_value=Path(sys.executable)),patch('stream_process.run_logged',side_effect=run):
+                    if wrong:
+                        with self.assertRaisesRegex(ValueError,'settings differ'):
+                            drum.generate(ROOT,source,out,reference_audio=reference,execute=True)
+                    else:
+                        report=drum.generate(ROOT,source,out,reference_audio=reference,execute=True)
+                        self.assertEqual(report['status'],'generated')
+                        self.assertEqual(report['reference_audio']['sha256'],sha256(reference))
+                        self.assertEqual((out/'reference.wav').read_bytes(),reference.read_bytes())
+
 
 if __name__=='__main__':unittest.main()

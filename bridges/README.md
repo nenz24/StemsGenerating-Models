@@ -1,5 +1,11 @@
 # ACE-Step context bridge
 
+[Notebook 16](../notebooks/16_colab_drum_kit_reference.ipynb) runs one controlled
+reference-conditioned comparison: kit reference from chunk 1, target chunk 0.
+It reuses the active model runtime and verifies the reviewed control/reference
+WAV hashes. If the old chunk files are missing, upload the lossless result ZIP
+and original piano. It does not re-generate the full song or promise kit locking.
+
 [Notebook 15](../notebooks/15_colab_drum_context_90.ipynb) generates drum in bounded
 90-second contexts and stitches them using the bass method, while keeping the
 drum preset unchanged. It reuses the active runtime/weights. Its feedback includes
