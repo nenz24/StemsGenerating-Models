@@ -254,3 +254,10 @@ terhadap FP32 asli `7,0143e-6`. Mayoritas biaya ada di interval run+copy pasanga
 layer; interval itu juga mencakup binding fungsi, sehingga penyebab waktunya
 belum terisolasi. Pengukuran fase tersebut menjadi langkah berikutnya.
 [Panduan dan batas pengujian](../../docs/coreai-denoiser-loop.md).
+
+Tombol **Profil waktu loop 4 langkah** menambahkan timer untuk pembukaan model,
+binding fungsi, validasi input, await backend, copy output dan sisa overhead.
+Laporan merangkum seluruh fase dan interval di luar tahap model. Model, input,
+referensi dan semua pemeriksaan parity tetap sama; tidak ada unduhan atau ekspor
+baru. Ini menyiapkan pengukuran, belum optimisasi. Kode timer baru perlu build
+dan pengujian iPhone. [Panduan profiling](../../docs/coreai-loop-timing.md).

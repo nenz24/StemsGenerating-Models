@@ -115,6 +115,15 @@ struct CoreAIDeviceProbeApp: App {
                             }
                         }
                         .disabled(runningModel)
+                        Button("Profil waktu loop 4 langkah") {
+                            runningModel = true
+                            report = "Mengukur pembukaan model, binding fungsi, eksekusi dan copy output…"
+                            Task {
+                                report = await CoreAIDecoderProbe.runDenoiserLoop(profilePhases: true) { text in self.report = text }
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
                         Text(report)
                             .font(.system(.footnote, design: .monospaced))
                             .textSelection(.enabled)

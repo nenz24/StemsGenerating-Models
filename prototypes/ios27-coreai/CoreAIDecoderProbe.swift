@@ -1,4 +1,4 @@
-// Component gates and one complete sharded denoiser forward passed on device.
+// Component gates and the four-step synthetic denoiser loop passed on device.
 import CoreAI
 import CryptoKit
 import Darwin
@@ -169,7 +169,45 @@ enum CoreAIDecoderProbe {
         let relativeRmseTolerance: Double
     }
 
-    static func runDenoiserLoop(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+    private struct StagePhases: Sendable {
+        var count = 0
+        var modelOpenMs = 0.0
+        var functionBindMs = 0.0
+        var inputValidationMs = 0.0
+        var backendAwaitMs = 0.0
+        var outputCopyMs = 0.0
+        var runOtherMs = 0.0
+
+        var measuredMs: Double {
+            modelOpenMs + functionBindMs + inputValidationMs + backendAwaitMs + outputCopyMs + runOtherMs
+        }
+
+        mutating func add(_ other: StagePhases) {
+            count += other.count
+            modelOpenMs += other.modelOpenMs
+            functionBindMs += other.functionBindMs
+            inputValidationMs += other.inputValidationMs
+            backendAwaitMs += other.backendAwaitMs
+            outputCopyMs += other.outputCopyMs
+            runOtherMs += other.runOtherMs
+        }
+
+        var report: String {
+            "model-open ms \(modelOpenMs); function-bind ms \(functionBindMs); input-validation ms \(inputValidationMs); backend-await ms \(backendAwaitMs); output-copy ms \(outputCopyMs); run-other ms \(runOtherMs)"
+        }
+
+        var dominantPhase: String {
+            let phases = [("model-open", modelOpenMs), ("function-bind", functionBindMs),
+                          ("input-validation", inputValidationMs), ("backend-await", backendAwaitMs),
+                          ("output-copy", outputCopyMs), ("run-other", runOtherMs)]
+            guard count > 0, measuredMs > 0, let largest = phases.max(by: { $0.1 < $1.1 }) else {
+                return "NOT MEASURED (no completed stages)"
+            }
+            return "\(largest.0); \(largest.1) ms; \(100 * largest.1 / measuredMs)% of completed-stage measured time"
+        }
+    }
+
+    static func runDenoiserLoop(profilePhases: Bool = false, progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",
                      "Test: COMPLETE 24-layer denoiser / 4 feedback Euler ODE steps / NOT instrument generation",
@@ -183,9 +221,17 @@ enum CoreAIDecoderProbe {
         #else
         lines.append("Target: iOS device build")
         #endif
+        if profilePhases {
+            lines.append("Timing profile: API boundaries / same four-step case / no extra warmup or stage retries")
+            lines.append("model-open includes asset validation + AIModel init; function-bind measures loadFunction")
+            lines.append("backend-await measures function.run await, NOT isolated kernel time; deferred work may appear in output-copy")
+            lines.append("output-copy includes output validation, Float read-back, finite checks and fresh CPU NDArray creation")
+            lines.append("Phase totals cover completed stages only; outside-stage includes logging, UI waits, resource release and any unfinished stage")
+        }
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
         var completedSteps = 0; var completedStages = 0
+        var phaseTotals = StagePhases()
         do {
             guard let resources = Bundle.main.resourceURL else { throw ShardError.missingPreparedBundle }
             let folder = resources.appendingPathComponent("ModelCandidates/denoiser-sharded")
@@ -255,6 +301,7 @@ enum CoreAIDecoderProbe {
             lines.append("SHA-256: VERIFIED 16 references + 3 self-contained inputs; checkpoint contract matched")
             for step in loop.steps {
                 let stepStart = clock.now
+                var stepPhases = StagePhases()
                 var state = shared
                 state["noise"] = NDArray(scalars: latent, shape: [1,25,64])
                 state["timestep"] = NDArray(scalars: [step.timestep], shape: [1])
@@ -276,6 +323,11 @@ enum CoreAIDecoderProbe {
                     }
                     completedStages += 1
                     lines.append("Step \(step.index) stage \(index+1)/14 \(stage.assetFile): load ms \(result.loadMs); run+detached-copy ms \(result.runMs)")
+                    if profilePhases {
+                        stepPhases.add(result.phases)
+                        phaseTotals.add(result.phases)
+                        lines.append("Timing step \(step.index) stage \(index+1)/14: \(result.phases.report)")
+                    }
                     saveProgress(lines, profile: .denoiser)
                     await progress(lines.joined(separator: "\n"))
                     await Task.yield()
@@ -300,6 +352,9 @@ enum CoreAIDecoderProbe {
                 }
                 completedSteps += 1
                 lines.append("Step \(step.index)/4 dual velocity+latent parity: PASS; total step ms: \(ms(stepStart.duration(to: clock.now)))")
+                if profilePhases {
+                    lines.append("Timing step \(step.index) totals (\(stepPhases.count)/14 completed stages): \(stepPhases.report)")
+                }
                 saveProgress(lines, profile: .denoiser)
                 await progress(lines.joined(separator: "\n"))
             }
@@ -309,9 +364,17 @@ enum CoreAIDecoderProbe {
             lines.append("Error: \(String(reflecting: error))")
         }
         let usage = memory.finish()
+        let totalMs = ms(start.duration(to: clock.now))
+        if profilePhases {
+            lines.append("Timing completed stages: \(phaseTotals.count)/56")
+            lines.append("Timing totals: \(phaseTotals.report)")
+            lines.append("Timing completed-stage measured ms: \(phaseTotals.measuredMs)")
+            lines.append("Timing outside-stage ms: \(totalMs - phaseTotals.measuredMs)")
+            lines.append("Largest measured phase: \(phaseTotals.dominantPhase)")
+        }
         if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
         if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
-        lines.append("Completed parity steps: \(completedSteps)/4; completed stages: \(completedStages)/56; total loop probe ms: \(ms(start.duration(to: clock.now)))")
+        lines.append("Completed parity steps: \(completedSteps)/4; completed stages: \(completedStages)/56; total loop probe ms: \(totalMs)")
         lines.append("Memory scope: sampled app process footprint, NOT total model/device RAM or exact peak; cache behavior unverified")
         saveProgress(lines, profile: .denoiser)
         return lines.joined(separator: "\n")
@@ -487,11 +550,14 @@ enum CoreAIDecoderProbe {
     // All model/function/output references stay inside this async scope. Fresh
     // CPU-owned NDArrays cross its boundary, not model-backed output buffers.
     private static func runDetachedStage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray]) async throws
-        -> (values: [String: NDArray], loadMs: Double, runMs: Double) {
+        -> (values: [String: NDArray], loadMs: Double, runMs: Double, phases: StagePhases) {
         let clock = ContinuousClock(); let loadStart = clock.now
         let probe = try await CoreAIModelProbe(contentsOf: folder.appendingPathComponent(stage.assetFile), options: .cpuOnly)
-        let loadMs = ms(loadStart.duration(to: clock.now)); let runStart = clock.now
-        var outputs = try await probe.runStateless(functionNamed: "main", inputs: inputs)
+        let runStart = clock.now
+        let loadMs = ms(loadStart.duration(to: runStart))
+        var timings = CoreAIModelProbe.StatelessTimings()
+        var outputs = try await probe.runStateless(functionNamed: "main", inputs: inputs, timings: &timings)
+        let copyStart = clock.now
         var detached: [String: NDArray] = [:]
         for (name, shape) in stage.outputShapes {
             guard let value = outputs.remove(name), let tensor = value.ndArray, tensor.scalarType == .float32,
@@ -519,7 +585,14 @@ enum CoreAIDecoderProbe {
             guard values.allSatisfy({ $0.isFinite }) else { throw ProbeError.invalidOutputTensor }
             detached[name] = NDArray(scalars: values, shape: shape)
         }
-        return (detached, loadMs, ms(runStart.duration(to: clock.now)))
+        let end = clock.now
+        let runMs = ms(runStart.duration(to: end))
+        let copyMs = ms(copyStart.duration(to: end))
+        let otherMs = runMs - timings.functionBindMs - timings.inputValidationMs - timings.backendAwaitMs - copyMs
+        let phases = StagePhases(count: 1, modelOpenMs: loadMs, functionBindMs: timings.functionBindMs,
+                                 inputValidationMs: timings.inputValidationMs, backendAwaitMs: timings.backendAwaitMs,
+                                 outputCopyMs: copyMs, runOtherMs: otherMs)
+        return (detached, loadMs, runMs, phases)
     }
 
     static func savedDenoiserReport() -> String? {

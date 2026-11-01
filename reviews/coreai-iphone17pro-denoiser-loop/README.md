@@ -33,7 +33,10 @@ work or actual backend execution. Do not describe these intervals as kernel
 time or conclude that recompilation, cache eviction or copying is the cause.
 The next diagnostic gate is to separate constructor, function binding, backend
 execution and detached-output-copy timings before choosing an optimization.
-That instrumentation is not implemented by this evidence-only update.
+That instrumentation was not implemented by this evidence-only update.
+A [subsequent timing caller](../../docs/coreai-loop-timing.md) now exposes these
+API-boundary intervals; its on-device measurements remain pending. This baseline
+report and its raw timings are unchanged.
 
 Sampled app process maximum is **74.01760864257812 MiB**, baseline
 19.173629760742188 MiB. This is 10 ms sampled `phys_footprint`, not exact peak,

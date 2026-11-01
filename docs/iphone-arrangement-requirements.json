@@ -477,6 +477,37 @@
     "device_total_loop_probe_ms": 53001.064667,
     "device_sampled_process_maximum_mib": 74.01760864257812,
     "first_manifest_failure_exact_field_confirmed": false,
-    "next_gate": "Separate constructor, function binding, backend execution and output-copy timings before choosing performance changes; do not treat run+copy as kernel-only time"
+    "next_gate": "Phase timing caller prepared: same four-step case, constructor/function binding/input validation/backend-await/output copy and residuals; Apple build and device timing pending"
+  },
+  "pretrained_denoiser_loop_timing_probe": {
+    "source_files": [
+      "prototypes/ios27-coreai/CoreAIModelProbe.swift",
+      "prototypes/ios27-coreai/CoreAIDecoderProbe.swift"
+    ],
+    "button": "Profil waktu loop 4 langkah",
+    "guide": "docs/coreai-loop-timing.md",
+    "baseline_report": "reviews/coreai-iphone17pro-denoiser-loop/report.json",
+    "step_count": 4,
+    "stage_count": 56,
+    "same_fixture_and_native_models": true,
+    "additional_warmup_or_retries": false,
+    "requested_compute_policy": "cpuOnly",
+    "phases": [
+      "model-open",
+      "function-bind",
+      "input-validation",
+      "backend-await",
+      "output-copy",
+      "run-other"
+    ],
+    "outside_stage_time_reported": true,
+    "timing_scope": "Monotonic API-boundary wall intervals for completed stages; backend-await is not isolated kernel time; deferred work may enter copy; failed-stage work stays outside completed-stage totals",
+    "original_dual_parity_required": true,
+    "new_model_export_required": false,
+    "new_swift_apple_build_verified": false,
+    "device_phase_timing_verified": false,
+    "speedup_verified": false,
+    "accelerator_placement_verified": false,
+    "cache_residency_measured": false
   }
 }

@@ -1,5 +1,5 @@
 // A caller for a valid, locally exported CoreAI asset. This is not a converter.
-// API declarations checked against uploaded interfaces; model execution pending.
+// API declarations checked against uploaded interfaces; device component/loop gates passed.
 import CoreAI
 import Foundation
 
@@ -16,6 +16,12 @@ struct CoreAIModelProbe: Sendable {
 
     let model: AIModel
 
+    struct StatelessTimings: Sendable {
+        var functionBindMs = 0.0
+        var inputValidationMs = 0.0
+        var backendAwaitMs = 0.0
+    }
+
     init(contentsOf url: URL, options: SpecializationOptions = .default) async throws {
         guard url.isFileURL, AIModelAsset.isValid(at: url) else {
             throw ProbeError.requiresValidLocalAsset
@@ -27,9 +33,24 @@ struct CoreAIModelProbe: Sendable {
         functionNamed name: String,
         inputs: [String: NDArray]
     ) async throws -> InferenceFunction.Outputs {
+        var timings = StatelessTimings()
+        return try await runStateless(functionNamed: name, inputs: inputs, timings: &timings)
+    }
+
+    // The function stays inside this call; timing adds no retained model/function
+    // references. Scalar timings accompany the original noncopyable outputs.
+    func runStateless(
+        functionNamed name: String,
+        inputs: [String: NDArray],
+        timings: inout StatelessTimings
+    ) async throws -> InferenceFunction.Outputs {
+        let clock = ContinuousClock()
+        let bindStart = clock.now
         guard let function = try model.loadFunction(named: name) else {
             throw ProbeError.missingFunction(name)
         }
+        timings.functionBindMs = Self.milliseconds(bindStart.duration(to: clock.now))
+        let validationStart = clock.now
         let descriptor = function.descriptor
         guard descriptor.stateNames.isEmpty else {
             throw ProbeError.statefulFunctionRequiresExplicitState
@@ -52,7 +73,16 @@ struct CoreAIModelProbe: Sendable {
                 throw ProbeError.inputTypeOrShapeMismatch(inputName)
             }
         }
-        return try await function.run(inputs: inputs)
+        timings.inputValidationMs = Self.milliseconds(validationStart.duration(to: clock.now))
+        let runStart = clock.now
+        let outputs = try await function.run(inputs: inputs)
+        timings.backendAwaitMs = Self.milliseconds(runStart.duration(to: clock.now))
+        return outputs
+    }
+
+    private static func milliseconds(_ duration: Duration) -> Double {
+        let parts = duration.components
+        return Double(parts.seconds) * 1000 + Double(parts.attoseconds) / 1e15
     }
 }
 

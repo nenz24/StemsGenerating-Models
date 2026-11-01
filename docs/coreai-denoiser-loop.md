@@ -78,8 +78,9 @@ Pada laporan PASS, seluruh 48 pasangan layer memerlukan sekitar 1,01–1,14 deti
 per interval run+copy. Constructor model hanya sekitar 1,6–1,9 ms pada kebanyakan
 tahap. Interval run+copy juga memuat binding fungsi dan validasi, sehingga belum
 diketahui apakah biaya utamanya berasal dari binding, backend, paging atau copy.
-Tahap berikutnya adalah memisahkan pengukuran tersebut sebelum memilih optimisasi;
-instrumentasi itu belum dibuat dalam pembaruan laporan ini. Footprint maksimum
+Pengukuran terpisah kini tersedia melalui **Profil waktu loop 4 langkah**:
+[panduan dan arti fase](coreai-loop-timing.md). Instrumen baru perlu build dan
+pengujian di iPhone; belum ada klaim penyebab atau percepatan. Footprint maksimum
 tersampel 74,02 MiB tetap bukan seluruh RAM model/perangkat.
 
 Untuk audit ulang referensi yang sudah ikut repository, tanpa model/bobot:

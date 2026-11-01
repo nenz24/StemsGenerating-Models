@@ -75,7 +75,9 @@ cold launch dan kebutuhan RAM model belum tervalidasi sebagai anggaran produksi.
 56/56 tahap dan seluruh 16 pembandingan velocity/latent lolos. Waktu total
 53,00 detik; normalized RMSE latent akhir terhadap FP32 asli sekitar `7,01e-6`.
 Langkah berikutnya memisahkan waktu binding fungsi, eksekusi backend dan copy
-untuk menentukan sumber biaya. [Panduan uji](docs/coreai-denoiser-loop.md).
+untuk menentukan sumber biaya. Tombol **Profil waktu loop 4 langkah** sudah
+disiapkan, memakai model dan referensi yang sama; hasil perangkat masih menunggu.
+[Panduan profiling](docs/coreai-loop-timing.md).
 Ini belum generasi instrumen lengkap.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
