@@ -126,6 +126,7 @@ enum CoreAIDecoderProbe {
     private enum ShardError: Error {
         case invalidManifest, missingPreparedBundle, memoryBudgetReached, footprintUnavailable
         case manifestMismatch(String)
+        case memoryBudgetReachedAfterBind(asset: String, mib: Double)
     }
 
     private static func checkManifest<Value: Equatable>(_ actual: Value, _ expected: Value, _ field: String) throws {
@@ -206,6 +207,20 @@ enum CoreAIDecoderProbe {
             return "\(largest.0); \(largest.1) ms; \(100 * largest.1 / measuredMs)% of completed-stage measured time"
         }
     }
+
+    private struct RetainedStage: Sendable {
+        let probe: CoreAIModelProbe
+        let function: InferenceFunction
+    }
+
+    private struct RetentionStats: Sendable {
+        var modelOpens = 0
+        var functionBinds = 0
+        var cacheHits = 0
+        var completedCalls = 0
+    }
+
+    private typealias StageResult = (values: [String: NDArray], loadMs: Double, runMs: Double, phases: StagePhases)
 
     private struct PairReuseContract: Decodable {
         let schemaVersion: Int
@@ -359,7 +374,7 @@ enum CoreAIDecoderProbe {
         return (values, ms(start.duration(to: copyStart)), ms(copyStart.duration(to: clock.now)))
     }
 
-    static func runDenoiserLoop(profilePhases: Bool = false, progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+    static func runDenoiserLoop(profilePhases: Bool = false, retainStages: Bool = false, progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",
                      "Test: COMPLETE 24-layer denoiser / 4 feedback Euler ODE steps / NOT instrument generation",
@@ -373,6 +388,11 @@ enum CoreAIDecoderProbe {
         #else
         lines.append("Target: iOS device build")
         #endif
+        if retainStages {
+            lines.append("Execution strategy: retain all 14 model/function handles across four steps, loaded lazily on first use")
+            lines.append("No extra warmup or stage retry; numerical inputs/schedule/references unchanged")
+            lines.append("Retention does NOT guarantee backend weight residency or a 122x whole-loop speedup")
+        }
         if profilePhases {
             lines.append("Timing profile: API boundaries / same four-step case / no extra warmup or stage retries")
             lines.append("model-open includes asset validation + AIModel init; function-bind measures loadFunction")
@@ -384,7 +404,12 @@ enum CoreAIDecoderProbe {
         let memory = CoreAIProcessFootprintSampler()
         var completedSteps = 0; var completedStages = 0
         var phaseTotals = StagePhases()
+        var retainedStages: [String: RetainedStage] = [:]
+        var retention = RetentionStats()
         do {
+            // Hold every cached model/function through the whole measured loop.
+            // Cleanup occurs after this scope, including failure paths.
+            defer { withExtendedLifetime(retainedStages) {} }
             guard let resources = Bundle.main.resourceURL else { throw ShardError.missingPreparedBundle }
             let folder = resources.appendingPathComponent("ModelCandidates/denoiser-sharded")
             let fixture = resources.appendingPathComponent("ModelCandidates/denoiser-loop-4")
@@ -463,18 +488,29 @@ enum CoreAIDecoderProbe {
                     guard let footprint = CoreAIProcessFootprintSampler.currentFootprint() else { throw ShardError.footprintUnavailable }
                     lines.append("Before step \(step.index) stage \(index+1)/14 footprint MiB: \(Double(footprint)/1048576)")
                     guard footprint < 2000 * 1048576 else { throw ShardError.memoryBudgetReached }
-                    let phase = "Phase: step \(step.index)/4 stage \(index+1)/14 \(stage.assetFile) loading/running"
+                    let reused = retainedStages[stage.assetFile] != nil
+                    let action = retainStages ? (reused ? "running retained function" : "opening/binding/first run") : "loading/running"
+                    let phase = "Phase: step \(step.index)/4 stage \(index+1)/14 \(stage.assetFile) \(action)"
                     saveProgress(lines + [phase], profile: .denoiser)
                     await progress((lines + [phase]).joined(separator: "\n"))
                     var inputs: [String: NDArray] = [:]
                     for name in stage.inputShapes.keys { inputs[name] = state[name] }
-                    let result = try await runDetachedStage(stage, folder: folder, inputs: inputs)
+                    let result: StageResult
+                    if retainStages {
+                        result = try await runRetainedStage(stage, folder: folder, inputs: inputs,
+                                                           pool: &retainedStages, stats: &retention)
+                    } else {
+                        result = try await runDetachedStage(stage, folder: folder, inputs: inputs)
+                    }
                     for (name, tensor) in result.values {
                         guard let target = stage.outputBindings?[name] else { throw ShardError.invalidManifest }
                         state[target] = tensor
                     }
                     completedStages += 1
                     lines.append("Step \(step.index) stage \(index+1)/14 \(stage.assetFile): load ms \(result.loadMs); run+detached-copy ms \(result.runMs)")
+                    if retainStages {
+                        lines.append("Retention step \(step.index) stage \(index+1): \(reused ? "reused" : "first-use"); live cached model/function entries: \(retainedStages.count)")
+                    }
                     if profilePhases {
                         stepPhases.add(result.phases)
                         phaseTotals.add(result.phases)
@@ -510,11 +546,24 @@ enum CoreAIDecoderProbe {
                 saveProgress(lines, profile: .denoiser)
                 await progress(lines.joined(separator: "\n"))
             }
+            if retainStages {
+                try checkManifest(retention.modelOpens, 14, "retention.model_opens")
+                try checkManifest(retention.functionBinds, 14, "retention.function_binds")
+                try checkManifest(retention.cacheHits, 42, "retention.cache_hits")
+                try checkManifest(retention.completedCalls, 56, "retention.completed_calls")
+                try checkManifest(retainedStages.count, 14, "retention.cached_entries")
+            }
             lines.append("Four-step Euler loop dual parity: PASS (feedback at all four steps)")
         } catch {
             lines.append("Four-step Euler loop dual parity: NOT PASSED")
             lines.append("Error: \(String(reflecting: error))")
         }
+        if retainStages {
+            lines.append("Retention totals: model opens \(retention.modelOpens); function binds \(retention.functionBinds); cache hits \(retention.cacheHits); completed calls \(retention.completedCalls); cached entries before release \(retainedStages.count)")
+            lines.append("Phase: releasing Swift-held model/function pool; native cache eviction NOT GUARANTEED")
+            saveProgress(lines, profile: .denoiser)
+        }
+        retainedStages.removeAll()
         let usage = memory.finish()
         let totalMs = ms(start.duration(to: clock.now))
         if profilePhases {
@@ -702,7 +751,7 @@ enum CoreAIDecoderProbe {
     // All model/function/output references stay inside this async scope. Fresh
     // CPU-owned NDArrays cross its boundary, not model-backed output buffers.
     private static func runDetachedStage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray]) async throws
-        -> (values: [String: NDArray], loadMs: Double, runMs: Double, phases: StagePhases) {
+        -> StageResult {
         let clock = ContinuousClock(); let loadStart = clock.now
         let probe = try await CoreAIModelProbe(contentsOf: folder.appendingPathComponent(stage.assetFile), options: .cpuOnly)
         let runStart = clock.now
@@ -724,6 +773,58 @@ enum CoreAIDecoderProbe {
         let phases = StagePhases(count: 1, modelOpenMs: loadMs, functionBindMs: timings.functionBindMs,
                                  inputValidationMs: timings.inputValidationMs, backendAwaitMs: timings.backendAwaitMs,
                                  outputCopyMs: copyMs, runOtherMs: otherMs)
+        return (detached, loadMs, runMs, phases)
+    }
+
+    private static func runRetainedStage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray],
+                                         pool: inout [String: RetainedStage], stats: inout RetentionStats) async throws -> StageResult {
+        let clock = ContinuousClock()
+        let entry: RetainedStage
+        var loadMs = 0.0
+        var setup = CoreAIModelProbe.StatelessTimings()
+        let runStart: ContinuousClock.Instant
+        if let cached = pool[stage.assetFile] {
+            entry = cached
+            stats.cacheHits += 1
+            runStart = clock.now
+            let validationStart = clock.now
+            try CoreAIModelProbe.validateStatelessInputs(function: entry.function, inputs: inputs)
+            setup.inputValidationMs = ms(validationStart.duration(to: clock.now))
+        } else {
+            let loadStart = clock.now
+            let probe = try await CoreAIModelProbe(contentsOf: folder.appendingPathComponent(stage.assetFile), options: .cpuOnly)
+            stats.modelOpens += 1
+            runStart = clock.now
+            loadMs = ms(loadStart.duration(to: runStart))
+            let function = try probe.loadStatelessFunction(functionNamed: "main", inputs: inputs, timings: &setup)
+            stats.functionBinds += 1
+            entry = RetainedStage(probe: probe, function: function)
+            pool[stage.assetFile] = entry
+        }
+        // Recheck after bind/validation too: a pre-load guard cannot bound
+        // allocations during binding or the following backend invocation.
+        guard let footprint = CoreAIProcessFootprintSampler.currentFootprint() else { throw ShardError.footprintUnavailable }
+        guard footprint < 2000 * 1048576 else {
+            throw ShardError.memoryBudgetReachedAfterBind(asset: stage.assetFile, mib: Double(footprint)/1048576)
+        }
+        let backendStart = clock.now
+        var outputs = try await entry.function.run(inputs: inputs)
+        let copyStart = clock.now
+        let backendMs = ms(backendStart.duration(to: copyStart))
+        var detached: [String: NDArray] = [:]
+        for (name, shape) in stage.outputShapes {
+            guard let value = outputs.remove(name), let tensor = value.ndArray else { throw ProbeError.invalidOutputTensor }
+            let values = try copiedValues(tensor, shape: shape)
+            detached[name] = NDArray(scalars: values, shape: shape)
+        }
+        let end = clock.now
+        let runMs = ms(runStart.duration(to: end))
+        let copyMs = ms(copyStart.duration(to: end))
+        let otherMs = runMs - setup.functionBindMs - setup.inputValidationMs - backendMs - copyMs
+        let phases = StagePhases(count: 1, modelOpenMs: loadMs, functionBindMs: setup.functionBindMs,
+                                 inputValidationMs: setup.inputValidationMs, backendAwaitMs: backendMs,
+                                 outputCopyMs: copyMs, runOtherMs: otherMs)
+        stats.completedCalls += 1
         return (detached, loadMs, runMs, phases)
     }
 

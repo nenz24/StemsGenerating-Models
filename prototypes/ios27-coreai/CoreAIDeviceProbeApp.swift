@@ -133,6 +133,15 @@ struct CoreAIDeviceProbeApp: App {
                             }
                         }
                         .disabled(runningModel)
+                        Button("Uji loop 24 layer dengan reuse") {
+                            runningModel = true
+                            report = "Menguji empat langkah dengan 14 model/fungsi yang dipertahankan…"
+                            Task {
+                                report = await CoreAIDecoderProbe.runDenoiserLoop(profilePhases: true, retainStages: true) { text in self.report = text }
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
                         Text(report)
                             .font(.system(.footnote, design: .monospaced))
                             .textSelection(.enabled)

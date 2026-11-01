@@ -270,6 +270,13 @@ dipertahankan untuk beberapa run. Belum diimplementasikan dalam pencatatan ini.
 Tombol **Uji reuse satu pasangan layer** mempertahankan model layers 0+1 dan
 fungsi yang dimuat sekali, lalu mengukur empat call dengan input tetap. Setiap
 call wajib lolos terhadap dua referensi host yang ikut GitHub; tidak perlu
-menyiapkan atau mengekspor model ulang. Kode baru perlu build dan uji iPhone.
+menyiapkan atau mengekspor model ulang. [Uji ini sudah PASS di iPhone](../../reviews/coreai-iphone17pro-retained-pair/README.md),
+1042,53 ms pertama versus rata-rata 8,52 ms pada tiga run ulang; semua referensi lolos.
 [Panduan reuse](../../docs/coreai-pair-reuse.md) dan
 [tahapan menuju generasi](../../docs/iphone-generation-roadmap.md).
+
+**Uji loop 24 layer dengan reuse** menyimpan setiap model/fungsi pada penggunaan
+pertama untuk dipakai lagi di langkah berikutnya. Targetnya 14 open, 14 bind,
+42 hit reuse, 56 call dan seluruh 16 pembandingan lolos. Footprint diperiksa
+sebelum setiap tahap dan backend. Tidak perlu ekspor baru; kode mode baru perlu
+build dan uji perangkat. [Panduan uji kedua](../../docs/coreai-retained-loop.md).

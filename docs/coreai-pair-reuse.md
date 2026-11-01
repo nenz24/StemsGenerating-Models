@@ -5,6 +5,10 @@ menempatkan 50,75 dari total 51,88 detik di interval `function.run`. Uji kecil i
 membandingkan pemanggilan pertama dan tiga pemanggilan berikutnya pada **model
 dan fungsi yang sama**, agar biaya first-use bisa dibedakan dari eksekusi ulang.
 
+**Hasil iPhone sudah PASS:** [laporan](../reviews/coreai-iphone17pro-retained-pair/README.md),
+1042,53 ms pertama dan rata-rata 8,52 ms untuk run ulang, seluruh delapan
+pembandingan lolos. Berikutnya [uji reuse seluruh loop](coreai-retained-loop.md).
+
 ```bash
 git pull --ff-only &&
 open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
@@ -50,6 +54,6 @@ peak OS. Footprint tersampel 10 ms bukan seluruh RAM model/perangkat. Kebijakan
 yang diminta tetap `cpuOnly`; penempatan accelerator sebenarnya tidak diukur.
 
 [Referensi host sudah lolos](../reviews/coreai-retained-pair-reference/README.md).
-Kode Swift baru perlu build dan pengujian di iPhone; workspace Linux tidak
-memiliki Apple SDK. Uji ini tidak menjalankan full denoiser, CFG, rekaman piano,
+Pengguna sudah membuild dan menjalankan caller ini di iPhone; workspace Linux
+tidak memiliki Apple SDK untuk kompilasi independen. Uji ini tidak menjalankan full denoiser, CFG, rekaman piano,
 atau waveform generation. Lihat [tahapan menuju generasi](iphone-generation-roadmap.md).

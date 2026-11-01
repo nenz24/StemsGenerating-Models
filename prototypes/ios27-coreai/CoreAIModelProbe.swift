@@ -66,6 +66,12 @@ struct CoreAIModelProbe: Sendable {
         }
         timings.functionBindMs = Self.milliseconds(bindStart.duration(to: clock.now))
         let validationStart = clock.now
+        try Self.validateStatelessInputs(function: function, inputs: inputs)
+        timings.inputValidationMs = Self.milliseconds(validationStart.duration(to: clock.now))
+        return function
+    }
+
+    static func validateStatelessInputs(function: InferenceFunction, inputs: [String: NDArray]) throws {
         let descriptor = function.descriptor
         guard descriptor.stateNames.isEmpty else {
             throw ProbeError.statefulFunctionRequiresExplicitState
@@ -88,8 +94,6 @@ struct CoreAIModelProbe: Sendable {
                 throw ProbeError.inputTypeOrShapeMismatch(inputName)
             }
         }
-        timings.inputValidationMs = Self.milliseconds(validationStart.duration(to: clock.now))
-        return function
     }
 
     private static func milliseconds(_ duration: Duration) -> Double {

@@ -79,8 +79,12 @@ Total 51,88 detik; 50,75 detik berada di interval `function.run`, atau 99,36%
 waktu tahap terukur. Opening, binding dan copy masing-masing sekitar 0,10–0,12
 detik. Berikutnya perlu membedakan biaya run pertama dan run berulang dengan
 satu pasangan layer/fungsi tetap dimuat. [Panduan profiling](docs/coreai-loop-timing.md).
-Tombol **Uji reuse satu pasangan layer** sudah disiapkan dengan referensi host
-baru yang kecil; asset native dipakai ulang. [Cara menjalankan](docs/coreai-pair-reuse.md).
+**Uji reuse satu pasangan layer PASS 4/4:**
+[laporan iPhone](reviews/coreai-iphone17pro-retained-pair/README.md), 1042,53 ms
+pertama versus rata-rata 8,52 ms pada run ulang. Rasio ini berlaku pada komponen.
+Uji kedua tahap 1 sudah disiapkan: **Uji loop 24 layer dengan reuse** menyimpan
+14 model/fungsi selama empat langkah dengan guard memori dan referensi yang sama.
+[Cara menjalankan](docs/coreai-retained-loop.md).
 [Empat tahap besar menuju generasi dari rekaman](docs/iphone-generation-roadmap.md)
 memisahkan pekerjaan eksekusi, conditioning, pipeline WAV pendek dan kualitas pengiring.
 Ini belum generasi instrumen lengkap.

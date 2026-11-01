@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "evidence_source": "Transcribed user-pasted physical-device report, not independently executed on Linux",
+  "raw_report": "report.txt",
+  "transcribed_report_sha256": "e4251edc46b567c3b35b35f833f5b062bf8b2d0aeb13122e19ef7408afecc53b",
+  "reported_device": "iPhone 17 Pro",
+  "os": "27.0.1 (24A446)",
+  "architecture": "h18p",
+  "requested_compute_policy": "cpuOnly",
+  "accelerator_placement_measured": false,
+  "scope": "Layers 0+1 only, one retained model AND loaded function, same fixed synthetic pair inputs for four calls; independent storage16 and original-FP32 references",
+  "model_opens": 1,
+  "function_binds": 1,
+  "setup_ms": {
+    "model_open": 4.386208,
+    "function_bind": 92.25675,
+    "input_validation": 0.033791
+  },
+  "runs": [
+    {
+      "run": 1,
+      "backend_await_ms": 1042.534584,
+      "output_readback_and_checks_ms": 1.094333,
+      "before_process_footprint_mib": 25.517425537109375,
+      "comparisons": {
+        "storage16": {
+          "max_absolute_error": 0.00244140625,
+          "rmse": 3.691176956934211e-05,
+          "normalized_rmse": 6.879016138198428e-07,
+          "parity_passed": true
+        },
+        "original_fp32": {
+          "max_absolute_error": 0.002197265625,
+          "rmse": 3.8507709107272523e-05,
+          "normalized_rmse": 7.176440958068637e-07,
+          "parity_passed": true
+        }
+      }
+    },
+    {
+      "run": 2,
+      "backend_await_ms": 8.438375,
+      "output_readback_and_checks_ms": 0.811625,
+      "before_process_footprint_mib": 23.533370971679688,
+      "comparisons": {
+        "storage16": {
+          "max_absolute_error": 0.00244140625,
+          "rmse": 3.691176956934211e-05,
+          "normalized_rmse": 6.879016138198428e-07,
+          "parity_passed": true
+        },
+        "original_fp32": {
+          "max_absolute_error": 0.002197265625,
+          "rmse": 3.8507709107272523e-05,
+          "normalized_rmse": 7.176440958068637e-07,
+          "parity_passed": true
+        }
+      }
+    },
+    {
+      "run": 3,
+      "backend_await_ms": 8.524209,
+      "output_readback_and_checks_ms": 0.773875,
+      "before_process_footprint_mib": 28.423995971679688,
+      "comparisons": {
+        "storage16": {
+          "max_absolute_error": 0.00244140625,
+          "rmse": 3.691176956934211e-05,
+          "normalized_rmse": 6.879016138198428e-07,
+          "parity_passed": true
+        },
+        "original_fp32": {
+          "max_absolute_error": 0.002197265625,
+          "rmse": 3.8507709107272523e-05,
+          "normalized_rmse": 7.176440958068637e-07,
+          "parity_passed": true
+        }
+      }
+    },
+    {
+      "run": 4,
+      "backend_await_ms": 8.600958,
+      "output_readback_and_checks_ms": 0.763167,
+      "before_process_footprint_mib": 31.673995971679688,
+      "comparisons": {
+        "storage16": {
+          "max_absolute_error": 0.00244140625,
+          "rmse": 3.691176956934211e-05,
+          "normalized_rmse": 6.879016138198428e-07,
+          "parity_passed": true
+        },
+        "original_fp32": {
+          "max_absolute_error": 0.002197265625,
+          "rmse": 3.8507709107272523e-05,
+          "normalized_rmse": 7.176440958068637e-07,
+          "parity_passed": true
+        }
+      }
+    }
+  ],
+  "summary": {
+    "completed_parity_calls": 4,
+    "dual_reference_checks_passed": 8,
+    "first_backend_await_ms": 1042.534584,
+    "repeated_backend_await_mean_ms": 8.521180666666668,
+    "first_to_repeated_backend_ratio": 122.34625984145701,
+    "process_baseline_mib": 58.73615264892578,
+    "sampled_process_maximum_mib": 58.89240264892578,
+    "total_probe_ms": 1274.0055419999999
+  },
+  "limits": {
+    "cold_cache_start_guaranteed": false,
+    "pure_kernel_time_measured": false,
+    "backend_initialization_mechanism_identified": false,
+    "backend_weight_residency_measured": false,
+    "full_loop_retention_measured": false,
+    "full_loop_speedup_verified": false,
+    "total_model_ram_measured": false,
+    "memory_scope": "10 ms sampled whole-process footprint, not exact peak or total model/device RAM",
+    "instrument_generation_verified": false
+  },
+  "next_gate": "Four-step 24-layer loop retaining all 14 model/function handles, loaded on first use; same fixtures and parity bounds, per-stage 2000 MiB guards, no extra warmup"
+}

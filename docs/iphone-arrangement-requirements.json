@@ -117,10 +117,10 @@
     "shared_scheme": "CoreAIProbe",
     "signing_team_selection": "Apple Team stored in ignored Signing.local.xcconfig; shared Debug/Release configurations include it",
     "apple_compilation_verified": true,
-    "apple_compilation_evidence": "User built and ran API-phase timing caller to completion on iPhone; not independently Apple-built on Linux",
+    "apple_compilation_evidence": "User executed retained-pair caller successfully; full-loop retention change still needs Apple build/device test; no independent Apple SDK build on Linux",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-denoiser-loop-timing/report.json",
-    "device_execution_scope": "Profiled four-step feedback Euler loop, 56/56 stages and all 16 parity checks PASS; backend-await accounts for 99.36% of completed-stage time; no recorded conditioning/waveform",
+    "device_execution_report": "reviews/coreai-iphone17pro-retained-pair/report.json",
+    "device_execution_scope": "Retained pair first vs repeated calls PASS 4/4 against two host references; full-loop retention not yet measured; existing nonretained four-step loop passes",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -425,7 +425,7 @@
     "stability_dual_parity_pass_count": 3,
     "latency_stability_verified": false,
     "long_run_memory_plateau_verified": false,
-    "next_gate": "Retained-pair test prepared with dual host references; first versus repeated device calls pending, then choose viable execution path before recording conditioning"
+    "next_gate": "Retained-pair component PASS; full four-step loop with all 14 model/function handles retained prepared, memory/time/parity pending device test"
   },
   "pretrained_denoiser_loop_probe": {
     "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
@@ -477,7 +477,7 @@
     "device_total_loop_probe_ms": 53001.064667,
     "device_sampled_process_maximum_mib": 74.01760864257812,
     "first_manifest_failure_exact_field_confirmed": false,
-    "next_gate": "Retained-pair test prepared with dual host references; first versus repeated device calls pending, then choose viable execution path before recording conditioning"
+    "next_gate": "Retained-pair component PASS; full four-step loop with all 14 model/function handles retained prepared, memory/time/parity pending device test"
   },
   "pretrained_denoiser_loop_timing_probe": {
     "source_files": [
@@ -525,7 +525,7 @@
     "backend_await_percent_of_completed_stage_time": 99.36218308679913,
     "pure_kernel_time_measured": false,
     "backend_initialization_vs_steady_state_cost_isolated": false,
-    "next_gate": "Retained pair first-vs-repeated caller now prepared, four fixed-input runs and two host references per run; Apple build and device measurements pending"
+    "next_gate": "Retained-pair component PASS; full four-step loop with all 14 model/function handles retained prepared, memory/time/parity pending device test"
   },
   "pretrained_pair_reuse_probe": {
     "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
@@ -549,12 +549,17 @@
     "host_normalized_rmse": 2.095003501410023e-07,
     "device_dual_reference_checks_required": 8,
     "new_model_export_required": false,
-    "new_swift_apple_build_verified": false,
-    "device_execution_verified": false,
-    "first_vs_repeated_timing_measured": false,
+    "new_swift_apple_build_verified": true,
+    "device_execution_verified": true,
+    "first_vs_repeated_timing_measured": true,
     "backend_weight_residency_guaranteed": false,
     "full_loop_speedup_verified": false,
-    "fixture_binary_bytes": 910920
+    "fixture_binary_bytes": 910920,
+    "device_dual_reference_parity_passed": true,
+    "device_report": "reviews/coreai-iphone17pro-retained-pair/report.json",
+    "first_backend_await_ms": 1042.534584,
+    "repeated_backend_await_mean_ms": 8.521180666666668,
+    "first_to_repeated_component_ratio": 122.34625984145701
   },
   "generation_roadmap": {
     "guide": "docs/iphone-generation-roadmap.md",
@@ -567,6 +572,35 @@
     ],
     "current_major_stage": 1,
     "iteration_count_guaranteed": false,
-    "production_full_song_and_thermal_work_follows": true
+    "production_full_song_and_thermal_work_follows": true,
+    "stage1_planned_main_tests": {
+      "retained_pair": "PASS 4/4 calls and all 8 reference checks; first 1042.53 ms, subsequent mean 8.52 ms",
+      "retained_full_loop": "Prepared; device memory/parity/time pending",
+      "stage1_complete": false,
+      "additional_alternative_tests_conditional_on_failure": true
+    }
+  },
+  "pretrained_retained_denoiser_loop_probe": {
+    "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
+    "button": "Uji loop 24 layer dengan reuse",
+    "guide": "docs/coreai-retained-loop.md",
+    "step_count": 4,
+    "layer_count": 24,
+    "asset_count": 14,
+    "expected_successful_model_opens": 14,
+    "expected_function_binds": 14,
+    "expected_retained_cache_hits": 42,
+    "expected_completed_calls": 56,
+    "load_strategy": "Open and bind lazily at first use; retain both handles through four steps; release Swift pool on success/failure, native cache eviction unguaranteed",
+    "input_validation_each_call": true,
+    "same_loop_fixture_and_bounds": true,
+    "extra_warmup_or_retry": false,
+    "pre_stage_and_pre_backend_process_footprint_stop_mib": 2000,
+    "in_stage_peak_bound_guaranteed": false,
+    "new_model_export_required": false,
+    "new_swift_apple_build_verified": false,
+    "device_execution_verified": false,
+    "device_dual_parity_verified": false,
+    "full_loop_speedup_verified": false
   }
 }

@@ -27,6 +27,7 @@ comparison. Every call must pass both independent host references.
 Host tests cover real binary/metric consistency, finite input shapes, loop
 provenance, corruption and incompatible identity/bounds rejection, and preserving
 an existing destination before optional heavy imports. Those checks do not
-simulate CoreAI reuse or establish device timing. Apple compilation, first versus
-repeated latency, memory and all four device parity checks remain pending.
+simulate CoreAI reuse or establish device timing. A [later device report](../coreai-iphone17pro-retained-pair/README.md)
+now passes all four calls against both references: 1042.53 ms first and repeated
+mean 8.52 ms. Reuse of all 14 handles in the full loop remains pending.
 See [device instructions](../../docs/coreai-pair-reuse.md).

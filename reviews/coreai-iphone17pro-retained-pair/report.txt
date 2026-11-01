@@ -1,0 +1,37 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: pretrained ACE Base layers 0+1 / one retained model AND function / fixed synthetic inputs
+Scope: first call + three repeated calls; 13 hidden / 64 condition tokens; NOT full denoiser or instrument generation
+Requested compute policy: cpuOnly; accelerator placement NOT MEASURED
+One successful model open and function bind intended; no hidden warmup, cache clearing or reload between runs
+backend-await is an API wall interval, not isolated kernel time; first call is not a guaranteed cold-cache run
+Process footprint guard before load and each call: 2000 MiB; NOT an OS peak-memory guarantee
+Target: iOS device build
+SHA-256: VERIFIED eight fixed input tensors and both host output references; checkpoint contract matched
+Phase: opening one pair model and binding its stateless function once
+Setup: model-open ms 4.386208; function-bind ms 92.25675; input-validation ms 0.033791
+Before retained run 1/4 footprint MiB: 25.517425537109375
+Retained run 1/4: backend-await ms 1042.534584; output-readback+checks ms 1.094333
+Retained run 1 storage16 reference: max abs error 0.00244140625; RMSE 3.691176956934211e-05; normalized RMSE 6.879016138198428e-07; PASS
+Retained run 1 original FP32 reference: max abs error 0.002197265625; RMSE 3.8507709107272523e-05; normalized RMSE 7.176440958068637e-07; PASS
+Before retained run 2/4 footprint MiB: 23.533370971679688
+Retained run 2/4: backend-await ms 8.438375; output-readback+checks ms 0.811625
+Retained run 2 storage16 reference: max abs error 0.00244140625; RMSE 3.691176956934211e-05; normalized RMSE 6.879016138198428e-07; PASS
+Retained run 2 original FP32 reference: max abs error 0.002197265625; RMSE 3.8507709107272523e-05; normalized RMSE 7.176440958068637e-07; PASS
+Before retained run 3/4 footprint MiB: 28.423995971679688
+Retained run 3/4: backend-await ms 8.524209; output-readback+checks ms 0.773875
+Retained run 3 storage16 reference: max abs error 0.00244140625; RMSE 3.691176956934211e-05; normalized RMSE 6.879016138198428e-07; PASS
+Retained run 3 original FP32 reference: max abs error 0.002197265625; RMSE 3.8507709107272523e-05; normalized RMSE 7.176440958068637e-07; PASS
+Before retained run 4/4 footprint MiB: 31.673995971679688
+Retained run 4/4: backend-await ms 8.600958; output-readback+checks ms 0.763167
+Retained run 4 storage16 reference: max abs error 0.00244140625; RMSE 3.691176956934211e-05; normalized RMSE 6.879016138198428e-07; PASS
+Retained run 4 original FP32 reference: max abs error 0.002197265625; RMSE 3.8507709107272523e-05; normalized RMSE 7.176440958068637e-07; PASS
+First retained backend-await ms: 1042.534584
+Repeated retained backend-await mean ms (runs 2-4): 8.521180666666666
+First/repeated backend-await ratio: 122.34625984145703; component-only, NOT a full-loop speedup
+Retained pair dual parity: PASS (4/4 calls; same model AND function)
+Process baseline MiB: 58.73615264892578
+Sampled process maximum MiB (10 ms): 58.89240264892578
+Successful model opens: 1; function binds: 1; completed parity calls: 4/4; total probe ms: 1274.0055419999999
+Memory: sampled app process, NOT total model/device RAM or exact peak; native residency and cold-cache state unmeasured
