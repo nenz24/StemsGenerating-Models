@@ -1,0 +1,55 @@
+{
+  "status": "technical_validation_passed; listener_approved_30_second_excerpt",
+  "provenance": {
+    "feedback_and_result_reports_equal": true,
+    "drum_and_mix_wav_hashes_match": true,
+    "model_input_hash_reproduced_exactly": true,
+    "actual_instruction": "drums",
+    "actual_preset_settings_match": true,
+    "cuda_fp32_capture_confirmed": true,
+    "mix_matches_half_source_plus_half_drums_max_pcm16_difference": 0
+  },
+  "audio": {
+    "drums": {
+      "sample_rate": 32000,
+      "frames": 960000,
+      "duration_seconds": 30.0,
+      "peak": 0.95440673828125,
+      "peak_dbfs": -0.40533006261275867,
+      "rms_dbfs": -21.290563239614997,
+      "full_scale_samples": 0,
+      "finite": true
+    },
+    "mix": {
+      "sample_rate": 32000,
+      "frames": 960000,
+      "duration_seconds": 30.0,
+      "peak": 0.476318359375,
+      "peak_dbfs": -6.4420535714651255,
+      "rms_dbfs": -25.063980821476047,
+      "full_scale_samples": 0,
+      "finite": true
+    }
+  },
+  "runtime": {
+    "inference_seconds": 48.567146621000006,
+    "peak_allocated_gib": 13.02699613571167
+  },
+  "onset_proxies": {
+    "method": "librosa spectral-flux onset envelopes, delta=.15, wait=.08s, ~10ms hop",
+    "piano_event_count": 62,
+    "drum_event_count": 74,
+    "nearest_piano_onset_median_seconds": 0.03990929705215418,
+    "fraction_drum_events_within_80ms_of_piano_event": 0.6351351351351351,
+    "envelope_zero_lag_correlation": 0.06223435327410698,
+    "best_envelope_correlation_within_300ms": 0.6485959887504578,
+    "best_lag_seconds_positive_drums_late": -0.029931972789115645,
+    "interpretation": "Not groove/timing accuracy. Syncopation, subdivisions, fills and quieter piano attacks can legitimately disagree with detected piano onsets. No retiming applied."
+  },
+  "limitations": [
+    "Acoustic drums legitimately have broadband/noisy cymbal and snare components; bass voicing/noise metrics are inappropriate here.",
+    "Original generated raw float waveform is absent, so pre-PCM export clipping is not checked. Exported WAVs are verified directly.",
+    "No independent meter/downbeat reference or listening evaluation by assistant; no automatic musical-quality verdict."
+  ],
+  "listener_assessment": "Sudah cocok"
+}

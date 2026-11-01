@@ -21,6 +21,13 @@ Listen for kick/snare/hi-hat, groove/timing, fills and noise. Upload
 input, seed, drum instruction, FP32 capture and output-length checks must pass
 before reporting success. Failure ZIPs contain reports, not fabricated audio.
 
+The initial 0:00–0:30 probe has now been uploaded, technically checked, and
+approved by the listener ("Sudah cocok"). Original WAV/feedback archives are
+preserved in `baselines/acoustic-drums-30-v1/`. Next check START=90 and START=210,
+each still 30 seconds, with every other parameter fixed. This checks different
+song sections without assuming that opening-excerpt success applies to the
+entire song. Use a new output directory for each attempt.
+
 CLI on a complete checkout:
 
 ```bash
@@ -30,5 +37,6 @@ python scripts/drum_probe.py --source /path/to/piano.mp3 --out runs/drums_real -
 
 `--start` selects a different 30-second excerpt. Every output directory must be
 new; the previous bass/drum runs are preserved. CPU tests validate plan, targeting,
-export and failure handling with mocked inference. Real drum quality/GPU success
-has not been tested in the chat environment.
+export and failure handling with mocked inference. Actual GPU execution was
+performed by the listener in Colab, not on the chat machine. Approval does not
+establish quality for other sections or a full-song drum track.

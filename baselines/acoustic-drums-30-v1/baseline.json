@@ -1,0 +1,49 @@
+{
+  "id": "acoustic-drums-30-v1",
+  "status": "listener_approved_excerpt",
+  "listener_assessment": "Sudah cocok",
+  "archives": [
+    {
+      "path": "drum_feedback.zip",
+      "sha256": "496c4802bebb1585cee0af429cf8b453f266337ec7b53204ea221b6b203052c8",
+      "bytes": 1440614
+    },
+    {
+      "path": "drum_result.zip",
+      "sha256": "70400534aac9e2ac14db1d7fc2bdaec31585cec9285e8fe5b60222fd202b8433",
+      "bytes": 6569676
+    }
+  ],
+  "source_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "model_input_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+  "start_seconds": 0,
+  "duration_seconds": 30,
+  "preset": {
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.",
+    "device": "cuda",
+    "guidance_scale": 7.0,
+    "id": "acoustic-drums-v1",
+    "inference_steps": 50,
+    "instrument": "drums",
+    "model": "acestep-v15-base",
+    "offload_to_cpu": true,
+    "precision": "float32",
+    "seeds": [
+      0
+    ]
+  },
+  "drum_wav_sha256": "29d409250f6104936b7fea215f5b1798c37f52bc8b91b3668003567952476fce",
+  "mix_wav_sha256": "a3c97bf4a87b0ba10d7cc03d38518665398aae01fe538983090d244423645b08",
+  "preservation_scope": "Original uploaded result ZIP preserves stereo 32kHz PCM16 drum and mix WAVs; feedback ZIP preserves previews, actual settings and FP32 capture.",
+  "scope_limit": "Approval applies to this 30-second opening excerpt only. Other song sections and long contexts are not validated. No audio retiming applied.",
+  "next_checks": [
+    {
+      "start_seconds": 90,
+      "duration_seconds": 30
+    },
+    {
+      "start_seconds": 210,
+      "duration_seconds": 30
+    }
+  ]
+}
