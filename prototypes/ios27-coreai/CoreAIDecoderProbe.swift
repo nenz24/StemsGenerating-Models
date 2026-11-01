@@ -125,6 +125,13 @@ enum CoreAIDecoderProbe {
 
     private enum ShardError: Error {
         case invalidManifest, missingPreparedBundle, memoryBudgetReached, footprintUnavailable
+        case manifestMismatch(String)
+    }
+
+    private static func checkManifest<Value: Equatable>(_ actual: Value, _ expected: Value, _ field: String) throws {
+        guard actual == expected else {
+            throw ShardError.manifestMismatch("\(field): expected \(expected), got \(actual)")
+        }
     }
 
     private struct LoopContract: Decodable {
@@ -155,6 +162,7 @@ enum CoreAIDecoderProbe {
         let checkpointDigest: String
         let checkpointFullSha256Verified: Bool
         let sharedInputSha256: [String: String]
+        let inputFiles: [String: String]
         let artifactSha256: [String: String]
         let absoluteTolerance: Double
         let relativeTolerance: Double
@@ -182,46 +190,69 @@ enum CoreAIDecoderProbe {
             guard let resources = Bundle.main.resourceURL else { throw ShardError.missingPreparedBundle }
             let folder = resources.appendingPathComponent("ModelCandidates/denoiser-sharded")
             let fixture = resources.appendingPathComponent("ModelCandidates/denoiser-loop-4")
+            lines.append("Phase: validating sharded model manifest")
+            saveProgress(lines, profile: .denoiser)
             let contract = try readShardedContract(folder: folder)
-            guard let stages = contract.stages else { throw ShardError.invalidManifest }
+            guard let stages = contract.stages else { throw ShardError.manifestMismatch("sharded.stages missing") }
+            lines.append("Sharded model manifest: PASS; decoding self-contained loop fixture")
             let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
             let loop = try decoder.decode(LoopContract.self, from: Data(contentsOf: fixture.appendingPathComponent("reference.json")))
             let schedule: [Float] = [1, 0.75, 0.5, 0.25, 0]
-            guard loop.schemaVersion == 1, loop.profile == "denoiser-loop-4", loop.method == "euler_ode",
-                  loop.timesteps == schedule, loop.steps.count == 4, loop.shift == 1, loop.guidanceScale == 1,
-                  !loop.kvCacheEnabled, loop.inputShapes == Profile.denoiser.inputShapes, loop.outputShape == [1,25,64],
-                  loop.weightStorageDtype == "float16", loop.computeDtype == "float32",
-                  loop.scalarType == "float32", loop.byteOrder == "little", loop.checkpointFullSha256Verified,
-                  loop.checkpointDigest == contract.checkpoint.digest,
-                  loop.absoluteTolerance == contract.absoluteTolerance, loop.relativeTolerance == contract.relativeTolerance,
-                  loop.relativeRmseTolerance == contract.relativeRmseTolerance,
-                  Set(loop.sharedInputSha256.keys) == Set(["noise", "condition", "context"]) else {
-                throw ShardError.invalidManifest
-            }
+            try checkManifest(loop.schemaVersion, 2, "loop.schema_version")
+            try checkManifest(loop.profile, "denoiser-loop-4", "loop.profile")
+            try checkManifest(loop.method, "euler_ode", "loop.method")
+            try checkManifest(loop.timesteps, schedule, "loop.timesteps")
+            try checkManifest(loop.steps.count, 4, "loop.steps.count")
+            try checkManifest(loop.shift, 1, "loop.shift")
+            try checkManifest(loop.guidanceScale, 1, "loop.guidance_scale")
+            try checkManifest(loop.kvCacheEnabled, false, "loop.kv_cache_enabled")
+            try checkManifest(loop.inputShapes, Profile.denoiser.inputShapes, "loop.input_shapes")
+            try checkManifest(loop.outputShape, [1,25,64], "loop.output_shape")
+            try checkManifest(loop.weightStorageDtype, "float16", "loop.weight_storage_dtype")
+            try checkManifest(loop.computeDtype, "float32", "loop.compute_dtype")
+            try checkManifest(loop.scalarType, "float32", "loop.scalar_type")
+            try checkManifest(loop.byteOrder, "little", "loop.byte_order")
+            try checkManifest(loop.checkpointFullSha256Verified, true, "loop.checkpoint_full_sha256_verified")
+            try checkManifest(loop.checkpointDigest, contract.checkpoint.digest, "loop.checkpoint_digest")
+            try checkManifest(loop.absoluteTolerance, contract.absoluteTolerance, "loop.absolute_tolerance")
+            try checkManifest(loop.relativeTolerance, contract.relativeTolerance, "loop.relative_tolerance")
+            try checkManifest(loop.relativeRmseTolerance, contract.relativeRmseTolerance, "loop.relative_rmse_tolerance")
+            try checkManifest(Set(loop.sharedInputSha256.keys), Set(["noise", "condition", "context"]), "loop.shared_input_sha256.keys")
+            try checkManifest(loop.inputFiles, ["noise":"input-noise.f32le", "condition":"input-condition.f32le", "context":"input-context.f32le"], "loop.input_files")
             var expectedFiles = Set<String>()
             for (index, step) in loop.steps.enumerated() {
                 let n = index + 1
-                guard step.index == n, step.timestep == schedule[index], step.nextTimestep == schedule[index+1],
-                      step.timestepR == step.timestep, step.velocityFile == "step-\(n)-velocity.f32le",
-                      step.latentFile == "step-\(n)-latent.f32le", step.originalVelocityFile == "step-\(n)-velocity-fp32.f32le",
-                      step.originalLatentFile == "step-\(n)-latent-fp32.f32le" else { throw ShardError.invalidManifest }
+                let field = "loop.steps[\(index)]"
+                try checkManifest(step.index, n, "\(field).index")
+                try checkManifest(step.timestep, schedule[index], "\(field).timestep")
+                try checkManifest(step.nextTimestep, schedule[index+1], "\(field).next_timestep")
+                try checkManifest(step.timestepR, step.timestep, "\(field).timestep_r")
+                try checkManifest(step.velocityFile, "step-\(n)-velocity.f32le", "\(field).velocity_file")
+                try checkManifest(step.latentFile, "step-\(n)-latent.f32le", "\(field).latent_file")
+                try checkManifest(step.originalVelocityFile, "step-\(n)-velocity-fp32.f32le", "\(field).original_velocity_file")
+                try checkManifest(step.originalLatentFile, "step-\(n)-latent-fp32.f32le", "\(field).original_latent_file")
                 expectedFiles.formUnion([step.velocityFile, step.latentFile, step.originalVelocityFile, step.originalLatentFile])
             }
-            guard Set(loop.artifactSha256.keys) == expectedFiles else { throw ShardError.invalidManifest }
+            let referenceFiles = expectedFiles
+            expectedFiles.formUnion(loop.inputFiles.values)
+            try checkManifest(Set(loop.artifactSha256.keys), expectedFiles, "loop.artifact_sha256.keys")
             var references: [String: [Float]] = [:]
-            for name in expectedFiles {
+            for name in referenceFiles {
                 references[name] = try readFloats(folder: fixture, name: name, count: 1600, hashes: loop.artifactSha256)
             }
             var shared: [String: NDArray] = [:]
             var latent: [Float] = []
             for name in ["noise", "condition", "context"] {
-                guard loop.sharedInputSha256[name] == contract.artifactSha256["\(name).f32le"],
+                guard let filename = loop.inputFiles[name],
                       let shape = Profile.denoiser.inputShapes[name] else { throw ShardError.invalidManifest }
-                let values = try readFloats(folder: folder, name: "\(name).f32le", count: shape.reduce(1,*), hashes: contract.artifactSha256)
+                try checkManifest(loop.sharedInputSha256[name], loop.artifactSha256[filename], "loop.input_sha256[\(name)]")
+                // Inputs belong to the reference fixture, not to a separately
+                // generated Mac random case. Native model weights stay unchanged.
+                let values = try readFloats(folder: fixture, name: filename, count: shape.reduce(1,*), hashes: loop.artifactSha256)
                 if name == "noise" { latent = values }
                 else { shared[name] = NDArray(scalars: values, shape: shape) }
             }
-            lines.append("SHA-256: VERIFIED all 16 loop references and shared synthetic inputs; checkpoint contract matched")
+            lines.append("SHA-256: VERIFIED 16 references + 3 self-contained inputs; checkpoint contract matched")
             for step in loop.steps {
                 let stepStart = clock.now
                 var state = shared
@@ -410,26 +441,44 @@ enum CoreAIDecoderProbe {
         let assets = ["front.aimodel"] + stride(from: 0, to: 24, by: 2).map {
             String(format: "blocks-%02d-%02d.aimodel", $0, $0 + 1)
         } + ["tail.aimodel"]
-        guard contract.schemaVersion == 1, contract.profile == "denoiser-sharded", contract.assetFile == "sharded-pipeline",
-              contract.layerCount == 24, contract.outputName == "velocity", contract.outputShape == [1,25,64],
-              contract.scalarType == "float32", contract.byteOrder == "little", contract.latentFrames == 25,
-              contract.inputShapes == Profile.denoiser.inputShapes, contract.weightStorageDtype == "float16",
-              contract.computeDtype == "float32", contract.originalFp32ReferenceFile == "velocity-fp32-reference.f32le",
-              contract.checkpointFullSha256Verified, contract.checkpoint.digest == Profile.denoiser.checkpointDigest,
-              contract.absoluteTolerance == 1e-4, contract.relativeTolerance == 1e-3, contract.relativeRmseTolerance == 1e-3,
-              let stages = contract.stages, stages.count == 14, stages.map({ $0.assetFile }) == assets else {
-            throw ShardError.invalidManifest
-        }
+        try checkManifest(contract.schemaVersion, 1, "sharded.schema_version")
+        try checkManifest(contract.profile, "denoiser-sharded", "sharded.profile")
+        try checkManifest(contract.assetFile, "sharded-pipeline", "sharded.asset_file")
+        try checkManifest(contract.layerCount, 24, "sharded.layer_count")
+        try checkManifest(contract.outputName, "velocity", "sharded.output_name")
+        try checkManifest(contract.outputShape, [1,25,64], "sharded.output_shape")
+        try checkManifest(contract.scalarType, "float32", "sharded.scalar_type")
+        try checkManifest(contract.byteOrder, "little", "sharded.byte_order")
+        try checkManifest(contract.latentFrames, 25, "sharded.latent_frames")
+        try checkManifest(contract.inputShapes, Profile.denoiser.inputShapes, "sharded.input_shapes")
+        try checkManifest(contract.weightStorageDtype, "float16", "sharded.weight_storage_dtype")
+        try checkManifest(contract.computeDtype, "float32", "sharded.compute_dtype")
+        try checkManifest(contract.originalFp32ReferenceFile, "velocity-fp32-reference.f32le", "sharded.original_fp32_reference_file")
+        try checkManifest(contract.checkpointFullSha256Verified, true, "sharded.checkpoint_full_sha256_verified")
+        try checkManifest(contract.checkpoint.digest, Profile.denoiser.checkpointDigest, "sharded.checkpoint.digest")
+        try checkManifest(contract.absoluteTolerance, 1e-4, "sharded.absolute_tolerance")
+        try checkManifest(contract.relativeTolerance, 1e-3, "sharded.relative_tolerance")
+        try checkManifest(contract.relativeRmseTolerance, 1e-3, "sharded.relative_rmse_tolerance")
+        guard let stages = contract.stages else { throw ShardError.manifestMismatch("sharded.stages missing") }
+        try checkManifest(stages.count, 14, "sharded.stages.count")
+        try checkManifest(stages.map({ $0.assetFile }), assets, "sharded.stages.asset_file order")
         for (index, stage) in stages.enumerated() {
+            let field = "sharded.stages[\(index)]"
             if index == 0 {
-                guard stage.layerIndices.isEmpty, stage.inputShapes == Profile.denoiser.inputShapes,
-                      stage.outputShapes == frontOutputs, stage.outputBindings == frontBindings else { throw ShardError.invalidManifest }
+                try checkManifest(stage.layerIndices, [], "\(field).layer_indices")
+                try checkManifest(stage.inputShapes, Profile.denoiser.inputShapes, "\(field).input_shapes")
+                try checkManifest(stage.outputShapes, frontOutputs, "\(field).output_shapes")
+                try checkManifest(stage.outputBindings, frontBindings, "\(field).output_bindings")
             } else if index == 13 {
-                guard stage.layerIndices.isEmpty, stage.inputShapes == ["hidden":[1,13,2048],"final_temb":[1,2048]],
-                      stage.outputShapes == ["velocity":[1,25,64]], stage.outputBindings == ["velocity":"velocity"] else { throw ShardError.invalidManifest }
+                try checkManifest(stage.layerIndices, [], "\(field).layer_indices")
+                try checkManifest(stage.inputShapes, ["hidden":[1,13,2048],"final_temb":[1,2048]], "\(field).input_shapes")
+                try checkManifest(stage.outputShapes, ["velocity":[1,25,64]], "\(field).output_shapes")
+                try checkManifest(stage.outputBindings, ["velocity":"velocity"], "\(field).output_bindings")
             } else {
-                guard stage.layerIndices == [(index-1)*2,(index-1)*2+1], stage.inputShapes == pairInputs,
-                      stage.outputShapes == ["hidden_out":[1,13,2048]], stage.outputBindings == ["hidden_out":"hidden"] else { throw ShardError.invalidManifest }
+                try checkManifest(stage.layerIndices, [(index-1)*2,(index-1)*2+1], "\(field).layer_indices")
+                try checkManifest(stage.inputShapes, pairInputs, "\(field).input_shapes")
+                try checkManifest(stage.outputShapes, ["hidden_out":[1,13,2048]], "\(field).output_shapes")
+                try checkManifest(stage.outputBindings, ["hidden_out":"hidden"], "\(field).output_bindings")
             }
         }
         return contract

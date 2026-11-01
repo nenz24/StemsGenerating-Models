@@ -14,7 +14,9 @@ git pull --ff-only &&
 open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
 ```
 
-Build dengan **Cmd+R**, lalu tekan **Uji loop denoising 4 langkah**.
+Setelah memperbarui dari versi pertama yang gagal `invalidManifest`, lakukan
+**Product → Clean Build Folder (Shift+Cmd+K)** sekali agar resource fixture ikut
+diperbarui. Build dengan **Cmd+R**, lalu tekan **Uji loop denoising 4 langkah**.
 Bagikan laporan lengkap setelah selesai. Target hasilnya:
 
 ```text
@@ -22,8 +24,8 @@ Four-step Euler loop dual parity: PASS (feedback at all four steps)
 Completed parity steps: 4/4; completed stages: 56/56
 ```
 
-Tidak perlu ekspor model atau unduh checkpoint ulang. Enam belas referensi kecil
-dan manifest, total sekitar 109 KB, ikut GitHub di
+Tidak perlu ekspor model atau unduh checkpoint ulang. Enam belas referensi,
+tiga input uji persis dari pembuat referensi, dan manifest, sekitar 0,65 MB, ikut GitHub di
 `ModelCandidates/denoiser-loop-4/`. Empat belas native asset tetap berada di folder
 lokal `denoiser-sharded/` yang sebelumnya sudah disiapkan. Bila folder itu belum
 ada di checkout ini, siapkan dengan `bash scripts/prepare_coreai_denoiser.sh`.
@@ -45,8 +47,13 @@ setiap langkah harus lolos terhadap kedua jalur, total 16 pembandingan, dengan
 batas sebelumnya: `abs(error) <= 1e-4 + 1e-3 * abs(reference)` dan normalized RMSE
 `<= 1e-3`. Tidak ada pelonggaran toleransi untuk akumulasi drift.
 
+Fixture schema v2 membawa inputnya sendiri. Input acak dari persiapan Mac tidak
+harus sama byte demi byte dengan hasil RNG Linux; kedua sisi uji membaca data
+uji yang sama dari fixture. Pemeriksaan identitas model tetap berlaku.
+
 Sebelum eksekusi, aplikasi memeriksa manifest jadwal, bentuk tensor, identitas
-checkpoint dan SHA-256 seluruh referensi serta input bersama. Laporan mencatat
+checkpoint dan SHA-256 seluruh referensi serta ketiga input fixture. Jika gagal,
+pesan menyebut nama field, nilai yang diharapkan, dan nilai aktual. Laporan mencatat
 load/run+copy per asset, hasil pembandingan, waktu per langkah dan footprint
 proses. Pada error atau kegagalan numerik, loop berhenti tanpa retry tersembunyi.
 Guard footprint 2000 MiB diperiksa sebelum setiap asset; ini bukan batas peak OS.
@@ -54,6 +61,9 @@ Cache internal, accelerator yang benar-benar digunakan, seluruh kebutuhan RAM
 model/perangkat dan peak di antara sampel 10 ms tetap belum diukur.
 
 [Referensi host sudah PASS](../reviews/coreai-four-step-denoiser-loop/README.md).
+Percobaan perangkat pertama [berhenti saat validasi manifest, 0/56 tahap](../reviews/coreai-iphone17pro-denoiser-loop-manifest-failure/README.md).
+Field penyebabnya belum diketahui dari pesan generik lama. Paket input mandiri
+dan diagnostik field disiapkan untuk percobaan berikutnya, tanpa mengubah referensi.
 Kode Swift baru belum dikompilasi dengan Apple SDK di workspace Linux; hasil
 CoreAI empat langkah perlu diuji di iPhone. Ini bukan pengujian kualitas musik,
 CFG, conditioning dari rekaman, atau jaminan stabil untuk lagu 90 detik.

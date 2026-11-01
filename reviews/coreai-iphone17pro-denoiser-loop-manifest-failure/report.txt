@@ -1,0 +1,16 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: COMPLETE 24-layer denoiser / 4 feedback Euler ODE steps / NOT instrument generation
+Requested compute policy: cpuOnly; accelerator placement NOT MEASURED
+Schedule: 1 -> 0.75 -> 0.5 -> 0.25 -> 0; shift=1; guidance=1; timestep_r=timestep
+Synthetic conditioning; no CFG, KV cache, recording or waveform generation
+Existing 14 assets per step; detached CPU copies; native cache eviction NOT GUARANTEED
+Process footprint stop before each stage: 2000 MiB; NOT an OS peak-memory guarantee
+Target: iOS device build
+Four-step Euler loop dual parity: NOT PASSED
+Error: CoreAIProbe.CoreAIDecoderProbe.(unknown context at $1036b51dc).ShardError.invalidManifest
+Process baseline MiB: 19.61115264892578
+Sampled process maximum MiB (10 ms): 19.61115264892578
+Completed parity steps: 0/4; completed stages: 0/56; total loop probe ms: 23.277916
+Memory scope: sampled app process footprint, NOT total model/device RAM or exact peak; cache behavior unverified

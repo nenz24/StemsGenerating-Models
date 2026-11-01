@@ -117,10 +117,10 @@
     "shared_scheme": "CoreAIProbe",
     "signing_team_selection": "Apple Team stored in ignored Signing.local.xcconfig; shared Debug/Release configurations include it",
     "apple_compilation_verified": true,
-    "apple_compilation_evidence": "User executed three-attempt sharded device wrapper successfully; no independent Apple SDK compilation on Linux",
+    "apple_compilation_evidence": "User executed initial four-step app, which failed before inference; schema-v2 fixture correction still pending Apple build; no independent SDK compilation on Linux",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-sharded-denoiser-stability/report.json",
-    "device_execution_scope": "Three complete synthetic denoiser forwards in same process, 14 assets / 24 layers each, dual parity PASS 3/3; earlier BNNS failure retained; no instrument generation",
+    "device_execution_report": "reviews/coreai-iphone17pro-denoiser-loop-manifest-failure/report.json",
+    "device_execution_scope": "Sharded denoiser single-forward repeatability PASS 3/3 previously; initial four-step caller launched but failed manifest validation before inference; corrected fixture/caller not device-tested",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -458,6 +458,17 @@
     "device_loop_parity_verified": false,
     "conditioning_from_recording_verified": false,
     "waveform_generation_verified": false,
-    "memory_scope": "10 ms sampled process footprint with pre-asset 2000 MiB guard; not full-device/model RAM or exact peak"
+    "memory_scope": "10 ms sampled process footprint with pre-asset 2000 MiB guard; not full-device/model RAM or exact peak",
+    "fixture_schema_version": 2,
+    "fixture_inputs_self_contained": true,
+    "fixture_input_binary_bytes": 543488,
+    "fixture_total_binary_bytes": 645888,
+    "requires_mac_random_input_hashes_match_linux": false,
+    "manifest_field_diagnostics": true,
+    "initial_wrapper_apple_build_reported": true,
+    "latest_device_status": "Initial schema-v1 attempt failed manifest validation at 0/56 stages; exact field unknown; schema-v2 correction pending device test",
+    "device_report": "reviews/coreai-iphone17pro-denoiser-loop-manifest-failure/report.json",
+    "manifest_correction_apple_build_verified": false,
+    "manifest_correction_device_execution_verified": false
   }
 }

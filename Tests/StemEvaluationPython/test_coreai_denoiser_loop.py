@@ -60,16 +60,33 @@ class DenoiserLoopTests(unittest.TestCase):
     def test_real_references_and_feedback_consistency(self):
         import numpy as np
         ref=MODULE.verify_fixture(self.folder)
-        # Starting from step 1's updated latent, independently check the next
-        # updates for BOTH trajectories, without invoking trajectory().
+        # Independently check ALL updates for both trajectories, including the
+        # initial input that must travel with these exact references.
         for velocity_key,latent_key in [('velocity_file','latent_file'),('original_velocity_file','original_latent_file')]:
-            previous=np.fromfile(self.folder/ref['steps'][0][latent_key],dtype='<f4')
-            for step in ref['steps'][1:]:
+            previous=np.fromfile(self.folder/ref['input_files']['noise'],dtype='<f4')
+            for step in ref['steps']:
                 velocity=np.fromfile(self.folder/step[velocity_key],dtype='<f4')
                 actual=np.fromfile(self.folder/step[latent_key],dtype='<f4')
                 expected=previous-velocity*np.float32(step['timestep']-step['next_timestep'])
                 np.testing.assert_array_equal(actual,expected)
                 previous=actual
+
+    def test_fixture_is_self_contained_and_rejects_corrupt_inputs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder=Path(tmp)/'fixture';shutil.copytree(self.folder,folder)
+            # No separately generated model bundle or random inputs accompany
+            # this copy; integrity verification must still be possible.
+            ref=MODULE.verify_fixture(folder)
+            self.assertEqual(set(ref['input_files']),{'noise','condition','context'})
+            original=(folder/'reference.json').read_text()
+            ref['shared_input_sha256']['condition']='0'*64
+            (folder/'reference.json').write_text(json.dumps(ref))
+            with self.assertRaisesRegex(ValueError,'input identity mismatch'):
+                MODULE.verify_fixture(folder)
+            (folder/'reference.json').write_text(original)
+            p=folder/ref['input_files']['condition'];raw=bytearray(p.read_bytes());raw[-1]^=1;p.write_bytes(raw)
+            with self.assertRaisesRegex(ValueError,'integrity mismatch'):
+                MODULE.verify_fixture(folder)
 
     def test_corrupt_references_and_schedule_are_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:

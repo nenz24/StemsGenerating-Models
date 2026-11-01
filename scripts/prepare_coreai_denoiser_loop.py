@@ -8,6 +8,7 @@ import argparse
 import ast
 import importlib.metadata
 import json
+import math
 from pathlib import Path
 import shutil
 import sys
@@ -20,6 +21,7 @@ from export_coreai_denoiser_sharded import make_partitions, stage_plan, verify_b
 
 TIMESTEPS = [1.0, 0.75, 0.5, 0.25, 0.0]
 SHARED_INPUTS = ['noise', 'condition', 'context']
+INPUT_FILES = {name: f'input-{name}.f32le' for name in SHARED_INPUTS}
 
 
 def trajectory(predict, inputs):
@@ -78,7 +80,8 @@ def verify_fixture(folder):
                            ('original_velocity_file','velocity-fp32'), ('original_latent_file','latent-fp32')]}}
                       for i,t in enumerate(TIMESTEPS[:-1])]
     expected_files = {v for step in expected_steps for k,v in step.items() if k.endswith('_file')}
-    if (ref.get('schema_version') != 1 or ref.get('profile') != 'denoiser-loop-4'
+    expected_files.update(INPUT_FILES.values())
+    if (ref.get('schema_version') != 2 or ref.get('profile') != 'denoiser-loop-4'
             or ref.get('steps') != expected_steps or ref.get('timesteps') != TIMESTEPS
             or ref.get('input_shapes') != INPUT_SHAPES or ref.get('output_shape') != OUTPUT_SHAPE
             or ref.get('scalar_type') != 'float32' or ref.get('byte_order') != 'little'
@@ -91,6 +94,7 @@ def verify_fixture(folder):
             or ref.get('absolute_tolerance') != 1e-4 or ref.get('relative_tolerance') != 1e-3
             or ref.get('relative_rmse_tolerance') != 1e-3
             or set(ref.get('shared_input_sha256',{})) != set(SHARED_INPUTS)
+            or ref.get('input_files') != INPUT_FILES
             or len(ref.get('host_comparisons',[])) != 4
             or not all(row.get('velocity',{}).get('parity_passed') and row.get('latent',{}).get('parity_passed')
                        for row in ref['host_comparisons'])):
@@ -100,9 +104,13 @@ def verify_fixture(folder):
         raise ValueError('Incomplete or unexpected loop references')
     for name,digest in ref['artifact_sha256'].items():
         path=(folder/name).resolve()
-        if (not path.is_relative_to(folder.resolve()) or path.stat().st_size != 6400
+        shape = next((INPUT_SHAPES[n] for n,f in INPUT_FILES.items() if f == name), OUTPUT_SHAPE)
+        if (not path.is_relative_to(folder.resolve()) or path.stat().st_size != math.prod(shape)*4
                 or sha256(path) != digest):
             raise ValueError(f'Loop reference integrity mismatch: {name}')
+    for name,filename in INPUT_FILES.items():
+        if ref['shared_input_sha256'][name] != ref['artifact_sha256'][filename]:
+            raise ValueError(f'Loop input identity mismatch: {name}')
     return ref
 
 
@@ -156,6 +164,10 @@ def main():
         raise ValueError(f'Loop FP32 baseline gate failed; no fixture published: {comparisons}')
     staging=ROOT/'.runtime-cache/coreai-denoiser-staging';staging.mkdir(parents=True,exist_ok=True)
     stage=Path(tempfile.mkdtemp(prefix='loop-',dir=staging));steps=[]
+    # Carry the exact inputs used above. Mac-generated random tensors need not
+    # have identical bytes to Linux tensors even with the same nominal seed.
+    for name,filename in INPUT_FILES.items():
+        shutil.copyfile(args.sharded_bundle/f'{name}.f32le',stage/filename)
     for i,(a,b) in enumerate(zip(expected,original)):
         step={'index':i+1,'timestep':TIMESTEPS[i],'next_timestep':TIMESTEPS[i+1],'timestep_r':TIMESTEPS[i]}
         for key,suffix,value in [('velocity_file','velocity',a[0]),('latent_file','latent',a[1]),
@@ -163,12 +175,13 @@ def main():
             name=f'step-{i+1}-{suffix}.f32le';step[key]=name
             value.numpy().astype('<f4',copy=False).tofile(stage/name)
         steps.append(step)
-    ref={'schema_version':1,'profile':'denoiser-loop-4','method':'euler_ode','timesteps':TIMESTEPS,'steps':steps,
+    ref={'schema_version':2,'profile':'denoiser-loop-4','method':'euler_ode','timesteps':TIMESTEPS,'steps':steps,
          'shift':1,'guidance_scale':1,'kv_cache_enabled':False,'input_shapes':INPUT_SHAPES,'output_shape':OUTPUT_SHAPE,
          'weight_storage_dtype':'float16','compute_dtype':'float32','scalar_type':'float32','byte_order':'little',
          'checkpoint_digest':record['digest'],'checkpoint_full_sha256_verified':True,
          'publisher_source_digest':publisher['modeling_acestep_v15_base.py']['digest'],'publisher_sampling_semantics':sampling,
          'shared_input_sha256':{n:shards['artifact_sha256'][f'{n}.f32le'] for n in SHARED_INPUTS},
+         'input_files':INPUT_FILES,
          'artifact_sha256':{p.name:sha256(p) for p in sorted(stage.iterdir())},'host_comparisons':comparisons,
          'reference_versions':{n:importlib.metadata.version(n) for n in ['torch','transformers','safetensors','numpy']},
          'absolute_tolerance':1e-4,'relative_tolerance':1e-3,'relative_rmse_tolerance':1e-3,
