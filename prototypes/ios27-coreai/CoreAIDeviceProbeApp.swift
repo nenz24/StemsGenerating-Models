@@ -124,6 +124,15 @@ struct CoreAIDeviceProbeApp: App {
                             }
                         }
                         .disabled(runningModel)
+                        Button("Uji reuse satu pasangan layer") {
+                            runningModel = true
+                            report = "Membandingkan run pertama dan tiga run ulang pada model/fungsi yang sama…"
+                            Task {
+                                report = await CoreAIDecoderProbe.runPairReuse { text in self.report = text }
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
                         Text(report)
                             .font(.system(.footnote, design: .monospaced))
                             .textSelection(.enabled)

@@ -38,8 +38,8 @@ mechanism from the timer alone.
 The next bounded experiment is first versus repeated execution of **one layer
 pair**, keeping both its model and loaded function alive, with fixed inputs and
 numerical checks. This will test whether repeated calls amortize first-use work
-without holding all 14 models at once. That experiment is not implemented by
-this report. The existing short/two-block warm probes are historical component
+without holding all 14 models at once. A [subsequent caller and host fixture](../../docs/coreai-pair-reuse.md)
+now prepare that experiment; device execution remains pending. The existing short/two-block warm probes are historical component
 evidence with different cases, not direct controls for this sharded loop.
 
 The earlier loop took 53.001 seconds; this one takes 51.881 seconds. There was

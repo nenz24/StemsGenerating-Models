@@ -79,6 +79,10 @@ Total 51,88 detik; 50,75 detik berada di interval `function.run`, atau 99,36%
 waktu tahap terukur. Opening, binding dan copy masing-masing sekitar 0,10–0,12
 detik. Berikutnya perlu membedakan biaya run pertama dan run berulang dengan
 satu pasangan layer/fungsi tetap dimuat. [Panduan profiling](docs/coreai-loop-timing.md).
+Tombol **Uji reuse satu pasangan layer** sudah disiapkan dengan referensi host
+baru yang kecil; asset native dipakai ulang. [Cara menjalankan](docs/coreai-pair-reuse.md).
+[Empat tahap besar menuju generasi dari rekaman](docs/iphone-generation-roadmap.md)
+memisahkan pekerjaan eksekusi, conditioning, pipeline WAV pendek dan kualitas pengiring.
 Ini belum generasi instrumen lengkap.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan

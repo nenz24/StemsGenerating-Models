@@ -425,7 +425,7 @@
     "stability_dual_parity_pass_count": 3,
     "latency_stability_verified": false,
     "long_run_memory_plateau_verified": false,
-    "next_gate": "Four-step device loop passed; profile function binding vs backend execution/output copy before performance changes"
+    "next_gate": "Retained-pair test prepared with dual host references; first versus repeated device calls pending, then choose viable execution path before recording conditioning"
   },
   "pretrained_denoiser_loop_probe": {
     "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
@@ -477,7 +477,7 @@
     "device_total_loop_probe_ms": 53001.064667,
     "device_sampled_process_maximum_mib": 74.01760864257812,
     "first_manifest_failure_exact_field_confirmed": false,
-    "next_gate": "Measure first versus repeated execution with one layer-pair model AND function kept loaded, fixed inputs and reference checks; do not retain all 14 assets or attribute backend-await to pure compute yet"
+    "next_gate": "Retained-pair test prepared with dual host references; first versus repeated device calls pending, then choose viable execution path before recording conditioning"
   },
   "pretrained_denoiser_loop_timing_probe": {
     "source_files": [
@@ -525,6 +525,48 @@
     "backend_await_percent_of_completed_stage_time": 99.36218308679913,
     "pure_kernel_time_measured": false,
     "backend_initialization_vs_steady_state_cost_isolated": false,
-    "next_gate": "Measure first versus repeated execution with one layer-pair model AND function kept loaded, fixed inputs and reference checks; do not retain all 14 assets or attribute backend-await to pure compute yet"
+    "next_gate": "Retained pair first-vs-repeated caller now prepared, four fixed-input runs and two host references per run; Apple build and device measurements pending"
+  },
+  "pretrained_pair_reuse_probe": {
+    "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
+    "button": "Uji reuse satu pasangan layer",
+    "guide": "docs/coreai-pair-reuse.md",
+    "reference_generator": "scripts/prepare_coreai_pair_reuse.py",
+    "reference_manifest": "prototypes/ios27-coreai/ModelCandidates/denoiser-pair-reuse/reference.json",
+    "native_asset_reused": "denoiser-sharded/blocks-00-01.aimodel",
+    "layer_indices": [
+      0,
+      1
+    ],
+    "run_count": 4,
+    "model_opens": 1,
+    "function_binds": 1,
+    "both_handles_retained": true,
+    "fixed_inputs": true,
+    "hidden_tokens": 13,
+    "condition_tokens": 64,
+    "host_same_input_storage16_vs_fp32_parity_passed": true,
+    "host_normalized_rmse": 2.095003501410023e-07,
+    "device_dual_reference_checks_required": 8,
+    "new_model_export_required": false,
+    "new_swift_apple_build_verified": false,
+    "device_execution_verified": false,
+    "first_vs_repeated_timing_measured": false,
+    "backend_weight_residency_guaranteed": false,
+    "full_loop_speedup_verified": false,
+    "fixture_binary_bytes": 910920
+  },
+  "generation_roadmap": {
+    "guide": "docs/iphone-generation-roadmap.md",
+    "estimated_major_stages_to_short_recording_conditioned_preview": 4,
+    "stages": [
+      "viable execution path",
+      "recording/target conditioning",
+      "short sampling-to-WAV pipeline",
+      "musical quality and three-instrument arrangement"
+    ],
+    "current_major_stage": 1,
+    "iteration_count_guaranteed": false,
+    "production_full_song_and_thermal_work_follows": true
   }
 }

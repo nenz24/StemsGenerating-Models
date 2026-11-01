@@ -266,3 +266,10 @@ Penyebab di dalam `function.run` belum terpisah antara inisialisasi dan eksekusi
 steady-state. Langkah berikutnya adalah uji satu pasangan layer/fungsi yang
 dipertahankan untuk beberapa run. Belum diimplementasikan dalam pencatatan ini.
 [Panduan profiling](../../docs/coreai-loop-timing.md).
+
+Tombol **Uji reuse satu pasangan layer** mempertahankan model layers 0+1 dan
+fungsi yang dimuat sekali, lalu mengukur empat call dengan input tetap. Setiap
+call wajib lolos terhadap dua referensi host yang ikut GitHub; tidak perlu
+menyiapkan atau mengekspor model ulang. Kode baru perlu build dan uji iPhone.
+[Panduan reuse](../../docs/coreai-pair-reuse.md) dan
+[tahapan menuju generasi](../../docs/iphone-generation-roadmap.md).

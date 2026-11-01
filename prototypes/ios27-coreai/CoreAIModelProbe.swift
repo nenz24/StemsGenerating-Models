@@ -44,6 +44,21 @@ struct CoreAIModelProbe: Sendable {
         inputs: [String: NDArray],
         timings: inout StatelessTimings
     ) async throws -> InferenceFunction.Outputs {
+        let function = try loadStatelessFunction(functionNamed: name, inputs: inputs, timings: &timings)
+        let clock = ContinuousClock()
+        let runStart = clock.now
+        let outputs = try await function.run(inputs: inputs)
+        timings.backendAwaitMs = Self.milliseconds(runStart.duration(to: clock.now))
+        return outputs
+    }
+
+    // The retained-pair diagnostic uses this once, then runs the same owned
+    // function with unchanged inputs. Ordinary callers still bind on each call.
+    func loadStatelessFunction(
+        functionNamed name: String,
+        inputs: [String: NDArray],
+        timings: inout StatelessTimings
+    ) throws -> InferenceFunction {
         let clock = ContinuousClock()
         let bindStart = clock.now
         guard let function = try model.loadFunction(named: name) else {
@@ -74,10 +89,7 @@ struct CoreAIModelProbe: Sendable {
             }
         }
         timings.inputValidationMs = Self.milliseconds(validationStart.duration(to: clock.now))
-        let runStart = clock.now
-        let outputs = try await function.run(inputs: inputs)
-        timings.backendAwaitMs = Self.milliseconds(runStart.duration(to: clock.now))
-        return outputs
+        return function
     }
 
     private static func milliseconds(_ duration: Duration) -> Double {

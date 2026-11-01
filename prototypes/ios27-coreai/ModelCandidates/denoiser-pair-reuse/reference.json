@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "profile": "denoiser-pair-reuse",
+  "asset_file": "blocks-00-01.aimodel",
+  "function_name": "main",
+  "output_name": "hidden_out",
+  "layer_indices": [
+    0,
+    1
+  ],
+  "input_shapes": {
+    "hidden": [
+      1,
+      13,
+      2048
+    ],
+    "condition": [
+      1,
+      64,
+      2048
+    ],
+    "temb": [
+      1,
+      6,
+      2048
+    ],
+    "rope_cos": [
+      1,
+      13,
+      128
+    ],
+    "rope_sin": [
+      1,
+      13,
+      128
+    ],
+    "self_mask": [
+      1,
+      1,
+      13,
+      13
+    ],
+    "local_mask": [
+      1,
+      1,
+      13,
+      13
+    ],
+    "cross_mask": [
+      1,
+      1,
+      13,
+      64
+    ]
+  },
+  "output_shape": [
+    1,
+    13,
+    2048
+  ],
+  "run_count": 4,
+  "scalar_type": "float32",
+  "byte_order": "little",
+  "weight_storage_dtype": "float16",
+  "compute_dtype": "float32",
+  "checkpoint_digest": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b",
+  "checkpoint_full_sha256_verified": true,
+  "expected_file": "hidden-reference.f32le",
+  "original_fp32_reference_file": "hidden-fp32-reference.f32le",
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "input_provenance": "Storage16 front output at first loop step t=1, timestep_r=1 using exact committed v2 loop inputs; identical fixed pair inputs for both references",
+  "loop_manifest_sha256": "b29b0ddf18834ffca9de194e83db16a44c31925c2e419df8d8aac212747d050e",
+  "host_storage16_vs_original_fp32": {
+    "finite": true,
+    "max_absolute_error": 0.0009765625,
+    "rmse": 1.1241475528383034e-05,
+    "normalized_rmse": 2.095003501410023e-07,
+    "elementwise_fraction_over_bound": 0.0,
+    "parity_passed": true
+  },
+  "reference_versions": {
+    "torch": "2.8.0+cpu",
+    "transformers": "4.57.3",
+    "safetensors": "0.8.0",
+    "numpy": "2.4.6"
+  },
+  "artifact_sha256": {
+    "condition.f32le": "1f97db10d5ab601a2781539c4af3c9b1c627556858c3a2a14893e14450e21d9d",
+    "cross_mask.f32le": "6bb4877dfebc6d4f819999f0f8b65d06aa540746bc63b7c1261282636efcaa15",
+    "hidden-fp32-reference.f32le": "9a97524aa5ec23b52538449b2ce3e1a6fde85f6ec34b9bb232028890eb5e3ef0",
+    "hidden-reference.f32le": "e7e1ccd2bedcf8c0bda4e65b47a99d1611bc7edde06296f334d059ac4701dacd",
+    "hidden.f32le": "4b0eea67b7a3c1690caab5dcd3d44850f55530c1ba600cedc8475fafe9b0ee0b",
+    "local_mask.f32le": "1bfedb90a487ecce837b77d13c349bf60548cc0326eba5435fd27c359231b6ca",
+    "rope_cos.f32le": "60bdced3345af62e48e3ac8b4a246fd7b743248639db59bda673cb56ea054130",
+    "rope_sin.f32le": "d9b86b4e912bd45bf71d84a3cc609101fdb182deb9ee31a3cd21d1786ad5eb85",
+    "self_mask.f32le": "1bfedb90a487ecce837b77d13c349bf60548cc0326eba5435fd27c359231b6ca",
+    "temb.f32le": "b8723295c6a2e3197af670148a01cd3a846eb277d30468c14e2f2484e841ee07"
+  },
+  "scope": "First vs three repeated calls to one retained pair/model/function, fixed synthetic activations; not full generation",
+  "device_execution_verified": false
+}

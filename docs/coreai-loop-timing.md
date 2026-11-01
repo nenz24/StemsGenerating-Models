@@ -15,7 +15,8 @@ akuntansi; tidak perlu mengulang profil yang sama untuk mencatat hasil ini.
 Fase dominan adalah interval `function.run`, tetapi komputasi steady-state dan
 pekerjaan inisialisasi/tertunda di dalamnya belum terpisah. Langkah berikutnya
 adalah uji run pertama versus run berulang pada satu pasangan layer dengan
-model dan fungsi tetap dimuat. Uji tersebut belum diimplementasikan. Ini
+model dan fungsi tetap dimuat. [Uji tersebut kini disiapkan](coreai-pair-reuse.md),
+dengan referensi host yang lolos dan pengujian perangkat masih menunggu. Ini
 menghindari keharusan memuat semua 14 model sekaligus saat menguji reuse.
 
 ## Reproduksi pengukuran

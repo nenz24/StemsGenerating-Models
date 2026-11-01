@@ -207,6 +207,158 @@ enum CoreAIDecoderProbe {
         }
     }
 
+    private struct PairReuseContract: Decodable {
+        let schemaVersion: Int
+        let profile: String
+        let assetFile: String
+        let functionName: String
+        let outputName: String
+        let layerIndices: [Int]
+        let inputShapes: [String: [Int]]
+        let outputShape: [Int]
+        let runCount: Int
+        let scalarType: String
+        let byteOrder: String
+        let weightStorageDtype: String
+        let computeDtype: String
+        let checkpointDigest: String
+        let checkpointFullSha256Verified: Bool
+        let expectedFile: String
+        let originalFp32ReferenceFile: String
+        let artifactSha256: [String: String]
+        let absoluteTolerance: Double
+        let relativeTolerance: Double
+        let relativeRmseTolerance: Double
+    }
+
+    static func runPairReuse(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+                     "CoreAI architecture: \(AIModel.deviceArchitectureName)",
+                     "Test: pretrained ACE Base layers 0+1 / one retained model AND function / fixed synthetic inputs",
+                     "Scope: first call + three repeated calls; 13 hidden / 64 condition tokens; NOT full denoiser or instrument generation",
+                     "Requested compute policy: cpuOnly; accelerator placement NOT MEASURED",
+                     "One successful model open and function bind intended; no hidden warmup, cache clearing or reload between runs",
+                     "backend-await is an API wall interval, not isolated kernel time; first call is not a guaranteed cold-cache run",
+                     "Process footprint guard before load and each call: 2000 MiB; NOT an OS peak-memory guarantee"]
+        #if targetEnvironment(simulator)
+        lines.append("Target: Simulator; not physical-device evidence")
+        #else
+        lines.append("Target: iOS device build")
+        #endif
+        let clock = ContinuousClock(); let start = clock.now
+        let memory = CoreAIProcessFootprintSampler()
+        var completed = 0; var opens = 0; var binds = 0
+        var backendTimes: [Double] = []
+        do {
+            guard let resources = Bundle.main.resourceURL else { throw ShardError.missingPreparedBundle }
+            let models = resources.appendingPathComponent("ModelCandidates/denoiser-sharded")
+            let fixture = resources.appendingPathComponent("ModelCandidates/denoiser-pair-reuse")
+            let contract = try readShardedContract(folder: models)
+            guard let stages = contract.stages else { throw ShardError.manifestMismatch("sharded.stages missing") }
+            let pair = stages[1]
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let ref = try decoder.decode(PairReuseContract.self, from: Data(contentsOf: fixture.appendingPathComponent("reference.json")))
+            try checkManifest(ref.schemaVersion, 1, "reuse.schema_version")
+            try checkManifest(ref.profile, "denoiser-pair-reuse", "reuse.profile")
+            try checkManifest(ref.assetFile, pair.assetFile, "reuse.asset_file")
+            try checkManifest(ref.functionName, "main", "reuse.function_name")
+            try checkManifest(ref.outputName, "hidden_out", "reuse.output_name")
+            try checkManifest(ref.layerIndices, [0,1], "reuse.layer_indices")
+            try checkManifest(ref.inputShapes, pair.inputShapes, "reuse.input_shapes")
+            try checkManifest(ref.outputShape, [1,13,2048], "reuse.output_shape")
+            try checkManifest(ref.runCount, 4, "reuse.run_count")
+            try checkManifest(ref.scalarType, "float32", "reuse.scalar_type")
+            try checkManifest(ref.byteOrder, "little", "reuse.byte_order")
+            try checkManifest(ref.weightStorageDtype, "float16", "reuse.weight_storage_dtype")
+            try checkManifest(ref.computeDtype, "float32", "reuse.compute_dtype")
+            try checkManifest(ref.checkpointDigest, contract.checkpoint.digest, "reuse.checkpoint_digest")
+            try checkManifest(ref.checkpointFullSha256Verified, true, "reuse.checkpoint_full_sha256_verified")
+            try checkManifest(ref.expectedFile, "hidden-reference.f32le", "reuse.expected_file")
+            try checkManifest(ref.originalFp32ReferenceFile, "hidden-fp32-reference.f32le", "reuse.original_fp32_reference_file")
+            try checkManifest(ref.absoluteTolerance, contract.absoluteTolerance, "reuse.absolute_tolerance")
+            try checkManifest(ref.relativeTolerance, contract.relativeTolerance, "reuse.relative_tolerance")
+            try checkManifest(ref.relativeRmseTolerance, contract.relativeRmseTolerance, "reuse.relative_rmse_tolerance")
+            var filenames = Set(ref.inputShapes.keys.map { "\($0).f32le" })
+            filenames.formUnion([ref.expectedFile, ref.originalFp32ReferenceFile])
+            try checkManifest(Set(ref.artifactSha256.keys), filenames, "reuse.artifact_sha256.keys")
+            var prepared: [String: NDArray] = [:]
+            for (name, shape) in ref.inputShapes {
+                let values = try readFloats(folder: fixture, name: "\(name).f32le", count: shape.reduce(1,*), hashes: ref.artifactSha256)
+                prepared[name] = NDArray(scalars: values, shape: shape)
+            }
+            let inputs = prepared
+            let count = ref.outputShape.reduce(1,*)
+            let expected = try readFloats(folder: fixture, name: ref.expectedFile, count: count, hashes: ref.artifactSha256)
+            let original = try readFloats(folder: fixture, name: ref.originalFp32ReferenceFile, count: count, hashes: ref.artifactSha256)
+            lines.append("SHA-256: VERIFIED eight fixed input tensors and both host output references; checkpoint contract matched")
+            guard let footprint = CoreAIProcessFootprintSampler.currentFootprint() else { throw ShardError.footprintUnavailable }
+            guard footprint < 2000 * 1048576 else { throw ShardError.memoryBudgetReached }
+            lines.append("Phase: opening one pair model and binding its stateless function once")
+            saveProgress(lines, profile: .denoiser)
+            await progress(lines.joined(separator: "\n"))
+            let openStart = clock.now
+            let probe = try await CoreAIModelProbe(contentsOf: models.appendingPathComponent(ref.assetFile), options: .cpuOnly)
+            opens += 1
+            let openMs = ms(openStart.duration(to: clock.now))
+            var setup = CoreAIModelProbe.StatelessTimings()
+            let function = try probe.loadStatelessFunction(functionNamed: ref.functionName, inputs: inputs, timings: &setup)
+            binds += 1
+            // Explicit lifetime extension keeps BOTH handles through every run.
+            // It does not assert that the backend pins all weights in RAM.
+            defer {
+                withExtendedLifetime(function) {}
+                withExtendedLifetime(probe) {}
+            }
+            lines.append("Setup: model-open ms \(openMs); function-bind ms \(setup.functionBindMs); input-validation ms \(setup.inputValidationMs)")
+            for iteration in 1...4 {
+                guard let footprint = CoreAIProcessFootprintSampler.currentFootprint() else { throw ShardError.footprintUnavailable }
+                lines.append("Before retained run \(iteration)/4 footprint MiB: \(Double(footprint)/1048576)")
+                guard footprint < 2000 * 1048576 else { throw ShardError.memoryBudgetReached }
+                let phase = "Phase: retained run \(iteration)/4, same model/function and fixed inputs"
+                saveProgress(lines + [phase], profile: .denoiser)
+                await progress((lines + [phase]).joined(separator: "\n"))
+                let result = try await runRetainedPair(function: function, inputs: inputs, shape: ref.outputShape)
+                lines.append("Retained run \(iteration)/4: backend-await ms \(result.backendMs); output-readback+checks ms \(result.copyMs)")
+                let stats = try compare(actual: result.values, expected: expected, contract: contract)
+                let baseline = try compare(actual: result.values, expected: original, contract: contract)
+                lines.append("Retained run \(iteration) storage16 reference: max abs error \(stats.maxError); RMSE \(stats.rmse); normalized RMSE \(stats.normalizedRmse); \(stats.passed ? "PASS" : "NOT PASSED")")
+                lines.append("Retained run \(iteration) original FP32 reference: max abs error \(baseline.maxError); RMSE \(baseline.rmse); normalized RMSE \(baseline.normalizedRmse); \(baseline.passed ? "PASS" : "NOT PASSED")")
+                guard stats.passed, baseline.passed else { throw ProbeError.numericalParityFailed }
+                completed += 1; backendTimes.append(result.backendMs)
+                saveProgress(lines, profile: .denoiser)
+                await progress(lines.joined(separator: "\n"))
+                await Task.yield()
+            }
+            let repeatedMean = backendTimes.dropFirst().reduce(0,+) / 3
+            lines.append("First retained backend-await ms: \(backendTimes[0])")
+            lines.append("Repeated retained backend-await mean ms (runs 2-4): \(repeatedMean)")
+            if repeatedMean > 0 {
+                lines.append("First/repeated backend-await ratio: \(backendTimes[0] / repeatedMean); component-only, NOT a full-loop speedup")
+            }
+            lines.append("Retained pair dual parity: PASS (4/4 calls; same model AND function)")
+        } catch {
+            lines.append("Retained pair dual parity: NOT PASSED")
+            lines.append("Error: \(String(reflecting: error))")
+        }
+        let usage = memory.finish()
+        if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
+        lines.append("Successful model opens: \(opens); function binds: \(binds); completed parity calls: \(completed)/4; total probe ms: \(ms(start.duration(to: clock.now)))")
+        lines.append("Memory: sampled app process, NOT total model/device RAM or exact peak; native residency and cold-cache state unmeasured")
+        saveProgress(lines, profile: .denoiser)
+        return lines.joined(separator: "\n")
+    }
+
+    private static func runRetainedPair(function: InferenceFunction, inputs: [String: NDArray], shape: [Int]) async throws
+        -> (values: [Float], backendMs: Double, copyMs: Double) {
+        let clock = ContinuousClock(); let start = clock.now
+        var outputs = try await function.run(inputs: inputs)
+        let copyStart = clock.now
+        guard let value = outputs.remove("hidden_out"), let tensor = value.ndArray else { throw ProbeError.invalidOutputTensor }
+        let values = try copiedValues(tensor, shape: shape)
+        return (values, ms(start.duration(to: copyStart)), ms(copyStart.duration(to: clock.now)))
+    }
+
     static func runDenoiserLoop(profilePhases: Bool = false, progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",
@@ -562,27 +714,7 @@ enum CoreAIDecoderProbe {
         for (name, shape) in stage.outputShapes {
             guard let value = outputs.remove(name), let tensor = value.ndArray, tensor.scalarType == .float32,
                   tensor.shape == shape, tensor.interleaveLayout == nil else { throw ProbeError.invalidOutputTensor }
-            let view = tensor.view(as: Float.self)
-            let contiguous = view.isContiguous
-            let count = shape.reduce(1,*)
-            let values = try view.withUnsafePointer { pointer, _, strides in
-                if contiguous { return Array(UnsafeBufferPointer(start: pointer, count: count)) }
-                guard strides.count == shape.count else { throw ProbeError.invalidOutputTensor }
-                for axis in 0..<shape.count {
-                    guard strides[axis] >= 0 else { throw ProbeError.invalidOutputTensor }
-                }
-                var copied: [Float] = []; copied.reserveCapacity(count)
-                for index in 0..<count {
-                    var remaining = index; var offset = 0
-                    for axis in (0..<shape.count).reversed() {
-                        offset += (remaining % shape[axis]) * strides[axis]
-                        remaining /= shape[axis]
-                    }
-                    copied.append(pointer[offset])
-                }
-                return copied
-            }
-            guard values.allSatisfy({ $0.isFinite }) else { throw ProbeError.invalidOutputTensor }
+            let values = try copiedValues(tensor, shape: shape)
             detached[name] = NDArray(scalars: values, shape: shape)
         }
         let end = clock.now
@@ -593,6 +725,34 @@ enum CoreAIDecoderProbe {
                                  inputValidationMs: timings.inputValidationMs, backendAwaitMs: timings.backendAwaitMs,
                                  outputCopyMs: copyMs, runOtherMs: otherMs)
         return (detached, loadMs, runMs, phases)
+    }
+
+    private static func copiedValues(_ tensor: NDArray, shape: [Int]) throws -> [Float] {
+        guard tensor.scalarType == .float32, tensor.shape == shape, tensor.interleaveLayout == nil else {
+            throw ProbeError.invalidOutputTensor
+        }
+        let view = tensor.view(as: Float.self)
+        let contiguous = view.isContiguous
+        let count = shape.reduce(1,*)
+        let values = try view.withUnsafePointer { pointer, _, strides in
+            if contiguous { return Array(UnsafeBufferPointer(start: pointer, count: count)) }
+            guard strides.count == shape.count else { throw ProbeError.invalidOutputTensor }
+            for axis in 0..<shape.count {
+                guard strides[axis] >= 0 else { throw ProbeError.invalidOutputTensor }
+            }
+            var copied: [Float] = []; copied.reserveCapacity(count)
+            for index in 0..<count {
+                var remaining = index; var offset = 0
+                for axis in (0..<shape.count).reversed() {
+                    offset += (remaining % shape[axis]) * strides[axis]
+                    remaining /= shape[axis]
+                }
+                copied.append(pointer[offset])
+            }
+            return copied
+        }
+        guard values.allSatisfy({ $0.isFinite }) else { throw ProbeError.invalidOutputTensor }
+        return values
     }
 
     static func savedDenoiserReport() -> String? {
