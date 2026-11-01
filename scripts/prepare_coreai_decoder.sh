@@ -9,6 +9,12 @@ if [ "$(uname -s)" != Darwin ] || [ "$(uname -m)" != arm64 ]; then
     exit 2
 fi
 environment_dir="$repo_root/.runtime-cache/coreai-decoder-venv"
+# uv's managed Python and cache defaults may point at non-writable ~/.local or
+# ~/.cache directories. Scope all uv writes to this ignored checkout-local tree.
+export UV_PYTHON_INSTALL_DIR="$repo_root/.runtime-cache/uv/python"
+export UV_CACHE_DIR="$repo_root/.runtime-cache/uv/cache"
+export UV_PYTHON_BIN_DIR="$repo_root/.runtime-cache/uv/bin"
+mkdir -p "$UV_PYTHON_INSTALL_DIR" "$UV_CACHE_DIR" "$UV_PYTHON_BIN_DIR"
 if command -v uv >/dev/null 2>&1; then
     if [ ! -x "$environment_dir/bin/python" ]; then
         uv venv --python 3.12 "$environment_dir"

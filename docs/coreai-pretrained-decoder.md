@@ -18,6 +18,10 @@ Skrip menyiapkan environment terpisah di `.runtime-cache`, memakai Python 3.12
 melalui `uv` jika tersedia. Tanpa uv, skrip mencari Python 3.11–3.13 yang sudah
 terpasang. Jika belum tersedia, pasang Python 3.12 atau uv lalu jalankan lagi.
 Python 3.14 belum dipilih karena wheel Torch 2.8 yang dipin memakai versi sebelumnya.
+Managed Python, cache dan direktori executable uv juga diarahkan ke
+`.runtime-cache/uv/` untuk menghindari permission error pada `~/.local/share/uv`
+atau cache global. Pengaturan ini hanya berlaku pada proses persiapan; tidak
+memerlukan sudo atau perubahan ownership direktori home.
 
 Skrip akan:
 
