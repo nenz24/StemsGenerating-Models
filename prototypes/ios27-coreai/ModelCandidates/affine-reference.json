@@ -1,0 +1,37 @@
+{
+  "asset_file": "affine.mlpackage",
+  "function_name": "main",
+  "input_name": "x",
+  "output_name": "y",
+  "input_shape": [
+    1,
+    4
+  ],
+  "output_shape": [
+    1,
+    4
+  ],
+  "input_values": [
+    0.0,
+    0.25,
+    -0.5,
+    1.0
+  ],
+  "expected_values": [
+    0.25,
+    0.75,
+    -0.75,
+    2.25
+  ],
+  "absolute_tolerance": 1e-06,
+  "exporter": "coremltools 9.0",
+  "candidate_format": "Core ML ML Program package; CoreAI compatibility unverified",
+  "requested_runtime": "CoreAI",
+  "coreai_model_loaded": false,
+  "coreai_prediction_executed": false,
+  "artifact_sha256": {
+    "affine.mlpackage/Data/com.apple.CoreML/model.mlmodel": "e4607d13094863680b9070de6b04f34c711a333af065d98cf7637fc30bff70c7",
+    "affine.mlpackage/Data/com.apple.CoreML/weights/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "affine.mlpackage/Manifest.json": "5158f14771943aebabce8ccd022e77e8e8f1cdcf6fe32a18b546903c32e419d2"
+  }
+}

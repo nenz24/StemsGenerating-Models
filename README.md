@@ -27,8 +27,9 @@ piano menghasilkan gitar+bass+drum; rekaman gitar menghasilkan piano+bass+drum.
 Rekaman asli tetap disimpan. [Kebutuhan dan rancangan on-device](docs/iphone-coreai.md)
 memisahkan target produk dari eksperimen CUDA. **[Proyek Xcode CoreAIProbe](prototypes/ios27-coreai/README.md)**
 siap dibuka setelah pull untuk uji runtime/tensor pada iPhone 17 Pro / iOS 27.
-API runtime sudah diidentifikasi dari interface SDK pengguna; build Apple,
-eksekusi perangkat, ekspor model dan generasi audio CoreAI belum diverifikasi.
+Pengguna sudah menjalankan [probe tensor pada iPhone](reviews/coreai-iphone17pro-device-probe/README.md):
+Float32 round-trip **PASS**, iOS 27.0.1, arsitektur CoreAI `h18p`.
+Ekspor/pemuatan model, inference model dan generasi audio CoreAI belum diverifikasi.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:

@@ -1,0 +1,11 @@
+Target: iOS device build
+Device family: iPhone
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Reported available compute kinds: cpu, gpu, neuralEngine
+NDArray Float32 round-trip: PASS
+Shape: [1, 4]
+Values: [0.0, 0.25, -0.5, 1.0]
+Model loaded: NO
+Model inference executed: NO
+Accelerator used by a model: NOT MEASURED

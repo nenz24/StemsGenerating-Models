@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "evidence_source": "User supplied the device probe text in chat after running the Xcode project",
+  "expected_project_commit": "6967da18c49eeca55daac5bc90b9b547c6420496",
+  "actual_source_commit_reported": null,
+  "device_model_previously_stated_by_user": "iPhone 17 Pro",
+  "reported_device_family": "iPhone",
+  "reported_target": "iOS device build",
+  "os_version": "27.0.1",
+  "os_build": "24A446",
+  "coreai_architecture_string": "h18p",
+  "reported_available_compute_kinds": ["cpu", "gpu", "neuralEngine"],
+  "tensor_probe": {
+    "scalar_type": "float32",
+    "shape": [1, 4],
+    "values": [0.0, 0.25, -0.5, 1.0],
+    "round_trip_passed": true
+  },
+  "model_loaded": false,
+  "model_inference_executed": false,
+  "actual_model_accelerator_measured": false,
+  "export_format_verified": false,
+  "audio_generation_verified": false,
+  "performance_benchmark_available": false,
+  "scope": "User-reported physical-device app/tensor execution only; no independent reproduction in Linux"
+}

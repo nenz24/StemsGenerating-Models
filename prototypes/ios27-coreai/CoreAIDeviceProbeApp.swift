@@ -1,5 +1,6 @@
 // API declarations checked against the user's Xcode 27 SDK interfaces.
-// Not yet compiled or executed on Apple hardware in this Linux workspace.
+// The user reported a successful tensor probe on iOS 27.0.1; see reviews/.
+// The numerical model compatibility test still needs device verification.
 import CoreAI
 import SwiftUI
 import UIKit
@@ -8,6 +9,7 @@ import UIKit
 @MainActor
 struct CoreAIDeviceProbeApp: App {
     @State private var report = "Belum dijalankan."
+    @State private var runningModel = false
 
     var body: some Scene {
         WindowGroup {
@@ -22,6 +24,16 @@ struct CoreAIDeviceProbeApp: App {
                                 report = "Pemeriksaan gagal: \(error)"
                             }
                         }
+                        .disabled(runningModel)
+                        Button(runningModel ? "Memeriksa model…" : "Uji model numerik") {
+                            runningModel = true
+                            report = "Menguji aset kandidat melalui CoreAI…"
+                            Task {
+                                report = await CoreAINumericalProbe.run()
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
                         Text(report)
                             .font(.system(.footnote, design: .monospaced))
                             .textSelection(.enabled)

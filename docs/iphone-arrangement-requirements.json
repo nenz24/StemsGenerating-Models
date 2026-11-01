@@ -27,16 +27,17 @@
     "coreai_import_evidence": {
       "source": "User executed Swift type-check on the Mac and reported CoreAI import: OK",
       "target": "arm64-apple-ios27.0",
-      "scope": "Module import/type-check only; custom model loading and device execution remain unverified"
+      "scope": "This import evidence establishes module type-check only; see the later device report for app/tensor execution"
     },
-    "physical_device_execution_verified": false,
+    "physical_device_execution_verified": true,
+    "physical_device_execution_scope": "User-reported app startup, compute-availability query and Float32 NDArray round-trip; model inference not executed",
     "public_sdk_interface_review": {
       "archive_name": "coreai-api.apDMX4.zip",
       "archive_sha256": "7c8d1c8cde67d4f062032c0704fc0991d958ceb17e0952defd2d7c4daa5cb597",
       "public_interface_target": "arm64e-apple-ios27.0",
       "reexported_module": "CoreAIDelegates",
       "delegate_interface_supplied": true,
-      "status": "six_public_interfaces_reviewed_runtime_api_identified_export_and_device_execution_unverified",
+      "status": "six_public_interfaces_reviewed_runtime_api_identified_model_export_and_model_execution_unverified",
       "delegate_search_report": {
         "archive_name": "coreai-delegates.ig8KPy.zip",
         "archive_sha256": "c23ebc1adec7ff312b0c5e8357a5e0e8cb921df5d16b20812e750816cab70fd5",
@@ -87,8 +88,23 @@
     "xcode_project": "prototypes/ios27-coreai/CoreAIProbe.xcodeproj",
     "shared_scheme": "CoreAIProbe",
     "signing_team_selection": "user selects the Apple signing Team in Xcode",
-    "apple_compilation_verified": false,
-    "physical_device_execution_verified": false,
+    "apple_compilation_verified": true,
+    "apple_compilation_evidence": "User reported successful execution of the device probe app; not independently compiled in this Linux workspace",
+    "physical_device_execution_verified": true,
+    "device_execution_report": "reviews/coreai-iphone17pro-device-probe/report.json",
+    "device_execution_scope": "App and tensor probe only; model loading/inference and accelerator placement not verified",
+    "numerical_compatibility_candidate": {
+      "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
+      "exporter": "coremltools 9.0",
+      "format": "Legacy ML Program package; not a verified CoreAI-native export path",
+      "runtime_under_test": "CoreAI",
+      "function": "y = 2*x + 0.25",
+      "requested_compute_policy": "cpuOnly",
+      "artifact_created": true,
+      "coreai_acceptance_verified": false,
+      "model_inference_verified": false,
+      "updated_probe_apple_build_verified": false
+    },
     "valid_exported_model_asset_available": false,
     "checkpoint_conversion_implemented": false
   }

@@ -4,7 +4,8 @@
 
 - Target platform: iPhone dengan iOS 27, memakai **CoreAI** sesuai penamaan
   pengguna. Jangan menggantinya menjadi Core ML atau mengasumsikan API-nya sama.
-- Perangkat uji awal: **iPhone 17 Pro**, deployment target **iOS 27.0**.
+- Perangkat uji awal: **iPhone 17 Pro**, deployment target **iOS 27.0**;
+  hasil probe pertama melaporkan OS **27.0.1 build 24A446**.
 - Pengguna melaporkan **Xcode 27.0 build 27A266a**, dengan SDK iphoneos27.0
   dan iphonesimulator27.0. Ini bukti ketersediaan toolchain dari terminal Mac
   pengguna, belum bukti bahwa modul CoreAI atau model audio sudah dapat dijalankan.
@@ -42,8 +43,11 @@ tersimpan adalah referensi kualitas, bukan bukti bahwa model berjalan di iPhone.
 Source Swift untuk probe runtime/tensor dan pemanggil model lokal kini tersedia
 di [prototypes/ios27-coreai](../prototypes/ios27-coreai/README.md), beserta proyek
 `CoreAIProbe.xcodeproj` dan shared scheme agar dapat langsung dibuka di Xcode.
-Source belum dikompilasi dengan SDK Apple atau dijalankan pada iPhone. Belum ada
-model hasil konversi, training mobile atau benchmark audio.
+Pengguna sudah melaporkan aplikasi berhasil berjalan di iPhone, arsitektur CoreAI
+`h18p`, dengan **Float32 NDArray round-trip PASS**. CPU/GPU/Neural Engine
+dilaporkan tersedia. Bukti dan batasnya ada pada [laporan perangkat](../reviews/coreai-iphone17pro-device-probe/README.md).
+Belum ada model dimuat/dijalankan, model hasil konversi, training mobile atau
+benchmark audio. Hasil ini tidak membuktikan penggunaan akselerator oleh model.
 
 Impor modul CoreAI pada target iOS 27 sudah lolos di Mac pengguna. API pemuatan
 aset dan eksekusi tensor telah diidentifikasi dari interface publik. Kontrak model

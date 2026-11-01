@@ -2,8 +2,12 @@
 
 Initial target: iPhone 17 Pro, iOS 27.0, Xcode 27.0 / 27A266a. These Swift
 sources use APIs declared in the six public interfaces supplied by the user.
-They have **not been compiled, linked or run on Apple hardware** here: this
-workspace is Linux and has no Apple SDK. No stub CoreAI implementation is used.
+The user has built and run the device probe on an iPhone with iOS 27.0.1:
+**Float32 NDArray round-trip PASS**, CoreAI architecture `h18p`, reported compute
+kinds CPU/GPU/Neural Engine. See the [device report](../../reviews/coreai-iphone17pro-device-probe/README.md).
+No model was loaded or run. This workspace is Linux with no Apple SDK, so that
+run is user-supplied evidence, not an independent reproduction here.
+No stub CoreAI implementation is used.
 The folder includes a native Xcode project and shared `CoreAIProbe` scheme.
 
 ## Run the device probe
@@ -46,9 +50,46 @@ The caller uses `SpecializationOptions.default` unless a preference is supplied;
 
 This caller is not an exporter, model or audio generator. An API such as
 `AIModel(contentsOf:options:)` does not imply safetensors or PyTorch files are
-accepted. No supported asset extension or ACE-Step conversion route has been
+accepted. No ACE-Step conversion route or CoreAI-native export format has been
 established. The supplied CoreAICompiler and CoreAICommon public interfaces
 contain imports but no compiler/graph-construction declarations.
+
+## Uji model numerik berikutnya
+
+Setelah pull, buka project yang sama, **Run**, lalu tekan **Uji model numerik**.
+Bagikan seluruh laporan, termasuk jika gagal memuat model atau compile.
+
+Model kandidat `ModelCandidates/affine.mlpackage` menghitung `y = 2*x + 0.25`:
+input `[0, 0.25, -0.5, 1]` menghasilkan referensi `[0.25, 0.75, -0.75, 2.25]`.
+Paket dan referensi berukuran sekitar 2 KB. Kandidat diekspor dengan
+**Core ML Tools 9.0** sebagai ML Program dengan minimum target iOS 18. Ini
+**uji kompatibilitas format lama**, bukan klaim bahwa format itu sudah didukung
+CoreAI atau jalur konversi ACE-Step sudah bekerja. Aplikasi tetap `import CoreAI`
+dan memanggil `AIModel`/`InferenceFunction.run`; tidak ada runtime fallback.
+
+Folder kandidat disalin sebagai resource biasa. Xcode tidak diminta melakukan
+Core ML code generation atau membuat wrapper `MLModel`. Pemeriksaan sumber
+`AIModelAsset.isValid` dicatat, lalu loader CoreAI diberi kesempatan menerima atau
+menolak sumber tersebut. Loader tidak diganti jika gagal. Pemanggil model generik
+tetap memvalidasi aset secara default; hanya eksperimen kompatibilitas ini yang
+meneruskan sumber langsung ke loader setelah mencatat hasil validasi.
+
+Uji meminta kebijakan `.cpuOnly`, memeriksa parity dalam tiga run, dan mencatat
+waktu pemuatan/specialization terpisah dari run pertama serta dua run hangat.
+Waktu run termasuk membaca output. Ini bukan pengukuran peak RAM atau bukti
+penempatan akselerator; model kecil ini juga tidak mewakili biaya generasi musik.
+Numerical probe baru belum dikompilasi/dijalankan dengan SDK Apple di workspace
+Linux ini. Hasil tensor awal pengguna hanya berlaku pada versi probe sebelumnya.
+
+Developer dapat mengekspor ulang ke **folder baru** dengan:
+
+```bash
+python3 -m venv /tmp/coreai-export-env
+/tmp/coreai-export-env/bin/python -m pip install 'coremltools==9.0' 'numpy<2.3'
+/tmp/coreai-export-env/bin/python scripts/export_coreai_candidate.py --out /tmp/coreai-candidate
+```
+
+Pengguna aplikasi tidak perlu memasang exporter atau mengunduh model.
 
 Before audio tests, establish the official export tool and create a tiny known
 model asset with reference inputs/outputs. Load it on device, run the function,

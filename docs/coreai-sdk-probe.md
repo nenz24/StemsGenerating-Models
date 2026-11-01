@@ -146,7 +146,9 @@ NDArray round-trip/compute-availability check and a separate local-model caller.
 The model caller requires a valid asset and
 explicit function/input contracts. No checkpoint or asset was generated.
 The Swift source has not been compiled here: no Apple SDK/Swift compiler is
-installed in this Linux workspace. No mock runtime is used as evidence.
+installed in this Linux workspace. The user subsequently reported successful
+device-app execution and tensor round-trip; see the device report below.
+No mock runtime is used as evidence.
 
 First run the device probe in Xcode on the iPhone. In parallel, establish the
 official exporter and create a tiny known numerical model with reference
@@ -154,3 +156,39 @@ inputs/outputs. Then load/run that asset and measure memory/latency before a
 short one-instrument audio test. The CUDA/GarageBand mix remains the quality
 reference. Distribution of the project does not establish successful Apple
 compilation, signing, physical-device execution or model conversion.
+
+## User-reported first device result
+
+The [preserved device report](../reviews/coreai-iphone17pro-device-probe/README.md)
+records a successful Float32 [1, 4] NDArray read-back on an iPhone with OS
+27.0.1 (24A446), CoreAI architecture string `h18p`. Available compute kinds
+are reported as CPU/GPU/Neural Engine. This advances the app/tensor gate from
+source inspection to user-reported physical-device execution. No model is
+loaded or run, and accelerator placement, model export compatibility, audio
+quality, memory, inference latency and thermals remain unverified.
+
+## Next numerical compatibility candidate
+
+`ModelCandidates/affine.mlpackage` and its JSON reference are a tiny ML Program
+package produced by Core ML Tools 9.0, not a claimed CoreAI-native export.
+The graph is `y = 2*x + 0.25`, Float32 shape [1, 4], function `main`, input `x`,
+output `y`. Inline constants mean no trained weights; a tracked empty marker
+preserves the weights directory referenced by the package manifest after pull.
+The reference records every package file's SHA-256. No Apple prediction was
+performed in Linux. Tests reopen the saved package without model loading and
+inspect its serialized constants, wiring, types and reference arithmetic.
+
+This is a bounded compatibility experiment: the new button reports source asset
+validation and asks CoreAI's loader to accept or reject the source. All model
+calls use CoreAI. The SDK umbrella is still the only linked AI framework, and
+the folder resource is copied raw to avoid generated Core ML wrappers. No
+alternative runtime is called on failure. Generic callers validate assets by
+default; the explicit compatibility experiment delegates source acceptance to
+the loader even if the asset validator reports false.
+
+CoreAI acceptance, the updated Swift build and numerical inference remain
+unverified until the user runs the new button. A tiny numerical parity pass
+would establish only that particular model/format path, not ACE-Step operator
+coverage, music quality, Neural Engine placement or production performance.
+The first run and two warmed runs use `.cpuOnly` and include output read-back;
+model load/specialization timing is recorded separately.
