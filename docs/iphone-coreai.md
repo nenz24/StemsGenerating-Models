@@ -12,7 +12,8 @@
 - Pengguna kemudian berhasil menjalankan type-check `import CoreAI` untuk
   `arm64-apple-ios27.0` dan melaporkan `CoreAI import: OK`. Impor modul pada
   target perangkat sudah dikonfirmasi melalui output pengguna; pemuatan model
-  audio kustom, konversi checkpoint dan eksekusi iPhone belum diuji.
+  audio kustom dan konversi checkpoint belum diuji. Bukti perangkat berikutnya
+  dicatat terpisah di bawah.
 - ZIP interface SDK yang dikirim pengguna memperlihatkan bahwa `CoreAI`
   mengekspor ulang `CoreAIDelegates`.
 - Pemindaian compiler berikutnya berhasil dan menemukan `CoreAIDelegates`,
@@ -23,7 +24,8 @@
   `InferenceFunction.run(inputs:)` dan `NDArray` tersedia sebagai deklarasi publik.
   SDK mendeklarasikan preferensi CPU/GPU/Neural Engine dan daftar compute kind
   yang tersedia. Penempatan model pada akselerator tertentu belum diuji.
-  Format aset, tool export dan kompatibilitas ACE-Step masih belum terverifikasi.
+  Format native `.aimodel` dan exporter coreai-torch kemudian diverifikasi untuk
+  model numerik kecil; kompatibilitas ACE-Step tetap belum terverifikasi.
 - Analisis, generasi audio pengiring, rendering dan mixing berjalan di perangkat.
   Tidak ada backend CUDA/server pada alur inferensi aplikasi final.
 - Rekaman asli dipertahankan sebagai track sumber. Generate instrumen lain yang
@@ -46,14 +48,19 @@ di [prototypes/ios27-coreai](../prototypes/ios27-coreai/README.md), beserta proy
 Pengguna sudah melaporkan aplikasi berhasil berjalan di iPhone, arsitektur CoreAI
 `h18p`, dengan **Float32 NDArray round-trip PASS**. CPU/GPU/Neural Engine
 dilaporkan tersedia. Bukti dan batasnya ada pada [laporan perangkat](../reviews/coreai-iphone17pro-device-probe/README.md).
-Belum ada model dimuat/dijalankan, model hasil konversi, training mobile atau
-benchmark audio. Hasil ini tidak membuktikan penggunaan akselerator oleh model.
+Model numerik native kemudian berhasil divalidasi, dimuat dan dijalankan dalam
+3 run dengan error absolut 0. [Laporan inference](../reviews/coreai-iphone17pro-native-affine/README.md)
+mencatat pemuatan sekitar 300 ms, run pertama 117 ms dan dua run hangat rata-rata
+0,770 ms. Ini khusus model empat elemen, bukan estimasi waktu generasi audio.
+Training mobile, konversi ACE-Step, benchmark audio dan penempatan akselerator
+masih belum terverifikasi.
 
 Impor modul CoreAI pada target iOS 27 sudah lolos di Mac pengguna. API pemuatan
 aset dan eksekusi tensor telah diidentifikasi dari interface publik. Kontrak model
 audio kustom, format export, operator serta performa/precision pada akselerator
 perangkat masih perlu diuji. Interface CoreAICompiler yang dikirim tidak memiliki
-fungsi compiler/export publik; jalur tooling export resmi perlu ditetapkan.
+fungsi compiler/export publik; jalur resmi sekarang ditetapkan melalui
+coreai-torch dan coreai-build pada dokumentasi Apple, bukan dari interface itu.
 CoreAI belum terbukti dapat langsung memuat checkpoint ACE-Step. Jika kemampuan
 yang diperlukan tidak tersedia, laporkan blocker; jangan mengganti runtime diam-diam.
 
@@ -62,7 +69,8 @@ specialization, sebelum inference. Setelah perubahan jaringan, dokumentasi resmi
 dapat dibaca: format sumber adalah `.aimodel` dan hasil AOT `.aimodelc`, yang
 memperbaiki ejaan `.aimodels` sebelumnya. Ekspor native model numerik berhasil
 dengan coreai-torch 0.4.3. Lihat [jalur resmi](coreai-native-export.md); inference
-native pada iPhone masih menunggu uji.
+native model numerik pada iPhone kini dilaporkan lulus; tahap audio berikutnya
+memerlukan verifikasi komponen, operator, memori dan kualitas tersendiri.
 
 Pemeriksaan berikutnya tersedia pada `scripts/probe_coreai_sdk.sh`, dijalankan
 di Mac dengan Xcode. Probe melakukan type-check `import CoreAI` untuk target

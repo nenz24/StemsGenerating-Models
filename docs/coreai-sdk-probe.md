@@ -218,3 +218,14 @@ reproduction and exact validation scope. Export and PyTorch reference generation
 are verified; current Swift compilation and native inference on iPhone are not.
 An optional Linux in-package runtime smoke was terminated without a completed
 result; it supplies no model-inference or parity evidence.
+
+## Native affine inference confirmed by user device report
+
+The [native model report](../reviews/coreai-iphone17pro-native-affine/README.md)
+advances the tiny-model gate to PASS on iPhone/iOS 27.0.1/h18p. Asset validation
+is true, model load succeeds, and all three inference runs match exactly.
+Load/specialization is 299.960625 ms; first inference 117.172042 ms; two warm
+runs 0.817167 and 0.722708 ms. Cache state and actual hardware placement were
+not reported. This supersedes pending-device statements for this affine test,
+not for audio/ACE-Step. The export-time reference manifest remains an immutable
+record of the original export; subsequent device evidence is stored separately.

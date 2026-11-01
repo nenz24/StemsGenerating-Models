@@ -5,8 +5,10 @@ sources use APIs declared in the six public interfaces supplied by the user.
 The user has built and run the device probe on an iPhone with iOS 27.0.1:
 **Float32 NDArray round-trip PASS**, CoreAI architecture `h18p`, reported compute
 kinds CPU/GPU/Neural Engine. See the [device report](../../reviews/coreai-iphone17pro-device-probe/README.md).
-No model was loaded or run. This workspace is Linux with no Apple SDK, so that
-run is user-supplied evidence, not an independent reproduction here.
+The subsequent [native model report](../../reviews/coreai-iphone17pro-native-affine/README.md)
+confirms successful asset validation, loading and three exact affine inference
+runs. This workspace is Linux with no Apple SDK, so device runs are user-supplied
+evidence, not independent reproductions here.
 No stub CoreAI implementation is used.
 The folder includes a native Xcode project and shared `CoreAIProbe` scheme.
 
@@ -111,7 +113,9 @@ Source aplikasi menambahkan tombol **Uji model native**. Tombol itu memuat aset
 native melalui CoreAI dengan CPU-only, memeriksa nilai terhadap referensi dalam
 3 run, dan mencatat waktu pemuatan terpisah dari run pertama serta 2 run hangat.
 CPU-only adalah kebijakan yang diminta; penempatan akselerator tidak diukur.
-Versi Swift baru belum dikompilasi atau dijalankan di iPhone.
+Pengguna telah menjalankan versi ini pada iPhone: validasi aset true, model
+dimuat, 3 run parity PASS, error absolut 0. Rata-rata dua run hangat sekitar
+0.770 ms, khusus model numerik empat elemen ini.
 
 Prototype menyalin sumber portable menggunakan folder resource yang sudah ada
 untuk menguji pemuatan langsung. Ini belum merupakan integrasi build-time AOT.
@@ -119,7 +123,7 @@ Untuk integrasi Xcode standar/AOT, dokumentasi Apple mensyaratkan Metal Toolchai
 Lihat [jalur ekspor resmi dan cara reproduksi](../../docs/coreai-native-export.md).
 
 Paket legacy `.mlpackage` tetap disimpan sebagai arsip percobaan yang ditolak
-(`Missing hash file`), bukan sebagai input tombol baru. Inference model native,
+(`Missing hash file`), bukan sebagai input tombol baru. Inference model native kecil telah lulus;
 kecocokan operator ACE-Step dan kualitas musik masih belum terverifikasi.
 
 ## Optional command-line build on the Mac

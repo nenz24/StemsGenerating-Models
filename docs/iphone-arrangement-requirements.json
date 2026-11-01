@@ -41,7 +41,7 @@
       "scope": "This import evidence establishes module type-check only; see the later device report for app/tensor execution"
     },
     "physical_device_execution_verified": true,
-    "physical_device_execution_scope": "User-reported app startup, compute-availability query and Float32 NDArray round-trip; model inference not executed",
+    "physical_device_execution_scope": "User-reported app/tensor execution plus native affine model validation, load and three exact inference runs; hardware placement not measured",
     "public_sdk_interface_review": {
       "archive_name": "coreai-api.apDMX4.zip",
       "archive_sha256": "7c8d1c8cde67d4f062032c0704fc0991d958ceb17e0952defd2d7c4daa5cb597",
@@ -103,11 +103,11 @@
   },
   "unverified": {
     "coreai_sdk_custom_audio_model_support": "not_verified",
-    "model_import_format_and_operators": "not_verified",
-    "accelerator_and_precision_support": "Compute preferences and scalar types declared; per-model placement and execution unverified",
+    "model_import_format_and_operators": "Native .aimodel affine import verified on iPhone; ACE-Step/audio operator coverage unverified",
+    "accelerator_and_precision_support": "Float32 affine parity verified under requested CPU-only policy; actual placement and GPU/Neural Engine model execution unmeasured",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
-    "model_conversion_training_and_device_benchmarks": "not implemented"
+    "model_conversion_training_and_device_benchmarks": "Native affine export and device timings reported; ACE-Step conversion, training and audio benchmarks not implemented"
   },
   "local_prototype_status": {
     "source_directory": "prototypes/ios27-coreai",
@@ -119,8 +119,8 @@
     "apple_compilation_verified": true,
     "apple_compilation_evidence": "User reported successful execution of the device probe app; not independently compiled in this Linux workspace",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-device-probe/report.json",
-    "device_execution_scope": "App and tensor probe only; model loading/inference and accelerator placement not verified",
+    "device_execution_report": "reviews/coreai-iphone17pro-native-affine/report.json",
+    "device_execution_scope": "Native affine model validates/loads/runs and matches reference exactly in three runs; audio models and hardware placement unverified",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -137,7 +137,7 @@
       "legacy_probe_retired": true,
       "report": "reviews/coreai-iphone17pro-raw-candidate/report.json"
     },
-    "valid_exported_model_asset_available": false,
+    "valid_exported_model_asset_available": true,
     "checkpoint_conversion_implemented": false,
     "native_model_format_requirement": {
       "source_extension": ".aimodel",
@@ -149,9 +149,10 @@
       "exporter_core_version": "coreai-core 1.0.0b3",
       "native_asset_available": true,
       "native_export_executed": true,
-      "native_iphone_inference_verified": false
+      "native_iphone_inference_verified": true
     },
     "native_model_reference": "prototypes/ios27-coreai/ModelCandidates/affine-native-reference.json",
-    "current_native_probe_apple_compilation_verified": false
+    "current_native_probe_apple_compilation_verified": true,
+    "native_inference_report": "reviews/coreai-iphone17pro-native-affine/report.json"
   }
 }

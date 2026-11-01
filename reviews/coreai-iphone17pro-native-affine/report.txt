@@ -1,0 +1,19 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: y = 2*x + 0.25 (native .aimodel)
+Requested compute policy: cpuOnly
+Accelerator used by a model: NOT MEASURED
+Target: iOS device build
+Source asset validation: true
+Load/specialization ms: 299.960625
+Function names: ["main"]
+First inference ms: 117.172042
+Values: [0.25, 0.75, -0.75, 2.25]; max absolute error: 0.0
+Warm inference 1 ms: 0.817167
+Values: [0.25, 0.75, -0.75, 2.25]; max absolute error: 0.0
+Warm inference 2 ms: 0.722708
+Values: [0.25, 0.75, -0.75, 2.25]; max absolute error: 0.0
+Numerical parity: PASS (three runs)
+Model loaded: YES
+Model inference executed: YES

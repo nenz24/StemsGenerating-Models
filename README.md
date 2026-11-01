@@ -29,11 +29,13 @@ memisahkan target produk dari eksperimen CUDA. **[Proyek Xcode CoreAIProbe](prot
 siap dibuka setelah pull untuk uji runtime/tensor pada iPhone 17 Pro / iOS 27.
 Pengguna sudah menjalankan [probe tensor pada iPhone](reviews/coreai-iphone17pro-device-probe/README.md):
 Float32 round-trip **PASS**, iOS 27.0.1, arsitektur CoreAI `h18p`.
-Pemuatan/inference model dan generasi audio CoreAI pada iPhone belum diverifikasi.
+[Model native numerik juga lulus di iPhone](reviews/coreai-iphone17pro-native-affine/README.md):
+validasi aset true, model dimuat dan 3 inference tepat (error absolut 0).
+Generasi audio CoreAI dan penggunaan GPU/Neural Engine oleh model belum diuji.
 Uji `.mlpackage` ditolak saat pemuatan (`Missing hash file`); jalur berikutnya
 sudah diganti dengan export native `.aimodel` melalui `coreai-torch` resmi.
 Lihat [jalur native](docs/coreai-native-export.md). Ekspor dan referensi PyTorch
-sudah dibuat; inference model native pada iPhone masih belum diuji.
+sudah dibuat dan inference model numerik native pada iPhone sudah dilaporkan lulus.
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:

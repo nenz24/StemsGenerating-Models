@@ -53,8 +53,11 @@ The **Uji model native** button loads the bundled portable `.aimodel` through
 CoreAI, asks for CPU-only specialization, and compares three inference runs with
 the PyTorch reference. Existing folder-resource wiring copies the portable
 source for direct loading; this experiment does not claim build-time AOT.
-New Swift changes and model inference still need verification on the iPhone.
-The previous tensor-only pass is preserved and does not imply model success.
+The [user-reported native device run](../reviews/coreai-iphone17pro-native-affine/README.md)
+now confirms validation, loading and inference on iPhone: three outputs match
+exactly, maximum absolute error 0. Load/specialization was 299.960625 ms, first
+inference 117.172042 ms, and the two warm runs averaged 0.7699375 ms. These are
+probe timings for this tiny model, not an audio or accelerator benchmark.
 
 ## Normal Xcode integration and optional AOT
 
