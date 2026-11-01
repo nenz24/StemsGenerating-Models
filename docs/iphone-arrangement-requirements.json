@@ -3,7 +3,9 @@
   "status": "confirmed_product_requirements_with_proposed_design",
   "confirmed_requirements": {
     "device_family": "iPhone",
+    "initial_test_device": "iPhone 17 Pro",
     "ios_target": "27",
+    "initial_deployment_target": "27.0",
     "runtime_target": "CoreAI",
     "all_inference_on_device": true,
     "server_inference_allowed": false,
@@ -14,6 +16,53 @@
       "guitar": ["piano", "bass", "drums"]
     },
     "output": "original recording plus three separate synchronized accompaniment tracks"
+  },
+  "user_reported_toolchain": {
+    "xcode_version": "27.0",
+    "xcode_build": "27A266a",
+    "iphoneos_sdk": "27.0",
+    "iphonesimulator_sdk": "27.0",
+    "evidence": "User-supplied xcodebuild output; not executed in this Linux workspace.",
+    "coreai_module_import_verified": true,
+    "coreai_import_evidence": {
+      "source": "User executed Swift type-check on the Mac and reported CoreAI import: OK",
+      "target": "arm64-apple-ios27.0",
+      "scope": "Module import/type-check only; custom model loading and device execution remain unverified"
+    },
+    "physical_device_execution_verified": false,
+    "public_sdk_interface_review": {
+      "archive_name": "coreai-api.apDMX4.zip",
+      "archive_sha256": "7c8d1c8cde67d4f062032c0704fc0991d958ceb17e0952defd2d7c4daa5cb597",
+      "public_interface_target": "arm64e-apple-ios27.0",
+      "reexported_module": "CoreAIDelegates",
+      "delegate_interface_supplied": true,
+      "status": "six_public_interfaces_reviewed_runtime_api_identified_export_and_device_execution_unverified",
+      "delegate_search_report": {
+        "archive_name": "coreai-delegates.ig8KPy.zip",
+        "archive_sha256": "c23ebc1adec7ff312b0c5e8357a5e0e8cb921df5d16b20812e750816cab70fd5",
+        "module_locations_file_bytes": 0,
+        "interface_files_supplied": 0,
+        "scope": "Earlier SDK filename search captured no matches; superseded for location discovery by successful compiler scan"
+      },
+      "compiler_resolution_report": {
+        "archive_name": "coreai-resolution.LXF4vO.zip",
+        "archive_sha256": "8826a535d80f6779c4d10a304a367b27aa9f3f8ccbe3187587e5ca9adc18505f",
+        "dependency_scan_succeeded": true,
+        "compiler_log_bytes": 0,
+        "wrapper_location": "System/Library/Frameworks/CoreAI.framework",
+        "dependency_location": "System/Library/SubFrameworks",
+        "resolved_coreai_modules": ["CoreAI", "CoreAIDelegates", "CoreAIRuntime", "CoreAICompiler", "CoreAICommon", "CoreAIAsset"],
+        "scope": "This report established locations and dependency graph only; readable contents supplied in subsequent interface archive"
+      },
+      "complete_interface_capture": {
+        "archive_name": "coreai-interfaces.ZrS4iz.zip",
+        "archive_sha256": "f2cf8caff9103c089cbdfb10c7d7a9fc4d804eb20a16117bbc8f54c5e4476ff2",
+        "interface_count": 6,
+        "runtime_api_declarations_identified": ["AIModelAsset.isValid(at:)", "AIModel.init(contentsOf:options:)", "AIModel.loadFunction(named:)", "InferenceFunction.run(inputs:)", "NDArray.init(scalars:shape:)"],
+        "declared_compute_kinds": ["cpu", "gpu", "neuralEngine"],
+        "scope": "Public API source inspection only; export formats, actual accelerator placement and model/audio inference unverified"
+      }
+    }
   },
   "proposed_design_not_yet_implemented": {
     "source_role_selection": "user-selected",
@@ -26,9 +75,21 @@
   "unverified": {
     "coreai_sdk_custom_audio_model_support": "not_verified",
     "model_import_format_and_operators": "not_verified",
-    "accelerator_and_precision_support": "not_verified",
+    "accelerator_and_precision_support": "Compute preferences and scalar types declared; per-model placement and execution unverified",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
     "model_conversion_training_and_device_benchmarks": "not implemented"
+  },
+  "local_prototype_status": {
+    "source_directory": "prototypes/ios27-coreai",
+    "device_tensor_probe_prepared": true,
+    "local_model_caller_prepared": true,
+    "xcode_project": "prototypes/ios27-coreai/CoreAIProbe.xcodeproj",
+    "shared_scheme": "CoreAIProbe",
+    "signing_team_selection": "user selects the Apple signing Team in Xcode",
+    "apple_compilation_verified": false,
+    "physical_device_execution_verified": false,
+    "valid_exported_model_asset_available": false,
+    "checkpoint_conversion_implemented": false
   }
 }

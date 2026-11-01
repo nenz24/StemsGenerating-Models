@@ -20,3 +20,9 @@ __pycache__/
 
 # Repository-local managed Python, installer and model download caches
 .runtime-cache/
+
+# Xcode machine-local state and build products
+xcuserdata/
+*.xcuserstate
+DerivedData/
+/prototypes/ios27-coreai/build/

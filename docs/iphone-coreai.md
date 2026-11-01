@@ -4,6 +4,25 @@
 
 - Target platform: iPhone dengan iOS 27, memakai **CoreAI** sesuai penamaan
   pengguna. Jangan menggantinya menjadi Core ML atau mengasumsikan API-nya sama.
+- Perangkat uji awal: **iPhone 17 Pro**, deployment target **iOS 27.0**.
+- Pengguna melaporkan **Xcode 27.0 build 27A266a**, dengan SDK iphoneos27.0
+  dan iphonesimulator27.0. Ini bukti ketersediaan toolchain dari terminal Mac
+  pengguna, belum bukti bahwa modul CoreAI atau model audio sudah dapat dijalankan.
+- Pengguna kemudian berhasil menjalankan type-check `import CoreAI` untuk
+  `arm64-apple-ios27.0` dan melaporkan `CoreAI import: OK`. Impor modul pada
+  target perangkat sudah dikonfirmasi melalui output pengguna; pemuatan model
+  audio kustom, konversi checkpoint dan eksekusi iPhone belum diuji.
+- ZIP interface SDK yang dikirim pengguna memperlihatkan bahwa `CoreAI`
+  mengekspor ulang `CoreAIDelegates`.
+- Pemindaian compiler berikutnya berhasil dan menemukan `CoreAIDelegates`,
+  `CoreAIRuntime`, `CoreAICompiler`, `CoreAICommon` dan `CoreAIAsset` di
+  `System/Library/SubFrameworks`. Laporan lokasi ini menggantikan pencarian
+  sebelumnya yang kosong.
+- Keenam interface kemudian berhasil dikirim. API `AIModel(contentsOf:options:)`,
+  `InferenceFunction.run(inputs:)` dan `NDArray` tersedia sebagai deklarasi publik.
+  SDK mendeklarasikan preferensi CPU/GPU/Neural Engine dan daftar compute kind
+  yang tersedia. Penempatan model pada akselerator tertentu belum diuji.
+  Format aset, tool export dan kompatibilitas ACE-Step masih belum terverifikasi.
 - Analisis, generasi audio pengiring, rendering dan mixing berjalan di perangkat.
   Tidak ada backend CUDA/server pada alur inferensi aplikasi final.
 - Rekaman asli dipertahankan sebagai track sumber. Generate instrumen lain yang
@@ -20,15 +39,26 @@ adalah piano dan gitar; dukungan sumber bass/drum belum ditetapkan.
 
 Repository ini masih bridge eksperimen Python/CUDA. Baseline bass/drum yang
 tersimpan adalah referensi kualitas, bukan bukti bahwa model berjalan di iPhone.
-Belum ada aplikasi Swift, implementasi CoreAI, model hasil konversi, training
-model mobile, atau benchmark iPhone di repository ini.
+Source Swift untuk probe runtime/tensor dan pemanggil model lokal kini tersedia
+di [prototypes/ios27-coreai](../prototypes/ios27-coreai/README.md), beserta proyek
+`CoreAIProbe.xcodeproj` dan shared scheme agar dapat langsung dibuka di Xcode.
+Source belum dikompilasi dengan SDK Apple atau dijalankan pada iPhone. Belum ada
+model hasil konversi, training mobile atau benchmark audio.
 
-API SDK CoreAI iOS 27, dukungan model audio kustom, format impor/ekspor,
-operator, precision, serta target akselerator belum diverifikasi di workspace
-ini. Dokumen ini tidak mengarang nama kelas/API atau menyatakan bahwa CoreAI
-bisa langsung memuat checkpoint ACE-Step. Kelayakan desain model bergantung pada
-verifikasi kemampuan SDK tersebut. Jika kemampuan yang diperlukan tidak ada,
-laporkan blocker; jangan mengganti runtime diam-diam.
+Impor modul CoreAI pada target iOS 27 sudah lolos di Mac pengguna. API pemuatan
+aset dan eksekusi tensor telah diidentifikasi dari interface publik. Kontrak model
+audio kustom, format export, operator serta performa/precision pada akselerator
+perangkat masih perlu diuji. Interface CoreAICompiler yang dikirim tidak memiliki
+fungsi compiler/export publik; jalur tooling export resmi perlu ditetapkan.
+CoreAI belum terbukti dapat langsung memuat checkpoint ACE-Step. Jika kemampuan
+yang diperlukan tidak tersedia, laporkan blocker; jangan mengganti runtime diam-diam.
+
+Pemeriksaan berikutnya tersedia pada `scripts/probe_coreai_sdk.sh`, dijalankan
+di Mac dengan Xcode. Probe melakukan type-check `import CoreAI` untuk target
+arm64-apple-ios27.0 dan menyalin interface publik yang ditemukan ke ZIP laporan.
+Probe tidak memuat checkpoint, tidak menjalankan aplikasi di iPhone, dan tidak
+menyimpulkan dukungan model audio hanya dari keberhasilan import. Lihat
+[panduan probe SDK](coreai-sdk-probe.md).
 
 ## Rancangan yang diusulkan
 
