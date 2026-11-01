@@ -1,4 +1,4 @@
-"""One clean-electric-guitar probe using an existing pinned ACE-Step CUDA runtime."""
+"""One clean-electric-guitar context (10–90s) on a pinned ACE-Step CUDA runtime."""
 import argparse
 import importlib.util
 import json
@@ -20,7 +20,7 @@ PRESET = {
 
 def load_engine(root):
     single.attach(root)
-    # Notebook 18 carries the current engine for older cached source bridges.
+    # Guitar notebooks carry the current engine for older cached source bridges.
     # Load it only in this process; runtime source, weights and old runs stay intact.
     path = Path(__file__).with_name('guitar_run.py')
     if not path.is_file():
@@ -46,8 +46,8 @@ def package(output, success):
 
 
 def generate(root, source, output, *, start=0, duration=30, execute=False):
-    if not math.isfinite(duration) or not 10 <= duration <= 30:
-        raise ValueError('Start guitar evaluation with a 10–30 second probe')
+    if not math.isfinite(duration) or not 10 <= duration <= 90:
+        raise ValueError('Guitar contexts must be 10–90 seconds; default probe is 30')
     root, source, output = [Path(p).resolve() for p in (root, source, output)]
     engine = load_engine(root)
     from provenance import sha256, write_json
@@ -70,7 +70,7 @@ def generate(root, source, output, *, start=0, duration=30, execute=False):
         if not execute:
             (output / 'generation').mkdir()
             experiment = engine.plan(output / 'prepared', 'ace', 'guitar', [0])
-            experiment.update(max_job_seconds=30, device_requested='cuda',
+            experiment.update(max_job_seconds=90, device_requested='cuda',
                               ace_model=PRESET['model'], offload_to_cpu=True,
                               guidance_scale=7, mode='single_pass_probe')
             write_json(output / 'generation/experiment.json', experiment)

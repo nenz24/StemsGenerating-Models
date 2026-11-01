@@ -1,6 +1,6 @@
 """ACE-Step bounded-context experiments and measured, sample-aligned stitching.
 
-Reuses the checked bass/drum workers. Plan/probe default to no inference.
+Reuses the checked bass/drum/guitar workers. Plan/probe default to no inference.
 Needs numpy, scipy, soundfile, ffmpeg, plus the existing CUDA runtime for --execute.
 """
 import argparse
@@ -91,7 +91,7 @@ def read_audio(path):
 
 def instrument_of(plan):
     instrument=plan.get('instrument',plan.get('preset',{}).get('instrument','bass'))
-    if instrument not in ('bass','drums'):raise ValueError('Supported chunk instruments: bass, drums')
+    if instrument not in ('bass','drums','guitar'):raise ValueError('Supported chunk instruments: bass, drums, guitar')
     return instrument
 
 
@@ -100,15 +100,21 @@ def worker_for(instrument):
     if instrument=='drums':
         import drum_probe
         return drum_probe
-    raise ValueError('Supported chunk instruments: bass, drums')
+    if instrument=='guitar':
+        import guitar_probe
+        return guitar_probe
+    raise ValueError('Supported chunk instruments: bass, drums, guitar')
 
 
 def files_for(plan):
-    return ('drum_probe.json','drums.wav','drums_full') if instrument_of(plan)=='drums' else ('single_pass.json','electric_bass.wav','electric_bass')
+    return {'drums':('drum_probe.json','drums.wav','drums_full'),
+            'guitar':('guitar_probe.json','guitar.wav','guitar_full'),
+            'bass':('single_pass.json','electric_bass.wav','electric_bass')}[instrument_of(plan)]
 
 
 def prepare(source, output, context=90, margin=6, fade=.58, cues_file=None, *, instrument='bass', reference_audio=None):
     worker=worker_for(instrument)
+    if instrument=='guitar' and context>90:raise ValueError('Guitar context cap cannot exceed 90 seconds')
     if reference_audio is not None and instrument!='drums':raise ValueError('Shared reference is supported for drums only')
     source,output=Path(source).resolve(),Path(output).resolve()
     output.mkdir(parents=True,exist_ok=False)
@@ -184,6 +190,13 @@ def verify_chunk(folder,plan,chunk):
     report=json.loads((folder/report_file).read_text())
     stem=folder/stem_file;metadata=report.get('input',{})
     expected_ref=plan.get('shared_reference');actual_ref=report.get('reference_audio')
+    if instrument_of(plan)=='guitar':
+        params=report.get('settings',{}).get('params',{})
+        expected={'instruction':'Generate the guitar track based on the audio context:',
+                  'caption':plan['preset']['caption'],'seed':0,'guidance_scale':7,
+                  'inference_steps':50,'duration':chunk['model_duration'],'task_type':'lego'}
+        if report.get('instrument')!='guitar' or any(params.get(k)!=v for k,v in expected.items()) or params.get('reference_audio') is not None:
+            raise ValueError('Actual guitar chunk settings mismatch')
     if expected_ref:
         if not actual_ref or actual_ref.get('sha256')!=expected_ref['sha256'] or report.get('settings',{}).get('params',{}).get('reference_audio')!=actual_ref.get('path'):
             raise ValueError('Chunk shared reference mismatch')
@@ -310,6 +323,8 @@ def stitch_arrays(plan,audios):
         after=audios[i][b-right['input_start']:b-right['input_start']+RATE//3]
         if instrument_of(plan)=='drums':
             lp=rp={'hz':None,'periodicity':None,'note':'Pitch continuity is not a drum-groove measure'}
+        elif instrument_of(plan)=='guitar':
+            lp=rp={'hz':None,'periodicity':None,'note':'Monophonic bass pitch continuity is invalid for polyphonic guitar; review chords by listening'}
         else:lp,rp=pitch(before),pitch(after)
         cents=1200*math.log2(rp['hz']/lp['hz']) if lp['hz'] and rp['hz'] else None
         stats.update(index=i,nominal_seconds=nominal/RATE,fade_start_frame=a,fade_end_frame=b,
@@ -367,7 +382,7 @@ def main():
     plan=sub.add_parser('plan');plan.add_argument('--source',type=Path,required=True);plan.add_argument('--out',type=Path,required=True)
     plan.add_argument('--context-seconds',type=float,default=90);plan.add_argument('--margin-seconds',type=float,default=6)
     plan.add_argument('--fade-seconds',type=float,default=.58);plan.add_argument('--cues',type=Path)
-    plan.add_argument('--instrument',choices=['bass','drums'],default='bass')
+    plan.add_argument('--instrument',choices=['bass','drums','guitar'],default='bass')
     plan.add_argument('--reference-audio',type=Path)
     for name in ['probe','run','stitch']:
         s=sub.add_parser(name);s.add_argument('--plan',type=Path,required=True)

@@ -1,0 +1,59 @@
+{
+  "id": "clean-electric-guitar-30-v1",
+  "status": "listener_accepted_30_second_candidate_for_longer_trial",
+  "listener_assessment_original": "hasil kitar lumayan oke",
+  "approval_scope": "Opening 30-second clean electric guitar only; not yet a full-song verdict.",
+  "archive": {
+    "path": "guitar_feedback.zip",
+    "bytes": 1432072,
+    "sha256": "cca5c57ee8513b34c7c40526a0905b6ae819836837672278ae7b3e17a47e2be6"
+  },
+  "source_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "preset": {
+    "caption": "Isolated clean electric guitar accompaniment. A warm, clear, undistorted electric guitar played naturally with gentle picked chord voicings and sparse rhythmic strums. Follow the piano performance chords, timing, phrasing and dynamics, leaving space for the piano melody. Subtle pick attack, natural note decay and expressive articulation. Electric guitar only, no bass guitar, drums, piano or vocals.",
+    "device": "cuda",
+    "guidance_scale": 7.0,
+    "id": "clean-electric-guitar-v1",
+    "inference_steps": 50,
+    "instrument": "guitar",
+    "model": "acestep-v15-base",
+    "offload_to_cpu": true,
+    "precision": "float32",
+    "seeds": [
+      0
+    ]
+  },
+  "input": {
+    "clean_sha256": "f2337bf143630d8ba3c028707dc9c1362f8df9f6d0987f2ca6fd7f86026f5673",
+    "duration": 30.0,
+    "end_padding_frames": 0,
+    "model_duration": 30,
+    "original_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+    "requested_duration": 30,
+    "sample_rate": 32000,
+    "source_gain": 0.7,
+    "source_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+    "start": 0,
+    "valid_frames": 960000
+  },
+  "reported_stem_sha256": "579099bc5e984ddeb51afb98690e657e5c9e0fa42c979b9933cb4a059e7426c4",
+  "reported_mix_sha256": "f432b9f143b171b22d66e901243586112b34f02d27a4ea48cd1ce563ba99c470",
+  "preservation_scope": "Uploaded MP3 previews and reports only; keep guitar_result.zip for lossless WAVs.",
+  "checks": {
+    "archive_crc": true,
+    "model_input_sha256_reproduced": true,
+    "actual_guitar_instruction": true,
+    "reported_cuda_fp32": true
+  },
+  "next_step": "Generate full song in contexts capped at 90 seconds with the same preset, then review each chunk and seam; reuse bass/drum outputs for later combined mix.",
+  "member_sha256": {
+    "guitar_probe.json": "d0f2e3a609681f23e67006c852af334b877986f597760a0c8d2a057f62e0c87f",
+    "prepared/input.json": "d9d13727b1f2bf25651b1ec2d36c117b65f7bca78342404111b6b495fe91b2ae",
+    "generation/experiment.json": "8434a7b983c249df6bde685d3a834e0b378a6e2be67956309b87dcdd7d65a0e8",
+    "generation/session.json": "febf4289ea032a6f359de1a39c3f3c15ef23ccd181833fb8b6a7c2ebcbe496ec",
+    "generation/000_A_guitar_seed0/result.json": "cc2f20a4075d5714c506091393a87c71441a76ccb0dce5b8a8ed40b293ec4a41",
+    "capture/capture.json": "b15e291ad0f9a3355419f88a639dde667d062c8dab02b3f9a125ac2d95e89dfa",
+    "guitar_preview.mp3": "f511536669b3ebfd7aef2fe70213d51aae92c0ad5635844ea891cb194c37b9e3",
+    "mix_preview.mp3": "0c043ba3561d9290149a00c8c24020ec81c542a91ad02d23597ac6558540b850"
+  }
+}

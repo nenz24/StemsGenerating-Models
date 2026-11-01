@@ -1,4 +1,39 @@
-# Clean electric guitar: first probe
+# Clean electric guitar: accepted probe and 90-second contexts
+
+## Accepted short probe and full-song continuation
+
+The listener found the uploaded 30-second result reasonably good and requested
+the existing bass/drum 90-second chunk method. The feedback and metadata are
+frozen in [`clean-electric-guitar-30-v1`](../baselines/clean-electric-guitar-30-v1/).
+Its actual guitar settings match the preset, and the piano model-input hash was
+reproduced exactly. This acceptance covers the excerpt only.
+
+Use [`19_colab_guitar_context_90.ipynb`](../notebooks/19_colab_guitar_context_90.ipynb)
+on the active CUDA VM. Run all: it makes guitar contexts capped at 90 seconds
+**including** 6-second margins and integer padding, then stitches with a
+0.58-second float equal-power fade. The 243.330625-second piano produces three
+model contexts (90/89/90 seconds), keeps the exact source length, and exports
+guitar solo plus piano/guitar mix. The same accepted caption/preset is retained.
+The 30-second output cannot substitute for a longer context with different
+input boundaries, so the three new guitar chunks are generated separately.
+
+Resume reuses verified completed chunks. Notebook helpers and a guitar-capable
+engine are embedded for old cached bridges, without reinstalling weights or
+rewriting runtime source. A complete cache is required; a new empty VM still
+needs setup. Bass/drum audio is not generated again or used as guitar input.
+
+Keep `guitar_chunked_result.zip` (full lossless exports and raw chunks); upload
+`guitar_chunked_feedback.zip` (full MP3s, previews, seam excerpts and actual
+reports). This notebook evaluates guitar with piano. The later combined mix can
+reuse the existing bass lossless export and approved shared-kit drum export;
+keep those result ZIPs. The bass baseline retains its known noise caveat.
+
+Guitar timbre, voicings and phrasing can change between contexts. The 90-second
+choice is inherited from bass/drum experiments, not validated for guitar yet.
+Monophonic bass pitch continuity is skipped for polyphonic guitar; numerical
+seam diagnostics cannot establish chord agreement or musical quality.
+
+## Original 30-second workflow
 
 The full-song shared-kit drum output is now frozen as a listener-approved
 baseline. The next selected instrument is **clean electric guitar** accompanying
@@ -17,13 +52,14 @@ engine adds the `guitar` track on older source bridges **within the guitar
 process**, without replacing their tracked source or requiring a fresh runtime.
 It uses ACE-Step 1.5 Base / LEGO / CUDA FP32 / seed 0 / CFG 7 / 50 steps. The
 caption requests warm, undistorted electric guitar, gentle chord picking and
-sparse rhythmic strums. This is a first candidate, not an approved guitar sound.
+sparse rhythmic strums. The opening result was accepted for this longer trial.
 
 The pinned upstream commit `ca1e85fe9430179831e6bc6be790c332190a3866`
 lists `guitar` in `acestep/constants.py:TRACK_NAMES` and LEGO uses
 `Generate the {TRACK_NAME} track based on the audio context:`. The instruction
 uses `guitar`; the clean electric character is requested in the caption, not a
-separate checkpoint. Whether it produces that sound needs a GPU/listening trial.
+separate checkpoint. The listener has assessed the 30-second Colab output;
+longer contexts need their own GPU/listening trial.
 
 Listen to both `guitar_preview.mp3` and `mix_preview.mp3`. Keep
 `guitar_result.zip` (lossless WAVs and reports); upload `guitar_feedback.zip`
@@ -39,7 +75,7 @@ downloads. Command-line equivalent from a prepared checkout:
 python scripts/guitar_probe.py --source piano.mp3 --out runs/guitar_clean_probe --execute
 ```
 
-Use `--start` and `--duration` for later 10–30-second probes in separate output
+Use `--start` and `--duration` for 10–90-second contexts in separate output
 folders. Source duration is measured from the audio; no guessed BPM or meter
 is supplied. GPU model inference and musical quality are untested on the chat machine. Offline
 iPhone/iOS 27/CoreAI remains a separate implementation and validation task.

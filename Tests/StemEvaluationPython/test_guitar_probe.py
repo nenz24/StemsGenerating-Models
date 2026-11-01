@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+import wave
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -58,8 +59,8 @@ class GuitarProbeTests(unittest.TestCase):
             self.assertFalse((output / 'guitar_feedback.zip').exists())
             with self.assertRaisesRegex(ValueError, 'requires the ACE-Step'):
                 guitar.load_engine(ROOT).plan(output / 'prepared', 'stage', 'guitar', [0])
-            with self.assertRaisesRegex(ValueError, '10–30'):
-                guitar.generate(ROOT, source, base / 'invalid', duration=90)
+            with self.assertRaisesRegex(ValueError, '10–90'):
+                guitar.generate(ROOT, source, base / 'invalid', duration=120)
 
     def test_verified_export_trims_padding_and_rejects_wrong_role_or_precision(self):
         for mode in ('correct', 'wrong_instruction', 'wrong_dtype'):
@@ -88,6 +89,18 @@ class GuitarProbeTests(unittest.TestCase):
                             self.assertEqual(z.read('guitar.wav'), (output / 'guitar.wav').read_bytes())
                     self.assertEqual(run.call_count, 1)
                     self.assertEqual(sha256(source), source_hash)
+
+    def test_90_second_context_plans_one_guitar_job(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp); source = base / 'piano.wav'
+            with wave.open(str(source), 'wb') as audio:
+                audio.setparams((2, 2, RATE, 0, 'NONE', 'not compressed'))
+                audio.writeframes(b'\0' * (90 * RATE * 4))
+            report = guitar.generate(ROOT, source, base / 'probe', duration=90)
+            experiment = json.loads((base / 'probe/generation/experiment.json').read_text())
+            self.assertEqual(report['input']['valid_frames'], 90 * RATE)
+            self.assertEqual([(j['instrument'], j['duration']) for j in experiment['jobs']], [('guitar', 90)])
+            self.assertEqual(experiment['max_job_seconds'], 90)
 
     def test_notebook_dry_run_uses_new_engine_without_mutating_old_bridge(self):
         script = r'''
@@ -119,6 +132,19 @@ assert [(j['instrument'], j['duration']) for j in plan['jobs']] == [('guitar', 3
 assert engine.read_text() == old
 assert not (root / 'vendor').exists()
 assert not list(out.rglob('guitar.wav'))
+book = json.loads((repo / 'notebooks/19_colab_guitar_context_90.ipynb').read_text())
+for repeat in range(2):
+ with contextlib.redirect_stdout(io.StringIO()):
+  for c in book['cells']:
+   if c['cell_type'] == 'code':
+    exec(compile(''.join(c['source']).replace('DRY_RUN = False', 'DRY_RUN = True'), 'guitar-chunk-notebook', 'exec'), scope)
+ if repeat == 0: chunk_out = scope['GUITAR_CHUNK_OUT']
+ assert scope['GUITAR_CHUNK_OUT'] == chunk_out
+plan = scope['guitar_plan']
+assert plan['instrument'] == 'guitar' and plan['context_cap_seconds'] == 90
+assert plan['total_frames'] == 31 * RATE
+assert engine.read_text() == old
+assert not list(chunk_out.rglob('guitar.wav'))
 '''
         with tempfile.TemporaryDirectory() as tmp:
             result = subprocess.run([sys.executable, '-c', script, str(ROOT), tmp],
