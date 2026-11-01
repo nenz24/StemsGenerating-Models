@@ -169,6 +169,16 @@ quality, memory, inference latency and thermals remain unverified.
 
 ## Next numerical compatibility candidate
 
+**Retired after device rejection.** The user reported `Missing hash file` during
+specialization of the raw package; no inference ran. They then corrected the
+native format to `.aimodels` and supplied https://developer.apple.com/core-ai/ .
+The legacy button and runner have been removed; the planned `.mlmodelc` follow-up
+was cancelled before publication/execution. The account's proxy denied access to
+the official URL (HTTP 403), so its exporter commands and hash schema have not
+been read or verified. Use a documented native export; do not rename the legacy
+package or invent the missing hash. See [device rejection](../reviews/coreai-iphone17pro-raw-candidate/README.md).
+The following describes the archived experiment, not a current recommendation.
+
 `ModelCandidates/affine.mlpackage` and its JSON reference are a tiny ML Program
 package produced by Core ML Tools 9.0, not a claimed CoreAI-native export.
 The graph is `y = 2*x + 0.25`, Float32 shape [1, 4], function `main`, input `x`,

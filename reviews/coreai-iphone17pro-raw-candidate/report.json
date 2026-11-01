@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "evidence_source": "User supplied numerical device probe output in chat",
+  "os_version": "27.0.1",
+  "os_build": "24A446",
+  "coreai_architecture": "h18p",
+  "target": "iOS device build",
+  "candidate": "ModelCandidates/affine.mlpackage",
+  "requested_compute_policy": "cpuOnly",
+  "source_asset_validation": false,
+  "error_type": "CoreAIDelegates.AIModelCacheError.failedToSpecialize",
+  "error_domain": "CoreAIDelegates.AIModelCacheError",
+  "error_code": 3,
+  "asset_error": "is malformed: Missing hash file",
+  "model_loaded": false,
+  "model_inference_executed": false,
+  "numerical_parity": "not_evaluated_due_to_load_failure",
+  "actual_accelerator_placement": "not_measured",
+  "scope": "Raw legacy ML Program package rejected at model specialization; no operator, precision, performance or music-quality result"
+}

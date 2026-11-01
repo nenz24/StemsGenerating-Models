@@ -57,6 +57,12 @@ fungsi compiler/export publik; jalur tooling export resmi perlu ditetapkan.
 CoreAI belum terbukti dapat langsung memuat checkpoint ACE-Step. Jika kemampuan
 yang diperlukan tidak tersedia, laporkan blocker; jangan mengganti runtime diam-diam.
 
+Uji paket legacy `.mlpackage` kemudian ditolak dengan `Missing hash file` saat
+specialization, sebelum inference. Pengguna mengoreksi format native yang dituju
+menjadi `.aimodels` dan memberikan https://developer.apple.com/core-ai/ . Jalur
+legacy dihentikan; exporter native dan aset valid masih diperlukan. Halaman resmi
+belum dapat dibaca dari workspace ini karena proxy HTTP 403.
+
 Pemeriksaan berikutnya tersedia pada `scripts/probe_coreai_sdk.sh`, dijalankan
 di Mac dengan Xcode. Probe melakukan type-check `import CoreAI` untuk target
 arm64-apple-ios27.0 dan menyalin interface publik yang ditemukan ke ZIP laporan.
