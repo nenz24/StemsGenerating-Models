@@ -24,6 +24,24 @@ baru dan resource build lama yang dibuang. Copy berikutnya melewati file yang
 ukuran, waktu modifikasi dan identitas manifestnya sama. Tidak ada hash ulang
 seluruh bobot pada setiap build; validasi checksum runtime tetap berjalan.
 
+## Build script dan akses file di Mac
+
+Target **CoreAIProbe**, untuk Debug dan Release, mengatur
+`ENABLE_USER_SCRIPT_SANDBOXING = NO`. Satu-satunya build script target ini
+memilih file secara dinamis dari manifest dan profil lokal, membaca metadata
+kandidat, serta membuang resource build yang sudah tidak dipakai. Deklarasi
+folder input sebelumnya tidak memberi akses baca yang dibutuhkan pada build
+Xcode pengguna: Python gagal membuka `source-context/reference.json` dengan
+`PermissionError: [Errno 1] Operation not permitted` di dalam `sandbox-exec`.
+Pengaturan ini berlaku untuk build script target di Mac; bukan entitlement
+atau izin aplikasi iPhone. Project-level default tetap `YES`.
+
+Pembatasan sumber/output di Python tetap berlaku: sumber/cache hanya dibaca,
+penulisan dan prune hanya pada direktori produk `.app/ModelCandidates` yang
+terpisah dari sumber. Dependency input/output phase tetap dicatat. Pesan
+**will be run during every build** adalah informasi karena pemilihan resource
+memang diperiksa setiap build; copy file yang tidak berubah tetap dilewati.
+
 ## Pilihan resource
 
 Build setting target **COREAI_MODEL_PROFILE** berlaku untuk Debug dan Release.
@@ -68,4 +86,5 @@ aktif dibutuhkan; pengurangan resource tidak membuktikan kelayakan memori infere
 Uji Linux memakai fixture non-executable untuk seleksi source/AOT, preservasi
 manifest, kegagalan sebelum prune, copy incremental, pergantian profil,
 perlindungan source/cache dan parse konfigurasi Xcode. Native Xcode build,
-sandbox build phase dan instalasi iPhone perlu diverifikasi di Mac pengguna.
+akses build phase setelah perbaikan konfigurasi dan instalasi iPhone masih
+perlu diverifikasi di Mac pengguna.

@@ -180,6 +180,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				COREAI_MODEL_PROFILE = auto;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "CoreAI Probe";
@@ -207,6 +208,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				COREAI_MODEL_PROFILE = auto;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "CoreAI Probe";
