@@ -75,6 +75,13 @@ saja, ulangi K=2 grouped-first dari nominal sebelum memperbesar pool. Aset,
 baseline generasi, copies dan toleransi tetap; cari penanda
 `bounded-live-progress-v1` pada laporan baru.
 
+[Run K=2 bounded-progress](../reviews/coreai-iphone17pro-interleaving-k2-bounded/README.md)
+selesai dengan thermal nominal: drift kontrol +0,92%, interleaved/grouped
++1,28%/−1,32%, sampled maksimum 206,721 MiB. Ini mendukung adanya confound
+pelaporan, bukan bukti penyebab tunggal atau percepatan full-loop. Parity tetap
+NOT PASSED 40/140. Berikutnya K=4, 220 call, memakai `--pairs 4 --expand-existing`;
+K=2 diarsipkan setelah bundle baru lolos verifikasi. Tidak ada export bobot native.
+
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
 masih memakai mode AOT satu-scope; hasil CPU ini tidak memvalidasinya. Default

@@ -23,6 +23,13 @@ berjalan. Perubahan instrumentasi belum diuji di Apple. Update kode/build
 tanpa preparation, ulangi K=2 grouped-first dari nominal, dan tandai hasil
 sebagai cohort `bounded-live-progress-v1` sebelum memutuskan K=4.
 
+[Kalibrasi bounded-progress](../reviews/coreai-iphone17pro-interleaving-k2-bounded/README.md)
+telah selesai: nominal, drift kontrol +0,92% dan switching +1,28%/−1,32%.
+Keputusan terbaru adalah lanjut K=4 dengan instrumentasi yang sama; gunakan
+`bash scripts/prepare_coreai_interleaving_probe.sh --pairs 4 --expand-existing`.
+Bundle K=2 diarsipkan setelah bundle K=4 diverifikasi. Target K=4 adalah
+220 calls, 14 opens/binds dan 220 prebound hits; belum ada hasil perangkat K=4.
+
 ## Persiapan dan menjalankan
 
 Gunakan checkout yang sudah memuat perubahan ini di Mac. Bundle
@@ -43,9 +50,13 @@ diseimbangkan memakai tombol **bergantian dahulu** pada pengulangan kedua.
 Biarkan thermal kembali ke kondisi awal di antara run. Tiap run K=2 menjalankan
 140 call; tanpa warmup atau feedback output. Jika run berhenti, simpan laporan.
 
-Naikkan ukuran hanya sesudah run kecil ditinjau. `--pairs 4/8/12` memerlukan
-folder output baru atau pengarsipan bundle diagnostik sebelumnya secara manual;
-bundle yang sudah ada tidak ditimpa. Folder aktivasi harus bernama
+Naikkan ukuran hanya sesudah run kecil ditinjau. `--pairs 4/8/12` dengan
+`--expand-existing` mempersiapkan bundle baru terlebih dahulu, memverifikasi
+kesamaan seluruh payload bersama dan manifest sumber, lalu mengarsipkan bundle
+diagnostik lama ke `.runtime-cache/coreai-interleaving-archives/`. Jika install
+baru gagal dan tujuan masih kosong, bundle lama dipulihkan. Persiapan gagal
+tidak mengubah bundle lama/selector. Tanpa flag eksplisit, ukuran berbeda
+ditolak. Folder output terpisah juga dapat dipakai. Folder aktivasi harus bernama
 `dit-interleaving-1024`. Tombol hanya menampilkan ukuran yang ada di bundle.
 Resource build berisi probe saja; bundle generasi di Mac tetap disimpan.
 Untuk kembali ke baseline generasi, gunakan perintah aktivasi ulang pada

@@ -2,7 +2,8 @@
 """Copy existing distinct BF16 pairs and compute fixed-input host references.
 
 No native export, waveform generation or baseline replacement. Start with two
-pairs; larger bundles require explicit --pairs and a new output directory.
+pairs; --expand-existing prepares and verifies a larger bundle before archiving
+the current diagnostic bundle. Generation/checkpoint/cache payloads are retained.
 """
 import argparse
 import copy
@@ -96,6 +97,52 @@ def activate(candidates):
     finally: Path(temporary).unlink(missing_ok=True)
 
 
+def install_expansion(out, prepared, archive_root, expected_manifest_sha256):
+    """Archive the old diagnostic; restore it if installing the new one fails."""
+    out, prepared, archive_root = Path(out), Path(prepared), Path(archive_root)
+    if out.is_symlink() or prepared.is_symlink(): raise ValueError('Expansion requires ordinary bundle directories')
+    if out.resolve().is_relative_to(prepared.resolve()) or prepared.resolve().is_relative_to(out.resolve()):
+        raise ValueError('Expansion needs separate non-nested bundles')
+    if archive_root.resolve().is_relative_to(out.resolve()) or archive_root.resolve().is_relative_to(prepared.resolve()):
+        raise ValueError('Archive must be outside both bundles')
+    old, new = verify_bundle(out), verify_bundle(prepared)
+    if sha256(out/'reference.json') != expected_manifest_sha256:
+        raise ValueError('Existing manifest changed during preparation; both bundles preserved')
+    if new['pair_count'] <= old['pair_count']: raise ValueError('Expansion must increase pair count')
+    if new['source_manifest_sha256'] != old['source_manifest_sha256']:
+        raise ValueError('Source manifest changed; both bundles preserved')
+    if any(new['artifact_sha256'].get(n) != h for n,h in old['artifact_sha256'].items()):
+        raise ValueError('Existing assets/inputs/references changed; both bundles preserved')
+    # Archive outside ModelCandidates: it must never be staged into an app.
+    archive_root.mkdir(parents=True,exist_ok=True)
+    archive = Path(tempfile.mkdtemp(prefix=f'k{old["pair_count"]}-to-k{new["pair_count"]}-',dir=archive_root))/PROFILE
+    os.rename(out,archive)
+    try:
+        if out.exists(): raise FileExistsError(f'Destination appeared during expansion: {out}')
+        os.rename(prepared,out)
+    except Exception:
+        # Do not overwrite a concurrently-created destination during rollback.
+        if out.exists():
+            raise RuntimeError(f'Expansion stopped: destination appeared; old bundle retained at {archive}, new at {prepared}')
+        os.rename(archive,out)
+        raise
+    print(f'Previous K={old["pair_count"]} diagnostic archived unchanged: {archive}',flush=True)
+    return archive
+
+
+def expand_bundle(source, fixture, out, count, checkpoint=None):
+    old = verify_bundle(out)
+    if count not in SIZES or count <= old['pair_count']:
+        raise ValueError('Expansion requires a larger supported pair count')
+    expected = sha256(out/'reference.json')
+    parent = ROOT/'.runtime-cache/coreai-interleaving-staging'; parent.mkdir(parents=True,exist_ok=True)
+    prepared = Path(tempfile.mkdtemp(prefix='expansion-',dir=parent))/PROFILE
+    print(f'Preparing K={count} in {prepared}; current K={old["pair_count"]} and selector remain untouched until verified.',flush=True)
+    # Existing bundle/selector are untouched until preparation and validation finish.
+    prepare(source,fixture,prepared,count,checkpoint)
+    return install_expansion(out,prepared,ROOT/'.runtime-cache/coreai-interleaving-archives',expected)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     base = ROOT/'prototypes/ios27-coreai/ModelCandidates'
@@ -105,11 +152,16 @@ def main():
     parser.add_argument('--pairs',type=int,choices=SIZES,default=2)
     parser.add_argument('--checkpoint',type=Path)
     parser.add_argument('--verify-only',action='store_true')
+    parser.add_argument('--expand-existing',action='store_true',help='Prepare larger bundle first, archive existing diagnostic, then install; no deletion')
     parser.add_argument('--activate',action='store_true')
     args = parser.parse_args()
+    if args.verify_only and args.expand_existing: parser.error('--verify-only cannot expand a bundle')
+    if args.activate and args.out.name != PROFILE: parser.error('Activation requires standard folder name')
     if args.out.exists() or args.verify_only:
         ref = verify_bundle(args.out)
-        if ref['pair_count'] != args.pairs: raise ValueError('Existing pair count differs; bundle preserved')
+        if ref['pair_count'] != args.pairs:
+            if not args.expand_existing: raise ValueError('Existing pair count differs; bundle preserved. Use --expand-existing to archive and expand.')
+            expand_bundle(args.source_bundle,args.fixture_bundle,args.out,args.pairs,args.checkpoint)
     else: prepare(args.source_bundle,args.fixture_bundle,args.out,args.pairs,args.checkpoint)
     if args.activate:
         if args.out.name != PROFILE: raise ValueError('Activation requires standard folder name')

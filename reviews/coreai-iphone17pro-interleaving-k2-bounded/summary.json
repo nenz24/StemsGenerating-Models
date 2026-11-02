@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "run_id": "24B8C737-E5F4-43AA-8E9C-82F660E5A536",
+  "started_utc": "2026-11-02T19:03:37Z",
+  "started_wib": "2026-11-03T02:03:37+07:00",
+  "report_sha256": "b7e163b2312de68904ae27aa53b082b5703bb70bcd6b19f6f583f82215fae9bf",
+  "evidence": "User-supplied report; arithmetic/accounting independently recomputed; full native tensors not supplied",
+  "pool_size": 2,
+  "thermal_counts": {
+    "0": 140
+  },
+  "thermal_label": "nominal (0) throughout",
+  "strict_passes": 40,
+  "strict_failures": 100,
+  "calls": 140,
+  "opens": 8,
+  "binds": 8,
+  "hits": 140,
+  "modes": {
+    "single-before": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 759.659667,
+          "repeated_mean_ms": 52.62088815789474,
+          "repeated_median_ms": 52.343041,
+          "repeated_p95_ms": 58.407542,
+          "output_copy_mean_ms": 17.46732725
+        }
+      },
+      "opens": 1,
+      "binds": 1,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 2294.459625
+    },
+    "pool-only": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 76.865792,
+          "repeated_mean_ms": 51.992364,
+          "repeated_median_ms": 51.961208,
+          "repeated_p95_ms": 55.998958,
+          "output_copy_mean_ms": 17.6200062
+        }
+      },
+      "opens": 2,
+      "binds": 2,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 1533.175125
+    },
+    "grouped": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 75.325958,
+          "repeated_mean_ms": 51.81846047368421,
+          "repeated_median_ms": 51.173125,
+          "repeated_p95_ms": 54.791834,
+          "output_copy_mean_ms": 17.69330845
+        },
+        "blocks-02-03.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 762.158209,
+          "repeated_mean_ms": 53.56229815789474,
+          "repeated_median_ms": 52.60525,
+          "repeated_p95_ms": 61.629166,
+          "output_copy_mean_ms": 18.052858399999998
+        }
+      },
+      "opens": 2,
+      "binds": 2,
+      "hits": 40,
+      "calls": 40,
+      "wall_ms": 3776.98575
+    },
+    "interleaved": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 74.284917,
+          "repeated_mean_ms": 52.48185078947368,
+          "repeated_median_ms": 51.615625,
+          "repeated_p95_ms": 56.888625,
+          "output_copy_mean_ms": 18.6704354
+        },
+        "blocks-02-03.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 72.490666,
+          "repeated_mean_ms": 52.855769736842106,
+          "repeated_median_ms": 52.112708,
+          "repeated_p95_ms": 55.638791,
+          "output_copy_mean_ms": 18.60959605
+        }
+      },
+      "opens": 2,
+      "binds": 2,
+      "hits": 40,
+      "calls": 40,
+      "wall_ms": 3126.806375
+    },
+    "single-after": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 82.748167,
+          "repeated_mean_ms": 53.10661857894737,
+          "repeated_median_ms": 51.714,
+          "repeated_p95_ms": 58.363167,
+          "output_copy_mean_ms": 19.18799385
+        }
+      },
+      "opens": 1,
+      "binds": 1,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 1593.1424590000001
+    }
+  },
+  "ratios": {
+    "interleaved_over_grouped": {
+      "blocks-00-01.aimodel": 1.0128022004074468,
+      "blocks-02-03.aimodel": 0.986809221311418
+    },
+    "pool_only_over_single_before": 0.9880556147967555,
+    "single_after_over_single_before": 1.0092307529967024
+  },
+  "reported_output_sha256_by_asset": {
+    "blocks-00-01.aimodel": [
+      "d5277a1d25dc4d1f04958f91162a6c4adc6c3529c8acb16c4a4847de6f8575f1"
+    ],
+    "blocks-02-03.aimodel": [
+      "89ee0adb6b0c913178f85c0b492570ba08180a0e593c9ddab92d1bd286637053"
+    ]
+  },
+  "full_output_hashes_consistent_across_modes": true,
+  "independent_full_tensor_verification": false,
+  "sampled_process_maximum_mib": 206.72061920166016,
+  "total_ms": 12754.986584,
+  "strict_parity_passed": false,
+  "baseline_replaced": false,
+  "tolerances_changed": false,
+  "decision": "Retain BF16. Bounded-live-progress-v1 reduces observed control drift to 0.92%; two-pair switching differences remain small and of mixed sign. Proceed to short K=4 diagnostic with retained K=2 archive; no full-loop speedup or numerical acceptance claim.",
+  "mode_order": [
+    "single-before",
+    "pool-only",
+    "grouped",
+    "interleaved",
+    "single-after"
+  ],
+  "instrumentation_revision": "bounded-live-progress-v1"
+}
