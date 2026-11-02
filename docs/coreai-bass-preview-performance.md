@@ -82,6 +82,14 @@ pelaporan, bukan bukti penyebab tunggal atau percepatan full-loop. Parity tetap
 NOT PASSED 40/140. Berikutnya K=4, 220 call, memakai `--pairs 4 --expand-existing`;
 K=2 diarsipkan setelah bundle baru lolos verifikasi. Tidak ada export bobot native.
 
+[K=4 selesai](../reviews/coreai-iphone17pro-interleaving-k4/README.md): 220 calls,
+14 opens/binds, nominal sepanjang run. Mean berulang per pasangan 51–54 ms;
+interleaved/grouped +1,22%/−0,09%/−2,15%/−2,80%, drift kontrol +1,68%.
+Sampled maksimum 202,502 MiB bukan total RAM native. Parity NOT PASSED 120/220:
+00–01 tetap gagal, tiga pasangan lain lolos. Belum ada perlambatan besar K=4
+atau penjelasan full-generation. Berikutnya K=8 dengan driver yang sama:
+`--pairs 8 --expand-existing`, 380 calls; K=4 diarsipkan, BF16/batas tetap.
+
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
 masih memakai mode AOT satu-scope; hasil CPU ini tidak memvalidasinya. Default

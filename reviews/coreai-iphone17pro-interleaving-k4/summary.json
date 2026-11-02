@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "run_id": "FC2792D8-6C75-4E82-B3BD-2FEA71D36B4A",
+  "started_utc": "2026-11-02T19:11:27Z",
+  "started_wib": "2026-11-03T02:11:27+07:00",
+  "report_sha256": "8816832d253669386b29af62d68d9521ae194873bad890ea42a3a615928a6919",
+  "evidence": "User-supplied report; arithmetic/accounting independently recomputed; full native tensors not supplied",
+  "pool_size": 4,
+  "instrumentation_revision": "bounded-live-progress-v1",
+  "mode_order": [
+    "single-before",
+    "pool-only",
+    "grouped",
+    "interleaved",
+    "single-after"
+  ],
+  "thermal_counts": {
+    "0": 220
+  },
+  "thermal_label": "nominal (0) throughout",
+  "strict_passes": 120,
+  "strict_failures": 100,
+  "calls": 220,
+  "opens": 14,
+  "binds": 14,
+  "hits": 220,
+  "modes": {
+    "single-before": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 751.339042,
+          "repeated_mean_ms": 52.795425578947366,
+          "repeated_median_ms": 52.217958,
+          "repeated_p95_ms": 61.558833,
+          "output_copy_mean_ms": 18.17714585
+        }
+      },
+      "opens": 1,
+      "binds": 1,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 2296.037333
+    },
+    "pool-only": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 75.927709,
+          "repeated_mean_ms": 51.851894736842105,
+          "repeated_median_ms": 51.958084,
+          "repeated_p95_ms": 54.400375,
+          "output_copy_mean_ms": 17.8400896
+        }
+      },
+      "opens": 4,
+      "binds": 4,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 1536.793833
+    },
+    "grouped": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 74.204875,
+          "repeated_mean_ms": 51.432425421052635,
+          "repeated_median_ms": 51.193083,
+          "repeated_p95_ms": 54.507167,
+          "output_copy_mean_ms": 17.5512875
+        },
+        "blocks-02-03.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 760.749875,
+          "repeated_mean_ms": 53.15305252631579,
+          "repeated_median_ms": 52.762208,
+          "repeated_p95_ms": 57.529291,
+          "output_copy_mean_ms": 17.7080167
+        },
+        "blocks-04-05.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 715.043125,
+          "repeated_mean_ms": 53.194179842105264,
+          "repeated_median_ms": 52.638125,
+          "repeated_p95_ms": 60.776833,
+          "output_copy_mean_ms": 17.50786035
+        },
+        "blocks-06-07.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 747.258125,
+          "repeated_mean_ms": 53.79421505263158,
+          "repeated_median_ms": 53.284042,
+          "repeated_p95_ms": 61.919792,
+          "output_copy_mean_ms": 17.55193965
+        }
+      },
+      "opens": 4,
+      "binds": 4,
+      "hits": 80,
+      "calls": 80,
+      "wall_ms": 8159.383125
+    },
+    "interleaved": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 77.9125,
+          "repeated_mean_ms": 52.05767978947368,
+          "repeated_median_ms": 51.400584,
+          "repeated_p95_ms": 58.054875,
+          "output_copy_mean_ms": 18.7256061
+        },
+        "blocks-02-03.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 74.705958,
+          "repeated_mean_ms": 53.107462789473686,
+          "repeated_median_ms": 53.1545,
+          "repeated_p95_ms": 58.368917,
+          "output_copy_mean_ms": 18.51828345
+        },
+        "blocks-04-05.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 75.649583,
+          "repeated_mean_ms": 52.05308542105263,
+          "repeated_median_ms": 51.5615,
+          "repeated_p95_ms": 56.06025,
+          "output_copy_mean_ms": 18.33626455
+        },
+        "blocks-06-07.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 77.444416,
+          "repeated_mean_ms": 52.285682105263156,
+          "repeated_median_ms": 51.303625,
+          "repeated_p95_ms": 57.860959,
+          "output_copy_mean_ms": 18.4133624
+        }
+      },
+      "opens": 4,
+      "binds": 4,
+      "hits": 80,
+      "calls": 80,
+      "wall_ms": 6219.517959
+    },
+    "single-after": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 79.432625,
+          "repeated_mean_ms": 53.68276968421053,
+          "repeated_median_ms": 54.524333,
+          "repeated_p95_ms": 58.085875,
+          "output_copy_mean_ms": 19.1001542
+        }
+      },
+      "opens": 1,
+      "binds": 1,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 1601.079875
+    }
+  },
+  "ratios": {
+    "interleaved_over_grouped": {
+      "blocks-00-01.aimodel": 1.0121568128141418,
+      "blocks-02-03.aimodel": 0.9991422931576783,
+      "blocks-04-05.aimodel": 0.9785485099227075,
+      "blocks-06-07.aimodel": 0.9719573387976292
+    },
+    "pool_only_over_single_before": 0.9821285493627785,
+    "single_after_over_single_before": 1.01680721569213
+  },
+  "reported_output_sha256_by_asset": {
+    "blocks-00-01.aimodel": [
+      "d5277a1d25dc4d1f04958f91162a6c4adc6c3529c8acb16c4a4847de6f8575f1"
+    ],
+    "blocks-02-03.aimodel": [
+      "89ee0adb6b0c913178f85c0b492570ba08180a0e593c9ddab92d1bd286637053"
+    ],
+    "blocks-04-05.aimodel": [
+      "c2811a2f88fbbf61711b2fd3b34b35d95b664988bcaea2fd915050f1ac0532e2"
+    ],
+    "blocks-06-07.aimodel": [
+      "d2ddeac20c98290d3102516f873cbbf746612a15425ff6df26204bc9af7dae4b"
+    ]
+  },
+  "full_output_hashes_consistent_across_modes": true,
+  "shared_reported_hashes_match_bounded_k2": true,
+  "independent_full_tensor_verification": false,
+  "sampled_process_maximum_mib": 202.50186920166016,
+  "total_ms": 20593.017834,
+  "strict_parity_passed": false,
+  "baseline_replaced": false,
+  "tolerances_changed": false,
+  "decision": "Retain BF16. Four-pair calls remain about 51-54 ms and control drift is 1.68%; no large switching penalty or full-loop explanation established. Next short diagnostic K=8, grouped-first, 380 calls with existing bounded-progress caller and archived K=4 bundle."
+}

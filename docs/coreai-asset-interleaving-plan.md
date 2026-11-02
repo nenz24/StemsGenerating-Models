@@ -30,6 +30,13 @@ Keputusan terbaru adalah lanjut K=4 dengan instrumentasi yang sama; gunakan
 Bundle K=2 diarsipkan setelah bundle K=4 diverifikasi. Target K=4 adalah
 220 calls, 14 opens/binds dan 220 prebound hits; belum ada hasil perangkat K=4.
 
+[Hasil K=4](../reviews/coreai-iphone17pro-interleaving-k4/README.md) kini tersedia:
+220 calls nominal, drift kontrol +1,68%, mean per pasangan 51–54 ms, tanpa
+perlambatan switching besar yang teramati. Strict parity tetap NOT PASSED
+120/220. Langkah terbaru K=8 memakai `--pairs 8 --expand-existing`; target
+380 calls/26 opens/26 binds/380 prebound hits. K=4 diarsipkan setelah bundle
+baru diverifikasi. Instrumentasi dan batas tetap, belum ada hasil K=8.
+
 ## Persiapan dan menjalankan
 
 Gunakan checkout yang sudah memuat perubahan ini di Mac. Bundle
