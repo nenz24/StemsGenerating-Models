@@ -117,6 +117,13 @@ latent/WAV lolos; build Apple, hasil generasi iPhone dan kualitas suara masih
 menunggu. Aset native baru sekitar 3,49 GB, checkpoint cache dipakai ulang.
 [Instruksi](docs/coreai-bass-preview.md).
 
+**Preview bass pertama sudah berbunyi di iPhone:** [console dan konfirmasi pengguna](reviews/coreai-iphone17pro-bass-preview-cpu-complete/README.md)
+mencatat 50 putaran denoiser/APG dan decoder selesai pada jalur source CPU-only;
+pengguna mengonfirmasi app tetap terbuka dan bass dapat diputar. Ini bukti
+keberhasilan eksekusi 5,12 detik. Parity numerik, durasi pipeline dan kualitas
+musikal masih memerlukan laporan akhir/audio, bukan disimpulkan dari console.
+
+
 [Percobaan gabungan iPhone pertama](reviews/coreai-iphone17pro-bass-preview-specialization/README.md)
 melewati encoder/conditioning tetapi gagal `failedToSpecialize` sebelum sampling
 pertama selesai, sehingga belum menghasilkan WAV. Update pelaporan menampilkan
@@ -126,19 +133,20 @@ mapping IR; aset yang gagal dan kebutuhan memorinya masih perlu diidentifikasi.
 Mitigasi AOT resmi Apple memerlukan Metal Toolchain di Mac; toolchain ini
 kemudian tersedia dan kompilasinya selesai sebagaimana dicatat di bawah.
 
-Laporan terbaru [menunjuk blok 18–19 saat binding fungsi](reviews/coreai-iphone17pro-bass-preview-block1819/README.md),
+Percobaan CPU awal [menunjuk blok 18–19 saat binding fungsi](reviews/coreai-iphone17pro-bass-preview-block1819/README.md),
 setelah sepuluh aset sampling berhasil. Preview sekarang melepas model/fungsi
 Swift per aset dan hanya memulihkan cache kompilasi CPU blok itu bila laporan
 sebelumnya mencatat graph-load failure yang sama. Pull/build ulang untuk mencoba;
 bobot, referensi dan perhitungan tetap dipakai, tanpa ekspor atau Metal Toolchain.
-Perubahan runtime ini masih menunggu validasi iPhone.
+Jalur ini kemudian menyelesaikan satu preview di iPhone sebagaimana dicatat
+di atas; cold-start/repeatability dan peak memory tetap belum tervalidasi.
 
 **AOT selesai dikompilasi di Mac pengguna:** Metal Toolchain 27B47 menghasilkan
 16 varian h18p, total 3,830 GB. Untuk menyiapkan atau melanjutkan di Mac lain, jalankan
 `bash scripts/prepare_coreai_bass_preview_aot.sh` untuk mengompilasi 16 aset
 preview hanya bagi `h18p`, tanpa mengulang ekspor/referensi. Loader memakai
 `.aimodelc` dengan policy `default`, sesuai pilihan compiler `none`; source/Qwen
-tetap CPU-only. Laporan iPhone terbaru lolos verifikasi checksum dan conditioning, lalu
+tetap CPU-only. Percobaan AOT iPhone lolos verifikasi checksum dan conditioning, lalu
 [crash di compiler Metal/MPS](reviews/coreai-iphone17pro-aot-metal-crash/README.md)
 saat memasuki aset AOT pertama. Build default sekarang memilih source CPU-only;
 inference AOT tetap belum berhasil.

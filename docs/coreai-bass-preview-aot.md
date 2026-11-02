@@ -22,6 +22,12 @@ Metal pada percobaan tersebut, tetapi bukan bukti masalah memori BNNS source
 sebelumnya telah teratasi. Komponen encoder/conditioning tetap inference nyata,
 bukan embedding/audio yang diganti fixture host.
 
+[Console CPU berikutnya dan konfirmasi pengguna](../reviews/coreai-iphone17pro-bass-preview-cpu-complete/README.md)
+mencatat seluruh 50 putaran denoiser/APG serta decoder selesai; app tetap terbuka
+dan stem bass bisa diputar. Ini satu keberhasilan eksekusi, bukan jaminan
+repeatability/peak memory atau strict numerical PASS. Untuk menilai hasil itu,
+ambil laporan akhir dan WAV yang sudah ada, tanpa regeneration.
+
 Dari repository, setelah menutup Xcode:
 
 ```bash

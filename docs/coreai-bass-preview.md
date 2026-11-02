@@ -3,13 +3,18 @@
 > Pembaruan perangkat: [AOT/default crash di compiler Metal/MPS](../reviews/coreai-iphone17pro-aot-metal-crash/README.md).
 > Build `auto` memakai source CPU-only; AOT tetap tersimpan di Mac dan tidak ikut
 > app default. Load/bind/backend/readback dicatat sebelum panggilan native.
-> Keberhasilan sampling lengkap setelah perubahan ini belum tervalidasi.
+> [Console dan konfirmasi pengguna](../reviews/coreai-iphone17pro-bass-preview-cpu-complete/README.md)
+> kini mencatat satu run 50 langkah + decoder lengkap; bass berhasil diputar.
+> Parity numerik, elapsed time dan kualitas musikal masih memerlukan laporan
+> akhir serta audio hasil run yang sudah ada.
 
 
 Pipeline pertama sekarang diimplementasikan: **PCM piano → VAE posterior →
 Qwen/ConditionEncoder → 50 langkah sampling → VAE decoder → WAV**. Dua gate
 conditioning sebelumnya sudah PASS. Pipeline gabungan sudah lolos pembandingan
-host Linux; build Apple, eksekusi gabungan iPhone dan penilaian suara masih menunggu.
+host Linux dan satu eksekusi gabungan iPhone sudah menghasilkan bass yang dapat
+diputar. Penilaian numerik perangkat dan kualitas suara tetap terpisah dari
+keberhasilan eksekusi tersebut.
 
 **Catatan Mac:** [laporan pengguna](../reviews/coreai-mac-bass-preview-drift/README.md)
 menunjukkan strict pointwise parity gagal setelah akumulasi 50 langkah, sehingga
@@ -146,7 +151,8 @@ bersama jika peak melebihi 0,98. Stem bass tetap tidak diubah. Setiap run membua
 folder baru di Documents aplikasi sehingga hasil sebelumnya tidak ditimpa.
 Gunakan ShareLink sebelum menutup aplikasi; kontrol pemutar memakai hasil run
 saat ini. Format RIFF/Float32 sudah diperiksa dengan ffprobe/FFmpeg; pemutaran
-AVAudioPlayer pada Apple masih perlu dicoba.
+AVAudioPlayer untuk stem bass sudah dikonfirmasi berhasil oleh pengguna pada
+run lengkap ini. Berhasil membagikan file/memutar listening mix belum dikonfirmasi.
 
 PCM, tokenisasi, epsilon dan initial noise masih dipersiapkan di Mac. Seluruh
 neural inference dan sampling dijalankan di iPhone saat tombol ditekan, tetapi

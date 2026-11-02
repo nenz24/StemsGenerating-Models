@@ -12,6 +12,11 @@ evidence, not independent reproductions here.
 No stub CoreAI implementation is used.
 The folder includes a native Xcode project and shared `CoreAIProbe` scheme.
 
+Satu [run bass preview source CPU-request lengkap](../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/README.md)
+sudah tercatat pada console perangkat: 50 putaran denoiser/APG dan decoder
+selesai, app tetap terbuka dan pengguna berhasil mendengar bass. Parity numerik,
+latensi, full-song/repeatability dan kualitas musikal belum disimpulkan dari log.
+
 ## Resource build
 
 Default `COREAI_MODEL_PROFILE=auto` membawa pipeline bass source dengan runtime
