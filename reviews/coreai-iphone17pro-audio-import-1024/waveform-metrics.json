@@ -1,0 +1,147 @@
+{
+  "scope": "Read-only audit of two uploaded WAV files; no inference, editing, gain changes, independent listening verdict or neural parity claim",
+  "review_date": "2026-11-02",
+  "review_timezone": "Asia/Jakarta",
+  "generation_run_id": "95E09157-5A7E-4C46-9231-B83793094718",
+  "files": {
+    "bass": {
+      "uploaded_filename": "bass 4.wav",
+      "sha256": "8f423449cb287daeaa053e77272184fcf501b61b53e633321545d97b108f2315",
+      "matches_generation_report_hash": true,
+      "file_bytes": 3932218,
+      "sample_rate": 48000,
+      "channels": 2,
+      "frames": 491520,
+      "duration_seconds": 10.24,
+      "dtype": "Float32 little endian",
+      "all_finite": true,
+      "peak": 1.1954083442687988,
+      "peak_dbfs": 1.5503256599891777,
+      "peak_time_seconds": 4.622333333333334,
+      "peak_channel_zero_based": 0,
+      "rms": 0.28961747879923366,
+      "rms_dbfs": -10.76350462871114,
+      "dc_mean_per_channel": [
+        0.0029464571687018073,
+        0.0027654218952266143
+      ],
+      "samples_above_unity": 1307,
+      "frames_any_channel_above_unity": 682,
+      "above_unity_total_frame_time_ms": 14.208333333333334,
+      "samples_exactly_plus_or_minus_one": 0,
+      "above_unity_regions": [
+        {
+          "start_seconds": 0.58275,
+          "end_seconds": 0.5844375,
+          "frames": 81
+        },
+        {
+          "start_seconds": 0.6105,
+          "end_seconds": 0.6119375,
+          "frames": 69
+        },
+        {
+          "start_seconds": 0.8784583333333333,
+          "end_seconds": 0.87925,
+          "frames": 38
+        },
+        {
+          "start_seconds": 0.8843125,
+          "end_seconds": 0.8843333333333333,
+          "frames": 1
+        },
+        {
+          "start_seconds": 2.3788125,
+          "end_seconds": 2.3788958333333334,
+          "frames": 4
+        },
+        {
+          "start_seconds": 2.3789166666666666,
+          "end_seconds": 2.3791875,
+          "frames": 13
+        },
+        {
+          "start_seconds": 2.3844375,
+          "end_seconds": 2.3852083333333334,
+          "frames": 37
+        },
+        {
+          "start_seconds": 2.6859375,
+          "end_seconds": 2.686,
+          "frames": 3
+        },
+        {
+          "start_seconds": 2.6860208333333335,
+          "end_seconds": 2.687125,
+          "frames": 53
+        },
+        {
+          "start_seconds": 2.6908333333333334,
+          "end_seconds": 2.692125,
+          "frames": 62
+        },
+        {
+          "start_seconds": 3.0150625,
+          "end_seconds": 3.0155625,
+          "frames": 24
+        },
+        {
+          "start_seconds": 4.611541666666667,
+          "end_seconds": 4.612520833333333,
+          "frames": 47
+        },
+        {
+          "start_seconds": 4.616375,
+          "end_seconds": 4.617520833333334,
+          "frames": 55
+        },
+        {
+          "start_seconds": 4.620354166666667,
+          "end_seconds": 4.6230416666666665,
+          "frames": 129
+        },
+        {
+          "start_seconds": 4.625895833333334,
+          "end_seconds": 4.627270833333333,
+          "frames": 66
+        }
+      ],
+      "oversampled_4x_peak_estimate": 1.1961692994879936,
+      "oversampled_4x_peak_estimate_dbfs": 1.5558530350202489
+    },
+    "mix": {
+      "uploaded_filename": "piano-with-bass 4.wav",
+      "sha256": "cb6209981c6c02521bf9ae22e9b3071ad8dfb10a0956e77f039553d93a8bb271",
+      "matches_generation_report_hash": true,
+      "file_bytes": 3932218,
+      "sample_rate": 48000,
+      "channels": 2,
+      "frames": 491520,
+      "duration_seconds": 10.24,
+      "dtype": "Float32 little endian",
+      "all_finite": true,
+      "peak": 0.9728348255157471,
+      "peak_dbfs": -0.23921781861016495,
+      "peak_time_seconds": 3.5706458333333333,
+      "peak_channel_zero_based": 1,
+      "rms": 0.1720037107354158,
+      "rms_dbfs": -15.289243674112827,
+      "dc_mean_per_channel": [
+        0.0016110579386869287,
+        0.0015095870636328333
+      ],
+      "samples_above_unity": 0,
+      "frames_any_channel_above_unity": 0,
+      "above_unity_total_frame_time_ms": 0.0,
+      "samples_exactly_plus_or_minus_one": 0,
+      "above_unity_regions": [],
+      "oversampled_4x_peak_estimate": 0.9734540982031428,
+      "oversampled_4x_peak_estimate_dbfs": -0.23369044357909396
+    }
+  },
+  "input_piano_wav_received_for_this_run": false,
+  "input_pcm_sha256_independently_verified": false,
+  "mix_recomposition_verified": false,
+  "mix_recomposition_limitation": "The 10.24-second input piano WAV was not uploaded; reported input hash and mix gain are not independently checked. Bass/mix byte hashes match the report.",
+  "float_stem_headroom_scope": "Above-unity Float32 values are preserved; sample peaks alone do not establish audible clipping. Mix has no above-unity samples. No normalization/limiter was applied."
+}

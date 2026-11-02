@@ -30,6 +30,16 @@ total model/device RAM, dan bukan jaminan skalabilitas full song.
 
 ## Jalur prototype yang dipilih
 
+**Profil 10,24 detik sudah menyelesaikan satu run**, dengan [laporan dan audit
+WAV](../reviews/coreai-iphone17pro-audio-import-1024/README.md): 772,415 detik,
+footprint maksimum tersampel 1.276,660 MiB, 30 opens/30 binds/720 hits/750 calls.
+Langkah pertama memakai scope tunggal per aset, lalu reuse mulai langkah kedua.
+Langkah 3–50 tetap rata-rata 15,191 detik; backend-await 744,691 detik atau
+96,41% total pipeline. Reuse handles tercatat tetapi tidak membuktikan percepatan
+backend pada profil ini. Penyebab internal, thermal dan cache state belum
+diisolasi. Klip diterima melalui uji dengar, bukan sebagai anggaran performa.
+Recovery cache 0/1 berarti jalur repair belum teruji oleh run yang selesai ini.
+
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
 masih memakai mode AOT satu-scope; hasil CPU ini tidak memvalidasinya. Default
@@ -40,7 +50,9 @@ Pool lazy berisi maksimal 14 shard DiT + satu APG model/fungsi, dilepas sebelum
 decoder dan saat gagal. Encoder piano dan Qwen tidak masuk pool. Guard proses
 2000 MiB sebelum stage dan sesudah bind tetap aktif. Retention dapat menaikkan
 live memory; guard tidak menjamin transient compiler peak/native eviction.
-Tidak ada retry atau fallback mode diam-diam.
+Untuk 5,12 detik tidak ada retry baru. Profil 10,24 detik mencatat satu budget
+recovery khusus BNNS cache bind sebelum inference; [syarat dan accounting](coreai-bass-preview-1024.md)
+tetap eksplisit. Ini tidak mengulang langkah atau mengganti metode sampling.
 
 ## Scheme dan penggunaan berikutnya
 

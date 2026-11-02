@@ -7,7 +7,13 @@ generasi 5,12 detik. Jalur source CPU dan reuse model/fungsi tetap digunakan.
 status `bounded_diagnostic`: normalized RMSE latent 0,000446 dan waveform
 0,000373 berada di bawah 0,001, tetapi gate pointwise belum lolos.
 Build Apple, pemakaian memori/waktu perangkat dan kualitas musikal profil baru
-harus diukur pada iPhone; keberhasilan dua klip 5,12 detik tidak membuktikannya.
+sudah memiliki [satu run perangkat yang selesai dan diterima melalui uji
+dengar](../reviews/coreai-iphone17pro-audio-import-1024/README.md): 50/50 langkah,
+772,415 detik, footprint proses maksimum tersampel 1.276,660 MiB. Dua hash WAV
+cocok. Pemulihan cache tidak terpicu; output parity impor tetap NOT EVALUATED.
+Ini belum anggaran latency produksi, exact peak/total RAM, atau cold-start
+repeatability. Prioritas sekarang mengisolasi biaya backend yang mengambil
+96,41% waktu pipeline, sebelum memperpanjang durasi.
 
 ## Persiapan sekali di Mac
 

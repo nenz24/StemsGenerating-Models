@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "baseline_id": "iphone-coreai-bass-import-1024-v1",
+  "status": "accepted_imported_input_audition_baseline",
+  "date": "2026-11-02",
+  "timezone": "Asia/Jakarta",
+  "evidence": "../../reviews/coreai-iphone17pro-audio-import-1024/summary.json",
+  "waveform_review": "../../reviews/coreai-iphone17pro-audio-import-1024/waveform-metrics.json",
+  "previous_short_input_baseline": "../iphone-coreai-bass-import-512-v1/baseline.json",
+  "generation_run_id": "95E09157-5A7E-4C46-9231-B83793094718",
+  "listener_feedback": {
+    "source": "User response in this conversation",
+    "assessment_original": "Sudah cocok dan enak didengar",
+    "accepted": true,
+    "scope": "This 10.24-second imported-piano bass/mix only; not independent assistant listening, strict parity or full-song acceptance"
+  },
+  "original_recording_sha256_reported": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "input_planar_pcm_sha256_reported": "c79163af4854a446ad2af982c95950bac3a3c445b692f1e650f8b5bd1ad57278",
+  "input_pcm_hash_independently_verified": false,
+  "audio_seconds": 10.24,
+  "sample_rate": 48000,
+  "channels": 2,
+  "frames": 491520,
+  "segment_start_seconds": 0,
+  "output_files": {
+    "bass": {
+      "sha256": "8f423449cb287daeaa053e77272184fcf501b61b53e633321545d97b108f2315",
+      "file_bytes": 3932218,
+      "peak": 1.1954083442687988,
+      "peak_dbfs": 1.5503256599891777,
+      "samples_above_unity": 1307,
+      "all_finite": true
+    },
+    "mix": {
+      "sha256": "cb6209981c6c02521bf9ae22e9b3071ad8dfb10a0956e77f039553d93a8bb271",
+      "file_bytes": 3932218,
+      "peak": 0.9728348255157471,
+      "peak_dbfs": -0.23921781861016495,
+      "samples_above_unity": 0,
+      "all_finite": true
+    }
+  },
+  "generation_completed": true,
+  "completed_sampling_steps": 50,
+  "generation_seconds": 772.4147251669999,
+  "sampled_process_maximum_mib": 1276.659538269043,
+  "numerical_parity": "NOT EVALUATED; no matching host trajectory/waveform for imported PCM",
+  "host_preparation_status": "trajectory_drift_diagnostic",
+  "host_full_numerical_gate_passed": false,
+  "fixed_conditioning_reference_checks_passed": 6,
+  "cache_recovery_path_exercised": false,
+  "raw_float_stem_preserved": true,
+  "mix_recomposition_verified": false,
+  "performance_accepted_for_product": false,
+  "not_accepted_by_this_baseline": [
+    "strict full-model numerical parity",
+    "production latency or RAM budget",
+    "cold-start repeatability or cache-recovery correctness",
+    "other recordings or longer/full-song generation",
+    "arbitrary prompts or on-device RNG",
+    "GPU/Neural Engine placement"
+  ],
+  "audio_or_model_weights_committed": false
+}

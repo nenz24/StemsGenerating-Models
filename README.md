@@ -1,8 +1,12 @@
 # StemsGenerating-Models
 
 POC JupyterLab untuk membuat bass/drum/gitar pengiring dari audio memakai pretrained
-ACE-Step 1.5 Base. Komponen VAE dan denoiser sudah diekspor ke CoreAI;
-generasi pengiring lengkap di iPhone belum diuji. Model belum dilatih ulang.
+ACE-Step 1.5 Base. Pipeline bass dari impor piano di iPhone sudah menghasilkan
+WAV 5,12 dan 10,24 detik yang diterima melalui uji dengar. Model belum dilatih ulang.
+
+**Baseline iPhone 10,24 detik diterima:** [laporan dan audit dua WAV](reviews/coreai-iphone17pro-audio-import-1024/README.md),
+50/50 langkah, 772,415 detik, footprint proses maksimum tersampel 1.276,660 MiB.
+Numerical parity output impor NOT EVALUATED; biaya backend masih perlu diperbaiki.
 
 **Pindah akun/VM Colab:** [notebook 22](notebooks/22_colab_cache_transfer.ipynb)
 memisahkan backup bobot via CPU (`ACTION="backup"`) dan restore pada VM GPU
@@ -32,7 +36,7 @@ Pengguna sudah menjalankan [probe tensor pada iPhone](reviews/coreai-iphone17pro
 Float32 round-trip **PASS**, iOS 27.0.1, arsitektur CoreAI `h18p`.
 [Model native numerik juga lulus di iPhone](reviews/coreai-iphone17pro-native-affine/README.md):
 validasi aset true, model dimuat dan 3 inference tepat (error absolut 0).
-Generasi audio CoreAI dan penggunaan GPU/Neural Engine oleh model belum diuji.
+Penempatan GPU/Neural Engine oleh model belum diukur.
 Uji `.mlpackage` ditolak saat pemuatan (`Missing hash file`); jalur berikutnya
 sudah diganti dengan export native `.aimodel` melalui `coreai-torch` resmi.
 Lihat [jalur native](docs/coreai-native-export.md). Ekspor dan referensi PyTorch
@@ -40,7 +44,7 @@ sudah dibuat dan inference model numerik native pada iPhone sudah dilaporkan lul
 
 **Audit komponen audio CoreAI:** [hasil dan rencana decoder VAE](reviews/coreai-ace-component-audit/README.md).
 Empat probe operator sintetis berhasil diekspor native. Decoder pretrained 0,2 dan 1 detik
-sudah lulus parity di iPhone; generasi pengiring lengkap belum diuji. Ukuran bobot dan feature map diaudit
+sudah lulus parity di iPhone; pipeline bass pendek dibuktikan pada laporan di atas. Ukuran bobot dan feature map diaudit
 terpisah dari waktu inference model numerik kecil.
 
 **Decoder pretrained 1 detik PASS:** [laporan iPhone](reviews/coreai-iphone17pro-pretrained-decoder-1s/README.md),
