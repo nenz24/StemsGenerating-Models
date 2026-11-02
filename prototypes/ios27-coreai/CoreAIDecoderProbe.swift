@@ -1351,7 +1351,7 @@ enum CoreAIDecoderProbe {
             try checkManifest(ref.runCount, 4, "reuse.run_count")
             try checkManifest(ref.scalarType, "float32", "reuse.scalar_type")
             try checkManifest(ref.byteOrder, "little", "reuse.byte_order")
-            try checkManifest(ref.weightStorageDtype, window.weightStorageDtype, "reuse.weight_storage_dtype")
+            try checkManifest(ref.weightStorageDtype, "float16", "reuse.weight_storage_dtype")
             try checkManifest(ref.computeDtype, "float32", "reuse.compute_dtype")
             try checkManifest(ref.checkpointDigest, contract.checkpoint.digest, "reuse.checkpoint_digest")
             try checkManifest(ref.checkpointFullSha256Verified, true, "reuse.checkpoint_full_sha256_verified")
