@@ -99,8 +99,46 @@ def partitions(root,null,make_mask):
     return [Front()]+[Pair(i) for i in range(0,24,2)]+[Tail()]
 
 
+def bounded_comparison(stats):
+    """Keep strict parity distinct from permission to export a diagnostic.
+
+    The pointwise bounds do not change. A diagnostic may fail them, but must
+    remain finite with normalized RMSE <= the existing 1e-3 limit.
+    """
+    keys=['max_absolute_error','rmse','normalized_rmse','elementwise_fraction_over_bound']
+    if (stats.get('finite') is not True or type(stats.get('parity_passed')) is not bool
+            or any(type(stats.get(k)) not in (int,float) or not math.isfinite(stats[k]) or stats[k]<0 for k in keys)
+            or stats['elementwise_fraction_over_bound']>1 or stats['normalized_rmse']>1e-3):
+        raise ValueError('Host comparison is nonfinite, incomplete or exceeds diagnostic normalized-RMSE limit; no export')
+    strict=stats['elementwise_fraction_over_bound']==0 and stats['normalized_rmse']<=1e-3
+    if stats['parity_passed'] is not strict:raise ValueError('Inconsistent strict host parity flag')
+    return strict
+
+
+def validate_host_trajectory(comparisons,apg_comparisons):
+    if (len(comparisons)!=50 or [r.get('step') for r in comparisons]!=list(range(1,51))
+            or len(apg_comparisons)!=50):raise ValueError('Incomplete host trajectory/APG comparisons')
+    # APG at identical inputs must still pass the full strict bound.
+    if not all([bounded_comparison(row) for row in apg_comparisons]):
+        raise ValueError('Identical-input APG gate failed; no export')
+    return all([bounded_comparison(row.get('latent',{})) for row in comparisons])
+
+
+def classify_host_references(comparisons,apg_comparisons,audio_metrics):
+    trajectory=validate_host_trajectory(comparisons,apg_comparisons)
+    audio=bounded_comparison(audio_metrics)
+    passed=trajectory and audio
+    return {'host_dual_trajectory_parity_passed':trajectory,'host_numerical_gate_passed':passed,
+            'host_export_status':'strict_pass' if passed else 'bounded_diagnostic'}
+
+
 def verify_bundle(folder,source_folder=SOURCE,condition_folder=CONDITION):
     ref=json.loads((folder/'reference.json').read_text())
+    status=classify_host_references(ref.get('host_comparisons',[]),ref.get('apg_same_input_vs_publisher',[]),ref.get('host_audio_vs_fp32',{}))
+    # Existing strictly passing bundles remain reusable without any re-export.
+    for key,value in status.items():
+        if key not in ref and status['host_numerical_gate_passed'] and key!='host_dual_trajectory_parity_passed':continue
+        if ref.get(key)!=value:raise ValueError('Inconsistent host export status; preserved')
     if (ref.get('schema_version')!=1 or ref.get('profile')!='bass-preview-512' or ref.get('stages')!=stage_plan()
             or ref.get('inference_steps')!=50 or ref.get('guidance_scale')!=7 or ref.get('shift')!=1
             or ref.get('method')!='euler_ode_apg' or ref.get('apg_momentum')!=-0.75
@@ -111,13 +149,11 @@ def verify_bundle(folder,source_folder=SOURCE,condition_folder=CONDITION):
             or ref.get('sample_rate')!=48000 or ref.get('audio_seconds')!=5.12
             or ref.get('scalar_type')!='float32' or ref.get('byte_order')!='little'
             or ref.get('checkpoint_digest')!=records()['model.safetensors']['digest']
-            or ref.get('all_checkpoints_verified') is not True or ref.get('host_dual_trajectory_parity_passed') is not True
+            or ref.get('all_checkpoints_verified') is not True
             or ref.get('vae_checkpoint_digest')!='da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0'
             or len(ref.get('host_comparisons',[]))!=50
-            or not all(r.get('latent',{}).get('parity_passed') for r in ref.get('host_comparisons',[]))
             or len(ref.get('apg_same_input_vs_publisher',[]))!=50
             or not all(r.get('parity_passed') for r in ref.get('apg_same_input_vs_publisher',[]))
-            or ref.get('host_audio_vs_fp32',{}).get('parity_passed') is not True
             or ref.get('host_decoder_folding_exact') is not True
             or ref.get('absolute_tolerance')!=1e-4 or ref.get('relative_tolerance')!=1e-3 or ref.get('relative_rmse_tolerance')!=1e-3
             or ref.get('source_reference_sha256')!=sha256(source_folder/'reference.json')
@@ -152,7 +188,8 @@ def main():
     parser.add_argument('--verify-only',action='store_true')
     args=parser.parse_args()
     if args.verify_only:
-        verify_bundle(args.out,args.source_bundle,args.condition_bundle);print('Integrated bass preview VERIFIED; no re-export');return
+        ref=verify_bundle(args.out,args.source_bundle,args.condition_bundle)
+        print('Integrated bass preview integrity VERIFIED; host status:',ref.get('host_export_status','strict_pass'),'; no re-export');return
     if args.out.exists():raise FileExistsError(f'Output already exists: {args.out}; preserved')
     verify_source(args.source_bundle);verify_condition(args.condition_bundle)
     import numpy as np
@@ -217,8 +254,8 @@ def main():
             expected[i+1]=(x.clone(),guided.clone())
             row={'step':i+1,'latent':precision_metrics(x,gold[i+1][0]),'guided':precision_metrics(guided,gold[i+1][1])};comparisons.append(row)
             if i+1 in CHECKPOINTS:print('Partition step',i+1,'latent',row['latent'],'guided',row['guided'],flush=True)
-    if not all(r['latent']['parity_passed'] for r in comparisons) or not all(r['parity_passed'] for r in apg_comparisons):
-        raise ValueError('Full latent trajectory or identical-input APG gate failed; not published')
+    trajectory_passed=validate_host_trajectory(comparisons,apg_comparisons)
+    print('Host latent strict parity:', 'PASS' if trajectory_passed else 'NOT PASSED; bounded diagnostic export only',flush=True)
     expected_latent=x.clone()
     del root,parts,original_predict,partition_predict;gc.collect()
     manifest=json.loads((ROOT/'configs/assets-base.json').read_text());vae=next(r for r in manifest['files'] if r['filename']=='vae/diffusion_pytorch_model.safetensors')
@@ -238,8 +275,9 @@ def main():
     with torch.no_grad():audio=decoder(expected_latent.transpose(1,2))
     torch.testing.assert_close(audio,unfolded,rtol=0,atol=0)
     audio_metrics=precision_metrics(audio,gold_audio)
-    if not audio_metrics['parity_passed']:raise ValueError(f'Decoded waveform FP32 gate failed: {audio_metrics}')
-    print('Full decoded waveform dual parity PASS:',audio_metrics,flush=True)
+    host_status=classify_host_references(comparisons,apg_comparisons,audio_metrics)
+    print('Decoded waveform strict parity:',audio_metrics,flush=True)
+    print('Host preparation status:',host_status['host_export_status'],'; tolerances unchanged',flush=True)
     parent=ROOT/'.runtime-cache/coreai-bass-preview-staging';parent.mkdir(parents=True,exist_ok=True)
     stage=Path(tempfile.mkdtemp(prefix='preview-',dir=parent));print('Staging:',stage,flush=True)
     def save(name,value):value.detach().numpy().astype('<f4').tofile(stage/name)
@@ -271,7 +309,7 @@ def main():
          'method':'euler_ode_apg','apg_momentum':-0.75,'apg_norm_threshold':2.5,'apg_projection_dims':[1],
          'apg_projection_precision':'float32_validated_against_original_float64','checkpoints':CHECKPOINTS,'latent_frames':128,'condition_tokens':117,
          'sample_rate':48000,'audio_seconds':5.12,'scalar_type':'float32','byte_order':'little','checkpoint_digest':publisher['model.safetensors']['digest'],
-         'vae_checkpoint_digest':vae['digest'],'all_checkpoints_verified':True,'host_dual_trajectory_parity_passed':True,'host_decoder_folding_exact':True,
+         'vae_checkpoint_digest':vae['digest'],'all_checkpoints_verified':True,**host_status,'host_decoder_folding_exact':True,
          'absolute_tolerance':1e-4,'relative_tolerance':1e-3,'relative_rmse_tolerance':1e-3,
          'source_reference_sha256':sha256(args.source_bundle/'reference.json'),'condition_reference_sha256':sha256(args.condition_bundle/'reference.json'),
          'host_comparisons':comparisons,'apg_same_input_vs_publisher':apg_comparisons,'host_audio_vs_fp32':audio_metrics,'sampling_source':sampling_source,
@@ -281,7 +319,7 @@ def main():
          'scope':'Real piano + bass preset -> 50 APG-guided Euler steps -> 5.12 s decoded waveform; host-tokenized/canonicalized fixtures; actual device generation pending'}
     (stage/'reference.json').write_text(json.dumps(ref,indent=2)+'\n');verify_bundle(stage,args.source_bundle,args.condition_bundle)
     args.out.parent.mkdir(parents=True,exist_ok=True);shutil.move(str(stage),str(args.out))
-    print('Ready: integrated preview bundle',args.out,flush=True)
+    print('Ready:',host_status['host_export_status'],'integrated preview bundle',args.out,flush=True)
 
 
 if __name__=='__main__':main()

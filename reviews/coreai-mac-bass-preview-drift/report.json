@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "evidence_source": "User-pasted Mac terminal log; not independently reproduced on Mac",
+  "original_paste_sha256": "b0bb3951bac8ca847047276f4f35889a8c6bc6b5a4c2cabd886749059201f6b6",
+  "code_revision": "2497523",
+  "phase": "Host preparation before native export; no iPhone inference in this report",
+  "logged_partition_checkpoints": [
+    {
+      "step": 1,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 1.9669532775878906e-06,
+        "rmse": 2.4521677009896347e-07,
+        "normalized_rmse": 2.498065200359267e-07,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 9.918212890625e-05,
+        "rmse": 1.2145981523102124e-05,
+        "normalized_rmse": 7.995043841284971e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    },
+    {
+      "step": 10,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 1.0773539543151855e-05,
+        "rmse": 1.5930264354203002e-06,
+        "normalized_rmse": 1.9239240043379113e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 0.0003101825714111328,
+        "rmse": 6.157167038424681e-05,
+        "normalized_rmse": 3.7363901034772735e-05,
+        "elementwise_fraction_over_bound": 0.001220703125,
+        "parity_passed": false
+      }
+    },
+    {
+      "step": 25,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 0.00011488795280456543,
+        "rmse": 1.2370560742852788e-05,
+        "normalized_rmse": 1.7902803040146816e-05,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 0.0032126903533935547,
+        "rmse": 0.000302022310603065,
+        "normalized_rmse": 0.00019928087209958347,
+        "elementwise_fraction_over_bound": 0.0509033203125,
+        "parity_passed": false
+      }
+    },
+    {
+      "step": 50,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 0.0005795955657958984,
+        "rmse": 6.44258760192851e-05,
+        "normalized_rmse": 6.788929154513494e-05,
+        "elementwise_fraction_over_bound": 0.00439453125,
+        "parity_passed": false
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 0.001991748809814453,
+        "rmse": 0.00018279204307003312,
+        "normalized_rmse": 0.00015739536107068708,
+        "elementwise_fraction_over_bound": 0.0423583984375,
+        "parity_passed": false
+      }
+    }
+  ],
+  "terminal_error": "ValueError: Full latent trajectory or identical-input APG gate failed; not published",
+  "strict_final_latent_parity_passed": false,
+  "final_latent_normalized_rmse": 6.788929154513494e-05,
+  "final_latent_fraction_over_pointwise_bound": 0.00439453125,
+  "all_50_latent_metrics_supplied": false,
+  "identical_input_apg_metrics_supplied": false,
+  "decoded_waveform_metrics_supplied": false,
+  "numerical_root_cause_isolated": false,
+  "native_export_completed": false,
+  "fix_scope": "Allow explicit bounded_diagnostic export with strict parity flags false; unchanged numerical thresholds; stop on nonfinite/excessive normalized error or strict same-input APG failure",
+  "updated_mac_preparation_verified": false,
+  "updated_apple_build_or_device_execution_verified": false
+}

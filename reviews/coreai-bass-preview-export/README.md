@@ -64,3 +64,9 @@ PCM/tokenization and epsilon/noise fixtures remain host-prepared; arbitrary new
 recording import, free prompts, iPhone RNG, CUDA RNG equivalence, KV-cache parity,
 long songs and thermal/battery behavior are unvalidated.
 See [Mac/device instructions](../../docs/coreai-bass-preview.md).
+
+The later [Mac preparation report](../coreai-mac-bass-preview-drift/README.md)
+fails the strict latent pointwise gate. The strict-pass metrics above describe
+this Linux export, not a guaranteed cross-platform result. Updated preparation
+may export an explicitly bounded diagnostic with failed strict flags preserved;
+it does not increase tolerances or establish that the Mac discrepancy is fixed.

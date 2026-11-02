@@ -117,6 +117,12 @@ latent/WAV lolos; build Apple, hasil generasi iPhone dan kualitas suara masih
 menunggu. Aset native baru sekitar 3,49 GB, checkpoint cache dipakai ulang.
 [Instruksi](docs/coreai-bass-preview.md).
 
+Persiapan Mac dapat menemukan drift pointwise yang tidak terjadi pada ekspor
+Linux. [Perbaikan status diagnostik](reviews/coreai-mac-bass-preview-drift/README.md)
+mengizinkan ekspor hanya jika error tetap finite dan normalized RMSE terbatas,
+dengan gate strict tetap NOT PASSED. Ini memungkinkan uji dengar tanpa
+melabeli hasil sebagai baseline numerik yang telah lolos.
+
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:
 Base, seed 0, CFG 7, 50 langkah. Lihat

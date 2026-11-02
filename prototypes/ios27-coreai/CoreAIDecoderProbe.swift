@@ -612,6 +612,15 @@ enum CoreAIDecoderProbe {
     }
 
     private struct BassPreviewContract: Decodable {
+        struct HostComparison: Decodable {
+            let finite: Bool
+            let maxAbsoluteError: Double
+            let rmse: Double
+            let normalizedRmse: Double
+            let elementwiseFractionOverBound: Double
+            let parityPassed: Bool
+        }
+        struct HostStep: Decodable { let step: Int; let latent: HostComparison }
         let schemaVersion: Int
         let profile: String
         let functionName: String
@@ -635,6 +644,11 @@ enum CoreAIDecoderProbe {
         let vaeCheckpointDigest: String
         let allCheckpointsVerified: Bool
         let hostDualTrajectoryParityPassed: Bool
+        let hostExportStatus: String?
+        let hostNumericalGatePassed: Bool?
+        let hostComparisons: [HostStep]
+        let apgSameInputVsPublisher: [HostComparison]
+        let hostAudioVsFp32: HostComparison
         let hostDecoderFoldingExact: Bool
         let sourceReferenceSha256: String
         let conditionReferenceSha256: String
@@ -733,7 +747,41 @@ enum CoreAIDecoderProbe {
             try checkManifest(ref.checkpointDigest, "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b", "preview.base_digest")
             try checkManifest(ref.vaeCheckpointDigest, Profile.encoderOneSecond.checkpointDigest, "preview.vae_digest")
             try checkManifest(ref.allCheckpointsVerified, true, "preview.checkpoints_verified")
-            try checkManifest(ref.hostDualTrajectoryParityPassed, true, "preview.host_trajectory")
+            try checkManifest(ref.hostComparisons.map { $0.step }, Array(1...50), "preview.host_steps")
+            try checkManifest(ref.apgSameInputVsPublisher.count, 50, "preview.host_apg_count")
+            func boundedHostComparison(_ stats: BassPreviewContract.HostComparison) throws -> Bool {
+                guard stats.finite, stats.maxAbsoluteError.isFinite, stats.maxAbsoluteError >= 0,
+                      stats.rmse.isFinite, stats.rmse >= 0, stats.normalizedRmse.isFinite,
+                      stats.normalizedRmse >= 0, stats.normalizedRmse <= 1e-3,
+                      stats.elementwiseFractionOverBound.isFinite, stats.elementwiseFractionOverBound >= 0,
+                      stats.elementwiseFractionOverBound <= 1 else { throw ShardError.invalidManifest }
+                let strict = stats.elementwiseFractionOverBound == 0
+                try checkManifest(stats.parityPassed, strict, "preview.host_comparison_flag")
+                return strict
+            }
+            var hostTrajectoryPassed = true
+            for step in ref.hostComparisons {
+                let passed = try boundedHostComparison(step.latent)
+                hostTrajectoryPassed = hostTrajectoryPassed && passed
+            }
+            for stats in ref.apgSameInputVsPublisher {
+                try checkManifest(try boundedHostComparison(stats), true, "preview.host_apg_strict")
+            }
+            let hostAudioPassed = try boundedHostComparison(ref.hostAudioVsFp32)
+            let hostStrict = hostTrajectoryPassed && hostAudioPassed
+            try checkManifest(ref.hostDualTrajectoryParityPassed, hostTrajectoryPassed, "preview.host_trajectory")
+            if let claimed = ref.hostNumericalGatePassed {
+                try checkManifest(claimed, hostStrict, "preview.host_numerical_gate")
+            } else if !hostStrict { throw ShardError.invalidManifest }
+            let hostStatus = hostStrict ? "strict_pass" : "bounded_diagnostic"
+            if let claimed = ref.hostExportStatus {
+                try checkManifest(claimed, hostStatus, "preview.host_export_status")
+            } else if !hostStrict { throw ShardError.invalidManifest }
+            allParity = hostStrict
+            lines.append("Host preparation: \(hostStatus); strict gate \(hostStrict ? "PASS" : "NOT PASSED"); original tolerances unchanged")
+            if !hostStrict {
+                lines.append("Bounded diagnostic bundle: finite, normalized RMSE <= 0.001; pointwise gate failed. Result cannot be labeled overall numerical PASS.")
+            }
             try checkManifest(ref.hostDecoderFoldingExact, true, "preview.decoder_fold")
             try checkManifest(ref.absoluteTolerance, 1e-4, "preview.abs")
             try checkManifest(ref.relativeTolerance, 1e-3, "preview.rel")

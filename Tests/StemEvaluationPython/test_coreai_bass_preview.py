@@ -59,6 +59,7 @@ class BassPreviewTests(unittest.TestCase):
         for asset in [*[s['asset_file'] for s in M.stage_plan()],'apg-euler.aimodel','decoder.aimodel']:
             (folder/asset).mkdir()
             for n in ['main.hash','main.mlirb','metadata.json']:(folder/asset/n).write_bytes(b'NOT executable; integrity-only fixture')
+        passed={'finite':True,'max_absolute_error':0.,'rmse':0.,'normalized_rmse':0.,'elementwise_fraction_over_bound':0.,'parity_passed':True}
         ref={'schema_version':1,'profile':'bass-preview-512','stages':M.stage_plan(),'inference_steps':50,'guidance_scale':7,'shift':1,
              'method':'euler_ode_apg','apg_momentum':-.75,'apg_norm_threshold':2.5,'apg_projection_dims':[1],
              'apg_projection_precision':'float32_validated_against_original_float64','checkpoints':M.CHECKPOINTS,'function_name':'main',
@@ -66,12 +67,49 @@ class BassPreviewTests(unittest.TestCase):
              'checkpoint_digest':M.records()['model.safetensors']['digest'],
              'vae_checkpoint_digest':'da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0',
              'all_checkpoints_verified':True,'host_dual_trajectory_parity_passed':True,'host_decoder_folding_exact':True,
-             'host_comparisons':[{'step':i+1,'latent':{'parity_passed':True}} for i in range(50)],
-             'apg_same_input_vs_publisher':[{'parity_passed':True} for _ in range(50)],'host_audio_vs_fp32':{'parity_passed':True},
+             'host_comparisons':[{'step':i+1,'latent':dict(passed)} for i in range(50)],
+             'apg_same_input_vs_publisher':[dict(passed) for _ in range(50)],'host_audio_vs_fp32':dict(passed),
              'absolute_tolerance':1e-4,'relative_tolerance':1e-3,'relative_rmse_tolerance':1e-3,
              'source_reference_sha256':M.sha256(source/'reference.json'),'condition_reference_sha256':M.sha256(condition/'reference.json'),
              'artifact_sha256':{str(p.relative_to(folder)):M.sha256(p) for p in folder.rglob('*') if p.is_file()}}
         (folder/'reference.json').write_text(json.dumps(ref));return ref
+
+    def test_mac_sized_drift_exports_only_as_explicit_diagnostic_without_false_pass(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);folder=root/'bundle';source=root/'source';condition=root/'condition'
+            ref=self.fixture(folder,source,condition)
+            # Actual user-reported Mac step-50 comparison. Other rows here are
+            # integrity fixtures, not a claimed reproduction of Mac inference.
+            ref['host_comparisons'][-1]['latent']={'finite':True,'max_absolute_error':0.0005795955657958984,
+                'rmse':6.44258760192851e-05,'normalized_rmse':6.788929154513494e-05,
+                'elementwise_fraction_over_bound':0.00439453125,'parity_passed':False}
+            status=M.classify_host_references(ref['host_comparisons'],ref['apg_same_input_vs_publisher'],ref['host_audio_vs_fp32'])
+            self.assertEqual(status,{'host_dual_trajectory_parity_passed':False,'host_numerical_gate_passed':False,'host_export_status':'bounded_diagnostic'})
+            ref.update(status);(folder/'reference.json').write_text(json.dumps(ref))
+            verified=M.verify_bundle(folder,source,condition)
+            self.assertFalse(verified['host_numerical_gate_passed'])
+            self.assertEqual(verified['absolute_tolerance'],1e-4)
+            self.assertEqual(verified['relative_tolerance'],1e-3)
+            self.assertEqual(verified['relative_rmse_tolerance'],1e-3)
+            ref['host_numerical_gate_passed']=True;(folder/'reference.json').write_text(json.dumps(ref))
+            with self.assertRaisesRegex(ValueError,'Inconsistent'):M.verify_bundle(folder,source,condition)
+
+    def test_excessive_nonfinite_or_same_input_apg_error_remains_blocked(self):
+        passed={'finite':True,'max_absolute_error':0.,'rmse':0.,'normalized_rmse':0.,'elementwise_fraction_over_bound':0.,'parity_passed':True}
+        rows=[{'step':i+1,'latent':dict(passed)} for i in range(50)];apg=[dict(passed) for _ in range(50)]
+        for change in [{'normalized_rmse':.00101,'parity_passed':False},
+                       {'normalized_rmse':float('nan')},{'finite':False},
+                       {'elementwise_fraction_over_bound':.01,'parity_passed':True}]:
+            bad={**passed,**change}
+            with self.assertRaises(ValueError):M.classify_host_references(rows,apg,bad)
+        audio_drift={**passed,'max_absolute_error':.0002,'rmse':.00001,'normalized_rmse':.0001,
+                     'elementwise_fraction_over_bound':.001,'parity_passed':False}
+        status=M.classify_host_references(rows,apg,audio_drift)
+        self.assertTrue(status['host_dual_trajectory_parity_passed'])
+        self.assertFalse(status['host_numerical_gate_passed'])
+        self.assertEqual(status['host_export_status'],'bounded_diagnostic')
+        apg[0]={**passed,'elementwise_fraction_over_bound':.001,'parity_passed':False}
+        with self.assertRaisesRegex(ValueError,'APG gate failed'):M.classify_host_references(rows,apg,passed)
 
     def test_rejects_changed_component_identity_guidance_and_missing_layers(self):
         with tempfile.TemporaryDirectory() as tmp:

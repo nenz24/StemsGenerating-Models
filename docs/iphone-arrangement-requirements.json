@@ -780,6 +780,16 @@
     "device_integrated_inference_verified": false,
     "device_wav_generation_verified": false,
     "musical_quality_verified": false,
-    "diagnostic_wav_may_be_saved_if_numerical_checks_fail": true
+    "diagnostic_wav_may_be_saved_if_numerical_checks_fail": true,
+    "host_platform_evidence": {
+      "linux_strict_export": "reviews/coreai-bass-preview-export/reference.json",
+      "mac_user_preparation_failure": "reviews/coreai-mac-bass-preview-drift/report.json",
+      "mac_strict_final_latent_parity_passed": false,
+      "updated_mac_diagnostic_preparation_verified": false
+    },
+    "bounded_diagnostic_host_export_implemented": true,
+    "bounded_diagnostic_export_rules": "Finite latent and decoded audio normalized RMSE <=1e-3; strict identical-input APG required; pointwise failure stays failed and prevents overall numerical PASS",
+    "numerical_tolerances_changed": false,
+    "updated_device_diagnostic_status_build_verified": false
   }
 }

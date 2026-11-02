@@ -3,7 +3,13 @@
 Pipeline pertama sekarang diimplementasikan: **PCM piano → VAE posterior →
 Qwen/ConditionEncoder → 50 langkah sampling → VAE decoder → WAV**. Dua gate
 conditioning sebelumnya sudah PASS. Pipeline gabungan sudah lolos pembandingan
-host; build Apple, eksekusi gabungan iPhone dan penilaian suara masih menunggu.
+host Linux; build Apple, eksekusi gabungan iPhone dan penilaian suara masih menunggu.
+
+**Catatan Mac:** [laporan pengguna](../reviews/coreai-mac-bass-preview-drift/README.md)
+menunjukkan strict pointwise parity gagal setelah akumulasi 50 langkah, sehingga
+persiapan versi awal berhenti sebelum ekspor. Perbedaan numerik itu belum
+dihilangkan. Persiapan kini dapat mengekspor `bounded_diagnostic` dengan status
+gagal tetap tersimpan, sehingga hasil bisa didengar tanpa mengklaim parity PASS.
 
 ## Jalankan di Mac dan iPhone
 
@@ -46,6 +52,20 @@ Error kontrak/hash, tensor, memori atau kegagalan backend menghentikan pipeline.
 Jika error `missingPreparedBundle`, kirim hasil persiapan terminal; pastikan
 Ready tercapai sebelum rebuild. Clean Build Folder dapat dipakai bila resource
 yang telah dibuat belum ikut aplikasi.
+
+Persiapan host juga membedakan **`strict_pass`** dari **`bounded_diagnostic`**.
+Paket diagnostik mensyaratkan setiap latent dan waveform finite dengan
+normalized RMSE <=1e-3; APG pada input identik tetap wajib lolos batas strict.
+Batas absolute/relative/normalized RMSE tidak diubah. Error besar/nonfinite atau
+kegagalan APG/integritas tetap menghentikan ekspor. `Ready` berarti paket selesai
+disiapkan, bukan otomatis berarti gate numerik PASS. Aplikasi memeriksa status
+host itu; paket diagnostik tidak dapat menghasilkan label numerical PASS
+keseluruhan walaupun sepuluh pembandingan perangkat kebetulan lolos.
+
+Untuk kegagalan Mac tersebut, jalankan ulang perintah di atas setelah pull.
+Checkpoint cache dipakai ulang; referensi dihitung ulang karena percobaan lama
+berhenti sebelum ekspor. Bundle strict-pass yang sudah lengkap tetap bisa
+diverifikasi/dipakai tanpa diekspor ulang.
 
 ## Yang benar-benar berjalan di perangkat
 
