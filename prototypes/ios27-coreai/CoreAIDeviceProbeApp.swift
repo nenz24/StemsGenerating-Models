@@ -170,7 +170,10 @@ struct CoreAIDeviceProbeApp: App {
                             runningModel = true
                             report = "Menjalankan pipeline piano ke WAV bass pendek…"
                             Task {
-                                let result = await CoreAIDecoderProbe.generateBassPreview { text in self.report = text }
+                                let update: @MainActor @Sendable (String) -> Void = { text in self.report = text }
+                                let result = await Task.detached(priority: .userInitiated) {
+                                    await CoreAIDecoderProbe.generateBassPreview(progress: update)
+                                }.value
                                 report = result.report
                                 generatedBass = result.bassURL
                                 generatedMix = result.mixURL

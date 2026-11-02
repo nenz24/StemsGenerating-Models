@@ -133,6 +133,13 @@ sebelumnya mencatat graph-load failure yang sama. Pull/build ulang untuk mencoba
 bobot, referensi dan perhitungan tetap dipakai, tanpa ekspor atau Metal Toolchain.
 Perubahan runtime ini masih menunggu validasi iPhone.
 
+**AOT siap disiapkan di Mac:** Metal Toolchain 27B47 sekarang tersedia. Jalankan
+`bash scripts/prepare_coreai_bass_preview_aot.sh` untuk mengompilasi 16 aset
+preview hanya bagi `h18p`, tanpa mengulang ekspor/referensi. Loader memakai
+`.aimodelc` dengan policy `default`, sesuai pilihan compiler `none`; source/Qwen
+tetap CPU-only. Native AOT dan hasil iPhone masih perlu dicoba.
+[Instruksi AOT](docs/coreai-bass-preview-aot.md).
+
 Persiapan Mac dapat menemukan drift pointwise yang tidak terjadi pada ekspor
 Linux. [Perbaikan status diagnostik](reviews/coreai-mac-bass-preview-drift/README.md)
 mengizinkan ekspor hanya jika error tetap finite dan normalized RMSE terbatas,

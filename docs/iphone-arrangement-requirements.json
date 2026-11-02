@@ -806,13 +806,35 @@
     "specialization_failure_trace_implemented": true,
     "specialization_failure_trace_apple_build_verified": true,
     "bnns_compile_allocation_failure_reported": true,
-    "aot_mitigation_status": "Official coreai-build AOT documented; Mac tool unavailable; Metal Toolchain prerequisite requested, CPU/architecture CLI options awaiting installed-tool help",
+    "aot_mitigation_status": "Mac Metal Toolchain 27B47 installed and help supplied; compiler/packager and runtime AOT selection implemented; real AOT compilation and device validation pending",
     "runtime_ownership_policy": "Single live Swift model/function scope per preview asset; detached CPU copies; native cache eviction unguaranteed",
     "expected_sampling_model_opens": 750,
     "expected_sampling_function_binds": 750,
     "expected_sampling_reuse_hits": 0,
     "targeted_cache_recovery": "Delete only blocks-18-19 cpuOnly compiled entry if prior saved report has its BNNS graphLoadFailed; no source asset or checkpoint changes",
     "sequential_preview_apple_build_verified": false,
-    "sequential_preview_device_execution_verified": false
+    "sequential_preview_device_execution_verified": false,
+    "aot": {
+      "preparation_script": "scripts/prepare_coreai_bass_preview_aot.sh",
+      "compiler_driver": "scripts/prepare_coreai_bass_preview_aot.py",
+      "guide": "docs/coreai-bass-preview-aot.md",
+      "toolchain_evidence": "reviews/coreai-aot-toolchain-27b47/compile-help.txt",
+      "architecture": "h18p",
+      "platform": "iOS",
+      "min_deployment_version": "27.0",
+      "preferred_compute": "none",
+      "runtime_sampling_decoder_policy": "default",
+      "source_and_qwen_policy": "cpuOnly",
+      "cpu_only_compile_option_available": false,
+      "assets": 16,
+      "local_ignored_bundle": "prototypes/ios27-coreai/ModelCandidates/bass-preview-512-aot",
+      "per_asset_compilation_resume_implemented": true,
+      "source_models_and_references_preserved": true,
+      "actual_mac_aot_compilation_verified": false,
+      "aot_loader_apple_build_verified": false,
+      "aot_device_execution_verified": false,
+      "aot_memory_mitigation_verified": false,
+      "actual_accelerator_placement_measured": false
+    }
   }
 }

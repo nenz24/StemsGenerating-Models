@@ -1,0 +1,15 @@
+Transcribed from the user's Mac CLI output after Metal Toolchain 27B47 installation.
+
+OVERVIEW: Compiles a source model to produce a specialization.
+USAGE: coreai-build compile <input> [--output <output>] [--platform <platform>] [--min-deployment-version <min-deployment-version>] [--preferred-compute <preferred-compute>] [--architecture <architecture> ...] [--expect-frequent-reshapes]
+
+ARGUMENTS:
+  <input> The input source model (.aimodel).
+OPTIONS:
+  --output <output> The output directory. Output preserves the base input model name and appends the architecture and .aimodelc extension. For a single model a full model path is also accepted.
+  --platform <platform> (values: iOS, macOS, watchOS, visionOS, tvOS; default: macOS)
+  --min-deployment-version <min-deployment-version> (default: 27.0)
+  --preferred-compute <preferred-compute> An optional preferred compute unit type. (values: gpu, neural-engine, none; default: none)
+  --architecture <architecture> A list of specific architectures. If omitted compiles for all supported architectures.
+  --expect-frequent-reshapes Hint that inference runs with frequently changing input shapes.
+  -h, --help Show help information.

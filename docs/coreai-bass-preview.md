@@ -13,6 +13,13 @@ gagal tetap tersimpan, sehingga hasil bisa didengar tanpa mengklaim parity PASS.
 
 ## Jalankan di Mac dan iPhone
 
+**Metal Toolchain 27B47 kini tersedia:** [jalur AOT](coreai-bass-preview-aot.md)
+memakai compiler resmi di Mac untuk 16 aset khusus `h18p`. Tidak perlu mengulang
+ekspor/referensi. Pilihan compiler `none` dipasangkan dengan runtime `default`
+untuk sampling/decoder; source/Qwen tetap CPU-only. AOT belum divalidasi pada
+perangkat dan masih menyisakan specialization, sehingga tidak menjamin error
+memori selesai. Laporan baru membedakan resource/policy AOT dari jalur source.
+
 **Update setelah kegagalan `blocks-18-19`:** [laporan terlokalisasi](../reviews/coreai-iphone17pro-bass-preview-block1819/README.md)
 berhasil menjalankan sepuluh aset sampling, lalu gagal binding aset ke-11.
 Preview kini melepas scope model/fungsi Swift setelah setiap aset dan menyalin
@@ -37,13 +44,12 @@ domain/code. Console pengguna kemudian menunjukkan BNNS gagal mengalokasikan
 mapping `bnns.ir` saat compile. Pembaruan pelaporan tetap diperlukan untuk
 mengidentifikasi aset/operasinya; ini belum membuktikan kegagalan runtime teratasi.
 
-Mitigasi yang sedang disiapkan adalah kompilasi AOT di Mac sesuai
-[panduan Apple](https://developer.apple.com/documentation/coreai/compiling-core-ai-models-ahead-of-time).
-`coreai-build` memerlukan Metal Toolchain. Jika `xcrun` belum menemukannya,
-jalankan `xcodebuild -downloadComponent MetalToolchain`, kemudian
-`xcrun coreai-build compile --help` dan bagikan hasilnya. Opsi CPU/target harus
-mengikuti tool yang terpasang; AOT tetap menyisakan sebagian specialization
-di iPhone dan belum divalidasi sebagai solusi error ini.
+Metal Toolchain 27B47 telah terpasang dan help compiler sudah diberikan.
+Gunakan [persiapan AOT](coreai-bass-preview-aot.md) untuk kompilasi di Mac:
+`--preferred-compute none --architecture h18p`. Compiler tidak menyediakan
+preferensi CPU-only; loader AOT memakai runtime `default`, sedangkan jalur
+source tetap CPU-only. AOT masih menyisakan sebagian specialization di iPhone
+dan belum divalidasi sebagai solusi error ini.
 
 Dari folder repository:
 

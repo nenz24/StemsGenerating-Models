@@ -692,6 +692,82 @@ enum CoreAIDecoderProbe {
         try checkManifest(digest, expected, "preview.component_reference_sha256")
     }
 
+    private struct BassPreviewAOTContract: Decodable {
+        let schemaVersion: Int
+        let profile: String
+        let architecture: String
+        let platform: String
+        let minDeploymentVersion: String
+        let preferredCompute: String
+        let runtimePolicy: String
+        let sourceReferenceSha256: String
+        let compiledAssetCount: Int
+        let assets: [String: String]
+        let artifactSha256: [String: String]
+    }
+
+    private struct PreviewAOTSelection: Sendable {
+        let folder: URL
+        let assets: [String: String]
+    }
+
+    private static func streamingSHA256(_ url: URL) throws -> String {
+        let file = try FileHandle(forReadingFrom: url)
+        defer { try? file.close() }
+        var digest = SHA256()
+        while let chunk = try file.read(upToCount: 4*1024*1024), !chunk.isEmpty { digest.update(data: chunk) }
+        return digest.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func preparedBassPreviewAOT(source: URL) throws -> PreviewAOTSelection? {
+        let folder = source.deletingLastPathComponent().appendingPathComponent("bass-preview-512-aot")
+        guard FileManager.default.fileExists(atPath: folder.path) else { return nil }
+        let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let ref = try decoder.decode(BassPreviewAOTContract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
+        let architecture = AIModel.deviceArchitectureName
+        try checkManifest(ref.schemaVersion, 1, "aot.schema")
+        try checkManifest(ref.profile, "bass-preview-512-aot", "aot.profile")
+        try checkManifest(ref.architecture, architecture, "aot.device_architecture")
+        try checkManifest(ref.platform, "iOS", "aot.platform")
+        try checkManifest(ref.minDeploymentVersion, "27.0", "aot.deployment")
+        try checkManifest(ref.preferredCompute, "none", "aot.compiler_preference")
+        try checkManifest(ref.runtimePolicy, "default", "aot.runtime_policy")
+        try checkManifest(ref.compiledAssetCount, 16, "aot.asset_count")
+        let names = bassPreviewStages().map { $0.assetFile } + ["apg-euler.aimodel","decoder.aimodel"]
+        let expected = Dictionary(uniqueKeysWithValues: names.map { name in
+            (name, (name as NSString).deletingPathExtension + "." + architecture + ".aimodelc")
+        })
+        try checkManifest(ref.assets, expected, "aot.variant_names")
+        try verifyReferenceIdentity(source.appendingPathComponent("reference.json"), expected: ref.sourceReferenceSha256)
+        guard !ref.artifactSha256.isEmpty else { throw ShardError.invalidManifest }
+        let root = folder.standardizedFileURL.resolvingSymlinksInPath().path + "/"
+        var actualFiles = Set<String>()
+        guard let files = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: [.isRegularFileKey]) else {
+            throw ShardError.invalidManifest
+        }
+        for case let url as URL in files {
+            let values = try url.resourceValues(forKeys: [.isRegularFileKey])
+            guard values.isRegularFile == true, url.lastPathComponent != ".DS_Store", url != folder.appendingPathComponent("reference.json") else { continue }
+            let path = url.standardizedFileURL.resolvingSymlinksInPath().path
+            guard path.hasPrefix(root) else { throw ShardError.invalidManifest }
+            actualFiles.insert(String(path.dropFirst(root.count)))
+        }
+        try checkManifest(actualFiles, Set(ref.artifactSha256.keys), "aot.covered_files")
+        for (name, expectedDigest) in ref.artifactSha256 {
+            guard ref.assets.values.contains(where: { name == $0 || name.hasPrefix($0 + "/") }) else { throw ShardError.invalidManifest }
+            let url = folder.appendingPathComponent(name).standardizedFileURL.resolvingSymlinksInPath()
+            guard url.path.hasPrefix(root) else { throw ShardError.invalidManifest }
+            try checkManifest(try streamingSHA256(url), expectedDigest, "aot.artifact_sha256: \(name)")
+        }
+        for name in ref.assets.values {
+            guard FileManager.default.fileExists(atPath: folder.appendingPathComponent(name).path),
+                  ref.artifactSha256.keys.contains(where: { $0 == name || $0.hasPrefix(name + "/") }) else {
+                throw ShardError.invalidManifest
+            }
+        }
+        return PreviewAOTSelection(folder: folder, assets: ref.assets)
+    }
+
     static func generateBassPreview(progress: @escaping @MainActor @Sendable (String) -> Void) async -> BassPreviewResult {
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
@@ -703,11 +779,11 @@ enum CoreAIDecoderProbe {
                      "Audio: 5.12 s / 48000 Hz stereo; 128 latent frames / 117 condition tokens",
                      "Guidance 7; APG momentum -0.75, threshold 2.5, projection over latent time (dim 1); shift 1",
                      "APG projection FP32, compared on host against original FP64 projection; not plain CFG",
-                     "Requested compute policy: cpuOnly; accelerator placement NOT MEASURED",
+                     "Requested compute policy: source/Qwen cpuOnly; sampling/decoder policy below; accelerator placement NOT MEASURED",
                      "Fixed host PCM/tokenization/epsilon/noise fixtures; raw recording import, arbitrary prompts and on-device RNG NOT tested",
                      "Actual component outputs feed sampling; host references are comparisons only",
                      "Execution: single live Swift model/function scope per asset; detached CPU copies; native cache eviction NOT GUARANTEED",
-                     "Compiled cache repair: only blocks-18-19 if the saved prior run reports its BNNS graphLoadFailed; no automatic retry",
+                     "Raw-source cache repair: only blocks-18-19 after its saved BNNS graphLoadFailed; skipped for AOT; no automatic retry",
                      "Footprint guard 2000 MiB before each stage and after bind; NOT an OS peak-memory guarantee"]
         #if targetEnvironment(simulator)
         lines.append("Target: Simulator; not physical-device evidence")
@@ -799,6 +875,18 @@ enum CoreAIDecoderProbe {
             }
             try verifyReferenceIdentity(sourceFolder.appendingPathComponent("reference.json"), expected: ref.sourceReferenceSha256)
             try verifyReferenceIdentity(conditionFolder.appendingPathComponent("reference.json"), expected: ref.conditionReferenceSha256)
+            lastPhase = "verifying optional architecture-matched AOT bundle"
+            saveProgress(lines + [lastPhase], profile: .denoiser)
+            await progress((lines + [lastPhase]).joined(separator: "\n"))
+            let preparedAOT = try preparedBassPreviewAOT(source: folder)
+            if let preparedAOT {
+                lines.append("Sampling/decoder assets: AOT .aimodelc; architecture \(AIModel.deviceArchitectureName); 16 compiled assets SHA-256 VERIFIED")
+                lines.append("Sampling/decoder requested policy: default, matching compiler --preferred-compute none; physical accelerator NOT MEASURED")
+                lines.append("AOT can still specialize on device; reduced compiler memory/time NOT YET MEASURED")
+                lines.append("AOT source identity matched: \(preparedAOT.folder.lastPathComponent)")
+            } else {
+                lines.append("Sampling/decoder assets: source .aimodel; requested policy cpuOnly; device compilation required")
+            }
             let noise = try readFloats(folder: folder, name: "initial-noise.f32le", count: 128*64, hashes: ref.artifactSha256)
             let times = try readFloats(folder: folder, name: "timesteps.f32le", count: 51, hashes: ref.artifactSha256)
             try checkManifest(times[0], Float(1), "preview.time_start")
@@ -822,7 +910,7 @@ enum CoreAIDecoderProbe {
             // Repair only the observed failing derived CPU cache entry, before
             // any model is opened. Bundled assets/weights/references are untouched.
             // The saved report is captured before component progress overwrites it.
-            if let priorReport,
+            if case .none = preparedAOT, let priorReport,
                priorReport.contains("Failing asset: blocks-18-19.aimodel"),
                priorReport.contains("BNNSCoreAIDelegate.BNNSDelegate.BNNSError.graphLoadFailed") {
                 lastPhase = "targeted compiled-cache recovery for blocks-18-19.aimodel"
@@ -870,7 +958,7 @@ enum CoreAIDecoderProbe {
                         guard let array = state[name], array.shape == shape else { throw ShardError.invalidManifest }
                         inputs[name] = array
                     }
-                    let result = try await runSequentialPreviewStage(stage, folder: folder, inputs: inputs, stats: &retention)
+                    let result = try await runSequentialPreviewStage(stage, folder: folder, inputs: inputs, aot: preparedAOT, stats: &retention)
                     if index == 0 {
                         lines.append("First sampling step stage \(stageIndex+1)/14 \(stage.assetFile): load ms \(result.loadMs); \(result.phases.report)")
                     }
@@ -887,7 +975,7 @@ enum CoreAIDecoderProbe {
                 await progress((lines + [lastPhase]).joined(separator: "\n"))
                 let result = try await runSequentialPreviewStage(apgStage, folder: folder,
                     inputs: ["velocity":velocity,"latent":latent,"momentum":momentum,
-                             "dt":NDArray(scalars: [times[index]-times[index+1]], shape: [1])], stats: &retention)
+                             "dt":NDArray(scalars: [times[index]-times[index+1]], shape: [1])], aot: preparedAOT, stats: &retention)
                 guard let next = result.values["latent_next"], let nextMomentum = result.values["momentum_next"],
                       result.values["guided_velocity"] != nil else { throw ProbeError.invalidOutputTensor }
                 latent = next; momentum = nextMomentum
@@ -922,7 +1010,7 @@ enum CoreAIDecoderProbe {
             let decoderStage = Contract.Stage(assetFile: "decoder.aimodel", layerIndices: [],
                 inputShapes: ["latent":[1,64,128]], outputShapes: ["audio":[1,2,245760]], outputBindings: nil)
             let decoded = try await runSequentialPreviewStage(decoderStage, folder: folder,
-                inputs: ["latent":NDArray(scalars: decoderInput, shape: [1,64,128])], stats: &retention)
+                inputs: ["latent":NDArray(scalars: decoderInput, shape: [1,64,128])], aot: preparedAOT, stats: &retention)
             guard let audioArray = decoded.values["audio"] else { throw ProbeError.invalidOutputTensor }
             let audio = try copiedValues(audioArray, shape: [1,2,245760])
             for kind in ["reference","fp32-reference"] {
@@ -1574,14 +1662,27 @@ enum CoreAIDecoderProbe {
     // inside this helper and is dropped on success or failure before the next
     // stage starts. This bounds our Swift ownership, not backend cache residency.
     private static func runSequentialPreviewStage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray],
-                                                   stats: inout RetentionStats) async throws -> StageResult {
+                                                   aot: PreviewAOTSelection? = nil, stats: inout RetentionStats) async throws -> StageResult {
         var owned: [String: RetainedStage] = [:]
         defer { owned.removeAll() }
-        return try await runRetainedStage(stage, folder: folder, inputs: inputs, pool: &owned, stats: &stats)
+        let resource: URL
+        let options: SpecializationOptions
+        if let aot {
+            guard let name = aot.assets[stage.assetFile] else { throw ShardError.invalidManifest }
+            resource = aot.folder.appendingPathComponent(name)
+            options = .default
+        } else {
+            resource = folder.appendingPathComponent(stage.assetFile)
+            options = .cpuOnly
+        }
+        return try await runRetainedStage(stage, folder: folder, inputs: inputs, pool: &owned, stats: &stats,
+                                          modelURL: resource, options: options)
     }
 
     private static func runRetainedStage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray],
-                                         pool: inout [String: RetainedStage], stats: inout RetentionStats) async throws -> StageResult {
+                                         pool: inout [String: RetainedStage], stats: inout RetentionStats, modelURL: URL? = nil,
+                                         options: SpecializationOptions = .cpuOnly) async throws -> StageResult {
+        let resource = modelURL ?? folder.appendingPathComponent(stage.assetFile)
         var operation = "retained-handle-selection"
         let reused = pool[stage.assetFile] != nil
         do {
@@ -1601,7 +1702,7 @@ enum CoreAIDecoderProbe {
             } else {
                 let loadStart = clock.now
                 operation = "model-open/specialization"
-                let probe = try await CoreAIModelProbe(contentsOf: folder.appendingPathComponent(stage.assetFile), options: .cpuOnly)
+                let probe = try await CoreAIModelProbe(contentsOf: resource, options: options)
                 stats.modelOpens += 1
                 runStart = clock.now
                 loadMs = ms(loadStart.duration(to: runStart))
@@ -1641,7 +1742,8 @@ enum CoreAIDecoderProbe {
             return (detached, loadMs, runMs, phases)
         } catch {
             throw StageExecutionFailure(asset: stage.assetFile, operation: operation, reused: reused,
-                                        details: modelErrorDetails(error))
+                                        details: ["Requested model resource: \(resource.lastPathComponent)",
+                                                  "Requested policy cpuOnly: \(options == .cpuOnly)"] + modelErrorDetails(error))
         }
     }
 

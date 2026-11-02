@@ -329,3 +329,15 @@ dengar/bagikan WAV bass, campuran piano+bass dan laporan. Target: 50/50 langkah,
 diagnostik saat pembandingan numerik tidak lolos; laporan tidak menandainya PASS.
 Ekspor/gate host lolos; build Apple dan pipeline iPhone belum diuji.
 [Panduan dan batas fixture](../../docs/coreai-bass-preview.md).
+
+## AOT untuk h18p
+
+Setelah Metal Toolchain terpasang, jalankan
+`bash scripts/prepare_coreai_bass_preview_aot.sh`. Skrip memakai source preview
+yang ada dan mengompilasi 16 aset khusus `h18p`, dengan resume per aset dan
+hash paket. Setelah Ready, Stop/Cmd+R lalu gunakan tombol generasi yang sama.
+Aplikasi mencatat pemakaian `.aimodelc` dan policy sampling/decoder `default`
+(compiler `--preferred-compute none`); source/Qwen tetap `cpuOnly`. CLI yang
+diberikan pengguna tidak menyediakan opsi preferensi CPU. AOT/caller baru
+belum divalidasi pada Mac/iPhone dan masih dapat memerlukan specialization.
+[Panduan](../../docs/coreai-bass-preview-aot.md).
