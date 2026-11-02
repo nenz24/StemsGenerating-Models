@@ -5,6 +5,7 @@ Run `EFF5CCF3-8A93-43B3-B0D9-CAB8C74933E7`, started
 [console](console.txt), after the first-step scope mitigation in `742388e`.
 iPhone 17 Pro, iOS 27.0.1 (24A446), h18p; Release, Swift `-O`, cpuOnly requested.
 Actual accelerator placement is unmeasured. User reports 148 GB free storage.
+Console line endings are normalized to LF; log text is otherwise preserved.
 
 | Observation | Result |
 | --- | --- |
