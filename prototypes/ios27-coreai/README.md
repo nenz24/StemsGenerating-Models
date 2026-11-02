@@ -298,3 +298,17 @@ embedding teks, ConditionEncoder atau generasi bass. [Uji iPhone sudah PASS](../
 3/3 run dan 12/12 output, rata-rata backend 1,037 detik, footprint maksimum
 tersampel 398,21 MiB. Bagian audio tahap 2 selesai untuk fixture ini; lanjut
 conditioning teks/instrumen. [Panduan](../../docs/coreai-source-context.md).
+
+## Conditioning instrumen bass
+
+Jalankan `bash scripts/prepare_coreai_bass_conditioning.sh`, tunggu Ready,
+build Cmd+R lalu tekan **Uji conditioning bass**. Tidak ada pilihan rekaman
+pada langkah ini. Qwen 0,6B diunduh jika belum ada (sekitar 1,19 GB); Base cache
+dipakai ulang. Ekspor menghasilkan 27 aset sekitar 2,42 GB dan mempertahankan
+bundle lain. Target: 27/27 tahap dan enam pembandingan PASS.
+
+Lookup token, semua 28 layer Qwen dan ConditionEncoder lengkap (8 lyric +
+4 timbre layer, projection, packing) dijalankan di CoreAI. Host parity lolos;
+kode baru belum diuji pada Apple SDK/iPhone. Tokenisasi prompt bass tetap di Mac,
+belum ada prompt bebas di iPhone. Tidak ada sampler/CFG atau suara bass pada
+gate ini. [Panduan](../../docs/coreai-bass-conditioning.md).

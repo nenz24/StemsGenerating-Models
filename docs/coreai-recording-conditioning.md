@@ -50,8 +50,10 @@ memakai encoder posterior dengan sample eksplisit dan mask helper `lego` asli,
 128 latent frame dari rekaman nyata. Ekspor native, host parity dan
 [uji iPhone](../reviews/coreai-iphone17pro-source-context/README.md) berhasil:
 3 run dan seluruh 12 output lolos. Bagian audio selesai untuk fixture ini;
-tidak perlu mengulang uji yang sama sekarang. Embedding teks dan ConditionEncoder
-belum diimplementasikan. Uji ini memvalidasi PCM yang dikanonisasi pada host,
+tidak perlu mengulang uji yang sama sekarang. [Jalur teks dan ConditionEncoder](coreai-bass-conditioning.md)
+kini juga diimplementasikan dan diekspor ke 27 aset native; full-model host parity
+lolos, uji iPhone masih menunggu. Tokenisasi preset tetap di Mac; semua operasi
+neural Qwen/ConditionEncoder diekspor untuk perangkat. Uji audio memvalidasi PCM yang dikanonisasi pada host,
 belum raw-recording import/resampling langsung di iPhone. Setelah conditioning
 benar, tahap 3 merangkainya dengan sampling/guidance dan decoder menjadi WAV
 pendek yang bisa didengar. Tidak ada uji tambahan tahap 1 yang diminta.

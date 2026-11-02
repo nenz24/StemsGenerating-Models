@@ -86,5 +86,7 @@ untuk membandingkan implementasi posterior yang sama.
 
 [Ekspor host sudah berhasil](../reviews/coreai-source-context-export/README.md).
 Build dan eksekusi Swift telah dilaporkan pengguna pada iPhone; workspace Linux
-tidak memiliki Apple SDK untuk mereproduksinya. Tahap 2 berikutnya adalah embedding prompt/lyrics,
-condition encoder dan mask aktual, lalu integrasi ke sampler/decoder pada tahap 3.
+tidak memiliki Apple SDK untuk mereproduksinya. Jalur berikutnya,
+[embedding prompt/lyrics dan ConditionEncoder](coreai-bass-conditioning.md), sudah
+diekspor dan lolos pembandingan host; uji iPhone masih menunggu. Setelah itu
+integrasi ke sampler/decoder pada tahap 3.

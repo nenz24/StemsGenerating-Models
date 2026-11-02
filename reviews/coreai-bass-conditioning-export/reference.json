@@ -1,0 +1,760 @@
+{
+  "schema_version": 1,
+  "profile": "bass-conditioning",
+  "function_name": "main",
+  "batch_size": 1,
+  "text_tokens": 105,
+  "lyric_tokens": 11,
+  "qwen_layer_count": 28,
+  "lyric_layer_count": 8,
+  "timbre_layer_count": 4,
+  "stages": [
+    {
+      "asset_file": "token-embedding.aimodel",
+      "input_shapes": {
+        "text_ids": [
+          1,
+          105
+        ],
+        "lyric_ids": [
+          1,
+          11
+        ]
+      },
+      "output_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ],
+        "lyric_hidden": [
+          1,
+          11,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "text_hidden": "text_hidden",
+        "lyric_hidden": "lyric_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-00-01.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-02-03.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-04-05.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-06-07.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-08-09.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-10-11.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-12-13.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-14-15.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-16-17.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-18-19.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-20-21.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-22-23.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-24-25.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-26-27.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "text_hidden"
+      }
+    },
+    {
+      "asset_file": "qwen-norm.aimodel",
+      "input_shapes": {
+        "text_hidden": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "text_embeddings": [
+          1,
+          105,
+          1024
+        ]
+      },
+      "output_bindings": {
+        "text_embeddings": "text_embeddings"
+      }
+    },
+    {
+      "asset_file": "lyric-front.aimodel",
+      "input_shapes": {
+        "lyric_hidden": [
+          1,
+          11,
+          1024
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          11,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "lyric_hidden"
+      }
+    },
+    {
+      "asset_file": "lyric-00-01.aimodel",
+      "input_shapes": {
+        "lyric_hidden": [
+          1,
+          11,
+          2048
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          11,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "lyric_hidden"
+      }
+    },
+    {
+      "asset_file": "lyric-02-03.aimodel",
+      "input_shapes": {
+        "lyric_hidden": [
+          1,
+          11,
+          2048
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          11,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "lyric_hidden"
+      }
+    },
+    {
+      "asset_file": "lyric-04-05.aimodel",
+      "input_shapes": {
+        "lyric_hidden": [
+          1,
+          11,
+          2048
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          11,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "lyric_hidden"
+      }
+    },
+    {
+      "asset_file": "lyric-06-07.aimodel",
+      "input_shapes": {
+        "lyric_hidden": [
+          1,
+          11,
+          2048
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          11,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "lyric_hidden"
+      }
+    },
+    {
+      "asset_file": "lyric-norm.aimodel",
+      "input_shapes": {
+        "lyric_hidden": [
+          1,
+          11,
+          2048
+        ]
+      },
+      "output_shapes": {
+        "lyric_encoded": [
+          1,
+          11,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "lyric_encoded": "lyric_encoded"
+      }
+    },
+    {
+      "asset_file": "timbre-front.aimodel",
+      "input_shapes": {
+        "reference_audio": [
+          1,
+          750,
+          64
+        ]
+      },
+      "output_shapes": {
+        "timbre_hidden": [
+          1,
+          750,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "timbre_hidden": "timbre_hidden"
+      }
+    },
+    {
+      "asset_file": "timbre-00-01.aimodel",
+      "input_shapes": {
+        "timbre_hidden": [
+          1,
+          750,
+          2048
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          750,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "timbre_hidden"
+      }
+    },
+    {
+      "asset_file": "timbre-02-03.aimodel",
+      "input_shapes": {
+        "timbre_hidden": [
+          1,
+          750,
+          2048
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          1,
+          750,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "timbre_hidden"
+      }
+    },
+    {
+      "asset_file": "timbre-norm.aimodel",
+      "input_shapes": {
+        "timbre_hidden": [
+          1,
+          750,
+          2048
+        ]
+      },
+      "output_shapes": {
+        "timbre_encoded": [
+          1,
+          1,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "timbre_encoded": "timbre_encoded"
+      }
+    },
+    {
+      "asset_file": "condition-pack.aimodel",
+      "input_shapes": {
+        "text_embeddings": [
+          1,
+          105,
+          1024
+        ],
+        "lyric_encoded": [
+          1,
+          11,
+          2048
+        ],
+        "timbre_encoded": [
+          1,
+          1,
+          2048
+        ]
+      },
+      "output_shapes": {
+        "condition": [
+          1,
+          117,
+          2048
+        ],
+        "condition_mask": [
+          1,
+          117
+        ]
+      },
+      "output_bindings": {
+        "condition": "condition",
+        "condition_mask": "condition_mask"
+      }
+    }
+  ],
+  "scalar_type": "float32",
+  "byte_order": "little",
+  "qwen_checkpoint_digest": "0437e45c94563b09e13cb7a64478fc406947a93cb34a7e05870fc8dcd48e23fd",
+  "base_checkpoint_digest": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b",
+  "silence_digest": "a778e9dd942f5e8b2c09c55370782d318834432b03dabbcdf70e6ed49ad6358b",
+  "all_checkpoint_hashes_verified": true,
+  "weight_storage_dtype": "float16",
+  "compute_dtype": "float32",
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "prompts": {
+    "instruction": "Generate the bass track based on the audio context:",
+    "caption": "Isolated fingerstyle electric bass guitar accompaniment. A dry, natural plucked tone with clearly articulated attacks, short note releases and audible upper harmonics. A simple musical bassline in a normal bass-guitar register following the piano's harmony, timing and dynamics.",
+    "metadata": "- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 5 seconds\n",
+    "text_prompt": "# Instruction\nGenerate the bass track based on the audio context:\n\n# Caption\nIsolated fingerstyle electric bass guitar accompaniment. A dry, natural plucked tone with clearly articulated attacks, short note releases and audible upper harmonics. A simple musical bassline in a normal bass-guitar register following the piano's harmony, timing and dynamics.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 5 seconds\n<|endoftext|>\n",
+    "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n<|endoftext|>",
+    "lyrics": "",
+    "vocal_language": "unknown",
+    "preset_sha256": "4bacacb4f9fb1a9e66c98958869e2756878e6420910b2af065bea6522cb6ef63",
+    "audio_seconds": 5.12
+  },
+  "tokenization_on_device": false,
+  "reference_audio_mode": "publisher_silence_750",
+  "all_valid_single_reference_specialization": true,
+  "host_partition_vs_original_fp32": {
+    "parity_passed": true,
+    "outputs": {
+      "text_embeddings": {
+        "finite": true,
+        "max_absolute_error": 0.0,
+        "rmse": 0.0,
+        "normalized_rmse": 0.0,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "condition": {
+        "finite": true,
+        "max_absolute_error": 0.0,
+        "rmse": 0.0,
+        "normalized_rmse": 0.0,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "condition_mask": {
+        "finite": true,
+        "max_absolute_error": 0.0,
+        "rmse": 0.0,
+        "normalized_rmse": 0.0,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    }
+  },
+  "host_storage16_vs_original_fp32": {
+    "parity_passed": true,
+    "outputs": {
+      "text_embeddings": {
+        "finite": true,
+        "max_absolute_error": 6.67572021484375e-05,
+        "rmse": 5.651992806673218e-06,
+        "normalized_rmse": 1.6820213854899026e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "condition": {
+        "finite": true,
+        "max_absolute_error": 6.365776062011719e-05,
+        "rmse": 6.302088468958909e-06,
+        "normalized_rmse": 1.678264633995912e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "condition_mask": {
+        "finite": true,
+        "max_absolute_error": 0.0,
+        "rmse": 0.0,
+        "normalized_rmse": 0.0,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    }
+  },
+  "artifact_sha256": {
+    "lyric_ids.f32le": "101d7cdb3dcee70d30b2c8f58b9c695761ec45496eedb872f949e8fad6f8ad12",
+    "condition-reference.f32le": "929245676fd1c022cd826612fd92655e23253824cfa8daaa45a4f91ba4dddcb4",
+    "text_embeddings-fp32-reference.f32le": "f447c90d53b077165e8b7f0537f84b184472124320c445f3b8030abb25971d51",
+    "condition_mask-fp32-reference.f32le": "2cfc90baffc046ffaaa5980b8a9a80ed2d1cb8f4ba0edd86a8accd0a42227b40",
+    "text_embeddings-reference.f32le": "d06932ad8bff5041417c5b6b4b9feb1a25cc1771e997225a1ef6082dfbd9eded",
+    "condition_mask-reference.f32le": "2cfc90baffc046ffaaa5980b8a9a80ed2d1cb8f4ba0edd86a8accd0a42227b40",
+    "condition-fp32-reference.f32le": "c49cb3fdfc60c1d74b03231359ff9e95a23dc0aa674055bb46d0e870f7e5c79e",
+    "text_ids.f32le": "5ff6a9da247868cd8d656a37a7e1484403db954ba98f2eaa9d5c2af8c68ebcf9",
+    "reference_audio.f32le": "4d0f3fc0ab3dc55080ad274e5c666c93b7ee3f94a12dd16b0e48b62edf7bb02e",
+    "lyric-06-07.aimodel/metadata.json": "ae3043b9999ad65aa990813686d2198dac55ab3d681f9f641a9b9dbbc0661488",
+    "lyric-06-07.aimodel/main.mlirb": "03f2d7b1afb85c8cbcbe4ef0e5f576e9fa332f5ad1f4c9d538ad98cb9a74252e",
+    "lyric-06-07.aimodel/main.hash": "a4cd16291682ad627180bec879c7836999f0abbe01b72d7465697a083d2a6709",
+    "qwen-10-11.aimodel/metadata.json": "b1749660e7d295a5181d27a73b023f86c6f90f01d08bbdad62734a3f48805026",
+    "qwen-10-11.aimodel/main.mlirb": "7ec50605be065c8b0913c2905897a2c76d7396ca99e3fe2fba0329956b213be5",
+    "qwen-10-11.aimodel/main.hash": "9d1d4378de80c0cce1b1fab00ff0af9f5eff552e363c5887a38cc22c092f0643",
+    "qwen-norm.aimodel/metadata.json": "eea8680b901ee28eb0deb075e7f5f62096dae296332de72181c4556dd0883cb7",
+    "qwen-norm.aimodel/main.mlirb": "1eec87d696e03cfd963799b10c5a527590814a3430272a55232958a6d1359691",
+    "qwen-norm.aimodel/main.hash": "6f2074acab3a7c758c10073174f6bf36bda65994ec377fbe5838ed32e5fa3710",
+    "qwen-00-01.aimodel/metadata.json": "19dc7901cf7207c132cbc6cb3e0c408442c9f18b10fa6892579605f6efd130b8",
+    "qwen-00-01.aimodel/main.mlirb": "3d9bd71d4f4b65b307d5c96e31f6956504f825e14ab9701e9bb4fa451cc25943",
+    "qwen-00-01.aimodel/main.hash": "0f481f6e809f6ea9843336586cb9eab0d49745fe9f2d35834e45949e96713870",
+    "timbre-norm.aimodel/metadata.json": "d50f306d1ca12783d1a75c57e4b7ad74d2326b21270f62abfdf3a8e5a84d9443",
+    "timbre-norm.aimodel/main.mlirb": "37925315e941b959f595e7a8f0fe8973e621f458eaf0be69a45d118aca0bd44f",
+    "timbre-norm.aimodel/main.hash": "c6bee154f939474c3c79d9fdf84710e95f4603c6b261ec4393bbc791f4323736",
+    "lyric-00-01.aimodel/metadata.json": "c75e214e799e44cd5a61f12e66459d0059218e907008975fffdf208dfc3423e8",
+    "lyric-00-01.aimodel/main.mlirb": "1cc494e42a0128bbbf792e9955f677d9f5ac74dcf5774e14022a32d957913e93",
+    "lyric-00-01.aimodel/main.hash": "2e914b593f9c44a3722ae48ab118bfd42935db527a9b4005a68254982439b457",
+    "qwen-06-07.aimodel/metadata.json": "b84c0a65f9895fe1d2e28663b27300d69e91b7ca556024d3b4fa6160f5f231cd",
+    "qwen-06-07.aimodel/main.mlirb": "30d9877c00e4a874aee53a3da6a21fe29fe6e534a5ada3b0911900bcb355f742",
+    "qwen-06-07.aimodel/main.hash": "1b4d42f17c95eba4d971ffff93a4be02e44333103d5c38e35a425bfbea8bfd65",
+    "qwen-16-17.aimodel/metadata.json": "160c67e91b8e28283c406616ca88c4400e9c73e53bba5944bfaee667e6b959d6",
+    "qwen-16-17.aimodel/main.mlirb": "bce8f2c17758af80f008444cefa04f50f0c165a1aae3aa917cadabc4b1e7e75c",
+    "qwen-16-17.aimodel/main.hash": "7e17ec074de8bb00790bbb29aae2c9387900e39f7abcbb7d1c1543747faed40b",
+    "qwen-08-09.aimodel/metadata.json": "330c23ae92834ee74d45978fe2a646468ffab13efb3a14fcaaf627fd3b321773",
+    "qwen-08-09.aimodel/main.mlirb": "57ae1a44538a68997ace4ee8615fb5d0c013e89ead9cc0e647773bfb8d67e2bd",
+    "qwen-08-09.aimodel/main.hash": "1ea45703ba6885bf764a786186b54a2a39b16a7aed002b678d0dba1218ba67c0",
+    "timbre-00-01.aimodel/metadata.json": "0091d2d796895de8dbc78fbfb2ffa82bf10cc2556b89bff8e2680f9e9847e4a7",
+    "timbre-00-01.aimodel/main.mlirb": "c9ad8795a8f2ac0ff3c9dc9dc2095cef6d6425361ae03d170be5747a122d9ca9",
+    "timbre-00-01.aimodel/main.hash": "80443734bc7058d480f1035356e045b379327a7c155c109047ac9d7e00420fb1",
+    "qwen-14-15.aimodel/metadata.json": "5937e4c04d9d83790db1c87612e457ac028544168375ca0ca83b801f49884e50",
+    "qwen-14-15.aimodel/main.mlirb": "0a17c10d1761fc28e081796b772e01d5e52ef420dbec90c76dfd0497da5e6851",
+    "qwen-14-15.aimodel/main.hash": "eb7e740ab5d548b3bbde7edcf20c913fbbe23ca5990a5106348af5466e1ae3e9",
+    "lyric-front.aimodel/metadata.json": "eea8680b901ee28eb0deb075e7f5f62096dae296332de72181c4556dd0883cb7",
+    "lyric-front.aimodel/main.mlirb": "48edca3676469b75f7ceca6ac811635c4acce7bd2d5bc0a5a5a9a7637831b9fd",
+    "lyric-front.aimodel/main.hash": "dfea58c1d4c7047260838edb821667e90cefa68df9a732cbd546ac9bb347fc56",
+    "qwen-24-25.aimodel/metadata.json": "9f3dc7249278689aa53f20f090598b25fab29109d7853e7909b9458e57d25a19",
+    "qwen-24-25.aimodel/main.mlirb": "ce7e65c8ce0e7b89e2644aded26c2fc5bd11f3e73ea5ccd4097370d62fae4d3a",
+    "qwen-24-25.aimodel/main.hash": "996feba7676323fcfa5a3789a0e224a0454daa0b6bf3d114254cd0b1a50f9774",
+    "qwen-20-21.aimodel/metadata.json": "936054d48d5dd387d46dc9b6364a3859618bd8551db1330ac56a30bcd70d8cb4",
+    "qwen-20-21.aimodel/main.mlirb": "7472db99436ec556dbefc225a132fc713b1e1acfda1c6431bcb51050815f229b",
+    "qwen-20-21.aimodel/main.hash": "678ff9025bbd32561a92342a9000d2d0389add6b602dd588761d3010e2caaef8",
+    "qwen-22-23.aimodel/metadata.json": "40984abddfbe10262c308abdf1e17ff063d1a713d289c61d9df072ce6a24ea99",
+    "qwen-22-23.aimodel/main.mlirb": "21a491117bfc2b84c52ef93fce6ec7d688fb3d02e5eea140c9b1dbf52c7c2c91",
+    "qwen-22-23.aimodel/main.hash": "57f8f3e38e802d3ba92d558edbf6f30d6179de61e7f2bc68751f00ff78947683",
+    "qwen-02-03.aimodel/metadata.json": "d16d852973a0dd7b8475d99dee91df49b071db19a23746b21fd991d225c77cff",
+    "qwen-02-03.aimodel/main.mlirb": "3324b93323611922884904b350b01c3147c8f8192f24e5bbe889fb4b50b45c92",
+    "qwen-02-03.aimodel/main.hash": "9c753d5f6dbdce35448ad2206fa728bbf15f7c4c4b7272f634134c2f1b771172",
+    "lyric-norm.aimodel/metadata.json": "ae3043b9999ad65aa990813686d2198dac55ab3d681f9f641a9b9dbbc0661488",
+    "lyric-norm.aimodel/main.mlirb": "eb4ffe9abc3e806504d910ad094ff186b1fddc890068f38aaefea03dc1e0f674",
+    "lyric-norm.aimodel/main.hash": "b27f30aab20867714e1ce2be55ca80b4d30a8bf566b3584bf023c6f72e4dbf7b",
+    "lyric-04-05.aimodel/metadata.json": "e308514a1d48b98d443bfdbc4084b5f4150b2714f3bdc350625c60feee55205e",
+    "lyric-04-05.aimodel/main.mlirb": "3bfdbe51257521933279dabc8eee63c997bc9144e2a53b09494765b80dc1bcf4",
+    "lyric-04-05.aimodel/main.hash": "83f52407d4b4aced436baba158d235e56117c4d0617864325e4bb091cd79e0ae",
+    "condition-pack.aimodel/metadata.json": "d50f306d1ca12783d1a75c57e4b7ad74d2326b21270f62abfdf3a8e5a84d9443",
+    "condition-pack.aimodel/main.mlirb": "951bfbaa30760ff43a768537089e0b9385c855cc0b87997a86e3f9ad227435e5",
+    "condition-pack.aimodel/main.hash": "2abf569f3b7fe6585a7976b9823d319295c3c06b405a5a2aec45c2a678c998a3",
+    "qwen-12-13.aimodel/metadata.json": "a64ea216d50bccadc94d45141dcbe8a3c6dea4158cd84daef2dcb301d81729f4",
+    "qwen-12-13.aimodel/main.mlirb": "e8e57b5f712db084bec97d2cba71a6a6a58a81f59f6308562120381712209943",
+    "qwen-12-13.aimodel/main.hash": "cdf955a95c4c9c1ec1234bddac9596955e3c682270949e6d137e1f937cd4b1f0",
+    "qwen-04-05.aimodel/metadata.json": "d8ae6e66293b97cdd4f86eec7cf672b6327fe7e63c3b7f1e67fe399ec163a0d0",
+    "qwen-04-05.aimodel/main.mlirb": "16352a35d11ef531ddb5b70ff2dfcdcd99bdd76595dd5a864a72610e754873b6",
+    "qwen-04-05.aimodel/main.hash": "636ccfba67f45e8f56433b262a24dd9c50f82f100857c04a7bc6c0892524da95",
+    "timbre-02-03.aimodel/metadata.json": "d50f306d1ca12783d1a75c57e4b7ad74d2326b21270f62abfdf3a8e5a84d9443",
+    "timbre-02-03.aimodel/main.mlirb": "8ad7c2cbd671c2dcd05a638e2605f66ab461adb4fc3db31d175ee625a01b0b93",
+    "timbre-02-03.aimodel/main.hash": "28a862a08f948ea4f6a9b9c35af4ec73b346ec18f0f422884af0aaa97394a2d9",
+    "lyric-02-03.aimodel/metadata.json": "38a2f132108b2f6951a505b5559423ad34b6ca2822f4e5e150e50d0a36d08f83",
+    "lyric-02-03.aimodel/main.mlirb": "a55954273949d6a97a9591b6fc44b67e8813ccfe780ed8daee303bc16e151f8c",
+    "lyric-02-03.aimodel/main.hash": "42e29438c88ca45c278d169c57cfe0eaf1d1afcc9e086094c37950c6fccd0d59",
+    "timbre-front.aimodel/metadata.json": "ae3043b9999ad65aa990813686d2198dac55ab3d681f9f641a9b9dbbc0661488",
+    "timbre-front.aimodel/main.mlirb": "8dbf8360f7becadcfcdfa202796baffc3d57aa73f09d8770df93426c82c72ff9",
+    "timbre-front.aimodel/main.hash": "ce3c4e11d071767684aa9a2a24be204c247370885d03c7b2f0483f483611f01d",
+    "token-embedding.aimodel/metadata.json": "8ae1703c7316bf13d9d0856237cf92950fc9d06ff8f9142f4e56a7711f6e171c",
+    "token-embedding.aimodel/main.mlirb": "e6fcaec5b0c8a78b39dea3301d0138c21513bfef573b2a89308aa7ae0c40516a",
+    "token-embedding.aimodel/main.hash": "64c51044625c34bb2bc77e7faa6a94e23a7e4d631110368b5b1418288e07337a",
+    "qwen-18-19.aimodel/metadata.json": "21d7ae8342a14ddedda925ba6446c474b631b5a68998a672e3e1bb800ad520a5",
+    "qwen-18-19.aimodel/main.mlirb": "8c16fb02522a23f4160ac4a00522be4839db880dda75b8d51f530d7a63ed2f78",
+    "qwen-18-19.aimodel/main.hash": "da9d4b7f693eb0986f61cc6bc03cf276ba2428a81cd4d5488d1eb73da11450b8",
+    "qwen-26-27.aimodel/metadata.json": "b9b18410940a7755ca6526f177b66dad2966be266b9864c062a6189b79a7c433",
+    "qwen-26-27.aimodel/main.mlirb": "c992058e54a24a3603b8fe744e05f1ff50bae3956c2f3e3658bde6390f74de19",
+    "qwen-26-27.aimodel/main.hash": "2293ecc999029c41801037bf6688ab7855c59b56e9ca4991663e474237d12815"
+  },
+  "native_asset_bytes": 2417955338,
+  "versions": {
+    "torch": "2.8.0+cpu",
+    "transformers": "4.57.3",
+    "coreai-torch": "0.4.3",
+    "coreai-core": "1.0.0b3"
+  },
+  "scope": "All neural text/lyric/timbre conditioning on device; fixed host-tokenized bass prompt; no source-context, denoiser, CFG or audio output"
+}

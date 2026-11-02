@@ -151,6 +151,15 @@ struct CoreAIDeviceProbeApp: App {
                             }
                         }
                         .disabled(runningModel)
+                        Button("Uji conditioning bass") {
+                            runningModel = true
+                            report = "Menghitung embedding Qwen dan conditioning instrumen bass…"
+                            Task {
+                                report = await CoreAIDecoderProbe.runBassConditioning { text in self.report = text }
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
                         Text(report)
                             .font(.system(.footnote, design: .monospaced))
                             .textSelection(.enabled)

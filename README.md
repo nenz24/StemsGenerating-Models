@@ -99,8 +99,16 @@ ulang lalu tekan **Uji audio-context piano**. Checkpoint VAE cache dipakai ulang
 graph baru dan tensor audio disimpan lokal. [Hasil iPhone sudah PASS](reviews/coreai-iphone17pro-source-context/README.md):
 3 run, seluruh 12 pembandingan, rata-rata backend 1,037 detik per run;
 footprint aplikasi maksimum tersampel 398,21 MiB. Bagian audio tahap 2 selesai
-untuk fixture ini; embedding teks/ConditionEncoder dan integrasi generasi masih
+untuk fixture ini; uji perangkat Qwen/ConditionEncoder dan integrasi generasi masih
 menunggu. [Panduan](docs/coreai-source-context.md).
+
+**Tahap 2b siap diuji:** lookup embedding, seluruh Qwen3 dan ConditionEncoder
+ACE sudah diekspor menjadi 27 aset native (sekitar 2,42 GB). Pembandingan host
+terhadap model FP32 utuh lolos. Jalankan
+`bash scripts/prepare_coreai_bass_conditioning.sh`, build ke iPhone, lalu tekan
+**Uji conditioning bass**. Tokenisasi preset masih di Mac; seluruh perhitungan
+neural conditioning ada di graph CoreAI. Hasil perangkat masih menunggu;
+belum menghasilkan bass. [Panduan](docs/coreai-bass-conditioning.md).
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:

@@ -377,6 +377,212 @@ enum CoreAIDecoderProbe {
         return (values, ms(start.duration(to: copyStart)), ms(copyStart.duration(to: clock.now)))
     }
 
+    private struct BassConditioningStage: Decodable, Equatable {
+        let assetFile: String
+        let inputShapes: [String: [Int]]
+        let outputShapes: [String: [Int]]
+        let outputBindings: [String: String]
+    }
+
+    private struct BassConditioningContract: Decodable {
+        struct HostParity: Decodable { let parityPassed: Bool }
+        struct Prompts: Decodable { let instruction: String; let presetSha256: String; let audioSeconds: Double }
+        let schemaVersion: Int
+        let profile: String
+        let functionName: String
+        let batchSize: Int
+        let textTokens: Int
+        let lyricTokens: Int
+        let qwenLayerCount: Int
+        let lyricLayerCount: Int
+        let timbreLayerCount: Int
+        let stages: [BassConditioningStage]
+        let qwenCheckpointDigest: String
+        let baseCheckpointDigest: String
+        let silenceDigest: String
+        let allCheckpointHashesVerified: Bool
+        let scalarType: String
+        let byteOrder: String
+        let weightStorageDtype: String
+        let computeDtype: String
+        let absoluteTolerance: Double
+        let relativeTolerance: Double
+        let relativeRmseTolerance: Double
+        let tokenizationOnDevice: Bool
+        let referenceAudioMode: String
+        let allValidSingleReferenceSpecialization: Bool
+        let hostPartitionVsOriginalFp32: HostParity
+        let hostStorage16VsOriginalFp32: HostParity
+        let artifactSha256: [String: String]
+        let prompts: Prompts
+    }
+
+    // Mirrors the fixed host contract independently. Every transformer pair is
+    // required once, in order; arbitrary stage omission/reordering is rejected.
+    private static func bassConditioningStages() -> [BassConditioningStage] {
+        let nt = 105, nl = 11
+        var plan: [BassConditioningStage] = []
+        func add(_ asset: String, _ inputs: [String: [Int]], _ outputs: [String: [Int]], _ bindings: [String: String]? = nil) {
+            let outputBindings = bindings ?? Dictionary(uniqueKeysWithValues: outputs.keys.map { ($0, $0) })
+            plan.append(BassConditioningStage(assetFile: asset + ".aimodel", inputShapes: inputs,
+                                             outputShapes: outputs, outputBindings: outputBindings))
+        }
+        add("token-embedding", ["text_ids":[1,nt],"lyric_ids":[1,nl]],
+            ["text_hidden":[1,nt,1024],"lyric_hidden":[1,nl,1024]])
+        for i in stride(from: 0, to: 28, by: 2) {
+            add(String(format: "qwen-%02d-%02d", i, i+1), ["text_hidden":[1,nt,1024]],
+                ["hidden_out":[1,nt,1024]], ["hidden_out":"text_hidden"])
+        }
+        add("qwen-norm", ["text_hidden":[1,nt,1024]], ["text_embeddings":[1,nt,1024]])
+        add("lyric-front", ["lyric_hidden":[1,nl,1024]], ["hidden_out":[1,nl,2048]], ["hidden_out":"lyric_hidden"])
+        for i in stride(from: 0, to: 8, by: 2) {
+            add(String(format: "lyric-%02d-%02d", i, i+1), ["lyric_hidden":[1,nl,2048]],
+                ["hidden_out":[1,nl,2048]], ["hidden_out":"lyric_hidden"])
+        }
+        add("lyric-norm", ["lyric_hidden":[1,nl,2048]], ["lyric_encoded":[1,nl,2048]])
+        add("timbre-front", ["reference_audio":[1,750,64]], ["timbre_hidden":[1,750,2048]])
+        for i in stride(from: 0, to: 4, by: 2) {
+            add(String(format: "timbre-%02d-%02d", i, i+1), ["timbre_hidden":[1,750,2048]],
+                ["hidden_out":[1,750,2048]], ["hidden_out":"timbre_hidden"])
+        }
+        add("timbre-norm", ["timbre_hidden":[1,750,2048]], ["timbre_encoded":[1,1,2048]])
+        add("condition-pack", ["text_embeddings":[1,nt,1024],"lyric_encoded":[1,nl,2048],"timbre_encoded":[1,1,2048]],
+            ["condition":[1,nt+nl+1,2048],"condition_mask":[1,nt+nl+1]])
+        return plan
+    }
+
+    static func runBassConditioning(progress: @MainActor @Sendable (String) -> Void) async -> String {
+        let clock = ContinuousClock(); let start = clock.now
+        let memory = CoreAIProcessFootprintSampler(); memory.start()
+        var lines = [
+            "Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+            "CoreAI architecture: \(AIModel.deviceArchitectureName)",
+            "Test: bass prompt -> all 28 Qwen blocks -> complete ACE ConditionEncoder (8 lyric + 4 timbre blocks)",
+            "Scope: text/target conditioning; fixed host-tokenized prompt; NO denoiser or bass waveform",
+            "Requested compute policy: cpuOnly; accelerator placement NOT MEASURED",
+            "27 sequential native assets; FP16 stored weights, FP32 calculations; detached CPU copies between assets",
+            "Prompt tokenization on Mac; arbitrary prompt entry/tokenization on iPhone NOT tested",
+            "No timbre reference recording: publisher silence latent, first 750 frames; single batch with all tokens valid",
+            "Output: condition [1,117,2048], mask [1,117]; source audio context tested separately",
+            "Footprint guard before each stage: 2000 MiB; NOT an OS peak-memory guarantee"
+        ]
+        #if targetEnvironment(simulator)
+        lines.append("Target: Simulator; not physical-device evidence")
+        #else
+        lines.append("Target: iOS device build")
+        #endif
+        var completed = 0, checks = 0
+        do {
+            guard let folder = Bundle.main.resourceURL?.appendingPathComponent("ModelCandidates/bass-conditioning"),
+                  FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
+                lines.append("Prepare on Mac: bash scripts/prepare_coreai_bass_conditioning.sh; wait for Ready, then rebuild app.")
+                throw ShardError.missingPreparedBundle
+            }
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let ref = try decoder.decode(BassConditioningContract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
+            try checkManifest(ref.schemaVersion, 1, "conditioning.schema_version")
+            try checkManifest(ref.profile, "bass-conditioning", "conditioning.profile")
+            try checkManifest(ref.functionName, "main", "conditioning.function")
+            try checkManifest(ref.batchSize, 1, "conditioning.batch")
+            try checkManifest(ref.textTokens, 105, "conditioning.text_tokens")
+            try checkManifest(ref.lyricTokens, 11, "conditioning.lyric_tokens")
+            try checkManifest(ref.qwenLayerCount, 28, "conditioning.qwen_layers")
+            try checkManifest(ref.lyricLayerCount, 8, "conditioning.lyric_layers")
+            try checkManifest(ref.timbreLayerCount, 4, "conditioning.timbre_layers")
+            try checkManifest(ref.stages, bassConditioningStages(), "conditioning.ordered_stages")
+            try checkManifest(ref.qwenCheckpointDigest, "0437e45c94563b09e13cb7a64478fc406947a93cb34a7e05870fc8dcd48e23fd", "conditioning.qwen_digest")
+            try checkManifest(ref.baseCheckpointDigest, "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b", "conditioning.base_digest")
+            try checkManifest(ref.silenceDigest, "a778e9dd942f5e8b2c09c55370782d318834432b03dabbcdf70e6ed49ad6358b", "conditioning.silence_digest")
+            try checkManifest(ref.allCheckpointHashesVerified, true, "conditioning.checkpoints_verified")
+            try checkManifest(ref.scalarType, "float32", "conditioning.scalar")
+            try checkManifest(ref.byteOrder, "little", "conditioning.byte_order")
+            try checkManifest(ref.weightStorageDtype, "float16", "conditioning.storage")
+            try checkManifest(ref.computeDtype, "float32", "conditioning.compute")
+            try checkManifest(ref.absoluteTolerance, 1e-4, "conditioning.abs_tolerance")
+            try checkManifest(ref.relativeTolerance, 1e-3, "conditioning.rel_tolerance")
+            try checkManifest(ref.relativeRmseTolerance, 1e-3, "conditioning.rmse_tolerance")
+            try checkManifest(ref.tokenizationOnDevice, false, "conditioning.host_tokenization")
+            try checkManifest(ref.referenceAudioMode, "publisher_silence_750", "conditioning.reference_mode")
+            try checkManifest(ref.allValidSingleReferenceSpecialization, true, "conditioning.single_reference")
+            try checkManifest(ref.hostPartitionVsOriginalFp32.parityPassed, true, "conditioning.partition_gold")
+            try checkManifest(ref.hostStorage16VsOriginalFp32.parityPassed, true, "conditioning.storage_gold")
+            try checkManifest(ref.prompts.instruction, "Generate the bass track based on the audio context:", "conditioning.instruction")
+            try checkManifest(ref.prompts.audioSeconds, 5.12, "conditioning.clip_seconds")
+            try checkManifest(ref.prompts.presetSha256, "4bacacb4f9fb1a9e66c98958869e2756878e6420910b2af065bea6522cb6ef63", "conditioning.preset")
+            var state: [String: NDArray] = [:]
+            let inputs = ["text_ids":[1,105],"lyric_ids":[1,11],"reference_audio":[1,750,64]]
+            for (name, shape) in inputs {
+                let values = try readFloats(folder: folder, name: "\(name).f32le", count: shape.reduce(1,*), hashes: ref.artifactSha256)
+                if name.hasSuffix("_ids") {
+                    guard values.allSatisfy({ $0 >= 0 && $0 < 151669 && $0.rounded(.towardZero) == $0 }) else { throw ProbeError.invalidFloatData }
+                }
+                state[name] = NDArray(scalars: values, shape: shape)
+            }
+            let milestones = ["text_embeddings":[1,105,1024],"condition":[1,117,2048],"condition_mask":[1,117]]
+            var references: [String: [Float]] = [:]
+            for (name, shape) in milestones {
+                for kind in ["reference","fp32-reference"] {
+                    references["\(name)-\(kind)"] = try readFloats(folder: folder, name: "\(name)-\(kind).f32le", count: shape.reduce(1,*), hashes: ref.artifactSha256)
+                }
+            }
+            lines.append("SHA-256: VERIFIED three inputs and six references; all checkpoint hashes verified during preparation")
+            for (index, stage) in ref.stages.enumerated() {
+                guard let footprint = CoreAIProcessFootprintSampler.currentFootprint() else { throw ShardError.footprintUnavailable }
+                guard footprint < 2000 * 1048576 else { throw ShardError.memoryBudgetReached }
+                let phase = "Phase: conditioning stage \(index+1)/27 \(stage.assetFile); footprint MiB \(Double(footprint)/1048576)"
+                saveProgress(lines + [phase], profile: .denoiser); await progress((lines + [phase]).joined(separator: "\n"))
+                var stageInputs: [String: NDArray] = [:]
+                for (name, shape) in stage.inputShapes {
+                    guard let array = state[name], array.shape == shape else { throw ShardError.invalidManifest }
+                    stageInputs[name] = array
+                }
+                let result = try await runBassConditioningStage(folder: folder, stage: stage, inputs: stageInputs)
+                lines.append("Stage \(index+1)/27 \(stage.assetFile): load+bind ms \(result.loadMs); backend-await ms \(result.backendMs); readback ms \(result.copyMs)")
+                for (name, values) in result.values {
+                    guard let shape = stage.outputShapes[name], let binding = stage.outputBindings[name] else { throw ShardError.invalidManifest }
+                    state[binding] = NDArray(scalars: values, shape: shape)
+                    if milestones[name] != nil {
+                        if name == "condition_mask" { try checkManifest(values.allSatisfy({ $0 == 1 }), true, "conditioning.full_valid_mask") }
+                        for kind in ["reference","fp32-reference"] {
+                            guard let expected = references["\(name)-\(kind)"] else { throw ShardError.invalidManifest }
+                            let stats = try compare(actual: values, expected: expected, absoluteTolerance: ref.absoluteTolerance,
+                                                    relativeTolerance: ref.relativeTolerance, relativeRmseTolerance: ref.relativeRmseTolerance)
+                            lines.append("\(name) vs \(kind): max abs error \(stats.maxError); RMSE \(stats.rmse); normalized RMSE \(stats.normalizedRmse); \(stats.passed ? "PASS" : "NOT PASSED")")
+                            guard stats.passed else { throw ProbeError.numericalParityFailed }
+                            checks += 1
+                        }
+                    }
+                }
+                completed += 1
+            }
+            guard completed == 27, checks == 6 else { throw ShardError.invalidManifest }
+            lines.append("Bass text/ConditionEncoder dual parity: PASS (all 40 layers, six checks)")
+        } catch {
+            lines.append("Bass text/ConditionEncoder dual parity: NOT PASSED")
+            lines.append("Error: \(String(reflecting: error))")
+        }
+        let usage = memory.finish()
+        if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
+        lines.append("Completed conditioning stages: \(completed)/27; parity checks: \(checks)/6; total probe ms: \(ms(start.duration(to: clock.now)))")
+        lines.append("Scope: sampled app process only; total model/device RAM, native cache eviction and raw recording import unmeasured; no bass generated")
+        saveProgress(lines, profile: .denoiser)
+        return lines.joined(separator: "\n")
+    }
+
+    private static func runBassConditioningStage(folder: URL, stage: BassConditioningStage, inputs: [String: NDArray]) async throws
+        -> (values: [String: [Float]], loadMs: Double, backendMs: Double, copyMs: Double) {
+        let clock = ContinuousClock(); let start = clock.now
+        let probe = try await CoreAIModelProbe(contentsOf: folder.appendingPathComponent(stage.assetFile), options: .cpuOnly)
+        var timings = CoreAIModelProbe.StatelessTimings()
+        let function = try probe.loadStatelessFunction(functionNamed: "main", inputs: inputs, timings: &timings)
+        let loadMs = ms(start.duration(to: clock.now))
+        defer { withExtendedLifetime(function) {}; withExtendedLifetime(probe) {} }
+        let result = try await runSourceContextFunction(function: function, inputs: inputs, shapes: stage.outputShapes)
+        // Return detached scalar arrays; no native output/model/function escapes.
+        return (result.values, loadMs, result.backendMs, result.copyMs)
+    }
+
     private struct PairReuseContract: Decodable {
         let schemaVersion: Int
         let profile: String
