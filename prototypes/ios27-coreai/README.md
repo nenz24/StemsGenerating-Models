@@ -433,3 +433,9 @@ piano minimal 10,24 detik untuk referensi host, tunggu Ready, lalu Cmd+R pada
 scheme **CoreAIProbe Reuse**. Pilih rekaman melalui Files di iPhone dan generate
 seperti sebelumnya; UI harus menyebut 10,24 detik. App hanya memuat profil aktif,
 profil pendek tetap disimpan di Mac. [Panduan dan lingkup referensi](../../docs/coreai-bass-preview-1024.md).
+
+Bila persiapan 10,24 detik ditolak gate lintasan, mode eksperimen eksplisit
+`bash scripts/prepare_coreai_bass_preview_1024.sh --diagnostic-trajectory`
+menambahkan empat uji denoiser pada input identik. Tetap membutuhkan 50 strict
+APG checks; full trajectory yang gagal tetap dilaporkan gagal. Tunggu Ready
+mode diagnostik sebelum build. Ini belum bukti kesamaan numerik atau uji iPhone.

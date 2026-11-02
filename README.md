@@ -156,6 +156,10 @@ ketiga hash WAV cocok dan mix tepat. Dua kasus ini tetap berdurasi 5,12 detik.
 memperbarui encoder, conditioning durasi dan sampler; build hanya memuat satu
 profil aktif, sementara bundle pendek disimpan di Mac. Profil baru menunggu
 build/pengukuran iPhone dan uji dengar; bukan validasi lagu panjang.
+Persiapan Mac berikutnya [ditolak gate lintasan](reviews/coreai-mac-1024-trajectory-rejection/README.md).
+Tersedia mode opt-in dengan empat uji denoiser identical-input dan 50 gate APG;
+selisih lintasan penuh tetap gagal, bukan numerical PASS. Lihat panduan untuk
+`--diagnostic-trajectory`; belum ada bukti runtime iPhone untuk mode tersebut.
 
 
 

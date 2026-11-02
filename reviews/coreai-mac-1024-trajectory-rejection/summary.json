@@ -1,0 +1,235 @@
+{
+  "evidence": "User-supplied Mac preparation output; not reproduced on this Linux host",
+  "console_sha256": "c1f6dea69ceb785de889affbf175e30a8eb6cee680a004531760456dfbd97f3c",
+  "profile_seconds": 10.24,
+  "status": "rejected_before_sampler_export_and_profile_activation",
+  "ready_reported": false,
+  "latent_final": {
+    "finite": true,
+    "max_absolute_error": 0.0138322114944458,
+    "rmse": 0.0014775267470531978,
+    "normalized_rmse": 0.0014409045433095061,
+    "elementwise_fraction_over_bound": 0.5289306640625,
+    "parity_passed": false
+  },
+  "normalized_rmse_limit": 0.001,
+  "original_gate_passed": false,
+  "printed_checkpoints": [
+    {
+      "step": 1,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 9.5367431640625e-07,
+        "rmse": 1.3024253049849535e-07,
+        "normalized_rmse": 1.321037446896439e-07,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 4.9114227294921875e-05,
+        "rmse": 6.2431044460954045e-06,
+        "normalized_rmse": 4.473995324484543e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    },
+    {
+      "step": 5,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 2.0265579223632812e-06,
+        "rmse": 2.882106655317408e-07,
+        "normalized_rmse": 3.155905257055727e-07,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 7.772445678710938e-05,
+        "rmse": 1.4169304794998933e-05,
+        "normalized_rmse": 1.0762319402139353e-05,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    },
+    {
+      "step": 10,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 0.0001227855682373047,
+        "rmse": 4.792333911822558e-06,
+        "normalized_rmse": 5.748083821852532e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 0.00774383544921875,
+        "rmse": 0.00029010481530132505,
+        "normalized_rmse": 0.00020120307252726553,
+        "elementwise_fraction_over_bound": 0.01531982421875,
+        "parity_passed": false
+      }
+    },
+    {
+      "step": 15,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 0.0005624294281005859,
+        "rmse": 5.7947091287808326e-05,
+        "normalized_rmse": 7.537661634027986e-05,
+        "elementwise_fraction_over_bound": 0.0032958984375,
+        "parity_passed": false
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 0.01556849479675293,
+        "rmse": 0.0025571347623833413,
+        "normalized_rmse": 0.0016646638450510062,
+        "elementwise_fraction_over_bound": 0.6048583984375,
+        "parity_passed": false
+      }
+    },
+    {
+      "step": 20,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 0.0012020692229270935,
+        "rmse": 0.00012551878944928863,
+        "normalized_rmse": 0.00017301964824369544,
+        "elementwise_fraction_over_bound": 0.030029296875,
+        "parity_passed": false
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 0.06115514039993286,
+        "rmse": 0.0030725464660632685,
+        "normalized_rmse": 0.0021197930624271967,
+        "elementwise_fraction_over_bound": 0.59954833984375,
+        "parity_passed": false
+      }
+    },
+    {
+      "step": 25,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 0.0036296844482421875,
+        "rmse": 0.00020109906221363148,
+        "normalized_rmse": 0.0002838988625679638,
+        "elementwise_fraction_over_bound": 0.06646728515625,
+        "parity_passed": false
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 0.052718937397003174,
+        "rmse": 0.003093673048146273,
+        "normalized_rmse": 0.002304688230146048,
+        "elementwise_fraction_over_bound": 0.609130859375,
+        "parity_passed": false
+      }
+    },
+    {
+      "step": 30,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 0.009289741516113281,
+        "rmse": 0.0004304450119512394,
+        "normalized_rmse": 0.000589214664566628,
+        "elementwise_fraction_over_bound": 0.19915771484375,
+        "parity_passed": false
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 0.09494936466217041,
+        "rmse": 0.007453102651781901,
+        "normalized_rmse": 0.005593589459349432,
+        "elementwise_fraction_over_bound": 0.837646484375,
+        "parity_passed": false
+      }
+    },
+    {
+      "step": 35,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 0.007648944854736328,
+        "rmse": 0.000746679928802172,
+        "normalized_rmse": 0.000976985574121461,
+        "elementwise_fraction_over_bound": 0.35980224609375,
+        "parity_passed": false
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 0.16010260581970215,
+        "rmse": 0.01075991422936059,
+        "normalized_rmse": 0.007883885638114685,
+        "elementwise_fraction_over_bound": 0.88714599609375,
+        "parity_passed": false
+      }
+    },
+    {
+      "step": 40,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 0.007059216499328613,
+        "rmse": 0.0010183697530666313,
+        "normalized_rmse": 0.0012105119600024764,
+        "elementwise_fraction_over_bound": 0.45294189453125,
+        "parity_passed": false
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 0.08191967010498047,
+        "rmse": 0.007427726427568244,
+        "normalized_rmse": 0.006319422626504012,
+        "elementwise_fraction_over_bound": 0.86212158203125,
+        "parity_passed": false
+      }
+    },
+    {
+      "step": 45,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 0.01017141342163086,
+        "rmse": 0.0012571239133710175,
+        "normalized_rmse": 0.0013521773540709193,
+        "elementwise_fraction_over_bound": 0.4957275390625,
+        "parity_passed": false
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 0.039005525410175323,
+        "rmse": 0.0049116300512332305,
+        "normalized_rmse": 0.0037652654686926267,
+        "elementwise_fraction_over_bound": 0.7994384765625,
+        "parity_passed": false
+      }
+    },
+    {
+      "step": 50,
+      "latent": {
+        "finite": true,
+        "max_absolute_error": 0.0138322114944458,
+        "rmse": 0.0014775267470531978,
+        "normalized_rmse": 0.0014409045433095061,
+        "elementwise_fraction_over_bound": 0.5289306640625,
+        "parity_passed": false
+      },
+      "guided": {
+        "finite": true,
+        "max_absolute_error": 0.09986686706542969,
+        "rmse": 0.007287133764733086,
+        "normalized_rmse": 0.005601720568486653,
+        "elementwise_fraction_over_bound": 0.84197998046875,
+        "parity_passed": false
+      }
+    }
+  ],
+  "all_50_comparison_rows_received": false,
+  "source_and_conditioning_metadata_received": false,
+  "same_input_denoiser_checks_reported": false,
+  "mac_original_apg_checks": "Producer reached latent-gate check after its APG gate; individual APG rows not in upload",
+  "remediation": "Explicit opt-in diagnostic mode requires strict 4 same-input complete-denoiser checks and 50 same-input APG checks; failing free-trajectory comparison stays failed. No automatic fallback or tolerance increase.",
+  "mac_diagnostic_export_verified": false,
+  "iphone_diagnostic_execution_verified": false
+}

@@ -35,6 +35,10 @@ struct CoreAIDeviceProbeApp: App {
                     VStack(alignment: .leading, spacing: 16) {
                         if hasResource(window.previewBundle + "/reference.json") {
                             Text("Buat bass untuk bagian awal rekaman piano Anda.")
+                            if CoreAIPreviewWindow.trajectoryDiagnosticEnabled {
+                                Text("Preview diagnostik. Hasilnya perlu diperiksa melalui laporan dan uji dengar.")
+                                    .font(.footnote)
+                            }
                             Text("Pilih audio mono atau stereo minimal \(window.durationLabel) detik. File asli disimpan; generasi memakai \(window.durationLabel) detik awal.")
                                 .font(.footnote)
                             Button("Pilih rekaman piano") { showingAudioImporter = true }

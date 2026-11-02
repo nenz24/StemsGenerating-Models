@@ -16,6 +16,13 @@ enum CoreAIPreviewWindow: String, Sendable {
     var conditionBundle: String { self == .short512 ? "bass-conditioning" : "bass-conditioning-1024" }
     var previewBundle: String { self == .short512 ? "bass-preview-512" : "bass-preview-1024" }
 
+    static var trajectoryDiagnosticEnabled: Bool {
+        guard let root = Bundle.main.resourceURL,
+              let data = try? Data(contentsOf: root.appendingPathComponent("ModelCandidates/app-resource-manifest.json")),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return false }
+        return object["diagnostic_trajectory"] as? Bool == true
+    }
+
     static var bundled: Self {
         guard let root = Bundle.main.resourceURL,
               let data = try? Data(contentsOf: root.appendingPathComponent("ModelCandidates/app-resource-manifest.json")),

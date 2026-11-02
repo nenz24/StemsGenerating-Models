@@ -40,6 +40,43 @@ dengan penyimpanan BF16. Aset FP16 lama tidak disalin sebagai BF16 hanya dengan
 mengganti metadata. Reuse native hanya diizinkan untuk shape, binding dan dtype
 yang identik. Seluruh conditioning tetap dibandingkan dengan implementasi asli.
 
+## Jika Mac berhenti pada gate lintasan
+
+[Laporan Mac](../reviews/coreai-mac-1024-trajectory-rejection/README.md) mencapai
+normalized RMSE latent 0,001441 sehingga **ditolak** oleh batas 0,001. Itu tetap
+gagal; contoh Linux `bounded_diagnostic` tidak menjamin Mac akan lolos.
+
+Untuk eksperimen uji dengar yang dinyatakan secara eksplisit, setelah update kode:
+
+```bash
+bash scripts/prepare_coreai_bass_preview_1024.sh --diagnostic-trajectory
+```
+
+Ini **bukan perbaikan paritas lintasan penuh** dan bukan automatic fallback.
+Mode hanya untuk 10,24 detik dan wajib lolos empat perbandingan denoiser lengkap
+pada input identik serta 50 APG identical-input checks dengan batas strict lama.
+Source/conditioning, checkpoint/hash, schedule dan pemeriksaan finite tetap
+berlaku. Empat fixture adalah latent setelah gold step 1/10/25/50, dievaluasi
+pada `times[step]`, dengan conditioning yang sama. Ada delapan forward tambahan
+(empat original dan empat partition); tidak ada perubahan pada sampling bebas.
+
+Jika normalized RMSE lintasan/waveform melampaui 0,001, nilainya tidak diubah dan
+status menjadi `trajectory_drift_diagnostic`, dengan full numerical gate tetap
+NOT PASSED. File audio diagnostik dapat diekspor untuk uji dengar hanya atas
+permintaan flag ini. Component checks yang gagal atau data nonfinite tetap
+memblokir ekspor. Source bundle yang sudah selesai dipakai lagi; bila sampler
+belum diekspor, kedua lintasan perlu dihitung ulang sekali. Tunggu
+**Ready (explicit trajectory diagnostic)** sebelum build.
+
+Bundle lama yang sudah lolos gate biasa tetap diaktifkan tanpa flag ini; flag
+tidak menambahkan bukti component check secara otomatis ke bundle lama.
+Mode terikat pada selector build dan diperiksa lagi oleh caller iPhone. Bundle
+mode ini tidak dapat diaktifkan melalui jalur biasa tanpa flag eksplisit.
+App menampilkan penanda preview diagnostik. Ini belum validasi runtime Mac/
+iPhone atau musical approval; [empat uji host Linux](../reviews/coreai-1024-same-input-denoiser/README.md)
+adalah bukti terpisah. Untuk mengaktifkan ulang bundle diagnostik yang sudah
+lengkap, tambahkan `--diagnostic-trajectory` pada perintah `--activate-only`.
+
 ## Jalankan di iPhone
 
 Pilih scheme **CoreAIProbe Reuse**, target iPhone, Cmd+R. Antarmuka harus menyebut

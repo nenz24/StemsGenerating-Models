@@ -856,7 +856,7 @@
     "device_mac_reference_waveform_checks_passed": 2,
     "device_final_latent_reference_checks_failed": 2,
     "performance_scope": "One confirmed Release -O retained CPU-request 5.12-second run, 59.235s, 450.42 MiB sampled process maximum; not exact peak, total RAM, cold-start or full-song guarantee.",
-    "next_measurement": "Prepare and activate 10.24-second BF16-storage source CPU bundle on Mac; run Files import on iPhone, inspect 50 steps/WAVs, timing/memory and musical fit. Host bounded diagnostic is not full numerical PASS.",
+    "next_measurement": "Mac default 10.24 s preparation rejected free-trajectory error >0.001. Explicit diagnostic mode must first pass 4 same-input denoiser and 50 APG checks; full numerical failures remain failures. Then build/test device audio separately.",
     "release_measurement_prepared": true,
     "release_measurement_apple_build_verified": true,
     "latest_profiled_report": "reviews/coreai-iphone17pro-bass-preview-reuse/summary.json",
@@ -993,7 +993,28 @@
       "apple_build_verified": false,
       "iphone_execution_verified": false,
       "musical_quality_verified": false,
-      "weight_storage_scope": "BF16 conditioning/denoiser; VAE encoder/decoder stay FP32"
+      "weight_storage_scope": "BF16 conditioning/denoiser; VAE encoder/decoder stay FP32",
+      "mac_preparation_report": "reviews/coreai-mac-1024-trajectory-rejection/summary.json",
+      "mac_default_preparation_passed": false,
+      "trajectory_diagnostic_mode": {
+        "implemented": true,
+        "opt_in_flag": "--diagnostic-trajectory",
+        "allowed_window_seconds": 10.24,
+        "default_path_accepts_drift": false,
+        "same_input_denoiser_strict_checks_required": 4,
+        "same_input_apg_strict_checks_required": 50,
+        "original_numeric_bounds_changed": false,
+        "nonfinite_allowed": false,
+        "failed_trajectory_parity_reclassified_as_pass": false,
+        "above_bound_status": "trajectory_drift_diagnostic",
+        "selector_and_runtime_opt_in_required": true,
+        "linux_same_input_checks_report": "reviews/coreai-1024-same-input-denoiser/checks.json",
+        "mac_component_checks_verified": false,
+        "mac_diagnostic_export_verified": false,
+        "apple_build_verified": false,
+        "iphone_execution_verified": false,
+        "regression_tests_passed": 91
+      }
     }
   }
 }

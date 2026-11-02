@@ -656,6 +656,15 @@ enum CoreAIDecoderProbe {
             let parityPassed: Bool
         }
         struct HostStep: Decodable { let step: Int; let latent: HostComparison }
+        struct DenoiserSameInput: Decodable {
+            let step: Int
+            let phase: String
+            let timestep: Double
+            let inputLatentFile: String
+            let inputLatentSha256: String
+            let conditioningInput: String
+            let comparison: HostComparison
+        }
         let schemaVersion: Int
         let profile: String
         let functionName: String
@@ -684,6 +693,8 @@ enum CoreAIDecoderProbe {
         let hostExportStatus: String?
         let hostNumericalGatePassed: Bool?
         let hostComparisons: [HostStep]
+        let hostTrajectoryDiagnosticRequested: Bool?
+        let hostDenoiserSameInput: [DenoiserSameInput]?
         let apgSameInputVsPublisher: [HostComparison]
         let hostAudioVsFp32: HostComparison
         let hostDecoderFoldingExact: Bool
@@ -945,38 +956,56 @@ enum CoreAIDecoderProbe {
             try checkManifest(ref.allCheckpointsVerified, true, "preview.checkpoints_verified")
             try checkManifest(ref.hostComparisons.map { $0.step }, Array(1...50), "preview.host_steps")
             try checkManifest(ref.apgSameInputVsPublisher.count, 50, "preview.host_apg_count")
-            func boundedHostComparison(_ stats: BassPreviewContract.HostComparison) throws -> Bool {
+            let trajectoryDiagnostic = ref.hostTrajectoryDiagnosticRequested ?? false
+            try checkManifest(!trajectoryDiagnostic || (window == .long1024 && CoreAIPreviewWindow.trajectoryDiagnosticEnabled), true, "preview.explicit_trajectory_diagnostic_selection")
+            func boundedHostComparison(_ stats: BassPreviewContract.HostComparison, allowTrajectoryDrift: Bool = false) throws -> Bool {
                 guard stats.finite, stats.maxAbsoluteError.isFinite, stats.maxAbsoluteError >= 0,
                       stats.rmse.isFinite, stats.rmse >= 0, stats.normalizedRmse.isFinite,
-                      stats.normalizedRmse >= 0, stats.normalizedRmse <= 1e-3,
+                      stats.normalizedRmse >= 0,
                       stats.elementwiseFractionOverBound.isFinite, stats.elementwiseFractionOverBound >= 0,
                       stats.elementwiseFractionOverBound <= 1 else { throw ShardError.invalidManifest }
-                let strict = stats.elementwiseFractionOverBound == 0
+                if !allowTrajectoryDrift && stats.normalizedRmse > 1e-3 { throw ShardError.invalidManifest }
+                let strict = stats.elementwiseFractionOverBound == 0 && stats.normalizedRmse <= 1e-3
                 try checkManifest(stats.parityPassed, strict, "preview.host_comparison_flag")
                 return strict
             }
             var hostTrajectoryPassed = true
             for step in ref.hostComparisons {
-                let passed = try boundedHostComparison(step.latent)
+                let passed = try boundedHostComparison(step.latent, allowTrajectoryDrift: trajectoryDiagnostic)
                 hostTrajectoryPassed = hostTrajectoryPassed && passed
             }
             for stats in ref.apgSameInputVsPublisher {
                 try checkManifest(try boundedHostComparison(stats), true, "preview.host_apg_strict")
             }
-            let hostAudioPassed = try boundedHostComparison(ref.hostAudioVsFp32)
+            let hostAudioPassed = try boundedHostComparison(ref.hostAudioVsFp32, allowTrajectoryDrift: trajectoryDiagnostic)
+            if trajectoryDiagnostic {
+                guard let cases = ref.hostDenoiserSameInput, cases.map({ $0.step }) == [1,10,25,50] else { throw ShardError.invalidManifest }
+                for row in cases {
+                    try checkManifest(row.phase, "after_gold_step", "preview.denoiser_check_phase")
+                    try checkManifest(row.inputLatentFile, "step-\(row.step)-latent-fp32-reference.f32le", "preview.denoiser_check_input")
+                    try checkManifest(ref.artifactSha256[row.inputLatentFile], Optional(row.inputLatentSha256), "preview.denoiser_check_input_hash")
+                    try checkManifest(row.conditioningInput, "original_fp32_condition_reference", "preview.denoiser_check_condition")
+                    guard row.timestep.isFinite && row.timestep >= 0 && row.timestep <= 1 else { throw ShardError.invalidManifest }
+                    try checkManifest(try boundedHostComparison(row.comparison), true, "preview.same_input_denoiser_strict")
+                }
+                lines.append("Explicit trajectory diagnostic: four identical-input full-denoiser checks and 50 identical-input APG checks must pass strict original bounds; free-trajectory failures remain failures")
+            }
             let hostStrict = hostTrajectoryPassed && hostAudioPassed
             try checkManifest(ref.hostDualTrajectoryParityPassed, hostTrajectoryPassed, "preview.host_trajectory")
             if let claimed = ref.hostNumericalGatePassed {
                 try checkManifest(claimed, hostStrict, "preview.host_numerical_gate")
             } else if !hostStrict { throw ShardError.invalidManifest }
-            let hostStatus = hostStrict ? "strict_pass" : "bounded_diagnostic"
+            let exceedsTrajectoryBound = ref.hostComparisons.contains { $0.latent.normalizedRmse > 1e-3 } || ref.hostAudioVsFp32.normalizedRmse > 1e-3
+            let hostStatus = trajectoryDiagnostic && exceedsTrajectoryBound ? "trajectory_drift_diagnostic" : (hostStrict ? "strict_pass" : "bounded_diagnostic")
             if let claimed = ref.hostExportStatus {
                 try checkManifest(claimed, hostStatus, "preview.host_export_status")
             } else if !hostStrict { throw ShardError.invalidManifest }
             allParity = referenceMode && hostStrict
             lines.append("Baseline export provenance: \(hostStatus); original tolerances unchanged; applies to fixed prepared input only")
             if referenceMode { lines.append("Host preparation: \(hostStatus); strict gate \(hostStrict ? "PASS" : "NOT PASSED"); original tolerances unchanged") }
-            if referenceMode && !hostStrict {
+            if !hostStrict && hostStatus == "trajectory_drift_diagnostic" {
+                lines.append("Host free-trajectory error exceeds original normalized-RMSE limit 0.001; full numerical gate NOT PASSED. Explicit component-validated experiment only; no automatic fallback or PASS relabeling.")
+            } else if referenceMode && !hostStrict {
                 lines.append("Bounded diagnostic bundle: finite, normalized RMSE <= 0.001; pointwise gate failed. Result cannot be labeled overall numerical PASS.")
             }
             try checkManifest(ref.hostDecoderFoldingExact, true, "preview.decoder_fold")
@@ -1017,6 +1046,9 @@ enum CoreAIDecoderProbe {
             let times = try readFloats(folder: folder, name: "timesteps.f32le", count: 51, hashes: ref.artifactSha256)
             try checkManifest(times[0], Float(1), "preview.time_start")
             try checkManifest(times[50], Float(0), "preview.time_end")
+            if trajectoryDiagnostic, let cases = ref.hostDenoiserSameInput {
+                for row in cases { try checkManifest(row.timestep, Double(times[row.step]), "preview.same_input_denoiser_time") }
+            }
             guard zip(times, times.dropFirst()).allSatisfy({ $0.0 > $0.1 }) else { throw ShardError.invalidManifest }
             // Only the regression input has matching host output references.
             var references: [String: [Float]] = [:]

@@ -1,0 +1,82 @@
+{
+  "evidence": "Actual original full FP32 and BF16 partition PyTorch forwards, four identical fixtures, Linux; no Apple native inference",
+  "phase": "after_gold_step",
+  "source_reference_sha256": "0b1d932fc8a2022ed2c228c6fb54c3965a6896ec585cad006546017227315b13",
+  "condition_reference_sha256": "976c0e0a523abf96b25e5785be5ce100f3c7c4b8dbe32cdd10fb80931cab4732",
+  "denoiser_checks": [
+    {
+      "step": 1,
+      "phase": "after_gold_step",
+      "timestep": 0.9800000190734863,
+      "input_latent_file": "step-1-latent-fp32-reference.f32le",
+      "input_latent_sha256": "3d9e532153f25c1787ac1b5372dac8f304ad354507223a5a7b54fa89167bb112",
+      "conditioning_input": "original_fp32_condition_reference",
+      "comparison": {
+        "finite": true,
+        "max_absolute_error": 1.4543533325195312e-05,
+        "rmse": 6.369162886741206e-07,
+        "normalized_rmse": 5.606441235442683e-07,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    },
+    {
+      "step": 10,
+      "phase": "after_gold_step",
+      "timestep": 0.800000011920929,
+      "input_latent_file": "step-10-latent-fp32-reference.f32le",
+      "input_latent_sha256": "99a4f8d4f8b7ef6f518c1713b9e902d4136f24fb98312246cadb8cfe30be8750",
+      "conditioning_input": "original_fp32_condition_reference",
+      "comparison": {
+        "finite": true,
+        "max_absolute_error": 2.1457672119140625e-05,
+        "rmse": 1.2342752931356841e-06,
+        "normalized_rmse": 9.904716514275764e-07,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    },
+    {
+      "step": 25,
+      "phase": "after_gold_step",
+      "timestep": 0.5,
+      "input_latent_file": "step-25-latent-fp32-reference.f32le",
+      "input_latent_sha256": "b67772d3a477cf083645d82f8cfab3dfbfeb1b35d19d0c043b481bde280833dc",
+      "conditioning_input": "original_fp32_condition_reference",
+      "comparison": {
+        "finite": true,
+        "max_absolute_error": 7.3909759521484375e-06,
+        "rmse": 1.0112932361278503e-06,
+        "normalized_rmse": 8.007140842806217e-07,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    },
+    {
+      "step": 50,
+      "phase": "after_gold_step",
+      "timestep": 0.0,
+      "input_latent_file": "step-50-latent-fp32-reference.f32le",
+      "input_latent_sha256": "624379e7fa9589e0ea876ad1019a38b71d2598fa84c2792b9af0ef5503933422",
+      "conditioning_input": "original_fp32_condition_reference",
+      "comparison": {
+        "finite": true,
+        "max_absolute_error": 7.748603820800781e-06,
+        "rmse": 1.2146351823747705e-06,
+        "normalized_rmse": 1.119650614259863e-06,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    }
+  ],
+  "sampling_native_payloads_reexported": false,
+  "free_trajectory_checks_reclassified_as_pass": false,
+  "host_export_status": "bounded_diagnostic",
+  "host_numerical_gate_passed": false,
+  "mac_same_input_checks_verified": false,
+  "apple_build_verified": false,
+  "iphone_execution_verified": false,
+  "base_checkpoint_digest": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b",
+  "native_payload_identity_sha256": "39b1f6845143664396b78b186b5de0549970c812c235df996631870deececb96",
+  "regression_tests_passed": 91
+}

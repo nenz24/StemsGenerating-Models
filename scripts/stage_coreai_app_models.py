@@ -59,6 +59,7 @@ def plan_resources(source, profile='auto'):
         raise ValueError(f'Unknown resource profile: {profile}')
     ready = all((source / name / 'reference.json').is_file()
                 for name in ('source-context', 'bass-conditioning', 'bass-preview-512'))
+    diagnostic_trajectory = False
     if profile == 'auto':
         # The supplied h18p/iOS 27.0.1 backtrace crashes in the Metal/MPS
         # compiler for AOT/default. Keep CPU-only source as the default;
@@ -67,8 +68,15 @@ def plan_resources(source, profile='auto'):
         if selector.exists():
             if selector.is_symlink():raise ValueError('Active preview selector must not be a symlink')
             chosen=json.loads(selector.read_text())
-            if chosen not in ({'schema_version':1,'resource_profile':'bass-source','audio_seconds':5.12},
-                              {'schema_version':1,'resource_profile':'bass-source-1024','audio_seconds':10.24}):
+            if not isinstance(chosen,dict):raise ValueError('Invalid active preview selector')
+            expected={'schema_version':1,'resource_profile':chosen.get('resource_profile'),'audio_seconds':chosen.get('audio_seconds')}
+            diagnostic_trajectory=chosen.get('diagnostic_trajectory',False)
+            if (type(diagnostic_trajectory) is not bool or not isinstance(chosen,dict)
+                    or set(chosen)-{'schema_version','resource_profile','audio_seconds','diagnostic_trajectory'}
+                    or expected not in ({'schema_version':1,'resource_profile':'bass-source','audio_seconds':5.12},
+                                        {'schema_version':1,'resource_profile':'bass-source-1024','audio_seconds':10.24})
+                    or chosen.get('schema_version')!=1
+                    or (diagnostic_trajectory and chosen.get('resource_profile')!='bass-source-1024')):
                 raise ValueError('Invalid active preview selector; build output preserved')
             profile=chosen['resource_profile']
         else:
@@ -111,6 +119,10 @@ def plan_resources(source, profile='auto'):
         source_ref = bundle(window.source_bundle)
         condition_ref = bundle(window.condition_bundle)
         preview = bundle(window.preview_bundle, PREVIEW_FIXTURES if profile == 'bass-aot' else None)
+        if preview.get('host_trajectory_diagnostic_requested',False) and not diagnostic_trajectory:
+            raise ValueError('Diagnostic trajectory bundle requires explicit active selector permission')
+        if diagnostic_trajectory and preview.get('host_trajectory_diagnostic_requested') is not True:
+            raise ValueError('Diagnostic selector requires a component-validated diagnostic bundle')
         if window == LONG:
             if (source_ref.get('profile') != window.source_bundle or source_ref.get('audio_seconds') != window.seconds
                     or source_ref.get('input_shapes', {}).get('audio') != [1,2,window.samples]
@@ -148,7 +160,7 @@ def plan_resources(source, profile='auto'):
                 raise ValueError('AOT variant payload coverage is incomplete')
     inventory = sum(p.stat().st_size for p in source.rglob('*')
                     if p.is_file() and not p.is_symlink() and p.name != '.DS_Store')
-    return {'schema_version': 1, 'selected_profile': profile, 'files': planned,
+    return {'schema_version': 1, 'selected_profile': profile, 'diagnostic_trajectory': diagnostic_trajectory, 'files': planned,
             'included_bytes': sum(item['size'] for item in planned.values()),
             'source_inventory_bytes': inventory}
 
