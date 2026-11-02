@@ -6,7 +6,8 @@ berjalan di iPhone. [Laporan perangkat pertama](../reviews/coreai-iphone17pro-au
 mencatat generasi dari MP3 stereo 44,1 kHz selesai: 50/50 langkah, 65,88 detik,
 footprint maksimum proses tersampel 472,71 MiB. Waktu dan sampler generasi ini
 tidak mencakup tahap penyalinan/decode/resampling/hash yang sudah selesai
-sebelumnya; kualitas audio input baru masih menunggu pemeriksaan WAV/uji dengar.
+sebelumnya. Ketiga WAV sudah dicocokkan dengan laporan dan pengguna menerima
+nada/feel hasil impor ini; lihat [baseline uji dengar](../baselines/iphone-coreai-bass-import-512-v1/README.md).
 
 ## Jalankan
 
@@ -89,9 +90,11 @@ APG, referensi, staging resource dan helper update proyek. Struktur proyek, empa
 source Swift dan scheme Release/reuse juga berhasil diperiksa. Workspace
 Linux tidak memiliki Swift compiler/Apple SDK. Laporan pengguna kemudian
 mengonfirmasi build Release dan penyelesaian impor MP3 44,1 kHz stereo hingga
-WAV pada iPhone. Hash input konsisten dengan metadata; WAV aktual dan playback
-run ini belum diperiksa. Peak bass yang dilaporkan 1,037155 memerlukan pemeriksaan
-headroom pada WAV Float32, tanpa langsung menyimpulkan hard clipping.
-Selanjutnya periksa WAV dan uji dengar, rekaman berbeda, mono, stereo 48 kHz,
+WAV pada iPhone. Hash ketiga WAV dan PCM input telah diverifikasi; mix tepat
+sama dengan piano/bass pada posisi frame yang sama. Pengguna menerima nada/feel.
+Bass Float32 memiliki 186 sample kanal >unity, peak 1,037155; mix peak 0,931429
+tetap di bawah unity. Ini bukan bukti hard clipping pada WAV mentah; tetap
+perhatikan headroom jika stem dikonversi ke PCM integer.
+Selanjutnya periksa rekaman berbeda, mono, stereo 48 kHz,
 penolakan audio pendek dan pembatalan picker. Tidak diperlukan perubahan
 checkpoint untuk pemeriksaan tersebut.

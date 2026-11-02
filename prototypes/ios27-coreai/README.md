@@ -421,5 +421,7 @@ Tidak perlu menjalankan export/persiapan model ulang. File asli disalin tanpa
 diubah; hasil mencakup input piano, bass, mix, metadata dan laporan. Implementasi
 impor sudah menyelesaikan satu run MP3 stereo 44,1 kHz pada iPhone: 50/50 langkah,
 65,88 detik generasi, footprint maksimum tersampel 472,71 MiB. Angka tersebut
-mengecualikan tahap impor sebelumnya; WAV dan uji dengar run baru masih menunggu.
+mengecualikan tahap impor sebelumnya. Hash WAV/PCM dan mix sudah diperiksa;
+pengguna menerima nada/feel klip impor ini. Bass mentah Float32 memiliki sedikit
+sample >unity; mix tetap di bawah unity. Lihat baseline dan batas audit di panduan.
 [Panduan](../../docs/coreai-iphone-audio-import.md).

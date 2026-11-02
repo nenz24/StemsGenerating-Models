@@ -1,0 +1,189 @@
+{
+  "scope": "Read-only audit of three uploaded WAVs; no inference, editing, gain applied to originals or model-reference parity claim",
+  "review_date": "2026-11-02",
+  "review_timezone": "Asia/Jakarta",
+  "generation_run_id": "2DCBE0FA-DE16-4EF8-A516-49F904093F89",
+  "input_import_id": "0C7BE99A-19A1-4C8E-BE40-74CD850B0BF9",
+  "files": {
+    "bass": {
+      "uploaded_filename": "bass 2.wav",
+      "sha256": "736874aef04814e0c2a2d39e5d2b1bae526e1ebe81a3b087a8fac5d4c29a782d",
+      "matches_generation_report_hash": true,
+      "file_bytes": 1966138,
+      "sample_rate": 48000,
+      "channels": 2,
+      "frames": 245760,
+      "duration_seconds": 5.12,
+      "dtype": "Float32 little endian",
+      "all_finite": true,
+      "peak": 1.037155032157898,
+      "peak_dbfs": 0.316873576735196,
+      "peak_sample": 143316,
+      "peak_time_seconds": 2.98575,
+      "peak_channel_zero_based": 0,
+      "rms": 0.20906384854038482,
+      "rms_dbfs": -13.59442118360882,
+      "dc_mean_per_channel": [
+        0.0011615377941286624,
+        0.0009085460604504376
+      ],
+      "peak_per_channel": [
+        1.037155032157898,
+        1.034487247467041
+      ],
+      "samples_above_unity": 186,
+      "frames_any_channel_above_unity": 96,
+      "samples_at_or_above_unity": 186,
+      "samples_exactly_plus_or_minus_one": 0,
+      "above_unity_region_count": 4,
+      "above_unity_longest_region_frames": 49,
+      "above_unity_total_frame_time_ms": 2.0,
+      "above_unity_regions": [
+        {
+          "start_frame": 129167,
+          "end_frame_exclusive": 129169,
+          "start_seconds": 2.6909791666666667,
+          "duration_ms": 0.041666666666666664
+        },
+        {
+          "start_frame": 129170,
+          "end_frame_exclusive": 129171,
+          "start_seconds": 2.6910416666666666,
+          "duration_ms": 0.020833333333333332
+        },
+        {
+          "start_frame": 129179,
+          "end_frame_exclusive": 129223,
+          "start_seconds": 2.6912291666666666,
+          "duration_ms": 0.9166666666666666
+        },
+        {
+          "start_frame": 143307,
+          "end_frame_exclusive": 143356,
+          "start_seconds": 2.9855625,
+          "duration_ms": 1.0208333333333333
+        }
+      ],
+      "oversampled_4x_peak_estimate": 1.0378152488433665,
+      "oversampled_4x_peak_estimate_dbfs": 0.32240095176626693
+    },
+    "piano": {
+      "uploaded_filename": "piano.wav",
+      "sha256": "be09b799dd655ab0d4593436cbdfea21b0814e6d145c82d88b694d25b2bfdf87",
+      "matches_generation_report_hash": true,
+      "file_bytes": 1966138,
+      "sample_rate": 48000,
+      "channels": 2,
+      "frames": 245760,
+      "duration_seconds": 5.12,
+      "dtype": "Float32 little endian",
+      "all_finite": true,
+      "peak": 0.6647878289222717,
+      "peak_dbfs": -3.5463388061480714,
+      "peak_sample": 171524,
+      "peak_time_seconds": 3.5734166666666667,
+      "peak_channel_zero_based": 1,
+      "rms": 0.06534791860198506,
+      "rms_dbfs": -23.69536481172783,
+      "dc_mean_per_channel": [
+        -3.396519856256485e-06,
+        -1.654901123495278e-05
+      ],
+      "peak_per_channel": [
+        0.3707498013973236,
+        0.6647878289222717
+      ],
+      "samples_above_unity": 0,
+      "frames_any_channel_above_unity": 0,
+      "samples_at_or_above_unity": 0,
+      "samples_exactly_plus_or_minus_one": 0,
+      "above_unity_region_count": 0,
+      "above_unity_longest_region_frames": 0,
+      "above_unity_total_frame_time_ms": 0.0,
+      "above_unity_regions": [],
+      "oversampled_4x_peak_estimate": 0.6679514127727427,
+      "oversampled_4x_peak_estimate_dbfs": -3.5051025448641324
+    },
+    "mix": {
+      "uploaded_filename": "piano-with-bass 2.wav",
+      "sha256": "9b9bc35d2871f94697dc6c39e1586b9415716241894f9c8bfd1a69ff6647fc69",
+      "matches_generation_report_hash": true,
+      "file_bytes": 1966138,
+      "sample_rate": 48000,
+      "channels": 2,
+      "frames": 245760,
+      "duration_seconds": 5.12,
+      "dtype": "Float32 little endian",
+      "all_finite": true,
+      "peak": 0.9314292669296265,
+      "peak_dbfs": -0.6170023998642078,
+      "peak_sample": 171391,
+      "peak_time_seconds": 3.5706458333333333,
+      "peak_channel_zero_based": 1,
+      "rms": 0.12598587733511935,
+      "rms_dbfs": -17.99356270704284,
+      "dc_mean_per_channel": [
+        0.0006361964983272757,
+        0.00048679210323028245
+      ],
+      "peak_per_channel": [
+        0.7037290334701538,
+        0.9314292669296265
+      ],
+      "samples_above_unity": 0,
+      "frames_any_channel_above_unity": 0,
+      "samples_at_or_above_unity": 0,
+      "samples_exactly_plus_or_minus_one": 0,
+      "above_unity_region_count": 0,
+      "above_unity_longest_region_frames": 0,
+      "above_unity_total_frame_time_ms": 0.0,
+      "above_unity_regions": [],
+      "oversampled_4x_peak_estimate": 0.9320221822839311,
+      "oversampled_4x_peak_estimate_dbfs": -0.6114750248331366
+    }
+  },
+  "planar_input_pcm_sha256": "2c602ebc5f47bd9b1780de1813d229f037ca826ea041c204fa8f02f1b0974b86",
+  "planar_input_matches_input_metadata_and_generation_report": true,
+  "mix_recomposition": {
+    "piano_gain": 0.78,
+    "bass_gain": 0.55,
+    "expected_global_gain": 1.0,
+    "reported_global_gain": 1.0,
+    "unscaled_mix_peak": 0.9314292669296265,
+    "maximum_absolute_residual": 0.0,
+    "rmse": 0.0,
+    "same_frame_positions_no_alignment_or_gain_fit": true
+  },
+  "generation_numerical_parity": "NOT EVALUATED; no matching trajectory/waveform reference for imported PCM",
+  "new_input_listener_feedback": {
+    "source": "User response in this conversation",
+    "assessment_original": "Sudah cocok dan enak didengar",
+    "accepted": true,
+    "scope": "This imported-piano 5.12-second bass/mix only; no independent listening verdict or full-song acceptance"
+  },
+  "hard_clipping_scope": "Above-unity Float32 samples are preserved. Count/peak alone does not establish audible distortion or exclude clipping before this WAV. No samples exactly +/-1 is not proof of absence of upstream clipping.",
+  "oversampling_scope": "scipy.signal.resample_poly 4x peak estimate, not certified true-peak measurement",
+  "host_decoder_comparison": {
+    "scope": "Input-only diagnostic against available Linux host PCM, not a new-input neural output reference or parity gate",
+    "host_pcm_sha256": "e9b80f21874c6fcadf7f2d0846897c602101fdf7cb0faa9cceb6caa909b15c8c",
+    "imported_pcm_sha256": "2c602ebc5f47bd9b1780de1813d229f037ca826ea041c204fa8f02f1b0974b86",
+    "bit_identical": false,
+    "direct_max_absolute_error": 1.1120632886886597,
+    "direct_rmse": 0.08738213075217324,
+    "direct_normalized_rmse": 1.3393759241641412,
+    "direct_pearson_correlation": 0.10450590522628707,
+    "best_lag_samples_within_100ms": -576,
+    "lag_convention": "positive means imported mono signal later than host mono signal",
+    "direct_metrics_aligned_or_gain_adjusted": false,
+    "lag_seconds": -0.012,
+    "overlap_after_lag_diagnostic": {
+      "frames": 245184,
+      "rmse": 0.0022500049462875534,
+      "normalized_rmse": 0.034447189503349324,
+      "max_absolute_error": 0.027774229645729065,
+      "pearson_correlation": 0.9994066947174682,
+      "gain_fit_applied": false,
+      "scope": "Diagnostic shift on comparison copies only, not applied to files or generation; no parity conclusion or decoder-delay cause established"
+    }
+  }
+}

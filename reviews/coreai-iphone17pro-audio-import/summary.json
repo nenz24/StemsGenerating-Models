@@ -105,12 +105,24 @@
     "listening mix": "9b9bc35d2871f94697dc6c39e1586b9415716241894f9c8bfd1a69ff6647fc69",
     "input piano": "be09b799dd655ab0d4593436cbdfea21b0814e6d145c82d88b694d25b2bfdf87"
   },
-  "wav_bytes_received_for_this_run": false,
-  "waveform_integrity_independently_verified": false,
-  "musical_quality_or_playback_confirmed_for_this_run": false,
+  "wav_bytes_received_for_this_run": true,
+  "waveform_integrity_independently_verified": true,
+  "musical_quality_or_playback_confirmed_for_this_run": true,
   "raw_bass_peak_reported": 1.037155,
   "raw_bass_peak_dbfs_derived": 0.3168733074215951,
   "listening_mix_gain_reported": 1.0,
   "peak_scope": "Float32 raw stem exceeds unity; this alone does not demonstrate hard clipping in stored WAV. Need actual WAV to assess count/shape and playback/export headroom.",
-  "remaining_scope": "Other input recordings, mono/48 kHz/short-file/cancel cases, arbitrary prompts, on-device RNG, longer audio and full-song behavior unverified"
+  "remaining_scope": "Different piano recordings, mono/48 kHz/short-file/cancel cases, arbitrary prompts, on-device RNG, longer audio and full-song behavior unverified",
+  "listener_feedback": {
+    "source": "User response in this conversation",
+    "assessment_original": "Sudah cocok dan enak didengar",
+    "accepted": true,
+    "scope": "This imported-piano 5.12-second bass/mix only; no independent listening verdict or full-song acceptance"
+  },
+  "waveform_metrics": "waveform-metrics.json",
+  "mix_recomposition_exact_float32_verified": true,
+  "input_pcm_sha256_independently_verified": true,
+  "bass_samples_above_unity": 186,
+  "bass_above_unity_frame_time_ms": 2.0,
+  "mix_sample_peak": 0.9314292669296265
 }

@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "baseline_id": "iphone-coreai-bass-import-512-v1",
+  "status": "accepted_short_imported_input_audition_baseline",
+  "date": "2026-11-02",
+  "timezone": "Asia/Jakarta",
+  "previous_fixed_input_baseline": "../iphone-coreai-bass-preview-512-v1/baseline.json",
+  "evidence": "../../reviews/coreai-iphone17pro-audio-import/summary.json",
+  "waveform_review": "../../reviews/coreai-iphone17pro-audio-import/waveform-metrics.json",
+  "listener_feedback": {
+    "source": "User response in this conversation",
+    "assessment_original": "Sudah cocok dan enak didengar",
+    "accepted": true,
+    "scope": "This imported-piano 5.12-second bass/mix only; no independent listening verdict or full-song acceptance"
+  },
+  "generation_run_id": "2DCBE0FA-DE16-4EF8-A516-49F904093F89",
+  "input_import_id": "0C7BE99A-19A1-4C8E-BE40-74CD850B0BF9",
+  "original_recording_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "input_planar_pcm_sha256": "2c602ebc5f47bd9b1780de1813d229f037ca826ea041c204fa8f02f1b0974b86",
+  "sample_rate": 48000,
+  "channels": 2,
+  "frames": 245760,
+  "audio_seconds": 5.12,
+  "segment_start_seconds": 0,
+  "input_normalization_applied": false,
+  "output_files": {
+    "bass": {
+      "sha256": "736874aef04814e0c2a2d39e5d2b1bae526e1ebe81a3b087a8fac5d4c29a782d",
+      "file_bytes": 1966138,
+      "peak": 1.037155032157898,
+      "peak_dbfs": 0.316873576735196,
+      "all_finite": true,
+      "samples_above_unity": 186
+    },
+    "piano": {
+      "sha256": "be09b799dd655ab0d4593436cbdfea21b0814e6d145c82d88b694d25b2bfdf87",
+      "file_bytes": 1966138,
+      "peak": 0.6647878289222717,
+      "peak_dbfs": -3.5463388061480714,
+      "all_finite": true,
+      "samples_above_unity": 0
+    },
+    "mix": {
+      "sha256": "9b9bc35d2871f94697dc6c39e1586b9415716241894f9c8bfd1a69ff6647fc69",
+      "file_bytes": 1966138,
+      "peak": 0.9314292669296265,
+      "peak_dbfs": -0.6170023998642078,
+      "all_finite": true,
+      "samples_above_unity": 0
+    }
+  },
+  "pipeline": "On-device imported PCM -> VAE posterior with fixture epsilon -> fixed Qwen/ConditionEncoder bass preset -> 50 APG-guided Euler steps -> VAE decoder",
+  "generation_completed": true,
+  "numerical_parity": "NOT EVALUATED; no matching host output references",
+  "fixed_conditioning_reference_checks_passed": 6,
+  "generation_seconds": 65.877000375,
+  "timing_excludes_prior_import": true,
+  "sampled_process_maximum_mib": 472.7055892944336,
+  "memory_scope": "10 ms sampled app process during generation; excludes prior import; not exact peak or total model/device RAM",
+  "mix_matches_imported_piano_and_generated_bass_exactly": true,
+  "raw_float_stem_preserved": true,
+  "known_headroom_scope": "Raw Float32 bass peak 1.037155, 186 samples >unity across 96 frames (2 ms union); mix peak 0.931429. No limiter/gain edit applied to baseline. Float-to-integer/export/playback headroom remains a separate handling consideration.",
+  "not_accepted_by_this_baseline": [
+    "strict neural numerical parity",
+    "different recordings",
+    "longer duration/full-song",
+    "arbitrary prompt/tokenization",
+    "on-device RNG",
+    "GPU/Neural Engine execution",
+    "cold-start/thermal/total device RAM guarantees"
+  ],
+  "audio_or_model_weights_committed": false
+}

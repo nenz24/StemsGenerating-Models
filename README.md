@@ -144,8 +144,10 @@ dengarkan bagian awal 5,12 detik lalu generate bass dengan model/preset yang sam
 Decode/resampling dilakukan di iPhone; tidak perlu export model ulang untuk file
 baru. [Run impor pertama selesai](reviews/coreai-iphone17pro-audio-import/README.md):
 50/50 langkah, generasi 65,88 s dan footprint maksimum proses tersampel
-472,71 MiB; tahap impor sebelumnya tidak termasuk pengukuran ini. Pemeriksaan
-WAV dan kualitas musikal run baru masih menunggu. [Panduan](docs/coreai-iphone-audio-import.md).
+472,71 MiB; tahap impor sebelumnya tidak termasuk pengukuran ini. Ketiga hash
+WAV cocok, mix tepat memakai PCM impor yang sama dan pengguna menerima nada/feel;
+[baseline impor](baselines/iphone-coreai-bass-import-512-v1/README.md) tetap
+terpisah dari numerical parity/lagu panjang. [Panduan](docs/coreai-iphone-audio-import.md).
 
 
 [Percobaan gabungan iPhone pertama](reviews/coreai-iphone17pro-bass-preview-specialization/README.md)

@@ -10,8 +10,9 @@ asli `ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189`.
 Metadata mencatat stereo 44,1 kHz, durasi 243,3306 detik, diubah pada iPhone
 menjadi 245760 frame stereo 48 kHz dari awal rekaman tanpa normalisasi.
 Hash asli dan PCM konsisten antara `input.json` dan `report.txt`; hash input
-WAV yang dilaporkan juga cocok dengan metadata preview. File WAV aktual untuk
-run ini belum diterima, sehingga hash itu belum diverifikasi dari byte WAV.
+WAV yang dilaporkan juga cocok dengan metadata preview. Ketiga WAV aktual
+kemudian diterima; seluruh hash WAV dan hash planar PCM telah diverifikasi
+dari byte file sebagaimana dicatat dalam `waveform-metrics.json`.
 
 Encoder menghasilkan empat output dengan shape/finite checks sesuai kontrak.
 Conditioning preset tetap lolos 6/6 pembandingan, seluruh 50 langkah sampling
@@ -29,17 +30,35 @@ biaya impor atau perubahan kecepatan.
 tidak ada trajectory atau waveform host yang cocok untuk PCM ini. Enam gate
 conditioning masih sah karena input teks/timbre tidak berubah. Hash WAV bass
 dan mix berbeda dari baseline yang disetujui pengguna; metadata PCM baru bukan
-bukti kesamaan dengan decoder/resampler Mac. Kualitas musikal run baru belum
-dikonfirmasi dan tidak diwarisi dari persetujuan baseline lama.
+bukti kesamaan dengan decoder/resampler Mac. Pengguna kemudian menerima nada/feel run baru: **“Sudah cocok dan enak didengar”**.
+Persetujuan ini dicatat terpisah dari baseline lama dan bukan numerical PASS.
 
 Peak bass yang dilaporkan **1,037155**, atau sekitar **+0,317 dBFS**. WAV Float32
 bisa menyimpan nilai di atas unity; nilai ini sendiri tidak membuktikan hard
-clipping pada file. Perlu WAV aktual untuk memeriksa jumlah/bentuk sample,
-headroom saat playback/konversi PCM dan level campuran. Tidak ada gain,
-normalisasi atau limiter yang diubah berdasarkan laporan ini.
+clipping pada file. Audit WAV mengonfirmasi 186 sample kanal >unity pada 96 frame
+(total 2 ms), terkumpul sekitar 2,691 dan 2,986 detik. Mix memiliki peak 0,931429
+(−0,617 dBFS), tidak ada sample >unity. Ketiadaan sample tepat ±1 tidak membuktikan tidak adanya distorsi sebelumnya. Tidak ada gain, normalisasi atau limiter yang diubah.
 
 Berkas asli laporan dan metadata disimpan byte-for-byte; `summary.json` memuat
 hash bukti dan angka yang diekstrak. Tidak ada bobot atau audio yang ditambahkan.
-Langkah berikut: periksa WAV input/bass/mix dan dengarkan hasil, lalu coba
-rekaman piano berbeda. Mono, stereo 48 kHz, penolakan audio pendek, pembatalan
+[Baseline uji dengar impor](../../baselines/iphone-coreai-bass-import-512-v1/README.md)
+menyimpan persetujuan pengguna. Langkah berikut: coba rekaman piano berbeda. Mono, stereo 48 kHz, penolakan audio pendek, pembatalan
 picker, prompt bebas, RNG perangkat dan lagu panjang tetap belum divalidasi.
+
+## Audit tiga WAV yang diunggah
+
+Semua file adalah stereo Float32 48 kHz, 245760 frame/5,12 detik, dengan nilai
+finite. Perbedaan nama upload (`bass 2.wav`, `piano-with-bass 2.wav`) tidak mengubah
+hash dibanding laporan. Recomposition Float32 0,78 × piano + 0,55 × bass tepat
+sama dengan mix: residual maksimum dan RMSE nol, tanpa alignment/gain fitting.
+Ini membuktikan pemakaian input yang sama dalam mix; bukan bukti kecocokan
+akor dari analisis sample. Penilaian musikal berasal dari pengguna.
+
+PCM impor berbeda dari PCM Linux/FFmpeg lama. Cross-correlation mono dalam
+±100 ms menemukan best lag −576 sample (impor 12 ms lebih awal); pada overlap
+yang digeser hanya untuk diagnostik, korelasi 0,999407 dan normalized RMSE 0,03445.
+Tidak ada shift atau gain yang diterapkan ke WAV asli/generasi. Penyebab offset
+decoder/priming belum dibuktikan dan tidak dikoreksi dengan offset tebakan. Mix
+baru memakai piano impor yang sama, sehingga perbedaan terhadap host lama ini
+bukan pergeseran antara dua track pada mix baru. Tidak ada referensi output
+neural yang cocok untuk PCM impor dan tidak ada gate parity baru yang diklaim.

@@ -856,7 +856,7 @@
     "device_mac_reference_waveform_checks_passed": 2,
     "device_final_latent_reference_checks_failed": 2,
     "performance_scope": "One confirmed Release -O retained CPU-request 5.12-second run, 59.235s, 450.42 MiB sampled process maximum; not exact peak, total RAM, cold-start or full-song guarantee.",
-    "next_measurement": "Inspect uploaded bass/mix/input WAV for this imported recording, including >unity stem peak, then listen/review a genuinely different piano recording.",
+    "next_measurement": "Try a different piano recording through existing Files import at fixed 5.12 s; raw Float32 stem headroom handling and longer-window export remain separate next development choices.",
     "release_measurement_prepared": true,
     "release_measurement_apple_build_verified": true,
     "latest_profiled_report": "reviews/coreai-iphone17pro-bass-preview-reuse/summary.json",
@@ -920,7 +920,7 @@
         "input.json"
       ],
       "device_report": "reviews/coreai-iphone17pro-audio-import/summary.json",
-      "verified_input_scope": "One MP3, 44.1 kHz stereo, same original piano file as baseline; first 5.12 seconds. No new-input musical approval or waveform-byte audit yet.",
+      "verified_input_scope": "One MP3, 44.1 kHz stereo, same original piano as baseline; first 5.12 seconds. Three WAV hashes/PCM/mix verified; user accepts notes/feel for this imported result only.",
       "generation_total_ms": 65877.000375,
       "generation_timing_excludes_prior_import": true,
       "generation_sampled_process_maximum_mib": 472.7055892944336,
@@ -928,8 +928,17 @@
       "generation_steps_completed": 50,
       "generation_wav_reported": true,
       "raw_bass_peak_reported": 1.037155,
-      "musical_quality_verified": false,
-      "waveform_bytes_verified": false
+      "musical_quality_verified": true,
+      "waveform_bytes_verified": true,
+      "musical_quality_scope": "This imported-piano 5.12-second bass/mix only; no independent listening verdict or full-song acceptance",
+      "listener_feedback_original": "Sudah cocok dan enak didengar",
+      "waveform_metrics": "reviews/coreai-iphone17pro-audio-import/waveform-metrics.json",
+      "audition_baseline": "baselines/iphone-coreai-bass-import-512-v1/baseline.json",
+      "imported_pcm_hash_verified_from_wav": true,
+      "mix_recomposition_exact_float32_verified": true,
+      "bass_samples_above_unity": 186,
+      "bass_above_unity_frame_time_ms": 2.0,
+      "mix_peak_verified": 0.9314292669296265
     }
   }
 }
