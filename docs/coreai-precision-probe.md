@@ -5,6 +5,15 @@ diterima melalui uji dengar, tetapi butuh 772,415 detik. Backend-await mengambil
 96,41% waktu. Sebanyak 720 reuse hits tercatat; langkah 3–50 tetap rata-rata
 15,191 detik. Ini belum menjelaskan penyebab internal backend.
 
+**Hasil perangkat terbaru:** [A/B/A selesai](../reviews/coreai-iphone17pro-precision-aba/README.md),
+mean panggilan berulang BF16 A1 **55,964 ms**, FP32 B **53,533 ms**, BF16 A2
+**53,336 ms**. Tidak ada keuntungan FP32 yang konsisten pada kasus satu pasangan
+layer ini. Strict parity tetap **NOT PASSED (0/12)**: kedua varian mencatat
+satu pelanggaran pada titik yang sama. Pertahankan baseline BF16; hasil ini
+tidak menjadi alasan mengekspor seluruh sampler ke FP32. Investigasi berikutnya
+perlu membandingkan pergantian banyak aset dan ukuran pool handle, dengan input
+tetap, sebelum mengubah strategi sampler.
+
 Eksperimen berikutnya membandingkan satu pasangan layer pada shape yang sama
 dengan sampler panjang: CFG batch 2, 128 hidden token, 118 condition token.
 Kandidat A menyalin **aset BF16 baseline yang persis sama**. Kandidat B memakai

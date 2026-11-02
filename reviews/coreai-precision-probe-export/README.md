@@ -37,6 +37,8 @@ Initial host preparation passed 98 regression tests, including seven new integri
 These tests validate contracts, corruption rejection, staging and existing host
 gates; they do not emulate CoreAI device execution. No Apple SDK or Swift
 compiler is available in this workspace. The first device call built and ran
-but failed strict parity; complete A/B/A parity, memory safety and timing
-comparison remain pending. The accepted 10.24-second baseline is not replaced.
+but failed strict parity. The [subsequent A/B/A run](../coreai-iphone17pro-precision-aba/README.md)
+completed all timing calls, with no consistent FP32 speed advantage; strict
+parity remained NOT PASSED (0/12). Full-loop behavior and total native memory
+remain unverified. The accepted 10.24-second baseline is not replaced.
 See the [run instructions](../../docs/coreai-precision-probe.md).

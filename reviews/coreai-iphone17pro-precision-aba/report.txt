@@ -1,0 +1,71 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+Probe run: EDC1C13C-300F-4E20-B5D6-98D07A736C52; started UTC: 2026-11-02T17:24:28Z
+CoreAI architecture: h18p
+Test: long-profile layers 0+1, existing BF16 asset vs expanded FP32 constants, A/B/A
+Scope: fixed synthetic inputs; actual CFG batch 2, 128 hidden / 118 condition tokens; NOT full denoiser or audio generation
+Requested compute policy: cpuOnly; actual accelerator placement NOT MEASURED
+All learned values identical; FP32 calculations/inputs/outputs in both variants; original FP32 host reference required
+Diagnostic timing collection: finite pointwise/RMSE parity failures are recorded and remain NOT PASSED; scheduled calls continue without changing bounds
+Shape/type/hash/nonfinite/native/memory failures still stop; this component probe generates no waveform and does not replace the sampler
+Three passes, four calls each; same model AND function retained within a pass, Swift scope released between passes
+No hidden warmup, cache deletion, retry or automatic baseline replacement; first call is not guaranteed cold cache
+backend-await is API wall time, NOT isolated kernel time or proof of full-loop speedup
+Thermal state codes: 0 nominal, 1 fair, 2 serious, 3 critical; low-power mode: false
+Process guard 2000 MiB before load and each call, rechecked after bind; NOT a native compiler peak guarantee
+Target: iOS device build
+App build configuration: Release
+Swift app optimization: -O
+Phase: verifying model binaries and fixed tensors; no model open yet
+SHA-256: VERIFIED both native assets, eight fixed inputs and original FP32 host reference; existing BF16 asset identity matched
+Pass 1 call 1: model-open ms 2.080542; function-bind ms 58.468542; input-validation ms 0.012875; backend-await ms 752.457625; output-copy ms 16.669709; run-other ms 2.6582490000000796; original FP32 reference max abs error 0.00311279296875, RMSE 3.1828222425334655e-05, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Pass 1 call 1: Pointwise errors over original bound: 1/524288 (fraction 1.9073486328125e-06); worst bound ratio 1.0375229421255225; index [1,118,1958], flat 505766; actual -0.018451690673828125; reference -0.01857471466064453; abs error 0.00012302398681640625; bound 0.00011857471466064454 = 1e-4 + 1e-3*abs(reference)
+Pass 1 call 1: strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output
+Pass 1 call 2: model-open ms 0.0; function-bind ms 0.0; input-validation ms 0.006833; backend-await ms 61.424; output-copy ms 19.003917; run-other ms 2.5059579999999997; original FP32 reference max abs error 0.00311279296875, RMSE 3.1828222425334655e-05, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Pass 1 call 2: Pointwise errors over original bound: 1/524288 (fraction 1.9073486328125e-06); worst bound ratio 1.0375229421255225; index [1,118,1958], flat 505766; actual -0.018451690673828125; reference -0.01857471466064453; abs error 0.00012302398681640625; bound 0.00011857471466064454 = 1e-4 + 1e-3*abs(reference)
+Pass 1 call 2: strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output
+Pass 1 call 3: model-open ms 0.0; function-bind ms 0.0; input-validation ms 0.007; backend-await ms 52.064834; output-copy ms 16.800583; run-other ms 2.586832999999995; original FP32 reference max abs error 0.00311279296875, RMSE 3.1828222425334655e-05, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Pass 1 call 3: Pointwise errors over original bound: 1/524288 (fraction 1.9073486328125e-06); worst bound ratio 1.0375229421255225; index [1,118,1958], flat 505766; actual -0.018451690673828125; reference -0.01857471466064453; abs error 0.00012302398681640625; bound 0.00011857471466064454 = 1e-4 + 1e-3*abs(reference)
+Pass 1 call 3: strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output
+Pass 1 call 4: model-open ms 0.0; function-bind ms 0.0; input-validation ms 0.006042; backend-await ms 54.40225; output-copy ms 18.095208; run-other ms 2.5325830000000096; original FP32 reference max abs error 0.00311279296875, RMSE 3.1828222425334655e-05, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Pass 1 call 4: Pointwise errors over original bound: 1/524288 (fraction 1.9073486328125e-06); worst bound ratio 1.0375229421255225; index [1,118,1958], flat 505766; actual -0.018451690673828125; reference -0.01857471466064453; abs error 0.00012302398681640625; bound 0.00011857471466064454 = 1e-4 + 1e-3*abs(reference)
+Pass 1 call 4: strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output
+Pass 1/3 bfloat16: first backend-await ms 752.457625; repeated mean (calls 2-4) ms 55.96369466666667
+Pass 1 Swift model/function scope released; native eviction NOT GUARANTEED
+Pass 2 call 1: model-open ms 535.894292; function-bind ms 4.00375; input-validation ms 0.007292; backend-await ms 72.5175; output-copy ms 17.172625; run-other ms 2.5179580000000037; original FP32 reference max abs error 0.00311279296875, RMSE 3.1828222425334655e-05, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Pass 2 call 1: Pointwise errors over original bound: 1/524288 (fraction 1.9073486328125e-06); worst bound ratio 1.0375229421255225; index [1,118,1958], flat 505766; actual -0.018451690673828125; reference -0.01857471466064453; abs error 0.00012302398681640625; bound 0.00011857471466064454 = 1e-4 + 1e-3*abs(reference)
+Pass 2 call 1: strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output
+Pass 2 call 2: model-open ms 0.0; function-bind ms 0.0; input-validation ms 0.00725; backend-await ms 54.324375; output-copy ms 18.160542; run-other ms 2.402124999999991; original FP32 reference max abs error 0.00311279296875, RMSE 3.1828222425334655e-05, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Pass 2 call 2: Pointwise errors over original bound: 1/524288 (fraction 1.9073486328125e-06); worst bound ratio 1.0375229421255225; index [1,118,1958], flat 505766; actual -0.018451690673828125; reference -0.01857471466064453; abs error 0.00012302398681640625; bound 0.00011857471466064454 = 1e-4 + 1e-3*abs(reference)
+Pass 2 call 2: strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output
+Pass 2 call 3: model-open ms 0.0; function-bind ms 0.0; input-validation ms 0.007792; backend-await ms 52.797291; output-copy ms 17.953625; run-other ms 2.579834000000009; original FP32 reference max abs error 0.00311279296875, RMSE 3.1828222425334655e-05, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Pass 2 call 3: Pointwise errors over original bound: 1/524288 (fraction 1.9073486328125e-06); worst bound ratio 1.0375229421255225; index [1,118,1958], flat 505766; actual -0.018451690673828125; reference -0.01857471466064453; abs error 0.00012302398681640625; bound 0.00011857471466064454 = 1e-4 + 1e-3*abs(reference)
+Pass 2 call 3: strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output
+Pass 2 call 4: model-open ms 0.0; function-bind ms 0.0; input-validation ms 0.006625; backend-await ms 53.477625; output-copy ms 18.326959; run-other ms 2.3866249999999987; original FP32 reference max abs error 0.00311279296875, RMSE 3.1828222425334655e-05, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Pass 2 call 4: Pointwise errors over original bound: 1/524288 (fraction 1.9073486328125e-06); worst bound ratio 1.0375229421255225; index [1,118,1958], flat 505766; actual -0.018451690673828125; reference -0.01857471466064453; abs error 0.00012302398681640625; bound 0.00011857471466064454 = 1e-4 + 1e-3*abs(reference)
+Pass 2 call 4: strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output
+Pass 2/3 float32: first backend-await ms 72.5175; repeated mean (calls 2-4) ms 53.533097
+Pass 2 Swift model/function scope released; native eviction NOT GUARANTEED
+Pass 3 call 1: model-open ms 1.477541; function-bind ms 1.5465; input-validation ms 0.00625; backend-await ms 80.794; output-copy ms 17.038375; run-other ms 2.406209000000022; original FP32 reference max abs error 0.00311279296875, RMSE 3.1828222425334655e-05, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Pass 3 call 1: Pointwise errors over original bound: 1/524288 (fraction 1.9073486328125e-06); worst bound ratio 1.0375229421255225; index [1,118,1958], flat 505766; actual -0.018451690673828125; reference -0.01857471466064453; abs error 0.00012302398681640625; bound 0.00011857471466064454 = 1e-4 + 1e-3*abs(reference)
+Pass 3 call 1: strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output
+Pass 3 call 2: model-open ms 0.0; function-bind ms 0.0; input-validation ms 0.006667; backend-await ms 53.633917; output-copy ms 18.811375; run-other ms 2.3620410000000014; original FP32 reference max abs error 0.00311279296875, RMSE 3.1828222425334655e-05, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Pass 3 call 2: Pointwise errors over original bound: 1/524288 (fraction 1.9073486328125e-06); worst bound ratio 1.0375229421255225; index [1,118,1958], flat 505766; actual -0.018451690673828125; reference -0.01857471466064453; abs error 0.00012302398681640625; bound 0.00011857471466064454 = 1e-4 + 1e-3*abs(reference)
+Pass 3 call 2: strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output
+Pass 3 call 3: model-open ms 0.0; function-bind ms 0.0; input-validation ms 0.007625; backend-await ms 52.908208; output-copy ms 17.558167; run-other ms 2.4866669999999935; original FP32 reference max abs error 0.00311279296875, RMSE 3.1828222425334655e-05, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Pass 3 call 3: Pointwise errors over original bound: 1/524288 (fraction 1.9073486328125e-06); worst bound ratio 1.0375229421255225; index [1,118,1958], flat 505766; actual -0.018451690673828125; reference -0.01857471466064453; abs error 0.00012302398681640625; bound 0.00011857471466064454 = 1e-4 + 1e-3*abs(reference)
+Pass 3 call 3: strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output
+Pass 3 call 4: model-open ms 0.0; function-bind ms 0.0; input-validation ms 0.006833; backend-await ms 53.46475; output-copy ms 18.084625; run-other ms 2.5268340000000045; original FP32 reference max abs error 0.00311279296875, RMSE 3.1828222425334655e-05, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Pass 3 call 4: Pointwise errors over original bound: 1/524288 (fraction 1.9073486328125e-06); worst bound ratio 1.0375229421255225; index [1,118,1958], flat 505766; actual -0.018451690673828125; reference -0.01857471466064453; abs error 0.00012302398681640625; bound 0.00011857471466064454 = 1e-4 + 1e-3*abs(reference)
+Pass 3 call 4: strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output
+Pass 3/3 bfloat16: first backend-await ms 80.794; repeated mean (calls 2-4) ms 53.335625
+Pass 3 Swift model/function scope released; native eviction NOT GUARANTEED
+Precision timing collection: COMPLETED (12/12 finite component calls)
+Precision component strict parity: NOT PASSED (0/12 calls pass; original pointwise and normalized-RMSE bounds unchanged)
+Timing ratios below are DIAGNOSTIC ONLY: at least one strict comparison failed; neither variant is accepted as a sampler replacement by this result
+Component BF16-A1/FP32-B repeated backend-await ratio: 1.0454036437807188
+Component BF16-A2/FP32-B repeated backend-await ratio: 0.9963112165918591; NOT full-loop speedup
+Sampled process maximum MiB (10 ms): 222.56514739990234
+Strict parity comparisons completed: 12/12; passed 0; NOT PASSED 12
+Completed component calls: 12/12; opens 3; binds 3; hits 9; total probe ms 2849.698708
+Memory scope: sampled app process, not exact peak/total RAM. First-call cache state and thermal effects are not controlled.

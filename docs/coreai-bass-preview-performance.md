@@ -39,9 +39,15 @@ Langkah 3–50 tetap rata-rata 15,191 detik; backend-await 744,691 detik atau
 backend pada profil ini. Penyebab internal, thermal dan cache state belum
 diisolasi. Klip diterima melalui uji dengar, bukan sebagai anggaran performa.
 Recovery cache 0/1 berarti jalur repair belum teruji oleh run yang selesai ini.
-[Uji pasangan layer BF16 versus FP32](coreai-precision-probe.md) sekarang
-disiapkan untuk mengisolasi pengaruh penyimpanan bobot dengan nilai dan input
-yang sama, tanpa mengulang 50 langkah atau mengubah baseline.
+[Uji pasangan layer BF16 versus FP32](coreai-precision-probe.md) sudah
+[menyelesaikan A/B/A](../reviews/coreai-iphone17pro-precision-aba/README.md).
+Mean berulang BF16 55,964 → FP32 53,533 → BF16 53,336 ms: tidak ada keuntungan
+FP32 yang konsisten dalam eksperimen ini. Strict parity tetap NOT PASSED,
+0/12; semua panggilan mencatat satu titik pelanggaran yang sama. Jangan
+memperbesar sampler ke FP32 berdasarkan hasil ini. Fokus diagnosis berikutnya
+adalah ukuran pool dan interleaving aset pada input tetap. Working set/native
+weight movement masih hipotesis, belum penyebab yang dibuktikan. Uji komponen
+ini tidak mereproduksi kondisi full generation 772 detik.
 
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
