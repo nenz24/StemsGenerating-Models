@@ -728,6 +728,25 @@ enum CoreAIDecoderProbe {
         return digest.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
+    // Foundation DirectoryEnumerator's Sequence iterator is unavailable in
+    // async contexts. Finish enumeration synchronously and return owned values
+    // before the AOT verifier suspends to report progress.
+    private static func aotPayloadFiles(in folder: URL) throws -> Set<String> {
+        let root = folder.standardizedFileURL.resolvingSymlinksInPath().path + "/"
+        var actualFiles = Set<String>()
+        guard let files = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: [.isRegularFileKey]) else {
+            throw ShardError.invalidManifest
+        }
+        for case let url as URL in files {
+            let values = try url.resourceValues(forKeys: [.isRegularFileKey])
+            guard values.isRegularFile == true, url.lastPathComponent != ".DS_Store", url != folder.appendingPathComponent("reference.json") else { continue }
+            let path = url.standardizedFileURL.resolvingSymlinksInPath().path
+            guard path.hasPrefix(root) else { throw ShardError.invalidManifest }
+            actualFiles.insert(String(path.dropFirst(root.count)))
+        }
+        return actualFiles
+    }
+
     private static func preparedBassPreviewAOT(source: URL, reportLines: [String],
                                                progress: @escaping @MainActor @Sendable (String) -> Void) async throws -> PreviewAOTSelection? {
         let folder = source.deletingLastPathComponent().appendingPathComponent("bass-preview-512-aot")
@@ -751,17 +770,7 @@ enum CoreAIDecoderProbe {
         try verifyReferenceIdentity(source.appendingPathComponent("reference.json"), expected: ref.sourceReferenceSha256)
         guard !ref.artifactSha256.isEmpty else { throw ShardError.invalidManifest }
         let root = folder.standardizedFileURL.resolvingSymlinksInPath().path + "/"
-        var actualFiles = Set<String>()
-        guard let files = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: [.isRegularFileKey]) else {
-            throw ShardError.invalidManifest
-        }
-        for case let url as URL in files {
-            let values = try url.resourceValues(forKeys: [.isRegularFileKey])
-            guard values.isRegularFile == true, url.lastPathComponent != ".DS_Store", url != folder.appendingPathComponent("reference.json") else { continue }
-            let path = url.standardizedFileURL.resolvingSymlinksInPath().path
-            guard path.hasPrefix(root) else { throw ShardError.invalidManifest }
-            actualFiles.insert(String(path.dropFirst(root.count)))
-        }
+        let actualFiles = try aotPayloadFiles(in: folder)
         try checkManifest(actualFiles, Set(ref.artifactSha256.keys), "aot.covered_files")
         guard ref.artifactSha256.keys.allSatisfy({ name in
             ref.assets.values.contains(where: { name == $0 || name.hasPrefix($0 + "/") })
