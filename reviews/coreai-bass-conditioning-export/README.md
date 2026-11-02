@@ -36,8 +36,11 @@ Qwen remains causal; ACE encoders use their alternating local/full masks.
 
 The device caller validates stage order, hashes three inputs and six references,
 executes the assets with detached CPU copies, and compares Qwen embedding,
-condition and mask against both references. **Apple compilation, iPhone parity,
-RAM and latency are pending.** No denoiser, CFG or bass waveform is executed or
+condition and mask against both references. The subsequent
+[user-supplied iPhone report](../coreai-iphone17pro-bass-conditioning/README.md)
+confirms successful Apple build/execution and all six comparisons PASS across
+27 stages. Total probe time is 9.463 s; sampled app-process maximum 783.99 MiB,
+not exact peak or total model/device RAM. No denoiser, CFG or bass waveform is executed or
 generated. Host tokenization does not establish arbitrary prompt entry on iPhone.
 
 Fifty related host tests pass, including corruption, checkpoint/stage-order

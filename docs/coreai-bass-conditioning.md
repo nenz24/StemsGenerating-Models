@@ -1,5 +1,11 @@
 # Tahap 2b: conditioning instrumen bass
 
+**Uji iPhone sudah PASS:** [laporan perangkat](../reviews/coreai-iphone17pro-bass-conditioning/README.md)
+memuat 27/27 tahap, seluruh 40 layer dan 6/6 pembandingan. Total 9,46 detik;
+footprint aplikasi maksimum tersampel 783,99 MiB, bukan RAM seluruh pipeline.
+Tidak perlu mengulang gate ini sekarang. Komponen conditioning selesai untuk
+fixture ini; lanjut tahap 3, integrasi sampling dan WAV.
+
 Audio-context piano sudah [PASS di iPhone](../reviews/coreai-iphone17pro-source-context/README.md).
 Berikutnya: lookup embedding token, seluruh 28 layer Qwen3, text projector,
 delapan layer lyric encoder, empat layer timbre encoder, normalisasi dan packing.
@@ -72,8 +78,8 @@ sebelum setiap aset bukan jaminan peak OS. Ukuran native bukan ukuran RAM.
 ## Status dan batas
 
 [Ekspor dan host parity sudah berhasil](../reviews/coreai-bass-conditioning-export/README.md)
-dengan checkpoint nyata. Build Apple dan parity perangkat untuk kode baru
-masih menunggu; Linux tidak memiliki Apple SDK.
+dengan checkpoint nyata. Build Apple dan parity perangkat telah dilaporkan
+pengguna berhasil; Linux tidak memiliki Apple SDK untuk mereproduksinya.
 
 **Tokenisasi masih di Mac untuk preset tetap.** Lookup embedding dan seluruh
 neural inference berjalan di CoreAI di iPhone saat uji. Prompt bebas dan
@@ -84,5 +90,5 @@ lain belum didukung spesialisasi ini.
 Uji ini belum menggabungkan audio-context, conditioning, denoiser, CFG dan
 decoder, serta belum menghasilkan bass. Condition 117 token dan source-context
 128 frame memerlukan penyesuaian kontrak denoiser sebelum integrasi; fixture
-sintetis lama 64 token/25 frame tidak langsung dipakai. Setelah gate ini lolos,
+sintetis lama 64 token/25 frame tidak langsung dipakai. Gate ini sudah lolos;
 pekerjaan berikutnya adalah merangkainya menjadi WAV pendek pada tahap 3.

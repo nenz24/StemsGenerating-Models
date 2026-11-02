@@ -308,7 +308,9 @@ dipakai ulang. Ekspor menghasilkan 27 aset sekitar 2,42 GB dan mempertahankan
 bundle lain. Target: 27/27 tahap dan enam pembandingan PASS.
 
 Lookup token, semua 28 layer Qwen dan ConditionEncoder lengkap (8 lyric +
-4 timbre layer, projection, packing) dijalankan di CoreAI. Host parity lolos;
-kode baru belum diuji pada Apple SDK/iPhone. Tokenisasi prompt bass tetap di Mac,
+4 timbre layer, projection, packing) dijalankan di CoreAI. [Uji iPhone sudah PASS](../../reviews/coreai-iphone17pro-bass-conditioning/README.md):
+27/27 tahap, 6/6 pembandingan, total 9,46 detik dan footprint maksimum tersampel
+783,99 MiB. Kedua gate conditioning selesai secara terpisah untuk fixture ini;
+berikutnya integrasi sampling/decoder pada tahap 3. Tokenisasi prompt bass tetap di Mac,
 belum ada prompt bebas di iPhone. Tidak ada sampler/CFG atau suara bass pada
 gate ini. [Panduan](../../docs/coreai-bass-conditioning.md).

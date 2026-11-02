@@ -88,5 +88,5 @@ untuk membandingkan implementasi posterior yang sama.
 Build dan eksekusi Swift telah dilaporkan pengguna pada iPhone; workspace Linux
 tidak memiliki Apple SDK untuk mereproduksinya. Jalur berikutnya,
 [embedding prompt/lyrics dan ConditionEncoder](coreai-bass-conditioning.md), sudah
-diekspor dan lolos pembandingan host; uji iPhone masih menunggu. Setelah itu
-integrasi ke sampler/decoder pada tahap 3.
+diekspor serta lolos pembandingan host dan iPhone (27/27 tahap, 6/6 checks).
+Berikutnya integrasi ke sampler/decoder pada tahap 3.

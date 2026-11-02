@@ -1,0 +1,51 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: bass prompt -> all 28 Qwen blocks -> complete ACE ConditionEncoder (8 lyric + 4 timbre blocks)
+Scope: text/target conditioning; fixed host-tokenized prompt; NO denoiser or bass waveform
+Requested compute policy: cpuOnly; accelerator placement NOT MEASURED
+27 sequential native assets; FP16 stored weights, FP32 calculations; detached CPU copies between assets
+Prompt tokenization on Mac; arbitrary prompt entry/tokenization on iPhone NOT tested
+No timbre reference recording: publisher silence latent, first 750 frames; single batch with all tokens valid
+Output: condition [1,117,2048], mask [1,117]; source audio context tested separately
+Footprint guard before each stage: 2000 MiB; NOT an OS peak-memory guarantee
+Target: iOS device build
+SHA-256: VERIFIED three inputs and six references; all checkpoint hashes verified during preparation
+Stage 1/27 token-embedding.aimodel: load+bind ms 981.861417; backend-await ms 3.719875; readback ms 4.665333
+Stage 2/27 qwen-00-01.aimodel: load+bind ms 214.883042; backend-await ms 12.791792; readback ms 3.075041
+Stage 3/27 qwen-02-03.aimodel: load+bind ms 181.464125; backend-await ms 12.976959; readback ms 3.096291
+Stage 4/27 qwen-04-05.aimodel: load+bind ms 177.833625; backend-await ms 12.9375; readback ms 3.111542
+Stage 5/27 qwen-06-07.aimodel: load+bind ms 177.870959; backend-await ms 13.258792; readback ms 3.241916
+Stage 6/27 qwen-08-09.aimodel: load+bind ms 189.769666; backend-await ms 13.004958; readback ms 3.173958
+Stage 7/27 qwen-10-11.aimodel: load+bind ms 201.029417; backend-await ms 13.015083; readback ms 3.166375
+Stage 8/27 qwen-12-13.aimodel: load+bind ms 205.331125; backend-await ms 13.22; readback ms 3.092083
+Stage 9/27 qwen-14-15.aimodel: load+bind ms 209.658333; backend-await ms 13.076959; readback ms 3.091875
+Stage 10/27 qwen-16-17.aimodel: load+bind ms 200.543125; backend-await ms 13.124958; readback ms 3.009583
+Stage 11/27 qwen-18-19.aimodel: load+bind ms 199.250625; backend-await ms 12.829208; readback ms 3.107958
+Stage 12/27 qwen-20-21.aimodel: load+bind ms 207.816333; backend-await ms 13.034125; readback ms 2.981125
+Stage 13/27 qwen-22-23.aimodel: load+bind ms 222.267166; backend-await ms 13.018375; readback ms 3.155333
+Stage 14/27 qwen-24-25.aimodel: load+bind ms 248.041542; backend-await ms 13.177625; readback ms 3.234375
+Stage 15/27 qwen-26-27.aimodel: load+bind ms 269.643; backend-await ms 13.503916; readback ms 3.1475
+Stage 16/27 qwen-norm.aimodel: load+bind ms 15.758708; backend-await ms 0.128583; readback ms 3.220208
+text_embeddings vs reference: max abs error 0.00012969970703125; RMSE 1.2159641049163495e-05; normalized RMSE 3.6186846834860243e-06; PASS
+text_embeddings vs fp32-reference: max abs error 0.00018310546875; RMSE 1.2263274014012788e-05; normalized RMSE 3.6495256000142243e-06; PASS
+Stage 17/27 lyric-front.aimodel: load+bind ms 25.755292; backend-await ms 0.623; readback ms 0.64475
+Stage 18/27 lyric-00-01.aimodel: load+bind ms 823.018875; backend-await ms 24.030083; readback ms 0.662334
+Stage 19/27 lyric-02-03.aimodel: load+bind ms 682.083334; backend-await ms 27.679542; readback ms 0.661291
+Stage 20/27 lyric-04-05.aimodel: load+bind ms 654.466917; backend-await ms 23.716291; readback ms 0.65075
+Stage 21/27 lyric-06-07.aimodel: load+bind ms 728.72; backend-await ms 24.208958; readback ms 0.655792
+Stage 22/27 lyric-norm.aimodel: load+bind ms 14.6725; backend-await ms 0.09925; readback ms 0.928542
+Stage 23/27 timbre-front.aimodel: load+bind ms 15.593917; backend-await ms 1.66475; readback ms 45.0045
+Stage 24/27 timbre-00-01.aimodel: load+bind ms 698.518; backend-await ms 138.6295; readback ms 44.696334
+Stage 25/27 timbre-02-03.aimodel: load+bind ms 652.997458; backend-await ms 143.804583; readback ms 52.856084
+Stage 26/27 timbre-norm.aimodel: load+bind ms 18.14225; backend-await ms 0.602167; readback ms 0.075917
+Stage 27/27 condition-pack.aimodel: load+bind ms 22.09025; backend-await ms 1.1915; readback ms 7.362625
+condition vs reference: max abs error 9.250640869140625e-05; RMSE 1.3496339060605427e-05; normalized RMSE 3.594115685058006e-06; PASS
+condition vs fp32-reference: max abs error 9.918212890625e-05; RMSE 1.3620884084145896e-05; normalized RMSE 3.6272825649971524e-06; PASS
+condition_mask vs reference: max abs error 0.0; RMSE 0.0; normalized RMSE 0.0; PASS
+condition_mask vs fp32-reference: max abs error 0.0; RMSE 0.0; normalized RMSE 0.0; PASS
+Bass text/ConditionEncoder dual parity: PASS (all 40 layers, six checks)
+Process baseline MiB: 24.626731872558594
+Sampled process maximum MiB (10 ms): 783.9873199462891
+Completed conditioning stages: 27/27; parity checks: 6/6; total probe ms: 9462.808417
+Scope: sampled app process only; total model/device RAM, native cache eviction and raw recording import unmeasured; no bass generated
