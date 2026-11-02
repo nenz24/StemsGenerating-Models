@@ -1,5 +1,11 @@
 # CoreAI device and model probes
 
+**Next performance experiment:** [BF16 versus expanded-FP32 pair](../../docs/coreai-precision-probe.md),
+12 component calls in A/B/A order at actual long-profile shapes. Prepare with
+`bash scripts/prepare_coreai_precision_probe.sh`; the next build includes only
+the two pair assets (about 762 MB), preserving the accepted generation bundles.
+Device parity and speed are pending; no full sampler replacement is activated.
+
 Initial target: iPhone 17 Pro, iOS 27.0, Xcode 27.0 / 27A266a. These Swift
 sources use APIs declared in the six public interfaces supplied by the user.
 The user has built and run the device probe on an iPhone with iOS 27.0.1:

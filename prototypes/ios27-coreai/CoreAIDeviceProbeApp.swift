@@ -55,6 +55,23 @@ struct CoreAIDeviceProbeApp: App {
                         }
                         Text("Pemeriksaan dan baseline")
                             .font(.headline)
+                        if hasResource("dit-precision-1024/reference.json") {
+                            Text("Uji komponen singkat untuk membandingkan biaya bobot BF16 dan FP32. Tidak menghasilkan audio baru.")
+                                .font(.footnote)
+                            Button("Uji biaya bobot BF16 vs FP32") {
+                                audioPlayer?.stop()
+                                runningModel = true
+                                report = "Memeriksa aset dan referensi uji bobot…"
+                                Task {
+                                    let update: @MainActor @Sendable (String) -> Void = { text in self.report = text }
+                                    report = await Task.detached(priority: .userInitiated) {
+                                        await CoreAIDecoderProbe.runPrecisionProbe(progress: update)
+                                    }.value
+                                    runningModel = false
+                                }
+                            }
+                            .disabled(runningModel)
+                        }
                         Button("Jalankan pemeriksaan") {
                             do {
                                 report = try CoreAIDeviceProbe.run()

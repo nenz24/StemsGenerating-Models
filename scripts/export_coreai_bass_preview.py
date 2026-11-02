@@ -72,6 +72,20 @@ def apg_euler(velocity,latent,momentum,dt):
     return (latent-guided*dt.reshape(1,1,1)).contiguous(),next_momentum.contiguous(),guided.contiguous()
 
 
+def block_pair(layers):
+    """Shared implementation for generation shards and the precision experiment."""
+    import torch
+    class Pair(torch.nn.Module):
+        def __init__(self):super().__init__();self.layers=torch.nn.ModuleList(layers)
+        def forward(self,hidden,condition,temb,rope_cos,rope_sin,self_mask,local_mask,cross_mask):
+            for layer in self.layers:
+                hidden=layer(hidden_states=hidden,position_embeddings=(rope_cos,rope_sin),temb=temb,
+                    attention_mask=local_mask if layer.attention_type=='sliding_attention' else self_mask,
+                    encoder_hidden_states=condition,encoder_attention_mask=cross_mask,use_cache=False,past_key_value=None)[0]
+            return hidden.contiguous()
+    return Pair()
+
+
 def partitions(root,null,make_mask,window=SHORT):
     import torch
     class Front(torch.nn.Module):
@@ -89,20 +103,12 @@ def partitions(root,null,make_mask,window=SHORT):
             local=make_mask(window.hidden_tokens,torch.float32,hidden.device,sliding_window=128,is_sliding_window=True,is_causal=False)
             cross=torch.zeros((1,1,window.hidden_tokens,window.condition_tokens),dtype=torch.float32,device=hidden.device)
             return tuple(v.contiguous() for v in [hidden,cond,p+q,cos,sin,full,local,cross,a+b])
-    class Pair(torch.nn.Module):
-        def __init__(self,i):super().__init__();self.layers=torch.nn.ModuleList(root.layers[i:i+2])
-        def forward(self,hidden,condition,temb,rope_cos,rope_sin,self_mask,local_mask,cross_mask):
-            for layer in self.layers:
-                hidden=layer(hidden_states=hidden,position_embeddings=(rope_cos,rope_sin),temb=temb,
-                    attention_mask=local_mask if layer.attention_type=='sliding_attention' else self_mask,
-                    encoder_hidden_states=condition,encoder_attention_mask=cross_mask,use_cache=False,past_key_value=None)[0]
-            return hidden.contiguous()
     class Tail(torch.nn.Module):
         def __init__(self):super().__init__();self.table=root.scale_shift_table;self.norm=root.norm_out;self.proj=root.proj_out
         def forward(self,hidden,final_temb):
             shift,scale=(self.table+final_temb.unsqueeze(1)).chunk(2,dim=1)
             return self.proj(self.norm(hidden)*(1+scale)+shift).contiguous()
-    return [Front()]+[Pair(i) for i in range(0,24,2)]+[Tail()]
+    return [Front()]+[block_pair(root.layers[i:i+2]) for i in range(0,24,2)]+[Tail()]
 
 
 def bounded_comparison(stats):

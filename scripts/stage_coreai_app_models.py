@@ -13,7 +13,7 @@ import re
 import shutil
 from coreai_preview_window import SHORT, LONG
 
-PROFILES = ('auto', 'bass-aot', 'bass-source', 'bass-source-1024', 'runtime', 'all')
+PROFILES = ('auto', 'bass-aot', 'bass-source', 'bass-source-1024', 'dit-precision-1024', 'runtime', 'all')
 STAMP = 'app-resource-manifest.json'
 PREVIEW_FIXTURES = {'initial-noise.f32le', 'timesteps.f32le',
                     'audio-reference.f32le', 'audio-fp32-reference.f32le'} | {
@@ -74,7 +74,8 @@ def plan_resources(source, profile='auto'):
             if (type(diagnostic_trajectory) is not bool or not isinstance(chosen,dict)
                     or set(chosen)-{'schema_version','resource_profile','audio_seconds','diagnostic_trajectory'}
                     or expected not in ({'schema_version':1,'resource_profile':'bass-source','audio_seconds':5.12},
-                                        {'schema_version':1,'resource_profile':'bass-source-1024','audio_seconds':10.24})
+                                        {'schema_version':1,'resource_profile':'bass-source-1024','audio_seconds':10.24},
+                                        {'schema_version':1,'resource_profile':'dit-precision-1024','audio_seconds':10.24})
                     or chosen.get('schema_version')!=1
                     or (diagnostic_trajectory and chosen.get('resource_profile')!='bass-source-1024')):
                 raise ValueError('Invalid active preview selector; build output preserved')
@@ -105,6 +106,23 @@ def plan_resources(source, profile='auto'):
                 raise ValueError(f'Directory symlink is unsupported: {path}')
             if path.is_file() and path.name != '.DS_Store' and path != source / STAMP:
                 add(path.relative_to(source).as_posix())
+    elif profile == 'dit-precision-1024':
+        # Validate before adding files: this profile must never pull the full
+        # generator or extra historical probes into the app.
+        probe_ref = load_reference(source, profile)
+        precision_files = {name + '.f32le' for name in ['hidden','condition','temb','rope_cos','rope_sin','self_mask','local_mask','cross_mask']}
+        precision_files.add('hidden-reference.f32le')
+        precision_files.update(asset + '/' + name for asset in ['blocks-bf16.aimodel','blocks-fp32.aimodel']
+                               for name in ['main.hash','main.mlirb','metadata.json'])
+        if set(probe_ref['artifact_sha256']) != precision_files:
+            raise ValueError('Unexpected precision-probe payload; build output preserved')
+        ref = bundle(profile)
+        if (ref.get('profile') != profile or ref.get('schema_version') != 1
+                or ref.get('assets') != {'bfloat16':'blocks-bf16.aimodel','float32':'blocks-fp32.aimodel'}
+                or ref.get('layer_indices') != [0,1] or ref.get('output_shape') != [2,128,2048]
+                or ref.get('pass_order') != ['bfloat16','float32','bfloat16']
+                or ref.get('runs_per_pass') != 4 or ref.get('learned_parameter_values_identical') is not True):
+            raise ValueError('Invalid precision-probe resource contract; build output preserved')
     elif profile == 'runtime':
         # A fresh clone can still run the tensor probe without prepared weights.
         model = source / 'affine.aimodel'

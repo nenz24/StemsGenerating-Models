@@ -1,0 +1,130 @@
+{
+  "profile": "dit-precision-1024",
+  "layer_indices": [
+    0,
+    1
+  ],
+  "input_shapes": {
+    "hidden": [
+      2,
+      128,
+      2048
+    ],
+    "condition": [
+      2,
+      118,
+      2048
+    ],
+    "temb": [
+      2,
+      6,
+      2048
+    ],
+    "rope_cos": [
+      1,
+      128,
+      128
+    ],
+    "rope_sin": [
+      1,
+      128,
+      128
+    ],
+    "self_mask": [
+      1,
+      1,
+      128,
+      128
+    ],
+    "local_mask": [
+      1,
+      1,
+      128,
+      128
+    ],
+    "cross_mask": [
+      1,
+      1,
+      128,
+      118
+    ]
+  },
+  "output_shape": [
+    2,
+    128,
+    2048
+  ],
+  "assets": {
+    "bfloat16": "blocks-bf16.aimodel",
+    "float32": "blocks-fp32.aimodel"
+  },
+  "pass_order": [
+    "bfloat16",
+    "float32",
+    "bfloat16"
+  ],
+  "runs_per_pass": 4,
+  "checkpoint_digest": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b",
+  "checkpoint_full_sha256_verified": true,
+  "learned_parameter_values_identical": true,
+  "source_pair_manifest_sha256": "612c3f46dde680ea72fee086f940abc932a1fbaffc2b32d420d63b30dcdbf4fc",
+  "source_pair_artifact_sha256": {
+    "metadata.json": "3c97629488afdabf645b65082bf5b622fe241b8b13dc38ec437d2414b1f4216d",
+    "main.hash": "501f6bcff428fa618e23ca6c68f3acb19ca65209b169519590f0bda8b57330c5",
+    "main.mlirb": "aa757137e0fec6f6915c89cb49634401b4e88b8e5e64ba3c21bfbbf8c052956c"
+  },
+  "host_bf16_vs_original_fp32": {
+    "finite": true,
+    "max_absolute_error": 0.0,
+    "rmse": 0.0,
+    "normalized_rmse": 0.0,
+    "elementwise_fraction_over_bound": 0.0,
+    "parity_passed": true
+  },
+  "host_expanded_fp32_vs_bf16": {
+    "finite": true,
+    "max_absolute_error": 0.0,
+    "rmse": 0.0,
+    "normalized_rmse": 0.0,
+    "elementwise_fraction_over_bound": 0.0,
+    "parity_passed": true
+  },
+  "input_provenance": "Fixed synthetic seed 47; actual long CFG batch=2, 128 hidden tokens / 118 condition tokens; local radius 128, all tokens valid",
+  "versions": {
+    "torch": "2.8.0+cpu",
+    "transformers": "4.57.3",
+    "coreai-torch": "0.4.3",
+    "coreai-core": "1.0.0b3"
+  },
+  "artifact_sha256": {
+    "blocks-bf16.aimodel/main.hash": "501f6bcff428fa618e23ca6c68f3acb19ca65209b169519590f0bda8b57330c5",
+    "blocks-bf16.aimodel/main.mlirb": "aa757137e0fec6f6915c89cb49634401b4e88b8e5e64ba3c21bfbbf8c052956c",
+    "blocks-bf16.aimodel/metadata.json": "3c97629488afdabf645b65082bf5b622fe241b8b13dc38ec437d2414b1f4216d",
+    "blocks-fp32.aimodel/main.hash": "c34d34e310f863af75c5f6a0d1ebfb22884293e2746673cfbfac08ce4ae2dba4",
+    "blocks-fp32.aimodel/main.mlirb": "1faa8c969ca59c373b5e5c8197f9c20c2e8a200bb721271c872622a8725d7ada",
+    "blocks-fp32.aimodel/metadata.json": "34bada885bd317aec75996847e3e991197718575cc4b511378987d6c6b827713",
+    "condition.f32le": "815e690349c597114879cda40b0ddef4db9163ce8a933c3b0322be484ffc3378",
+    "cross_mask.f32le": "a44cb528bc0e23dde59e1d6365c600dadf8fa01e4ff7faf9245360abb1ff7cdb",
+    "hidden-reference.f32le": "741b96006e30aef18652e8e3df7385289696b70927d8256c712b079fba85fe3b",
+    "hidden.f32le": "c5d00d1eaa5e44e4859e0147ee53a82136c6f42dfe912d8a838a97267ee80dbd",
+    "local_mask.f32le": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+    "rope_cos.f32le": "08628b4b6cea91f7f88e1ee778eee99f41b4b873d4b7e8368cb3b7a2d0a18de0",
+    "rope_sin.f32le": "ed45d8a83d19aadc77ec080f931b37760664d77bc84020308bbdfda5599a2925",
+    "self_mask.f32le": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+    "temb.f32le": "9d8ee204f515121d2d919d194f14ef0bc07b144b213736f0271dff867afc144b"
+  },
+  "scope": "Actual host-only pretrained pair preparation/export; no Apple build or device execution claim",
+  "source_manifest_sha256": "5460233e9fbe07c27a2361868315843e1e9f639023c12fabf7d8827ed5098f20",
+  "native_file_bytes": {
+    "blocks-bf16.aimodel/main.hash": 32,
+    "blocks-bf16.aimodel/main.mlirb": 251813478,
+    "blocks-bf16.aimodel/metadata.json": 105,
+    "blocks-fp32.aimodel/main.hash": 32,
+    "blocks-fp32.aimodel/main.mlirb": 503543267,
+    "blocks-fp32.aimodel/metadata.json": 105
+  },
+  "staged_resource_bytes": 761909636,
+  "staged_resource_file_count": 16,
+  "device_execution_verified": false,
+  "baseline_replaced": false
+}

@@ -1348,6 +1348,175 @@ enum CoreAIDecoderProbe {
         let relativeRmseTolerance: Double
     }
 
+    private struct PrecisionProbeContract: Decodable {
+        let schemaVersion: Int
+        let profile: String
+        let functionName: String
+        let outputName: String
+        let layerIndices: [Int]
+        let inputShapes: [String: [Int]]
+        let outputShape: [Int]
+        let assets: [String: String]
+        let passOrder: [String]
+        let runsPerPass: Int
+        let scalarType: String
+        let byteOrder: String
+        let computeDtype: String
+        let checkpointDigest: String
+        let checkpointFullSha256Verified: Bool
+        let learnedParameterValuesIdentical: Bool
+        let referenceFile: String
+        let absoluteTolerance: Double
+        let relativeTolerance: Double
+        let relativeRmseTolerance: Double
+        let sourcePairManifestProfile: String
+        let sourceWeightStorageDtype: String
+        let sourcePairArtifactSha256: [String: String]
+        let hostBf16VsOriginalFp32: BassPreviewContract.HostComparison
+        let hostExpandedFp32VsBf16: BassPreviewContract.HostComparison
+        let artifactSha256: [String: String]
+    }
+
+    static func runPrecisionProbe(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        let clock = ContinuousClock(); let start = clock.now
+        let memory = CoreAIProcessFootprintSampler()
+        var stats = RetentionStats()
+        var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+                     "Probe run: \(UUID().uuidString); started UTC: \(ISO8601DateFormatter().string(from: Date()))",
+                     "CoreAI architecture: \(AIModel.deviceArchitectureName)",
+                     "Test: long-profile layers 0+1, existing BF16 asset vs expanded FP32 constants, A/B/A",
+                     "Scope: fixed synthetic inputs; actual CFG batch 2, 128 hidden / 118 condition tokens; NOT full denoiser or audio generation",
+                     "Requested compute policy: cpuOnly; actual accelerator placement NOT MEASURED",
+                     "All learned values identical; FP32 calculations/inputs/outputs in both variants; original FP32 host reference required",
+                     "Three passes, four calls each; same model AND function retained within a pass, Swift scope released between passes",
+                     "No hidden warmup, cache deletion, retry or automatic baseline replacement; first call is not guaranteed cold cache",
+                     "backend-await is API wall time, NOT isolated kernel time or proof of full-loop speedup",
+                     "Thermal state codes: 0 nominal, 1 fair, 2 serious, 3 critical; low-power mode: \(ProcessInfo.processInfo.isLowPowerModeEnabled)",
+                     "Process guard 2000 MiB before load and each call, rechecked after bind; NOT a native compiler peak guarantee"]
+        #if targetEnvironment(simulator)
+        lines.append("Target: Simulator; not physical-device evidence")
+        #else
+        lines.append("Target: iOS device build")
+        #endif
+        lines.append("App build configuration: \(Bundle.main.object(forInfoDictionaryKey: "CoreAIProbeBuildConfiguration") as? String ?? "unrecorded")")
+        lines.append("Swift app optimization: \(Bundle.main.object(forInfoDictionaryKey: "CoreAIProbeSwiftOptimizationLevel") as? String ?? "unrecorded")")
+        do {
+            guard let folder = Bundle.main.resourceURL?.appendingPathComponent("ModelCandidates/dit-precision-1024") else {
+                throw ShardError.missingPreparedBundle
+            }
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let ref = try decoder.decode(PrecisionProbeContract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
+            let pair = bassPreviewStages(window: .long1024)[1]
+            let assets = ["bfloat16":"blocks-bf16.aimodel", "float32":"blocks-fp32.aimodel"]
+            try checkManifest(ref.schemaVersion, 1, "precision.schema")
+            try checkManifest(ref.profile, "dit-precision-1024", "precision.profile")
+            try checkManifest(ref.functionName, "main", "precision.function")
+            try checkManifest(ref.outputName, "hidden_out", "precision.output")
+            try checkManifest(ref.layerIndices, [0,1], "precision.layers")
+            try checkManifest(ref.inputShapes, pair.inputShapes, "precision.inputs")
+            try checkManifest(ref.outputShape, [2,128,2048], "precision.output_shape")
+            try checkManifest(ref.assets, assets, "precision.assets")
+            try checkManifest(ref.passOrder, ["bfloat16","float32","bfloat16"], "precision.order")
+            try checkManifest(ref.runsPerPass, 4, "precision.runs")
+            try checkManifest(ref.scalarType, "float32", "precision.scalar_type")
+            try checkManifest(ref.byteOrder, "little", "precision.byte_order")
+            try checkManifest(ref.computeDtype, "float32", "precision.compute")
+            try checkManifest(ref.checkpointDigest, Profile.denoiser.checkpointDigest, "precision.checkpoint")
+            try checkManifest(ref.checkpointFullSha256Verified, true, "precision.checkpoint_verified")
+            try checkManifest(ref.learnedParameterValuesIdentical, true, "precision.learned_values")
+            try checkManifest(ref.referenceFile, "hidden-reference.f32le", "precision.reference")
+            try checkManifest(ref.absoluteTolerance, 1e-4, "precision.absolute_tolerance")
+            try checkManifest(ref.relativeTolerance, 1e-3, "precision.relative_tolerance")
+            try checkManifest(ref.relativeRmseTolerance, 1e-3, "precision.relative_rmse_tolerance")
+            try checkManifest(ref.sourcePairManifestProfile, "bass-preview-1024", "precision.original_profile")
+            try checkManifest(ref.sourceWeightStorageDtype, "bfloat16", "precision.original_storage")
+            for metric in [ref.hostBf16VsOriginalFp32, ref.hostExpandedFp32VsBf16] {
+                guard metric.finite, metric.parityPassed, metric.maxAbsoluteError == 0, metric.rmse == 0,
+                      metric.normalizedRmse == 0, metric.elementwiseFractionOverBound == 0 else { throw ShardError.invalidManifest }
+            }
+            let nativeFiles: Set<String> = ["metadata.json","main.hash","main.mlirb"]
+            var required = Set(ref.inputShapes.keys.map { "\($0).f32le" }); required.insert(ref.referenceFile)
+            for asset in assets.values { for file in nativeFiles { required.insert(asset + "/" + file) } }
+            try checkManifest(Set(ref.artifactSha256.keys), required, "precision.payload")
+            try checkManifest(Set(ref.sourcePairArtifactSha256.keys), nativeFiles, "precision.original_bf16_payload")
+            for file in nativeFiles {
+                try checkManifest(ref.sourcePairArtifactSha256[file], ref.artifactSha256["blocks-bf16.aimodel/" + file], "precision.original_bf16_hash")
+            }
+            lines.append("Phase: verifying model binaries and fixed tensors; no model open yet")
+            saveProgress(lines, profile: .denoiser); await progress(lines.joined(separator: "\n"))
+            for asset in assets.values {
+                for file in nativeFiles {
+                    let name = asset + "/" + file
+                    guard let expectedHash = ref.artifactSha256[name] else { throw ShardError.invalidManifest }
+                    try checkManifest(try streamingSHA256(folder.appendingPathComponent(name)), expectedHash, "precision.asset_sha256")
+                }
+            }
+            var inputs: [String: NDArray] = [:]
+            for (name,shape) in ref.inputShapes {
+                inputs[name] = NDArray(scalars: try readFloats(folder: folder, name: name + ".f32le", count: shape.reduce(1,*), hashes: ref.artifactSha256), shape: shape)
+            }
+            let expected = try readFloats(folder: folder, name: ref.referenceFile, count: ref.outputShape.reduce(1,*), hashes: ref.artifactSha256)
+            lines.append("SHA-256: VERIFIED both native assets, eight fixed inputs and original FP32 host reference; existing BF16 asset identity matched")
+            var means: [Double] = []
+            for (pass,kind) in ref.passOrder.enumerated() {
+                guard let asset = assets[kind] else { throw ShardError.invalidManifest }
+                let stage = Contract.Stage(assetFile: asset, layerIndices: [0,1], inputShapes: ref.inputShapes,
+                                           outputShapes: ["hidden_out":ref.outputShape], outputBindings: nil)
+                let times = try await runPrecisionPass(stage, folder: folder, inputs: inputs, expected: expected,
+                    pass: pass+1, stats: &stats, lines: &lines, progress: progress)
+                let mean = times.dropFirst().reduce(0,+) / 3
+                means.append(mean)
+                lines.append("Pass \(pass+1)/3 \(kind): first backend-await ms \(times[0]); repeated mean (calls 2-4) ms \(mean)")
+                lines.append("Pass \(pass+1) Swift model/function scope released; native eviction NOT GUARANTEED")
+            }
+            try checkManifest(stats.modelOpens, 3, "precision.opens")
+            try checkManifest(stats.functionBinds, 3, "precision.binds")
+            try checkManifest(stats.cacheHits, 9, "precision.hits")
+            try checkManifest(stats.completedCalls, 12, "precision.calls")
+            if means[1] > 0 {
+                lines.append("Component BF16-A1/FP32-B repeated backend-await ratio: \(means[0]/means[1])")
+                lines.append("Component BF16-A2/FP32-B repeated backend-await ratio: \(means[2]/means[1]); NOT full-loop speedup")
+            }
+            lines.append("Precision component parity: PASS (12/12 calls against original FP32 host reference)")
+        } catch {
+            lines.append("Precision component probe: NOT COMPLETED; baseline unchanged")
+            if let failure = error as? StageExecutionFailure {
+                lines.append("Failing asset: \(failure.asset); operation: \(failure.operation)")
+                lines.append(contentsOf: failure.details)
+            } else { lines.append(contentsOf: modelErrorDetails(error)) }
+        }
+        let usage = memory.finish()
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
+        lines.append("Completed component calls: \(stats.completedCalls)/12; opens \(stats.modelOpens); binds \(stats.functionBinds); hits \(stats.cacheHits); total probe ms \(ms(start.duration(to: clock.now)))")
+        lines.append("Memory scope: sampled app process, not exact peak/total RAM. First-call cache state and thermal effects are not controlled.")
+        saveProgress(lines, profile: .denoiser)
+        return lines.joined(separator: "\n")
+    }
+
+    private static func runPrecisionPass(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray],
+                                         expected: [Float], pass: Int, stats: inout RetentionStats,
+                                         lines: inout [String], progress: @escaping @MainActor @Sendable (String) -> Void) async throws -> [Double] {
+        var owned: [String: RetainedStage] = [:]
+        defer { owned.removeAll() }
+        var times: [Double] = []
+        for call in 1...4 {
+            try requirePreviewMemoryBudget()
+            let phase = "Phase: pass \(pass)/3, \(stage.assetFile), call \(call)/4; thermal state \(ProcessInfo.processInfo.thermalState.rawValue)"
+            saveProgress(lines + [phase], profile: .denoiser)
+            await progress((lines + [phase]).joined(separator: "\n"))
+            let result = try await runRetainedStage(stage, folder: folder, inputs: inputs, pool: &owned, stats: &stats,
+                options: .cpuOnly, phaseProgress: previewPhaseProgress(prefix: (lines + [phase]).joined(separator: "\n")))
+            guard let output = result.values["hidden_out"] else { throw ProbeError.invalidOutputTensor }
+            let actual = try copiedValues(output, shape: [2,128,2048])
+            let comparison = try compare(actual: actual, expected: expected, absoluteTolerance: 1e-4,
+                                         relativeTolerance: 1e-3, relativeRmseTolerance: 1e-3)
+            lines.append("Pass \(pass) call \(call): \(result.phases.report); original FP32 reference max abs error \(comparison.maxError), normalized RMSE \(comparison.normalizedRmse); \(comparison.passed ? "PASS" : "NOT PASSED"); thermal state after \(ProcessInfo.processInfo.thermalState.rawValue)")
+            guard comparison.passed else { throw ProbeError.numericalParityFailed }
+            times.append(result.phases.backendAwaitMs)
+        }
+        return times
+    }
+
     static func runPairReuse(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",

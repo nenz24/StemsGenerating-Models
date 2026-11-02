@@ -39,6 +39,9 @@ Langkah 3–50 tetap rata-rata 15,191 detik; backend-await 744,691 detik atau
 backend pada profil ini. Penyebab internal, thermal dan cache state belum
 diisolasi. Klip diterima melalui uji dengar, bukan sebagai anggaran performa.
 Recovery cache 0/1 berarti jalur repair belum teruji oleh run yang selesai ini.
+[Uji pasangan layer BF16 versus FP32](coreai-precision-probe.md) sekarang
+disiapkan untuk mengisolasi pengaruh penyimpanan bobot dengan nilai dan input
+yang sama, tanpa mengulang 50 langkah atau mengubah baseline.
 
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
