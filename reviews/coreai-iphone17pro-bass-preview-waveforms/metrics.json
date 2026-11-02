@@ -112,13 +112,18 @@
     "rmse": 3.898773511541241e-08,
     "scope": "Confirms close sample-aligned mix against available piano PCM; source Mac PCM binary not supplied"
   },
-  "full_device_numerical_gate": "Not available: pasted report is conditioning-only; per-output generation report still required",
-  "full_pipeline_latency_and_sampled_peak_ram": "Not available in conditioning-only report",
+  "full_device_numerical_gate": "Subsequent per-output report: overall NOT PASSED, 8/10 outputs PASS; final latent pair NOT PASSED; both waveform checks vs Mac PASS; host bounded_diagnostic.",
+  "full_pipeline_latency_and_sampled_peak_ram": {
+    "pipeline_seconds": 85.953766125,
+    "sampled_process_maximum_mib": 417.18978118896484,
+    "scope": "Subsequently supplied report; no embedded WAV hashes, exact run-to-upload identity not cryptographically bound"
+  },
   "musical_harmony_and_feel": "User accepts notes/feel for this short supplied preview; no independent listening verdict is inferred from waveform metrics.",
   "listener_feedback": {
     "source": "User response in this conversation",
     "assessment_original": "Sudah cocok dan enak didengar",
     "accepted": true,
     "scope": "This supplied 5.12-second bass + piano preview only; not full-song or strict numerical acceptance"
-  }
+  },
+  "generation_report": "../coreai-iphone17pro-bass-preview-cpu-complete/generation-report.json"
 }

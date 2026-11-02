@@ -13,10 +13,15 @@ validates duration/format/levels and close waveform agreement to existing Linux
 references. Four of 491520 samples exceed the original pointwise bound against
 the Linux FP32 waveform, so that strict comparison remains NOT PASSED.
 
-The per-output Mac/iPhone generation report is still required for its ten
-comparison results, total latency and sampled pipeline footprint. Conditioning
-measurements alone do not establish these. Cold starts, repeatability, longer
-clips, raw recording import and three generated tracks remain separate work.
+The subsequently supplied [per-output report](../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.json)
+records 85.95 seconds for 5.12 seconds of audio and a 417.19 MiB sampled app
+process maximum (not exact peak/total RAM). Eight of ten output comparisons
+pass; final-step latent comparisons fail, both decoded waveforms against Mac
+references pass, and host `bounded_diagnostic` keeps the overall gate failed.
+These are separate from the Linux-reference waveform checks above.
+[Next measurement](../../docs/coreai-bass-preview-performance.md) uses the same
+case in Release; no latency gain or cold-cache repeatability is yet proven.
+Longer clips, raw recording import and three generated tracks remain separate work.
 
 Git stores metadata/measurements; the original uploads and iPhone Documents
 retain the WAV files. Models/checkpoints and audio are not added to app resources

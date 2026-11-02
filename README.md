@@ -125,9 +125,12 @@ memvalidasi format dan menemukan normalized RMSE 8,55e-5 terhadap waveform Linux
 FP32, dengan 4 sample melanggar batas pointwise sehingga strict PASS belum
 tercapai. Pengguna menerima nada/feel klip ini, disimpan sebagai
 [baseline uji dengar iPhone 5,12 detik](baselines/iphone-coreai-bass-preview-512-v1/README.md).
-Laporan generasi lengkap tetap diperlukan untuk latency/RAM dan perbandingan
-device; app kini bisa membuka/membagikan laporan per-output serta memulihkan
-hasil tersimpan tanpa regenerasi.
+[Laporan generasi lengkap](reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.json)
+mencatat **85,95 s** untuk audio 5,12 s, sampled process maximum **417,19 MiB**,
+8/10 output checks PASS; kedua waveform Mac PASS tetapi dua latent akhir dan
+host `bounded_diagnostic` menjaga overall gate NOT PASSED. App bisa memulihkan
+hasil tersimpan serta membagikan laporan per-output. [Pengukuran Release](docs/coreai-bass-preview-performance.md)
+berikutnya memakai model/preset yang sama; speedup belum diukur.
 
 
 [Percobaan gabungan iPhone pertama](reviews/coreai-iphone17pro-bass-preview-specialization/README.md)

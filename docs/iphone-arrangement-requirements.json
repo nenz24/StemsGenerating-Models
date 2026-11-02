@@ -41,7 +41,7 @@
       "scope": "This import evidence establishes module type-check only; see the later device report for app/tensor execution"
     },
     "physical_device_execution_verified": true,
-    "physical_device_execution_scope": "One complete 5.12-second source CPU-request piano-to-bass generation/playback observed; user accepts notes/feel for this clip. Full device numerical report, latency, full-song behavior and hardware placement remain unverified.",
+    "physical_device_execution_scope": "One complete 5.12-second source CPU-request bass run and listener approval; report gives 85.9538s and 417.19 MiB sampled process maximum. Overall numerical gate fails; waveform checks pass. Full-song and hardware placement remain unverified.",
     "public_sdk_interface_review": {
       "archive_name": "coreai-api.apDMX4.zip",
       "archive_sha256": "7c8d1c8cde67d4f062032c0704fc0991d958ceb17e0952defd2d7c4daa5cb597",
@@ -107,7 +107,7 @@
     "accelerator_and_precision_support": "Float32 affine and VAE encoder/decoder parity verified under requested CPU-only policy; actual placement and GPU/Neural Engine inference unmeasured",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
-    "model_conversion_training_and_device_benchmarks": "One complete 5.12-second device preview and playback observed; waveform audited and listener accepts notes/feel. Full pipeline latency/sampled RAM, cold starts, thermals and full-song behavior still need measurement."
+    "model_conversion_training_and_device_benchmarks": "One full 5.12-second CPU-request run reports 85.9538s, 417.19 MiB sampled process maximum, 8/10 output checks pass; longer clips, Release performance, cold starts, thermals and full-song behavior remain unverified."
   },
   "local_prototype_status": {
     "source_directory": "prototypes/ios27-coreai",
@@ -119,8 +119,8 @@
     "apple_compilation_verified": true,
     "apple_compilation_evidence": "User executed complete bass conditioning caller (40 layers, 27 assets, six checks) successfully on iPhone; no independent Apple SDK build on Linux",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-bass-preview-cpu-complete/summary.json",
-    "device_execution_scope": "50 rounds of 14 DiT shards + APG update, then decoder complete with source CPU-only requests; supplied WAV and user-confirmed playback/notes/feel for 5.12 seconds. Final numerical report/latency not supplied.",
+    "device_execution_report": "reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.json",
+    "device_execution_scope": "50/50 steps and WAV generation complete; user accepts 5.12-second notes/feel. Report evaluates ten comparisons: eight pass, final latent pair fails, both waveform checks pass; overall host/device gate NOT PASSED.",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -801,7 +801,7 @@
     "numerical_tolerances_changed": false,
     "updated_device_diagnostic_status_build_verified": true,
     "device_component_sequence_verified": true,
-    "device_report": "reviews/coreai-iphone17pro-bass-preview-cpu-complete/summary.json",
+    "device_report": "reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.json",
     "device_last_error": "No native generation error in supplied complete CPU run. Share metadata errors and trailing debug signal 9 retained; user reports app open and bass playback working.",
     "specialization_failure_trace_implemented": true,
     "specialization_failure_trace_apple_build_verified": true,
@@ -840,13 +840,23 @@
     "baseline": "baselines/iphone-coreai-bass-preview-512-v1/baseline.json",
     "waveform_review": "reviews/coreai-iphone17pro-bass-preview-waveforms/metrics.json",
     "device_previous_cpu_sampling_error": "BNNS graphLoadFailed at stage 11/14 blocks-18-19 during function-bind/input-validation; 10 completed sampling assets, 0/50 completed steps",
-    "device_final_generation_report_received": false,
+    "device_final_generation_report_received": true,
     "device_numerical_gate_verified": false,
-    "device_pipeline_latency_ms": null,
-    "device_pipeline_sampled_peak_mib": null,
+    "device_pipeline_latency_ms": 85953.766125,
+    "device_pipeline_sampled_peak_mib": 417.18978118896484,
     "linux_full_fp32_waveform_strict_parity_passed": false,
     "default_resource_profile": "auto -> source CPU-only; unused AOT remains on Mac",
     "saved_output_report_recovery_implemented": true,
-    "saved_output_report_recovery_apple_build_verified": false
+    "saved_output_report_recovery_apple_build_verified": false,
+    "device_numerical_gate_evaluated": true,
+    "device_numerical_gate_passed": false,
+    "device_output_reference_comparisons_passed": 8,
+    "device_output_reference_comparisons_failed": 2,
+    "device_mac_reference_waveform_checks_passed": 2,
+    "device_final_latent_reference_checks_failed": 2,
+    "performance_scope": "One supplied source CPU-request run, 5.12s output, sampled process footprint not exact peak/total RAM; build configuration/cache state unrecorded",
+    "next_measurement": "Same 5.12-second input, CoreAIProbe Performance scheme Release; preserve 50 steps/weights/precision/tolerances",
+    "release_measurement_prepared": true,
+    "release_measurement_apple_build_verified": false
   }
 }

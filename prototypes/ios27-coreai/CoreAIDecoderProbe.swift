@@ -218,6 +218,10 @@ enum CoreAIDecoderProbe {
         var functionBinds = 0
         var cacheHits = 0
         var completedCalls = 0
+        var phaseTotals = StagePhases()
+        var firstCallPhaseTotals = StagePhases()
+        var repeatedCallPhaseTotals = StagePhases()
+        var phaseTotalsByAsset: [String: StagePhases] = [:]
     }
 
     private typealias StageResult = (values: [String: NDArray], loadMs: Double, runMs: Double, phases: StagePhases)
@@ -815,6 +819,8 @@ enum CoreAIDecoderProbe {
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "Probe run: \(UUID().uuidString); started UTC: \(ISO8601DateFormatter().string(from: Date()))",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",
+                     "App build configuration: \(Bundle.main.object(forInfoDictionaryKey: "CoreAIProbeBuildConfiguration") as? String ?? "unrecorded")",
+                     "Swift app optimization: \(Bundle.main.object(forInfoDictionaryKey: "CoreAIProbeSwiftOptimizationLevel") as? String ?? "unrecorded"); native backend optimization is separate",
                      "Test: actual piano -> VAE posterior -> full Qwen/ConditionEncoder -> 50 APG-guided Euler steps -> bass WAV",
                      "Audio: 5.12 s / 48000 Hz stereo; 128 latent frames / 117 condition tokens",
                      "Guidance 7; APG momentum -0.75, threshold 2.5, projection over latent time (dim 1); shift 1",
@@ -1081,9 +1087,11 @@ enum CoreAIDecoderProbe {
             bassURL = stem; mixURL = mixed
             lines.append("Integrated bass preview numerical parity: \(allParity ? "PASS" : "NOT PASSED") (10 comparisons; fixture scope)")
             lines.append("WAV generated on device: YES; bass.wav and piano-with-bass.wav, 5.12 s stereo Float32/48 kHz")
+            lines.append("WAV bass SHA-256: \(try streamingSHA256(stem))")
+            lines.append("WAV listening mix SHA-256: \(try streamingSHA256(mixed))")
             lines.append("Raw bass peak: \(audio.reduce(Float(0)) { max($0,abs($1)) }); listening mix gain: \(gain)")
-            if !allParity { lines.append("Audio is diagnostic: numerical gate did not pass; musical/device baseline NOT accepted") }
-            lines.append("Musical quality, full-song behavior and total pipeline RAM: NOT VALIDATED")
+            if !allParity { lines.append("Audio is diagnostic: numerical gate did not pass; numerical baseline NOT accepted. Listener approval is tracked separately.") }
+            lines.append("Musical quality is not evaluated by this probe; full-song behavior and total model/device RAM: NOT VALIDATED")
             try lines.joined(separator: "\n").write(to: output.appendingPathComponent("report.txt"), atomically: true, encoding: .utf8)
         } catch {
             lines.append("Integrated bass preview: NOT COMPLETED")
@@ -1098,6 +1106,15 @@ enum CoreAIDecoderProbe {
             }
             lines.append("Sampling/decoder calls completed: \(retention.completedCalls); model opens: \(retention.modelOpens); function binds: \(retention.functionBinds); reuse hits: \(retention.cacheHits)")
         }
+        lines.append("Completed sampling/decoder asset API timings (\(retention.phaseTotals.count) calls): \(retention.phaseTotals.report)")
+        lines.append("First observed call per asset (\(retention.firstCallPhaseTotals.count) calls, NOT guaranteed cold cache): \(retention.firstCallPhaseTotals.report)")
+        lines.append("Repeated asset calls (\(retention.repeatedCallPhaseTotals.count) calls; models still reopened): \(retention.repeatedCallPhaseTotals.report)")
+        for asset in retention.phaseTotalsByAsset.keys.sorted() {
+            if let phases = retention.phaseTotalsByAsset[asset] {
+                lines.append("Asset timing total \(asset) (\(phases.count) calls): \(phases.report)")
+            }
+        }
+        lines.append("Timing scope: completed sampling/decoder API intervals; backend-await is not isolated kernel time; total pipeline includes components, validation, logging, UI waits, scope release and file writing")
         let usage = memory.finish()
         if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
         if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
@@ -1812,6 +1829,13 @@ enum CoreAIDecoderProbe {
             let phases = StagePhases(count: 1, modelOpenMs: loadMs, functionBindMs: setup.functionBindMs,
                                      inputValidationMs: setup.inputValidationMs, backendAwaitMs: backendMs,
                                      outputCopyMs: copyMs, runOtherMs: otherMs)
+            if stats.phaseTotalsByAsset[stage.assetFile] == nil {
+                stats.firstCallPhaseTotals.add(phases)
+            } else {
+                stats.repeatedCallPhaseTotals.add(phases)
+            }
+            stats.phaseTotals.add(phases)
+            stats.phaseTotalsByAsset[stage.assetFile, default: StagePhases()].add(phases)
             stats.completedCalls += 1
             return (detached, loadMs, runMs, phases)
         } catch {

@@ -5,16 +5,20 @@
 > app default. Load/bind/backend/readback dicatat sebelum panggilan native.
 > [Console dan konfirmasi pengguna](../reviews/coreai-iphone17pro-bass-preview-cpu-complete/README.md)
 > kini mencatat satu run 50 langkah + decoder lengkap; bass berhasil diputar.
-> Parity numerik, elapsed time dan kualitas musikal masih memerlukan laporan
-> akhir serta audio hasil run yang sudah ada.
+> Pengguna menerima klip pendek ini. Laporan akhir kini mencatat 85,95 s total,
+> sampled maximum proses 417,19 MiB, dua waveform Mac PASS dan dua latent akhir
+> NOT PASSED. [Pengukuran Release berikutnya](coreai-bass-preview-performance.md)
+> memakai model/preset yang sama.
 
 
 Pipeline pertama sekarang diimplementasikan: **PCM piano → VAE posterior →
 Qwen/ConditionEncoder → 50 langkah sampling → VAE decoder → WAV**. Dua gate
 conditioning sebelumnya sudah PASS. Pipeline gabungan sudah lolos pembandingan
 host Linux dan satu eksekusi gabungan iPhone sudah menghasilkan bass yang dapat
-diputar. Penilaian numerik perangkat dan kualitas suara tetap terpisah dari
-keberhasilan eksekusi tersebut.
+diputar. Pengguna menerima nada/feel preview ini. Gate numerik keseluruhan
+masih NOT PASSED karena dua latent akhir dan host `bounded_diagnostic`; dua
+waveform terhadap referensi Mac PASS. [Laporan lengkap](../reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.json)
+merekam waktunya, bukan laporan conditioning saja.
 
 **Catatan Mac:** [laporan pengguna](../reviews/coreai-mac-bass-preview-drift/README.md)
 menunjukkan strict pointwise parity gagal setelah akumulasi 50 langkah, sehingga
@@ -150,7 +154,9 @@ valid 5,12 detik stereo Float32/48 kHz, tanpa NaN/Inf atau sample >= full scale.
 Waveform sangat dekat dengan referensi Linux FP32 (normalized RMSE 8,55e-5),
 namun 4 dari 491520 sample melewati batas pointwise awal, sehingga strict PASS
 belum dinyatakan. Ini pembandingan lintas-host terhadap referensi Linux, bukan
-pengganti sepuluh hasil perbandingan pada laporan generasi Mac/iPhone.
+pengganti sepuluh hasil perbandingan pada laporan generasi Mac/iPhone yang
+kemudian diterima. Kedua waveform Mac pada laporan itu PASS; dua referensi
+lintas-host Linux di atas tetap memiliki beberapa pelanggaran pointwise.
 
 
 `bass.wav` menyimpan output asli tanpa normalisasi dalam Float32 stereo 48 kHz.
@@ -183,3 +189,7 @@ Pengguna menerima nada dan feel klip ini: **“Sudah cocok dan enak didengar”*
 [Baseline uji dengar iPhone 5,12 detik](../baselines/iphone-coreai-bass-preview-512-v1/README.md)
 menyimpan hash dua WAV dan batas persetujuannya; parity strict dan full-song
 tetap dinilai terpisah.
+
+Pengukuran berikutnya menggunakan [scheme CoreAIProbe Performance / Release](coreai-bass-preview-performance.md)
+untuk klip yang sama, dengan build flags, hash WAV dan ringkasan waktu API
+per aset. Data itu dipakai untuk optimasi sebelum durasi diperpanjang.

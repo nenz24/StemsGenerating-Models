@@ -54,22 +54,37 @@
   "evidence": {
     "execution_console": "../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/console.txt",
     "ordered_execution_summary": "../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/summary.json",
-    "uploaded_wav_metrics": "../../reviews/coreai-iphone17pro-bass-preview-waveforms/metrics.json"
+    "uploaded_wav_metrics": "../../reviews/coreai-iphone17pro-bass-preview-waveforms/metrics.json",
+    "per_output_generation_report": "../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.txt",
+    "per_output_generation_summary": "../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.json"
   },
   "numerical_status": {
-    "comparison_scope": "Available Linux waveform references; Mac per-output generation report not yet supplied",
+    "comparison_scope": "Linux WAV comparison plus subsequently supplied Mac/device per-output report; reference scopes kept separate",
     "linux_full_fp32_normalized_rmse": 8.554589665944836e-05,
     "linux_full_fp32_samples_over_bound": 4,
     "linux_full_fp32_total_samples": 491520,
     "strict_linux_waveform_parity_passed": false,
     "full_device_numerical_gate_verified": false,
-    "tolerances_changed": false
+    "tolerances_changed": false,
+    "device_integrated_gate_evaluated": true,
+    "device_integrated_gate_passed": false,
+    "mac_reference_waveform_checks_passed": 2,
+    "mac_reference_final_latent_checks_failed": 2,
+    "host_preparation_status": "bounded_diagnostic"
   },
   "preservation_scope": "Metadata, hashes and measurements in Git; original uploads and iPhone Documents retain WAVs. No audio/weights added to app or Git.",
   "remaining_validation": [
-    "Per-output generation report with total latency, sampled footprint and ten comparisons",
+    "Same-case Release performance measurement with build flags and aggregate phase totals",
     "Cold-start/repeatability and longer clips",
     "Raw recording import and arbitrary input handling on iPhone",
     "Full-song and other instrument generation on iPhone"
-  ]
+  ],
+  "performance_measurement": {
+    "report_run_id": "654E35CC-BD44-442A-A911-8AAD8616F204",
+    "pipeline_seconds": 85.953766125,
+    "audio_seconds": 5.12,
+    "wall_seconds_per_audio_second": 16.787844946289063,
+    "sampled_app_process_maximum_mib": 417.18978118896484,
+    "scope": "One supplied report; sampled process, not exact peak/total device RAM. No embedded WAV hashes/build flags."
+  }
 }

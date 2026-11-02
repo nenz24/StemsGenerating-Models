@@ -48,13 +48,16 @@ violations still prevent strict PASS. No relaxed tolerance or overall numerical
 baseline is claimed. Audio reading/metadata used SciPy/ffprobe; mix checks used
 Float32 arithmetic and measurements used Float64 accumulation.
 
-## Missing report and next action
+## Generation report and next action
 
 The pasted text is again the **conditioning-only** report: 27/27 stages, six
 checks, 7100.412209 ms and sampled app footprint maximum 117.17385864257812 MiB.
-Those are not full generation latency or RAM. Ten integrated comparison results,
-the Mac-bound host/device numerical status, total generation time and sampled
-pipeline footprint remain unavailable in that text.
+Those are not full generation latency or RAM. A subsequent
+[per-output report](../coreai-iphone17pro-bass-preview-cpu-complete/generation-report.json)
+now supplies the full measurements: 85.95 seconds, sampled process maximum
+417.19 MiB, 8/10 output checks PASS and the final latent pair NOT PASSED. Both
+Mac-reference waveform checks PASS; host status remains `bounded_diagnostic`.
+This does not change the separately measured Linux-reference failures above.
 
 Each successful generation already writes `report.txt` next to its two WAVs.
 The app now provides **Lihat laporan generasi** and **Bagikan laporan generasi**

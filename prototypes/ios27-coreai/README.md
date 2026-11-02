@@ -14,8 +14,10 @@ The folder includes a native Xcode project and shared `CoreAIProbe` scheme.
 
 Satu [run bass preview source CPU-request lengkap](../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/README.md)
 sudah tercatat pada console perangkat: 50 putaran denoiser/APG dan decoder
-selesai, app tetap terbuka dan pengguna berhasil mendengar bass. Parity numerik,
-latensi, full-song/repeatability dan kualitas musikal belum disimpulkan dari log.
+selesai, app tetap terbuka dan pengguna menerima nada/feel bass. Laporan lengkap
+mencatat 85,95 s untuk 5,12 s audio dan sampled process maximum 417,19 MiB;
+waveform Mac PASS, dua latent akhir NOT PASSED. Full-song/repeatability dan
+exact peak/total RAM belum tervalidasi.
 
 **Lihat laporan generasi** dan **Bagikan laporan generasi** memakai `report.txt`
 yang tersimpan bersama dua WAV. Ini tetap benar meskipun laporan yang tampil
@@ -23,6 +25,14 @@ sudah berubah karena menjalankan probe conditioning. Saat app dibuka kembali,
 pasangan WAV/report lengkap terbaru dimuat untuk playback/share tanpa model
 inference; audio ini diberi label tersimpan. Progress/error terakhir tetap
 tersedia secara terpisah. Helper pemulihan/UI baru menunggu validasi build Apple.
+
+## Pengukuran performa berikutnya
+
+Scheme bersama **CoreAIProbe Performance** menjalankan target yang sama dalam
+**Release (`-O`)**. Scheme **CoreAIProbe** tetap Debug. Pilih scheme Performance,
+Cmd+R, lalu Generate satu kali pada klip yang sama; kirim **Bagikan laporan
+generasi**. Persiapan/ekspor/AOT tidak diulang. Build flags, WAV hashes dan total
+waktu API per aset dicatat. Ini bukan janji speedup; [batas pengukuran dan langkah](../../docs/coreai-bass-preview-performance.md).
 
 ## Resource build
 
