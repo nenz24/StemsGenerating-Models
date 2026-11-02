@@ -14,7 +14,10 @@ compares single, pool-only, grouped and interleaved execution. Prepare with
 `bash scripts/prepare_coreai_interleaving_probe.sh --pairs 2`, then build the
 Release Reuse scheme and run the two-asset diagnostic. Existing long BF16 and
 precision fixtures are reused; no native model export. Device timing and Apple
-build validation remain pending.
+build validation initially remained pending. The [first K=2 device report](../../reviews/coreai-iphone17pro-interleaving-k2/README.md)
+now completes all 140 calls; strict parity remains NOT PASSED (40/140 pass).
+Control drift exceeds the small observed switching penalties; repeat with
+reversed mode order from nominal thermal using the existing bundle/build.
 
 Initial target: iPhone 17 Pro, iOS 27.0, Xcode 27.0 / 27A266a. These Swift
 sources use APIs declared in the six public interfaces supplied by the user.

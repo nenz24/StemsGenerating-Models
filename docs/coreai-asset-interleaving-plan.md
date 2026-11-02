@@ -2,7 +2,11 @@
 
 Rancangan berdasarkan main `d0b88c0f7f39ca40d5d537befd3cb53749d1c899`.
 Caller, preparation dan staging diagnostik tersedia; build Apple dan run
-perangkat belum diverifikasi. Baseline BF16 dan batas numerik dipertahankan.
+perangkat kini memiliki [satu laporan K=2](../reviews/coreai-iphone17pro-interleaving-k2/README.md).
+Run menyelesaikan 140 call; strict parity tetap NOT PASSED 40/140. Switching
++3,18–6,81% lebih kecil daripada drift kontrol +13,38%; thermal fair. Langkah
+berikutnya adalah K=2 urutan terbalik dari nominal, tanpa preparation ulang.
+Baseline BF16 dan batas numerik dipertahankan.
 
 ## Persiapan dan menjalankan
 

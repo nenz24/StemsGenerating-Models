@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "run_id": "F6F60C4F-80F9-41C2-833B-EACBC4B782ED",
+  "started_utc": "2026-11-02T18:44:59Z",
+  "started_wib": "2026-11-03T01:44:59+07:00",
+  "report_sha256": "be591a9f2d6c5d4bcd23dd5d3d12374c1b0479206c5ff0b82fea6be643f596ea",
+  "evidence": "User-supplied report; arithmetic/accounting independently recomputed; full native tensors not supplied",
+  "pool_size": 2,
+  "thermal_counts": {
+    "1": 140
+  },
+  "thermal_label": "fair (1) throughout",
+  "strict_passes": 40,
+  "strict_failures": 100,
+  "calls": 140,
+  "opens": 8,
+  "binds": 8,
+  "hits": 140,
+  "modes": {
+    "single-before": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 754.690625,
+          "repeated_mean_ms": 56.343451894736845,
+          "repeated_median_ms": 55.176333,
+          "repeated_p95_ms": 62.379459,
+          "output_copy_mean_ms": 18.77620205
+        }
+      },
+      "opens": 1,
+      "binds": 1,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 2409.049417
+    },
+    "pool-only": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 83.1805,
+          "repeated_mean_ms": 55.278747631578945,
+          "repeated_median_ms": 55.203375,
+          "repeated_p95_ms": 56.9435,
+          "output_copy_mean_ms": 18.6125124
+        }
+      },
+      "opens": 2,
+      "binds": 2,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 1630.970208
+    },
+    "grouped": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 81.798,
+          "repeated_mean_ms": 58.16136857894737,
+          "repeated_median_ms": 57.628417,
+          "repeated_p95_ms": 62.51425,
+          "output_copy_mean_ms": 20.04567915
+        },
+        "blocks-02-03.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 785.956292,
+          "repeated_mean_ms": 60.55749773684211,
+          "repeated_median_ms": 59.390208,
+          "repeated_p95_ms": 70.6045,
+          "output_copy_mean_ms": 28.3907064
+        }
+      },
+      "opens": 2,
+      "binds": 2,
+      "hits": 40,
+      "calls": 40,
+      "wall_ms": 4397.644
+    },
+    "interleaved": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 91.214708,
+          "repeated_mean_ms": 62.12459194736842,
+          "repeated_median_ms": 62.608041,
+          "repeated_p95_ms": 68.275291,
+          "output_copy_mean_ms": 23.47953765
+        },
+        "blocks-02-03.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 88.835792,
+          "repeated_mean_ms": 62.485603,
+          "repeated_median_ms": 62.0275,
+          "repeated_p95_ms": 70.201708,
+          "output_copy_mean_ms": 23.01644995
+        }
+      },
+      "opens": 2,
+      "binds": 2,
+      "hits": 40,
+      "calls": 40,
+      "wall_ms": 4322.40225
+    },
+    "single-after": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 90.395542,
+          "repeated_mean_ms": 63.88405257894737,
+          "repeated_median_ms": 60.996208,
+          "repeated_p95_ms": 77.834584,
+          "output_copy_mean_ms": 23.063408250000002
+        }
+      },
+      "opens": 1,
+      "binds": 1,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 2648.301041
+    }
+  },
+  "ratios": {
+    "interleaved_over_grouped": {
+      "blocks-00-01.aimodel": 1.068141851975877,
+      "blocks-02-03.aimodel": 1.031839249229495
+    },
+    "pool_only_over_single_before": 0.9811033185338551,
+    "single_after_over_single_before": 1.133832777911765
+  },
+  "reported_output_sha256_by_asset": {
+    "blocks-00-01.aimodel": [
+      "d5277a1d25dc4d1f04958f91162a6c4adc6c3529c8acb16c4a4847de6f8575f1"
+    ],
+    "blocks-02-03.aimodel": [
+      "89ee0adb6b0c913178f85c0b492570ba08180a0e593c9ddab92d1bd286637053"
+    ]
+  },
+  "full_output_hashes_consistent_across_modes": true,
+  "independent_full_tensor_verification": false,
+  "sampled_process_maximum_mib": 407.04920196533203,
+  "total_ms": 15839.939292,
+  "strict_parity_passed": false,
+  "baseline_replaced": false,
+  "tolerances_changed": false,
+  "decision": "Retain BF16. Repeat K=2 with reversed mode order from nominal thermal; control drift exceeds observed interleaving penalty. No full-loop speedup or causal residency claim."
+}

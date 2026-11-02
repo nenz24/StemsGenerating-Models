@@ -51,8 +51,12 @@ ini tidak mereproduksi kondisi full generation 772 detik.
 
 [Probe interleaving BF16](coreai-asset-interleaving-plan.md) kini menyiapkan
 perbandingan input tetap: single, pool-only, grouped dan interleaved. Mulai
-dengan dua pasangan layer, 140 call per run. Build Apple dan hasil perangkat
-belum tersedia; benchmark ini tidak mengganti sampler atau toleransi.
+dengan dua pasangan layer, 140 call per run. [Run K=2 pertama](../reviews/coreai-iphone17pro-interleaving-k2/README.md)
+selesai: interleaved/grouped +6,81% dan +3,18%, tetapi kontrol single-after
+melambat +13,38%. Thermal fair sepanjang run; strict parity NOT PASSED 40/140.
+Hasil belum mengisolasi switching atau menjelaskan pipeline penuh. Ulangi
+K=2 dengan urutan terbalik dari thermal nominal, tanpa export ulang.
+Benchmark ini tidak mengganti sampler atau toleransi.
 
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
