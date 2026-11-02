@@ -14,6 +14,15 @@ thermal fair. Efek timing berbalik dengan urutan; penalti switching K=2 belum
 konsisten. Berikutnya kontrol ketiga grouped-first dari thermal nominal,
 menggunakan bundle/build yang sama. Tidak ada perubahan model atau toleransi.
 
+[Kontrol nominal ketiga](../reviews/coreai-iphone17pro-interleaving-k2-nominal/README.md)
+tetap menunjukkan drift kontrol +13,51%. Caller kini memakai progres live
+pendek dan breadcrumb native terpisah agar pekerjaan pelaporan tidak bertambah
+seiring call. Laporan lengkap disimpan sebelum inferensi, di batas mode dan
+saat selesai/error tertangkap; crash dapat kehilangan detail mode yang sedang
+berjalan. Perubahan instrumentasi belum diuji di Apple. Update kode/build
+tanpa preparation, ulangi K=2 grouped-first dari nominal, dan tandai hasil
+sebagai cohort `bounded-live-progress-v1` sebelum memutuskan K=4.
+
 ## Persiapan dan menjalankan
 
 Gunakan checkout yang sudah memuat perubahan ini di Mac. Bundle

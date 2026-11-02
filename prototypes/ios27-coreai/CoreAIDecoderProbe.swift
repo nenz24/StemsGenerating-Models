@@ -1567,11 +1567,24 @@ enum CoreAIDecoderProbe {
         let sourceManifestSha256: String
     }
 
+    // Keep live native breadcrumbs separate from the complete report. Capturing
+    // the growing report here makes repeated writes/rendering grow with call
+    // position and can confound an order-sensitive timing experiment.
+    private static func interleavingPhaseProgress(prefix: String) -> @Sendable (String) -> Void {
+        return { phase in
+            guard let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+            try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+            try? (prefix + "\n" + phase).write(to: root.appendingPathComponent("last-interleaving-phase.txt"),
+                atomically: true, encoding: .utf8)
+        }
+    }
+
     static func runInterleavingProbe(count: Int, reverse: Bool,
         progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
         let clock = ContinuousClock(), start = ContinuousClock().now
         let memory = CoreAIProcessFootprintSampler()
         var lines = ["Runtime: CoreAI BF16 interleaving diagnostic; run \(UUID().uuidString)",
+            "Instrumentation revision: bounded-live-progress-v1; full report checkpointed between modes and on completion/error; native breadcrumb stored separately",
             "Started UTC: \(ISO8601DateFormatter().string(from: Date())); OS \(ProcessInfo.processInfo.operatingSystemVersionString); architecture \(AIModel.deviceArchitectureName)",
             "Fixed synthetic inputs; CFG batch 2 / hidden 128 / condition 118; no output feedback or waveform",
             "BF16 storage / FP32 compute; cpuOnly requested; actual accelerator placement NOT MEASURED",
@@ -1640,6 +1653,7 @@ enum CoreAIDecoderProbe {
                     count: shape.reduce(1,*), hashes: ref.artifactSha256))
             }
             let modes = ["single-before", "pool-only"] + (reverse ? ["interleaved","grouped"] : ["grouped","interleaved"]) + ["single-after"]
+            saveProgress(lines, profile: .denoiser)
             var means: [String: [Int: Double]] = [:]
             for mode in modes {
                 let result = try await runInterleavingMode(mode, count: count, folder: folder, ref: ref,
@@ -1647,6 +1661,7 @@ enum CoreAIDecoderProbe {
                 totalCalls += result.calls
                 means[mode] = result.means
                 lines.append("Mode \(mode) Swift scope released; native eviction NOT GUARANTEED")
+                saveProgress(lines, profile: .denoiser)
             }
             try checkManifest(totalCalls, 60 + 40*count, "interleaving.total_calls")
             for index in 0..<count {
@@ -1686,7 +1701,8 @@ enum CoreAIDecoderProbe {
         for stage in stages {
             try requirePreviewMemoryBudget()
             let phase = "Mode \(mode): opening/binding \(stage.assetFile); no inference yet"
-            saveProgress(lines + [phase], profile: .denoiser); await progress((lines + [phase]).joined(separator: "\n"))
+            interleavingPhaseProgress(prefix: lines[0])(phase)
+            await progress(phase)
             let begin = clock.now
             let probe = try await CoreAIModelProbe(contentsOf: folder.appendingPathComponent(stage.assetFile), options: .cpuOnly)
             stats.modelOpens += 1
@@ -1707,9 +1723,11 @@ enum CoreAIDecoderProbe {
         for (position,index) in order.enumerated() {
             try requirePreviewMemoryBudget()
             let phase = "Mode \(mode), K=\(count), call \(position+1)/\(order.count), \(stages[index].assetFile)"
-            saveProgress(lines + [phase], profile: .denoiser); await progress((lines + [phase]).joined(separator: "\n"))
+            let livePrefix = lines[0] + "\n" + phase
+            interleavingPhaseProgress(prefix: livePrefix)("Before call")
+            await progress(phase)
             let result = try await runRetainedStage(stages[index], folder: folder, inputs: inputs, pool: &pool, stats: &stats,
-                options: .cpuOnly, phaseProgress: previewPhaseProgress(prefix: (lines + [phase]).joined(separator: "\n")))
+                options: .cpuOnly, phaseProgress: interleavingPhaseProgress(prefix: livePrefix))
             guard let tensor = result.values["hidden_out"] else { throw ProbeError.invalidOutputTensor }
             let values = try copiedValues(tensor, shape: ref.outputShape)
             let comparison = try compare(actual: values, expected: references[index], absoluteTolerance: 1e-4,

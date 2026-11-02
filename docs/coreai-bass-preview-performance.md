@@ -66,6 +66,15 @@ Parity tetap NOT PASSED 40/140 dan hash output per aset cocok di kedua run.
 Lengkapi kontrol ketiga grouped-first dari thermal nominal sebelum memutuskan
 pool lebih besar. Tidak perlu preparation atau ekspor ulang untuk kontrol ini.
 
+[Kontrol ketiga](../reviews/coreai-iphone17pro-interleaving-k2-nominal/README.md)
+nominal sepanjang 140 call, tetapi single-after tetap +13,51%; interleaved
++8,20%/+4,37%. Pelaporan live sebelumnya menyalin/menulis teks yang terus
+bertambah. Caller diagnostik kini membatasi progres live dan menyimpan laporan
+lengkap di batas mode/akhir; penyebab drift belum dibuktikan. Update kode/build
+saja, ulangi K=2 grouped-first dari nominal sebelum memperbesar pool. Aset,
+baseline generasi, copies dan toleransi tetap; cari penanda
+`bounded-live-progress-v1` pada laporan baru.
+
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
 masih memakai mode AOT satu-scope; hasil CPU ini tidak memvalidasinya. Default

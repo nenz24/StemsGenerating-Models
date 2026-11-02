@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "run_id": "C5E95D16-7F37-48F7-AAC1-D2C79DF82A07",
+  "started_utc": "2026-11-02T18:54:13Z",
+  "started_wib": "2026-11-03T01:54:13+07:00",
+  "report_sha256": "4f6453d7e55a47819c44dd5d83c253ddf722348df2d28404a211f2f713ef48d7",
+  "evidence": "User-supplied report; arithmetic/accounting independently recomputed; full native tensors not supplied",
+  "pool_size": 2,
+  "thermal_counts": {
+    "0": 140
+  },
+  "thermal_label": "nominal (0) throughout",
+  "strict_passes": 40,
+  "strict_failures": 100,
+  "calls": 140,
+  "opens": 8,
+  "binds": 8,
+  "hits": 140,
+  "modes": {
+    "single-before": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 83.223333,
+          "repeated_mean_ms": 54.080168842105266,
+          "repeated_median_ms": 53.953667,
+          "repeated_p95_ms": 59.327625,
+          "output_copy_mean_ms": 18.2628812
+        }
+      },
+      "opens": 1,
+      "binds": 1,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 1597.137292
+    },
+    "pool-only": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 83.705458,
+          "repeated_mean_ms": 54.52687715789474,
+          "repeated_median_ms": 53.719625,
+          "repeated_p95_ms": 60.406541,
+          "output_copy_mean_ms": 18.34187495
+        }
+      },
+      "opens": 2,
+      "binds": 2,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 1647.794416
+    },
+    "grouped": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 87.627083,
+          "repeated_mean_ms": 55.38164263157895,
+          "repeated_median_ms": 55.386209,
+          "repeated_p95_ms": 57.077208,
+          "output_copy_mean_ms": 18.8275853
+        },
+        "blocks-02-03.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 81.731041,
+          "repeated_mean_ms": 57.436081105263156,
+          "repeated_median_ms": 57.067916,
+          "repeated_p95_ms": 62.0335,
+          "output_copy_mean_ms": 19.90546455
+        }
+      },
+      "opens": 2,
+      "binds": 2,
+      "hits": 40,
+      "calls": 40,
+      "wall_ms": 3415.112709
+    },
+    "interleaved": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 83.067541,
+          "repeated_mean_ms": 59.92293857894737,
+          "repeated_median_ms": 59.252333,
+          "repeated_p95_ms": 65.404792,
+          "output_copy_mean_ms": 21.8107875
+        },
+        "blocks-02-03.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 81.026958,
+          "repeated_mean_ms": 59.94762294736842,
+          "repeated_median_ms": 59.721209,
+          "repeated_p95_ms": 64.613959,
+          "output_copy_mean_ms": 21.8139187
+        }
+      },
+      "opens": 2,
+      "binds": 2,
+      "hits": 40,
+      "calls": 40,
+      "wall_ms": 4065.73425
+    },
+    "single-after": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 91.196125,
+          "repeated_mean_ms": 61.38446921052632,
+          "repeated_median_ms": 59.892791,
+          "repeated_p95_ms": 72.304084,
+          "output_copy_mean_ms": 21.745877150000002
+        }
+      },
+      "opens": 1,
+      "binds": 1,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 2570.622875
+    }
+  },
+  "ratios": {
+    "interleaved_over_grouped": {
+      "blocks-00-01.aimodel": 1.0820000225991662,
+      "blocks-02-03.aimodel": 1.0437275975967504
+    },
+    "pool_only_over_single_before": 1.00826011318666,
+    "single_after_over_single_before": 1.1350643040658213
+  },
+  "reported_output_sha256_by_asset": {
+    "blocks-00-01.aimodel": [
+      "d5277a1d25dc4d1f04958f91162a6c4adc6c3529c8acb16c4a4847de6f8575f1"
+    ],
+    "blocks-02-03.aimodel": [
+      "89ee0adb6b0c913178f85c0b492570ba08180a0e593c9ddab92d1bd286637053"
+    ]
+  },
+  "full_output_hashes_consistent_across_modes": true,
+  "independent_full_tensor_verification": false,
+  "sampled_process_maximum_mib": 396.83042907714844,
+  "total_ms": 13580.352042,
+  "strict_parity_passed": false,
+  "baseline_replaced": false,
+  "tolerances_changed": false,
+  "decision": "Retain BF16. Control drift persists at nominal thermal; no consistent K=2 switching penalty isolated across the three ordered runs. Bound live progress overhead, then repeat K=2 with the existing bundle before increasing pool size.",
+  "mode_order": [
+    "single-before",
+    "pool-only",
+    "grouped",
+    "interleaved",
+    "single-after"
+  ]
+}
