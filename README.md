@@ -117,6 +117,15 @@ latent/WAV lolos; build Apple, hasil generasi iPhone dan kualitas suara masih
 menunggu. Aset native baru sekitar 3,49 GB, checkpoint cache dipakai ulang.
 [Instruksi](docs/coreai-bass-preview.md).
 
+[Percobaan gabungan iPhone pertama](reviews/coreai-iphone17pro-bass-preview-specialization/README.md)
+melewati encoder/conditioning tetapi gagal `failedToSpecialize` sebelum sampling
+pertama selesai, sehingga belum menghasilkan WAV. Update pelaporan menampilkan
+aset dan operasi yang gagal; pull/build ulang lalu coba tombol yang sama,
+tanpa persiapan model ulang. Console BNNS kemudian mengonfirmasi gagal alokasi
+mapping IR; aset yang gagal dan kebutuhan memorinya masih perlu diidentifikasi.
+Mitigasi AOT resmi Apple memerlukan Metal Toolchain di Mac, yang belum tersedia
+pada probe utilitas pengguna.
+
 Persiapan Mac dapat menemukan drift pointwise yang tidak terjadi pada ekspor
 Linux. [Perbaikan status diagnostik](reviews/coreai-mac-bass-preview-drift/README.md)
 mengizinkan ekspor hanya jika error tetap finite dan normalized RMSE terbatas,

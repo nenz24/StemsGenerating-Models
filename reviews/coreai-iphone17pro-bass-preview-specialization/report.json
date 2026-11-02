@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "evidence_source": "User-pasted physical iPhone report; not independently reproduced in Linux",
+  "source_report": "report.txt",
+  "source_report_sha256": "850e67c3b019e45a7f1d7c1077b155403314a79ec57a0b152c25c441f72d92e1",
+  "runtime": "CoreAI",
+  "os": "Version 27.0.1 (Build 24A446)",
+  "architecture": "h18p",
+  "requested_compute_policy": "cpuOnly",
+  "host_preparation_status": "bounded_diagnostic",
+  "host_strict_gate_passed": false,
+  "component_identities_noise_schedule_and_ten_references_reported_hash_verified": true,
+  "source_component": {
+    "completed_runs": 1,
+    "output_comparisons_passed": 4,
+    "parity_passed": true,
+    "total_ms": 1480.7952500000001,
+    "sampled_process_maximum_mib": 398.7364044189453
+  },
+  "bass_conditioning_component": {
+    "completed_stages": 27,
+    "output_comparisons_passed": 6,
+    "layer_count": 40,
+    "parity_passed": true,
+    "total_ms": 10593.091375,
+    "sampled_process_maximum_mib": 137.0489959716797
+  },
+  "pipeline": {
+    "completed_sampling_steps": 0,
+    "completed_sampling_output_checks": 0,
+    "total_ms": 18625.629,
+    "process_baseline_mib": 27.111106872558594,
+    "sampled_process_maximum_mib": 790.3313446044922,
+    "error": "CoreAIDelegates.AIModelError.failedToSpecialize",
+    "completed": false,
+    "wav_generated": false,
+    "failing_asset": null,
+    "exact_failing_operation": null,
+    "completed_sampling_assets": null
+  },
+  "mac_terminal_excerpt": {
+    "preparation_advanced_past_prior_strict_latent_stop": true,
+    "host_export_status": "bounded_diagnostic",
+    "decoded_waveform": {
+      "finite": true,
+      "max_absolute_error": 9.968876838684082e-05,
+      "rmse": 1.0240567674076852e-05,
+      "normalized_rmse": 6.505227779631598e-05,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "excerpt_ends_at_staging": true,
+    "export_ready_line_in_excerpt": false
+  },
+  "limits": {
+    "accelerator_placement_measured": false,
+    "numerical_root_cause_isolated": false,
+    "specialization_root_cause_isolated": false,
+    "out_of_memory_error_reported": true,
+    "memory_scope": "10 ms sampled app process; not exact peak, compiler-worker memory, total model/device RAM or a memory-cause exclusion"
+  },
+  "next_action": "Retry same existing generation button after trace-only app rebuild; capture exact asset/operation/NSError chain. No new references or model export needed.",
+  "xcode_console_followup": {
+    "bnns_compile_error": "mmap of bnns ir file for writing failed with error: Cannot allocate memory",
+    "artifact": "coreai-cache/tmp/<cache-key>/model.aimodelx/main-this-delegates/BNNS/bnns.ir",
+    "memory_allocation_failure_in_bnns_compile_confirmed": true,
+    "exact_failing_asset_identified": false,
+    "cpu_aot_tool_probe": "xcrun: unable to find utility coreai-build, not a developer tool or in PATH",
+    "metal_toolchain_install_requested": true,
+    "aot_compile_executed": false
+  }
+}

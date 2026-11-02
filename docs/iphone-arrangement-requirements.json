@@ -120,7 +120,7 @@
     "apple_compilation_evidence": "User executed complete bass conditioning caller (40 layers, 27 assets, six checks) successfully on iPhone; no independent Apple SDK build on Linux",
     "physical_device_execution_verified": true,
     "device_execution_report": "reviews/coreai-iphone17pro-bass-conditioning/report.json",
-    "device_execution_scope": "Retained synthetic full denoiser loop, actual piano audio-context and complete bass text/ConditionEncoder PASS separately; integrated sampling-to-WAV code/host references prepared but not yet tested on iPhone; host canonicalization/tokenization still required",
+    "device_execution_scope": "First integrated pipeline executes source encoding and full bass conditioning with PASS; sampling then fails specialization before step 1 completes. No WAV generated; failing asset/operation unlogged in initial report.",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -776,7 +776,7 @@
     "device_output_reference_comparisons": 10,
     "raw_recording_import_or_prompt_tokenization_on_iphone_implemented": false,
     "on_device_rng_implemented": false,
-    "new_apple_build_verified": false,
+    "new_apple_build_verified": true,
     "device_integrated_inference_verified": false,
     "device_wav_generation_verified": false,
     "musical_quality_verified": false,
@@ -785,11 +785,21 @@
       "linux_strict_export": "reviews/coreai-bass-preview-export/reference.json",
       "mac_user_preparation_failure": "reviews/coreai-mac-bass-preview-drift/report.json",
       "mac_strict_final_latent_parity_passed": false,
-      "updated_mac_diagnostic_preparation_verified": false
+      "updated_mac_diagnostic_preparation_verified": false,
+      "mac_host_decoder_waveform_parity_passed": true,
+      "diagnostic_bundle_reference_loaded_on_device": true,
+      "export_ready_line_supplied": false
     },
     "bounded_diagnostic_host_export_implemented": true,
     "bounded_diagnostic_export_rules": "Finite latent and decoded audio normalized RMSE <=1e-3; strict identical-input APG required; pointwise failure stays failed and prevents overall numerical PASS",
     "numerical_tolerances_changed": false,
-    "updated_device_diagnostic_status_build_verified": false
+    "updated_device_diagnostic_status_build_verified": true,
+    "device_component_sequence_verified": true,
+    "device_report": "reviews/coreai-iphone17pro-bass-preview-specialization/report.json",
+    "device_last_error": "AIModelError.failedToSpecialize; BNNS console confirms mmap write allocation failure for bnns.ir; exact source asset still unlogged",
+    "specialization_failure_trace_implemented": true,
+    "specialization_failure_trace_apple_build_verified": false,
+    "bnns_compile_allocation_failure_reported": true,
+    "aot_mitigation_status": "Official coreai-build AOT documented; Mac tool unavailable; Metal Toolchain prerequisite requested, CPU/architecture CLI options awaiting installed-tool help"
   }
 }

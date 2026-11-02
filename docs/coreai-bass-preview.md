@@ -13,6 +13,25 @@ gagal tetap tersimpan, sehingga hasil bisa didengar tanpa mengklaim parity PASS.
 
 ## Jalankan di Mac dan iPhone
 
+**Jika paket sudah Ready dan iPhone berhenti pada `failedToSpecialize`:**
+[laporan pertama](../reviews/coreai-iphone17pro-bass-preview-specialization/README.md)
+menunjukkan source/conditioning PASS, lalu kegagalan specialization sebelum
+sampling pertama selesai. Update pelaporan kini menyimpan nama aset dan operasi
+yang gagal. Jalankan `git pull --ff-only`, build Cmd+R, lalu tekan tombol generasi
+yang sama sekali lagi. **Tidak perlu menjalankan skrip persiapan/ekspor ulang.**
+Bagikan laporan baru, khususnya `Failing asset`, `Failing operation` dan error
+domain/code. Console pengguna kemudian menunjukkan BNNS gagal mengalokasikan
+mapping `bnns.ir` saat compile. Pembaruan pelaporan tetap diperlukan untuk
+mengidentifikasi aset/operasinya; ini belum membuktikan kegagalan runtime teratasi.
+
+Mitigasi yang sedang disiapkan adalah kompilasi AOT di Mac sesuai
+[panduan Apple](https://developer.apple.com/documentation/coreai/compiling-core-ai-models-ahead-of-time).
+`coreai-build` memerlukan Metal Toolchain. Jika `xcrun` belum menemukannya,
+jalankan `xcodebuild -downloadComponent MetalToolchain`, kemudian
+`xcrun coreai-build compile --help` dan bagikan hasilnya. Opsi CPU/target harus
+mengikuti tool yang terpasang; AOT tetap menyisakan sebagian specialization
+di iPhone dan belum divalidasi sebagai solusi error ini.
+
 Dari folder repository:
 
 ```bash
