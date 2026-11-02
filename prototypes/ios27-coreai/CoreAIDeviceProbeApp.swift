@@ -1,6 +1,6 @@
 // API declarations checked against the user's Xcode 27 SDK interfaces.
 // The user reported a successful tensor probe on iOS 27.0.1; see reviews/.
-// Component gates passed; a complete 24-layer denoiser forward is next.
+// One complete source CPU-request bass preview and playback confirmed by user.
 import AVFoundation
 import CoreAI
 import SwiftUI
@@ -9,11 +9,20 @@ import UIKit
 @main
 @MainActor
 struct CoreAIDeviceProbeApp: App {
-    @State private var report = CoreAIDecoderProbe.savedDenoiserReport() ?? "Belum dijalankan."
+    @State private var report: String
     @State private var runningModel = false
     @State private var generatedBass: URL?
     @State private var generatedMix: URL?
     @State private var audioPlayer: AVAudioPlayer?
+    @State private var restoredPreview = false
+
+    init() {
+        let saved = CoreAIDecoderProbe.latestSavedBassPreview()
+        _report = State(initialValue: CoreAIDecoderProbe.savedDenoiserReport() ?? saved?.report ?? "Belum dijalankan.")
+        _generatedBass = State(initialValue: saved?.bassURL)
+        _generatedMix = State(initialValue: saved?.mixURL)
+        _restoredPreview = State(initialValue: saved != nil)
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -176,6 +185,7 @@ struct CoreAIDeviceProbeApp: App {
                             Button("Generate bass 5,12 detik") {
                                 audioPlayer?.stop()
                                 generatedBass = nil; generatedMix = nil
+                                restoredPreview = false
                                 runningModel = true
                                 report = "Menjalankan pipeline piano ke WAV bass pendek…"
                                 Task {
@@ -192,6 +202,21 @@ struct CoreAIDeviceProbeApp: App {
                             .disabled(runningModel)
                         }
                         if let generatedBass {
+                            let generationReport = generatedBass.deletingLastPathComponent().appendingPathComponent("report.txt")
+                            if restoredPreview {
+                                Text("Audio dari generasi terakhir yang tersimpan.")
+                                    .font(.footnote)
+                            }
+                            Button("Lihat laporan generasi") {
+                                do {
+                                    report = try String(contentsOf: generationReport, encoding: .utf8)
+                                } catch {
+                                    report = "Laporan generasi tidak dapat dibaca: \(error)"
+                                }
+                            }
+                            .disabled(runningModel)
+                            ShareLink(item: generationReport) { Label("Bagikan laporan generasi", systemImage: "square.and.arrow.up") }
+                                .disabled(runningModel)
                             Button("Dengarkan bass") { playPreview(generatedBass) }
                                 .disabled(runningModel)
                             ShareLink(item: generatedBass) { Label("Bagikan WAV bass", systemImage: "square.and.arrow.up") }

@@ -120,8 +120,14 @@ menunggu. Aset native baru sekitar 3,49 GB, checkpoint cache dipakai ulang.
 **Preview bass pertama sudah berbunyi di iPhone:** [console dan konfirmasi pengguna](reviews/coreai-iphone17pro-bass-preview-cpu-complete/README.md)
 mencatat 50 putaran denoiser/APG dan decoder selesai pada jalur source CPU-only;
 pengguna mengonfirmasi app tetap terbuka dan bass dapat diputar. Ini bukti
-keberhasilan eksekusi 5,12 detik. Parity numerik, durasi pipeline dan kualitas
-musikal masih memerlukan laporan akhir/audio, bukan disimpulkan dari console.
+keberhasilan eksekusi 5,12 detik. [Audit WAV yang diunggah](reviews/coreai-iphone17pro-bass-preview-waveforms/README.md)
+memvalidasi format dan menemukan normalized RMSE 8,55e-5 terhadap waveform Linux
+FP32, dengan 4 sample melanggar batas pointwise sehingga strict PASS belum
+tercapai. Pengguna menerima nada/feel klip ini, disimpan sebagai
+[baseline uji dengar iPhone 5,12 detik](baselines/iphone-coreai-bass-preview-512-v1/README.md).
+Laporan generasi lengkap tetap diperlukan untuk latency/RAM dan perbandingan
+device; app kini bisa membuka/membagikan laporan per-output serta memulihkan
+hasil tersimpan tanpa regenerasi.
 
 
 [Percobaan gabungan iPhone pertama](reviews/coreai-iphone17pro-bass-preview-specialization/README.md)

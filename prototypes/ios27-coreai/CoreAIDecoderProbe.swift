@@ -1849,6 +1849,41 @@ enum CoreAIDecoderProbe {
         return values
     }
 
+    // Recover existing output files without rerunning the models. A separate
+    // per-output report survives subsequent component probes overwriting the
+    // shared last-denoiser-probe.txt progress report.
+    static func latestSavedBassPreview() -> BassPreviewResult? {
+        let manager = FileManager.default
+        guard let documents = manager.urls(for: .documentDirectory, in: .userDomainMask).first,
+              let entries = try? manager.contentsOfDirectory(at: documents,
+                includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey], options: [.skipsHiddenFiles]) else { return nil }
+        let root = documents.standardizedFileURL.resolvingSymlinksInPath().path + "/"
+        var candidates: [(folder: URL, date: Date)] = []
+        for folder in entries where folder.lastPathComponent.hasPrefix("bass-preview-") {
+            guard let metadata = try? folder.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey]),
+                  metadata.isDirectory == true, metadata.isSymbolicLink != true,
+                  folder.standardizedFileURL.resolvingSymlinksInPath().path.hasPrefix(root) else { continue }
+            let files = ["bass.wav", "piano-with-bass.wav", "report.txt"].map { folder.appendingPathComponent($0) }
+            let complete = files.allSatisfy { file in
+                guard file.standardizedFileURL.resolvingSymlinksInPath().path.hasPrefix(root),
+                      let values = try? file.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey]) else { return false }
+                return values.isRegularFile == true && values.isSymbolicLink != true
+            }
+            guard complete,
+                  let values = try? files[2].resourceValues(forKeys: [.contentModificationDateKey]),
+                  let date = values.contentModificationDate else { continue }
+            candidates.append((folder, date))
+        }
+        for candidate in candidates.sorted(by: { $0.date > $1.date }) {
+            guard let report = try? String(contentsOf: candidate.folder.appendingPathComponent("report.txt"), encoding: .utf8),
+                  report.contains("WAV generated on device: YES") else { continue }
+            return BassPreviewResult(report: report,
+                bassURL: candidate.folder.appendingPathComponent("bass.wav"),
+                mixURL: candidate.folder.appendingPathComponent("piano-with-bass.wav"))
+        }
+        return nil
+    }
+
     static func savedDenoiserReport() -> String? {
         guard let url = denoiserReportURL(), let report = try? String(contentsOf: url, encoding: .utf8) else { return nil }
         return "Laporan denoiser tersimpan dari percobaan sebelumnya:\n\n" + report

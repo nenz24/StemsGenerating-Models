@@ -17,6 +17,13 @@ sudah tercatat pada console perangkat: 50 putaran denoiser/APG dan decoder
 selesai, app tetap terbuka dan pengguna berhasil mendengar bass. Parity numerik,
 latensi, full-song/repeatability dan kualitas musikal belum disimpulkan dari log.
 
+**Lihat laporan generasi** dan **Bagikan laporan generasi** memakai `report.txt`
+yang tersimpan bersama dua WAV. Ini tetap benar meskipun laporan yang tampil
+sudah berubah karena menjalankan probe conditioning. Saat app dibuka kembali,
+pasangan WAV/report lengkap terbaru dimuat untuk playback/share tanpa model
+inference; audio ini diberi label tersimpan. Progress/error terakhir tetap
+tersedia secara terpisah. Helper pemulihan/UI baru menunggu validasi build Apple.
+
 ## Resource build
 
 Default `COREAI_MODEL_PROFILE=auto` membawa pipeline bass source dengan runtime

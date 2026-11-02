@@ -1,0 +1,124 @@
+{
+  "scope": "Read-only audit of two supplied iPhone WAV files; no inference, audio editing, normalization or resampling",
+  "review_date": "2026-11-02",
+  "review_timezone": "Asia/Jakarta",
+  "files": {
+    "bass": {
+      "uploaded_filename": "bass.wav",
+      "sha256": "f027847ec785b7c4979d38b35f14fdde95fd33f582536685adb1516d7aec8665",
+      "file_bytes": 1966138,
+      "metadata": {
+        "codec_name": "pcm_f32le",
+        "sample_fmt": "flt",
+        "sample_rate": "48000",
+        "channels": 2,
+        "bits_per_sample": 32,
+        "duration": "5.120000"
+      },
+      "frames": 245760,
+      "duration_seconds": 5.12,
+      "finite": true,
+      "peak": 0.5564696788787842,
+      "rms": 0.1574208451433881,
+      "rms_dbfs": -16.05875520683997,
+      "dc_mean_per_channel": [
+        0.0015700657007011532,
+        0.001305727846629721
+      ],
+      "out_of_unit_range_samples": 0,
+      "at_or_above_full_scale_samples": 0
+    },
+    "piano_with_bass": {
+      "uploaded_filename": "piano-with-bass.wav",
+      "sha256": "549640f30b09a3000570124eac0324a1b334a039a08efedd48ef90241352b99c",
+      "file_bytes": 1966138,
+      "metadata": {
+        "codec_name": "pcm_f32le",
+        "sample_fmt": "flt",
+        "sample_rate": "48000",
+        "channels": 2,
+        "bits_per_sample": 32,
+        "duration": "5.120000"
+      },
+      "frames": 245760,
+      "duration_seconds": 5.12,
+      "finite": true,
+      "peak": 0.6434965133666992,
+      "rms": 0.10052694142129132,
+      "rms_dbfs": -19.954350617092484,
+      "dc_mean_per_channel": [
+        0.0008581656241627803,
+        0.000702036372320212
+      ],
+      "out_of_unit_range_samples": 0,
+      "at_or_above_full_scale_samples": 0
+    }
+  },
+  "local_linux_reference": {
+    "preview_manifest_sha256": "756eda1d509860093ab58b3ffabd99f25ba0d6b972a891baef11603d27f0d647",
+    "source_manifest_sha256": "6a1474eb492528776a2644e0f4387dccd63bf9877ff2d596c5ef673ab1e92ffe",
+    "recording": {
+      "name": "piano.mp3",
+      "sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+      "start_seconds": 0.0,
+      "canonicalization": "Host ffmpeg -> 48 kHz stereo Float32, planar tensor, no peak normalization; same PCM sent to device"
+    },
+    "piano_pcm_sha256": "e9b80f21874c6fcadf7f2d0846897c602101fdf7cb0faa9cceb6caa909b15c8c"
+  },
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "normalized_rmse_tolerance": 0.001,
+  "linux_waveform_comparisons": {
+    "reference": {
+      "reference_filename": "audio-reference.f32le",
+      "reference_sha256": "3645122d2850aa20d6474a509e2a7e2faddfbb14e7a8c2176c38f43e7af68fd1",
+      "hash_verified_against_local_linux_manifest": true,
+      "finite": true,
+      "max_absolute_error": 0.00012758374214172363,
+      "rmse": 1.4366948253636643e-05,
+      "normalized_rmse": 9.1263824700508e-05,
+      "elementwise_fraction_over_bound": 5.0862630208333336e-05,
+      "parity_passed": false,
+      "samples_over_bound": 25,
+      "total_samples": 491520,
+      "waveform_pearson_correlation": 0.9999999958699128,
+      "best_lag_samples_within_plus_minus_100_ms": 0,
+      "aligned_or_gain_adjusted_before_parity": false,
+      "interpretation": "Comparison with local Linux host waveform, not missing Mac per-run references or full device latent gate"
+    },
+    "fp32-reference": {
+      "reference_filename": "audio-fp32-reference.f32le",
+      "reference_sha256": "c847d9b03c63ddef16f6999cc3286fa3fa73ba0672110404733c907f1e3b4783",
+      "hash_verified_against_local_linux_manifest": true,
+      "finite": true,
+      "max_absolute_error": 0.00012949109077453613,
+      "rmse": 1.3466774116181809e-05,
+      "normalized_rmse": 8.554589665944836e-05,
+      "elementwise_fraction_over_bound": 8.138020833333333e-06,
+      "parity_passed": false,
+      "samples_over_bound": 4,
+      "total_samples": 491520,
+      "waveform_pearson_correlation": 0.9999999963529543,
+      "best_lag_samples_within_plus_minus_100_ms": 0,
+      "aligned_or_gain_adjusted_before_parity": false,
+      "interpretation": "Comparison with local Linux host waveform, not missing Mac per-run references or full device latent gate"
+    }
+  },
+  "mix_recomposition_using_linux_piano": {
+    "piano_gain": 0.78,
+    "bass_gain": 0.55,
+    "expected_global_gain": 1.0,
+    "maximum_absolute_residual": 5.960464477539062e-07,
+    "rmse": 3.898773511541241e-08,
+    "scope": "Confirms close sample-aligned mix against available piano PCM; source Mac PCM binary not supplied"
+  },
+  "full_device_numerical_gate": "Not available: pasted report is conditioning-only; per-output generation report still required",
+  "full_pipeline_latency_and_sampled_peak_ram": "Not available in conditioning-only report",
+  "musical_harmony_and_feel": "User accepts notes/feel for this short supplied preview; no independent listening verdict is inferred from waveform metrics.",
+  "listener_feedback": {
+    "source": "User response in this conversation",
+    "assessment_original": "Sudah cocok dan enak didengar",
+    "accepted": true,
+    "scope": "This supplied 5.12-second bass + piano preview only; not full-song or strict numerical acceptance"
+  }
+}

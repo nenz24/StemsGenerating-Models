@@ -145,14 +145,28 @@ namun tidak mengukur total RAM model/perangkat atau peak eksak.
 
 ## WAV dan batas prototipe
 
+[WAV iPhone yang sudah diunggah](../reviews/coreai-iphone17pro-bass-preview-waveforms/README.md)
+valid 5,12 detik stereo Float32/48 kHz, tanpa NaN/Inf atau sample >= full scale.
+Waveform sangat dekat dengan referensi Linux FP32 (normalized RMSE 8,55e-5),
+namun 4 dari 491520 sample melewati batas pointwise awal, sehingga strict PASS
+belum dinyatakan. Ini pembandingan lintas-host terhadap referensi Linux, bukan
+pengganti sepuluh hasil perbandingan pada laporan generasi Mac/iPhone.
+
+
 `bass.wav` menyimpan output asli tanpa normalisasi dalam Float32 stereo 48 kHz.
 `piano-with-bass.wav` adalah campuran dengar: piano 0,78 dan bass 0,55, diturunkan
 bersama jika peak melebihi 0,98. Stem bass tetap tidak diubah. Setiap run membuat
 folder baru di Documents aplikasi sehingga hasil sebelumnya tidak ditimpa.
-Gunakan ShareLink sebelum menutup aplikasi; kontrol pemutar memakai hasil run
-saat ini. Format RIFF/Float32 sudah diperiksa dengan ffprobe/FFmpeg; pemutaran
+Gunakan **Bagikan laporan generasi** untuk `report.txt` milik pasangan WAV,
+bukan laporan komponen yang sedang tampil. **Lihat laporan generasi** membuka
+teks yang sama. Aplikasi memulihkan pasangan WAV/report lengkap terbaru dari
+Documents saat dibuka kembali; audio pemulihan diberi label tersimpan dan tidak
+menjalankan model. Laporan progress/error terakhir tetap terpisah. Model,
+cache dan hasil lama tidak dihapus. Helper UI/pemulihan baru masih memerlukan
+build Apple. Format RIFF/Float32 sudah diperiksa dengan ffprobe/FFmpeg; pemutaran
 AVAudioPlayer untuk stem bass sudah dikonfirmasi berhasil oleh pengguna pada
-run lengkap ini. Berhasil membagikan file/memutar listening mix belum dikonfirmasi.
+run lengkap ini. Kedua WAV berhasil diterima sebagai upload; pemutaran listening mix terpisah
+belum dikonfirmasi.
 
 PCM, tokenisasi, epsilon dan initial noise masih dipersiapkan di Mac. Seluruh
 neural inference dan sampling dijalankan di iPhone saat tombol ditekan, tetapi
@@ -164,3 +178,8 @@ stream CUDA belum divalidasi. Klip ini bukan pengganti baseline musikal 90 detik
 APG pada input identik, lintasan latent, waveform dan diagnostik velocity.
 Setelah generasi iPhone berjalan, akor, groove, timbre dan timing dinilai pada
 tahap 4. Kualitas musikal, lagu panjang dan anggaran thermal/baterai masih terbuka.
+
+Pengguna menerima nada dan feel klip ini: **“Sudah cocok dan enak didengar”**.
+[Baseline uji dengar iPhone 5,12 detik](../baselines/iphone-coreai-bass-preview-512-v1/README.md)
+menyimpan hash dua WAV dan batas persetujuannya; parity strict dan full-song
+tetap dinilai terpisah.

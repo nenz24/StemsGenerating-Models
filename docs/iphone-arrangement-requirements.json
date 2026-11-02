@@ -41,7 +41,7 @@
       "scope": "This import evidence establishes module type-check only; see the later device report for app/tensor execution"
     },
     "physical_device_execution_verified": true,
-    "physical_device_execution_scope": "User-reported codec, retained complete four-step synthetic denoiser loop, real-piano audio-context and all 40 bass conditioning layers PASS; integrated music generation and hardware placement unverified",
+    "physical_device_execution_scope": "One complete 5.12-second source CPU-request piano-to-bass generation/playback observed; user accepts notes/feel for this clip. Full device numerical report, latency, full-song behavior and hardware placement remain unverified.",
     "public_sdk_interface_review": {
       "archive_name": "coreai-api.apDMX4.zip",
       "archive_sha256": "7c8d1c8cde67d4f062032c0704fc0991d958ceb17e0952defd2d7c4daa5cb597",
@@ -102,12 +102,12 @@
     "generation_schedule_candidate": "sequential"
   },
   "unverified": {
-    "coreai_sdk_custom_audio_model_support": "Separate VAE/DiT, real-piano audio-context and full Qwen/ConditionEncoder gates PASS; joint sampling-to-WAV pipeline and instrument generation unverified",
-    "model_import_format_and_operators": "Native affine, VAE and DiT verified on iPhone; complete 14-asset denoiser passed both references for three same-case same-process forwards; full generation unverified",
+    "coreai_sdk_custom_audio_model_support": "Short bass pipeline now executes all 50 denoiser/APG steps and decoder on device; arbitrary inputs, longer clips and other instrument arrangements remain unverified.",
+    "model_import_format_and_operators": "Native source CPU-request pipeline produced the supplied 5.12-second WAV; AOT/default crashes in Metal/MPS compilation. Longer-shape exports and other runtimes remain unverified.",
     "accelerator_and_precision_support": "Float32 affine and VAE encoder/decoder parity verified under requested CPU-only policy; actual placement and GPU/Neural Engine inference unmeasured",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
-    "model_conversion_training_and_device_benchmarks": "Retained synthetic four-step loop PASS (18.522 s); real-recording audio-context PASS (~1.037 s per call). Full conditioning/sampling/WAV integration, cold launches, long-run and full-song behavior remain unverified."
+    "model_conversion_training_and_device_benchmarks": "One complete 5.12-second device preview and playback observed; waveform audited and listener accepts notes/feel. Full pipeline latency/sampled RAM, cold starts, thermals and full-song behavior still need measurement."
   },
   "local_prototype_status": {
     "source_directory": "prototypes/ios27-coreai",
@@ -119,8 +119,8 @@
     "apple_compilation_verified": true,
     "apple_compilation_evidence": "User executed complete bass conditioning caller (40 layers, 27 assets, six checks) successfully on iPhone; no independent Apple SDK build on Linux",
     "physical_device_execution_verified": true,
-    "device_execution_report": "reviews/coreai-iphone17pro-bass-conditioning/report.json",
-    "device_execution_scope": "First integrated pipeline executes source encoding and full bass conditioning with PASS; sampling then fails specialization before step 1 completes. No WAV generated; failing asset/operation unlogged in initial report.",
+    "device_execution_report": "reviews/coreai-iphone17pro-bass-preview-cpu-complete/summary.json",
+    "device_execution_scope": "50 rounds of 14 DiT shards + APG update, then decoder complete with source CPU-only requests; supplied WAV and user-confirmed playback/notes/feel for 5.12 seconds. Final numerical report/latency not supplied.",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -154,7 +154,7 @@
     "native_model_reference": "prototypes/ios27-coreai/ModelCandidates/affine-native-reference.json",
     "current_native_probe_apple_compilation_verified": true,
     "native_inference_report": "reviews/coreai-iphone17pro-native-affine/report.json",
-    "checkpoint_conversion_scope": "Component device gates pass; new real-shape 14-shard denoiser + APG update + 128-frame decoder exported and host-validated for 5.12 s preview; integrated iPhone generation pending"
+    "checkpoint_conversion_scope": "Component gates and one complete 5.12-second device source CPU-request generation observed; not strict waveform parity, full-song feasibility or three-instrument acceptance."
   },
   "audio_component_audit": {
     "report": "reviews/coreai-ace-component-audit/report.json",
@@ -783,9 +783,9 @@
     "raw_recording_import_or_prompt_tokenization_on_iphone_implemented": false,
     "on_device_rng_implemented": false,
     "new_apple_build_verified": true,
-    "device_integrated_inference_verified": false,
-    "device_wav_generation_verified": false,
-    "musical_quality_verified": false,
+    "device_integrated_inference_verified": true,
+    "device_wav_generation_verified": true,
+    "musical_quality_verified": true,
     "diagnostic_wav_may_be_saved_if_numerical_checks_fail": true,
     "host_platform_evidence": {
       "linux_strict_export": "reviews/coreai-bass-preview-export/reference.json",
@@ -801,19 +801,19 @@
     "numerical_tolerances_changed": false,
     "updated_device_diagnostic_status_build_verified": true,
     "device_component_sequence_verified": true,
-    "device_report": "reviews/coreai-iphone17pro-bass-preview-block1819/report.json",
-    "device_last_error": "BNNS graphLoadFailed at stage 11/14 blocks-18-19 during function-bind/input-validation; 10 completed sampling assets, 0/50 completed steps",
+    "device_report": "reviews/coreai-iphone17pro-bass-preview-cpu-complete/summary.json",
+    "device_last_error": "No native generation error in supplied complete CPU run. Share metadata errors and trailing debug signal 9 retained; user reports app open and bass playback working.",
     "specialization_failure_trace_implemented": true,
     "specialization_failure_trace_apple_build_verified": true,
     "bnns_compile_allocation_failure_reported": true,
-    "aot_mitigation_status": "Mac Metal Toolchain 27B47 installed and help supplied; compiler/packager and runtime AOT selection implemented; real AOT compilation and device validation pending",
+    "aot_mitigation_status": "16 Mac AOT variants compiled; AOT/default crashes in Metal/MPS compiler at first sampling asset. Source CPU-request route completes one preview; AOT inference remains unverified.",
     "runtime_ownership_policy": "Single live Swift model/function scope per preview asset; detached CPU copies; native cache eviction unguaranteed",
     "expected_sampling_model_opens": 750,
     "expected_sampling_function_binds": 750,
     "expected_sampling_reuse_hits": 0,
     "targeted_cache_recovery": "Delete only blocks-18-19 cpuOnly compiled entry if prior saved report has its BNNS graphLoadFailed; no source asset or checkpoint changes",
-    "sequential_preview_apple_build_verified": false,
-    "sequential_preview_device_execution_verified": false,
+    "sequential_preview_apple_build_verified": true,
+    "sequential_preview_device_execution_verified": true,
     "aot": {
       "preparation_script": "scripts/prepare_coreai_bass_preview_aot.sh",
       "compiler_driver": "scripts/prepare_coreai_bass_preview_aot.py",
@@ -830,11 +830,23 @@
       "local_ignored_bundle": "prototypes/ios27-coreai/ModelCandidates/bass-preview-512-aot",
       "per_asset_compilation_resume_implemented": true,
       "source_models_and_references_preserved": true,
-      "actual_mac_aot_compilation_verified": false,
-      "aot_loader_apple_build_verified": false,
+      "actual_mac_aot_compilation_verified": true,
+      "aot_loader_apple_build_verified": true,
       "aot_device_execution_verified": false,
       "aot_memory_mitigation_verified": false,
       "actual_accelerator_placement_measured": false
-    }
+    },
+    "musical_quality_scope": "User: Sudah cocok dan enak didengar, for uploaded 5.12-second preview only; no independent listening claim.",
+    "baseline": "baselines/iphone-coreai-bass-preview-512-v1/baseline.json",
+    "waveform_review": "reviews/coreai-iphone17pro-bass-preview-waveforms/metrics.json",
+    "device_previous_cpu_sampling_error": "BNNS graphLoadFailed at stage 11/14 blocks-18-19 during function-bind/input-validation; 10 completed sampling assets, 0/50 completed steps",
+    "device_final_generation_report_received": false,
+    "device_numerical_gate_verified": false,
+    "device_pipeline_latency_ms": null,
+    "device_pipeline_sampled_peak_mib": null,
+    "linux_full_fp32_waveform_strict_parity_passed": false,
+    "default_resource_profile": "auto -> source CPU-only; unused AOT remains on Mac",
+    "saved_output_report_recovery_implemented": true,
+    "saved_output_report_recovery_apple_build_verified": false
   }
 }

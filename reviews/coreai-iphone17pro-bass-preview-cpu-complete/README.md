@@ -14,7 +14,9 @@ confirmed **“Aplikasi masih terbuka”** and **“Berhasil terdengar”** for 
 **Dengarkan bass** button. Together with the complete ordered model calls and
 the implemented WAV writer/return path, this supports a first successful
 **on-device generation and playback execution milestone** for the 5.12-second
-preview. WAV bytes and the final in-app report have not yet been supplied.
+preview. WAV bytes were subsequently supplied and [audited separately](../coreai-iphone17pro-bass-preview-waveforms/README.md).
+The final integrated in-app report is still missing; the next pasted report
+again covered conditioning only.
 
 The intended pipeline in this build uses actual source-context and conditioning
 outputs as sampling inputs. Host arrays remain comparisons and explicit
@@ -40,6 +42,7 @@ open and playback worked. Actual share/export success, or the reason that
 debug session ended, is not established by this console.
 
 This records one execution, not musical approval, cold-cache repeatability,
-full-song feasibility, or an accepted 90-second bass baseline. Next obtain the
-**existing** final in-app report and WAV stem/listening mix to assess parity and
-sound; no regeneration is required merely to collect these existing outputs.
+full-song feasibility, or an accepted 90-second bass baseline. The [subsequent WAV audit](../coreai-iphone17pro-bass-preview-waveforms/README.md)
+finds close Linux-reference agreement with a few strict pointwise violations.
+Still obtain the **existing** per-output generation report and musical feedback;
+no regeneration is required merely to collect these existing outputs.

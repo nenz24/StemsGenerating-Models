@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "id": "iphone-coreai-bass-preview-512-v1",
+  "status": "listener_accepted_short_device_preview_with_numerical_limits",
+  "accepted_on": "2026-11-02",
+  "timezone": "Asia/Jakarta",
+  "listener_assessment_original": "Sudah cocok dan enak didengar",
+  "approval_scope": "Generated bass notes and feel with piano in this 5.12-second preview; not strict numerical parity or full-song performance",
+  "device_context": {
+    "device": "iPhone 17 Pro",
+    "os": "iOS 27.0.1 (24A446)",
+    "architecture": "h18p",
+    "runtime": "CoreAI",
+    "requested_policy": "cpuOnly",
+    "accelerator_placement_measured": false
+  },
+  "pipeline": {
+    "generator": "ACE-Step v1.5 Base, all 24 DiT layers",
+    "source": "Actual piano source context and full Qwen/ConditionEncoder outputs feed sampling",
+    "inference_steps": 50,
+    "guidance_scale": 7,
+    "method": "APG-guided Euler ODE",
+    "apg_momentum": -0.75,
+    "apg_norm_threshold": 2.5,
+    "apg_projection_dims": [
+      1
+    ],
+    "precision": "FP16 stored generator/conditioning weights, FP32 computations; unchanged codec/APG",
+    "source_preparation": "Fixed Mac-prepared PCM/tokenization/epsilon/initial-noise fixtures; raw import and RNG on iPhone not implemented"
+  },
+  "audio": {
+    "seconds": 5.12,
+    "frames": 245760,
+    "sample_rate": 48000,
+    "channels": 2,
+    "format": "Float32 PCM WAV",
+    "files": {
+      "bass.wav": {
+        "sha256": "f027847ec785b7c4979d38b35f14fdde95fd33f582536685adb1516d7aec8665",
+        "bytes": 1966138
+      },
+      "piano-with-bass.wav": {
+        "sha256": "549640f30b09a3000570124eac0324a1b334a039a08efedd48ef90241352b99c",
+        "bytes": 1966138
+      }
+    }
+  },
+  "source_recording_context": {
+    "name": "piano.mp3",
+    "sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+    "start_seconds": 0.0,
+    "canonicalization": "Host ffmpeg -> 48 kHz stereo Float32, planar tensor, no peak normalization; same PCM sent to device"
+  },
+  "evidence": {
+    "execution_console": "../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/console.txt",
+    "ordered_execution_summary": "../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/summary.json",
+    "uploaded_wav_metrics": "../../reviews/coreai-iphone17pro-bass-preview-waveforms/metrics.json"
+  },
+  "numerical_status": {
+    "comparison_scope": "Available Linux waveform references; Mac per-output generation report not yet supplied",
+    "linux_full_fp32_normalized_rmse": 8.554589665944836e-05,
+    "linux_full_fp32_samples_over_bound": 4,
+    "linux_full_fp32_total_samples": 491520,
+    "strict_linux_waveform_parity_passed": false,
+    "full_device_numerical_gate_verified": false,
+    "tolerances_changed": false
+  },
+  "preservation_scope": "Metadata, hashes and measurements in Git; original uploads and iPhone Documents retain WAVs. No audio/weights added to app or Git.",
+  "remaining_validation": [
+    "Per-output generation report with total latency, sampled footprint and ten comparisons",
+    "Cold-start/repeatability and longer clips",
+    "Raw recording import and arbitrary input handling on iPhone",
+    "Full-song and other instrument generation on iPhone"
+  ]
+}
