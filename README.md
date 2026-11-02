@@ -148,6 +148,10 @@ baru. [Run impor pertama selesai](reviews/coreai-iphone17pro-audio-import/README
 WAV cocok, mix tepat memakai PCM impor yang sama dan pengguna menerima nada/feel;
 [baseline impor](baselines/iphone-coreai-bass-import-512-v1/README.md) tetap
 terpisah dari numerical parity/lagu panjang. [Panduan](docs/coreai-iphone-audio-import.md).
+[Rekaman berbeda, Goodness of God](reviews/coreai-iphone17pro-audio-import-goodness-of-god/README.md),
+juga selesai dan diterima pengguna: 77,62 s, sampled process maximum 455,39 MiB,
+ketiga hash WAV cocok dan mix tepat. Dua kasus ini tetap berdurasi 5,12 detik.
+
 
 
 [Percobaan gabungan iPhone pertama](reviews/coreai-iphone17pro-bass-preview-specialization/README.md)

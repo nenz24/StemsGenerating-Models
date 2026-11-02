@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "baseline_id": "iphone-coreai-bass-import-goodness-512-v1",
+  "status": "accepted_short_imported_input_audition_baseline",
+  "date": "2026-11-02",
+  "timezone": "Asia/Jakarta",
+  "evidence": "../../reviews/coreai-iphone17pro-audio-import-goodness-of-god/summary.json",
+  "waveform_review": "../../reviews/coreai-iphone17pro-audio-import-goodness-of-god/waveform-metrics.json",
+  "previous_imported_input_case": "../iphone-coreai-bass-import-512-v1/baseline.json",
+  "listener_feedback": {
+    "source": "User response in this conversation",
+    "assessment_original": "Sudah cocok dan enak didengar",
+    "accepted": true,
+    "scope": "This Goodness of God imported-piano 5.12-second bass/mix only; not independent assistant listening or full-song acceptance"
+  },
+  "generation_run_id": "84AD4570-68FC-4AB4-8A3C-BD0BF178B03D",
+  "recording_name": "Goodness of God - piano instrumental cover with lyrics.mp3",
+  "original_recording_sha256_reported": "0e415554220892284ab2e9cfafe2597fd680d47590e6abf8dcde435d04816631",
+  "original_recording_bytes_received": false,
+  "original_format_metadata_received": false,
+  "input_planar_pcm_sha256_verified_from_uploaded_wav": "c36d58a8e416eb487f4bc37a750957adb497538f5e4453512e728763ea09d882",
+  "canonical_sample_rate": 48000,
+  "channels": 2,
+  "frames": 245760,
+  "audio_seconds": 5.12,
+  "segment_start_seconds": 0,
+  "input_normalization_applied": false,
+  "generation_completed": true,
+  "sampling_steps": 50,
+  "fixed_conditioning_reference_checks_passed": 6,
+  "generation_output_reference_checks": 0,
+  "generation_numerical_parity": "NOT EVALUATED; no matching host output references",
+  "generation_seconds": 77.623565208,
+  "generation_timing_excludes_prior_import": true,
+  "generation_sampled_process_maximum_mib": 455.3930892944336,
+  "memory_scope": "10 ms sampled app process during generation; excludes prior import; not exact peak or total model/device RAM",
+  "different_original_recording_and_pcm_from_first_import": true,
+  "mix_recomposition_exact_float32_verified": true,
+  "output_files": {
+    "bass": {
+      "sha256": "a1391c388c8d1248b3fb317efeea36bfae4ad96c9a225ff07fb8b2fd8dd0f64c",
+      "file_bytes": 1966138,
+      "peak": 0.9464425444602966,
+      "peak_dbfs": -0.4781149109446321,
+      "all_finite": true,
+      "samples_above_unity": 0
+    },
+    "piano": {
+      "sha256": "27141c469429e6d7c11e5514db11868005348fd51ed928a0cbba46d4bf3e3776",
+      "file_bytes": 1966138,
+      "peak": 0.10536162555217743,
+      "peak_dbfs": -19.54635075126434,
+      "all_finite": true,
+      "samples_above_unity": 0
+    },
+    "mix": {
+      "sha256": "127923d842646c964eb8b22612c7133c8210a33dcf5b752e9b45627afd037cd0",
+      "file_bytes": 1966138,
+      "peak": 0.5265265703201294,
+      "peak_dbfs": -5.571594159,
+      "all_finite": true,
+      "samples_above_unity": 0
+    }
+  },
+  "audio_or_model_weights_committed": false,
+  "not_accepted_by_this_baseline": [
+    "strict neural numerical parity",
+    "arbitrary prompts",
+    "on-device RNG",
+    "longer durations/full-song",
+    "GPU/Neural Engine placement",
+    "cold-start/thermal/total RAM guarantees"
+  ]
+}

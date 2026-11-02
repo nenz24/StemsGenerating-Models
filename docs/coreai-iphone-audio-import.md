@@ -98,3 +98,13 @@ perhatikan headroom jika stem dikonversi ke PCM integer.
 Selanjutnya periksa rekaman berbeda, mono, stereo 48 kHz,
 penolakan audio pendek dan pembatalan picker. Tidak diperlukan perubahan
 checkpoint untuk pemeriksaan tersebut.
+
+## Rekaman berbeda sudah dicoba
+
+[Kasus Goodness of God](../reviews/coreai-iphone17pro-audio-import-goodness-of-god/README.md)
+memakai sumber/PCM berbeda dan menyelesaikan 50/50 langkah: 77,62 detik generasi,
+footprint maksimum tersampel 455,39 MiB. Hash ketiga WAV, PCM input dan mix tepat
+sudah diperiksa; semua sample di bawah unity. Pengguna menerima nada/feel klip
+ini juga. Kedua kasus menegaskan milestone dua input pendek; bukan validasi
+lagu panjang atau numerical parity output baru. Tidak perlu mengulang input
+pendek lain untuk mencatat milestone tersebut.

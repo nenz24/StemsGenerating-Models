@@ -856,7 +856,7 @@
     "device_mac_reference_waveform_checks_passed": 2,
     "device_final_latent_reference_checks_failed": 2,
     "performance_scope": "One confirmed Release -O retained CPU-request 5.12-second run, 59.235s, 450.42 MiB sampled process maximum; not exact peak, total RAM, cold-start or full-song guarantee.",
-    "next_measurement": "Try a different piano recording through existing Files import at fixed 5.12 s; raw Float32 stem headroom handling and longer-window export remain separate next development choices.",
+    "next_measurement": "Two distinct imported 5.12-second piano clips completed and accepted by user. Next development can address longer-window generation and independent listening gains; no additional same-shape input case is required to establish this observed milestone.",
     "release_measurement_prepared": true,
     "release_measurement_apple_build_verified": true,
     "latest_profiled_report": "reviews/coreai-iphone17pro-bass-preview-reuse/summary.json",
@@ -920,7 +920,7 @@
         "input.json"
       ],
       "device_report": "reviews/coreai-iphone17pro-audio-import/summary.json",
-      "verified_input_scope": "One MP3, 44.1 kHz stereo, same original piano as baseline; first 5.12 seconds. Three WAV hashes/PCM/mix verified; user accepts notes/feel for this imported result only.",
+      "verified_input_scope": "Two distinct imported piano recordings, first 5.12 seconds each; WAV hashes/PCM/mix verified and user accepts notes/feel for each. Original metadata for second recording not supplied.",
       "generation_total_ms": 65877.000375,
       "generation_timing_excludes_prior_import": true,
       "generation_sampled_process_maximum_mib": 472.7055892944336,
@@ -938,7 +938,24 @@
       "mix_recomposition_exact_float32_verified": true,
       "bass_samples_above_unity": 186,
       "bass_above_unity_frame_time_ms": 2.0,
-      "mix_peak_verified": 0.9314292669296265
+      "mix_peak_verified": 0.9314292669296265,
+      "accepted_imported_recording_cases": [
+        {
+          "name": "piano.mp3",
+          "report": "reviews/coreai-iphone17pro-audio-import/summary.json",
+          "baseline": "baselines/iphone-coreai-bass-import-512-v1/baseline.json"
+        },
+        {
+          "name": "Goodness of God - piano instrumental cover with lyrics.mp3",
+          "report": "reviews/coreai-iphone17pro-audio-import-goodness-of-god/summary.json",
+          "baseline": "baselines/iphone-coreai-bass-import-goodness-512-v1/baseline.json"
+        }
+      ],
+      "latest_case_report": "reviews/coreai-iphone17pro-audio-import-goodness-of-god/summary.json",
+      "latest_case_generation_seconds": 77.623565208,
+      "latest_case_generation_sampled_process_maximum_mib": 455.3930892944336,
+      "latest_case_musical_quality_verified": true,
+      "latest_case_waveform_bytes_verified": true
     }
   }
 }
