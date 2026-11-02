@@ -19,6 +19,15 @@ now completes all 140 calls; strict parity remains NOT PASSED (40/140 pass).
 Control drift exceeds the small observed switching penalties; repeat with
 reversed mode order from nominal thermal using the existing bundle/build.
 
+The [K=12 report](../../reviews/coreai-iphone17pro-interleaving-k12/README.md)
+completes the pair-pool sweep without reproducing the large steady slowdown.
+Next use the [actual-input three-step prefix](../../docs/coreai-actual-prefix-probe.md):
+restore the existing long generation resources, import the same piano, and
+press **Uji 3 langkah aktual (tanpa WAV)**. It runs the first three scheduled
+steps including front/tail/APG and feedback, then releases the pool without a
+decoder/WAV. Default production remains 50 steps. New Apple build/runtime
+validation is pending.
+
 Initial target: iPhone 17 Pro, iOS 27.0, Xcode 27.0 / 27A266a. These Swift
 sources use APIs declared in the six public interfaces supplied by the user.
 The user has built and run the device probe on an iPhone with iOS 27.0.1:

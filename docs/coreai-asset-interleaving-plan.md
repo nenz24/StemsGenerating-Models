@@ -44,6 +44,13 @@ mode, tanpa perubahan hash output. Berikutnya K=12, 540 calls/38 opens/binds,
 memakai `--pairs 12 --expand-existing`. Sweep ini tetap bukan full-loop;
 front/tail/APG dan actual input/feedback belum diuji oleh fixture komponen.
 
+[K=12 selesai](../reviews/coreai-iphone17pro-interleaving-k12/README.md), 540 calls
+nominal dan parity NOT PASSED 400/540. Tidak ada perlambatan berulang besar
+pada seluruh pasangan. Sweep ini ditutup; langkah terbaru adalah
+[prefix tiga langkah input aktual](coreai-actual-prefix-probe.md), bukan pool
+lebih besar. Front/tail/APG dan feedback masuk pengukuran, tanpa decoder/WAV
+dan tanpa mengubah 50 langkah produksi atau toleransi.
+
 ## Persiapan dan menjalankan
 
 Gunakan checkout yang sudah memuat perubahan ini di Mac. Bundle

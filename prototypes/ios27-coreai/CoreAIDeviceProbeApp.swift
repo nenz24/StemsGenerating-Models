@@ -50,6 +50,12 @@ struct CoreAIDeviceProbeApp: App {
                                     .disabled(runningModel)
                                 Button("Generate bass dari rekaman") { startGeneration(importedPiano: importedPiano) }
                                     .disabled(runningModel)
+                                if window == .long1024 {
+                                    Text("Diagnosis singkat memakai input dan feedback aktual. Hanya tiga langkah pertama, tanpa WAV baru.")
+                                        .font(.footnote)
+                                    Button("Uji 3 langkah aktual (tanpa WAV)") { startSamplingDiagnostic(importedPiano) }
+                                        .disabled(runningModel)
+                                }
                             }
                             Divider()
                         }
@@ -332,6 +338,23 @@ struct CoreAIDeviceProbeApp: App {
                 }
                 runningModel = false
             }
+        }
+    }
+
+    private func startSamplingDiagnostic(_ piano: CoreAIImportedPiano) {
+        guard !runningModel, window == .long1024 else { return }
+        audioPlayer?.stop()
+        runningModel = true
+        report = "Menyiapkan diagnosis tiga langkah aktual; audio lama tetap disimpan…"
+        let selectedWindow = window
+        Task {
+            let update: @MainActor @Sendable (String) -> Void = { text in self.report = text }
+            let result = await Task.detached(priority: .userInitiated) {
+                await CoreAIDecoderProbe.generateBassPreview(window: selectedWindow, importedPiano: piano,
+                    diagnosticThreeSteps: true, progress: update)
+            }.value
+            report = result.report
+            runningModel = false
         }
     }
 

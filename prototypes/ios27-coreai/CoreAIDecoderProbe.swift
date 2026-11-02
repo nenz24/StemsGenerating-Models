@@ -862,7 +862,8 @@ enum CoreAIDecoderProbe {
         }
     }
 
-    static func generateBassPreview(window: CoreAIPreviewWindow = .bundled, importedPiano: CoreAIImportedPiano? = nil, progress: @escaping @MainActor @Sendable (String) -> Void) async -> BassPreviewResult {
+    static func generateBassPreview(window: CoreAIPreviewWindow = .bundled, importedPiano: CoreAIImportedPiano? = nil,
+        diagnosticThreeSteps: Bool = false, progress: @escaping @MainActor @Sendable (String) -> Void) async -> BassPreviewResult {
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
         let priorReport = savedDenoiserReport()
@@ -889,7 +890,9 @@ enum CoreAIDecoderProbe {
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",
                      "App build configuration: \(Bundle.main.object(forInfoDictionaryKey: "CoreAIProbeBuildConfiguration") as? String ?? "unrecorded")",
                      "Swift app optimization: \(Bundle.main.object(forInfoDictionaryKey: "CoreAIProbeSwiftOptimizationLevel") as? String ?? "unrecorded"); native backend optimization is separate",
-                     "Test: actual piano -> VAE posterior -> full Qwen/ConditionEncoder -> 50 APG-guided Euler steps -> bass WAV",
+                     diagnosticThreeSteps
+                        ? "Test: actual piano -> VAE posterior -> full Qwen/ConditionEncoder -> first 3 actual APG-guided Euler steps; NO decoder/WAV"
+                        : "Test: actual piano -> VAE posterior -> full Qwen/ConditionEncoder -> 50 APG-guided Euler steps -> bass WAV",
                      "Audio: \(window.seconds) s / 48000 Hz stereo; \(window.latentFrames) latent frames / \(window.conditionTokens) condition tokens",
                      "Guidance 7; APG momentum -0.75, threshold 2.5, projection over latent time (dim 1); shift 1",
                      "APG projection FP32, compared on host against original FP64 projection; not plain CFG",
@@ -924,7 +927,18 @@ enum CoreAIDecoderProbe {
         var lastPhase = "preview manifest/reference validation"
         var completedSteps = 0, checks = 0, allParity = true
         var bassURL: URL?, mixURL: URL?
+        let plannedSteps = diagnosticThreeSteps ? 3 : 50
+        let runHeader = lines[2]
+        if diagnosticThreeSteps {
+            lines.append("Actual-input sampling diagnostic: THREE-STEP PREFIX ONLY; no decoder or WAV; production remains 50 steps")
+            lines.append("Instrumentation revision: actual-prefix-bounded-v1; short live progress, separate native breadcrumb, full checkpoint after each completed step")
+            lines.append("Scope: actual imported piano, source/conditioning, front + 12 pairs + tail + APG, actual latent/momentum feedback; no matching host output reference, numerical parity NOT EVALUATED")
+            lines.append("Diagnostic thermal before: \(ProcessInfo.processInfo.thermalState.rawValue); low-power: \(ProcessInfo.processInfo.isLowPowerModeEnabled)")
+        }
         do {
+            if diagnosticThreeSteps {
+                guard window == .long1024, importedPiano != nil, reuseSamplingStages else { throw ShardError.invalidManifest }
+            }
             if let importedPiano {
                 try importedPiano.validatePCM(window: window)
                 lines.append("Imported recording: \(importedPiano.metadata.name); first \(window.seconds) s, no input normalization")
@@ -1122,7 +1136,7 @@ enum CoreAIDecoderProbe {
             let apgStage = Contract.Stage(assetFile: "apg-euler.aimodel", layerIndices: [],
                 inputShapes: ["velocity":[2,window.latentFrames,64],"latent":[1,window.latentFrames,64],"momentum":[1,window.latentFrames,64],"dt":[1]],
                 outputShapes: ["latent_next":[1,window.latentFrames,64],"momentum_next":[1,window.latentFrames,64],"guided_velocity":[1,window.latentFrames,64]], outputBindings: nil)
-            for index in 0..<50 {
+            for index in 0..<plannedSteps {
                 let stepStart = clock.now
                 let reuseThisStep = reuseSamplingStages && (!sequentialFirstStep || index > 0)
                 if sequentialFirstStep && index == 1 {
@@ -1139,9 +1153,14 @@ enum CoreAIDecoderProbe {
                     let phase = "Phase: sampling step \(index+1)/50, stage \(stageIndex+1)/14 \(stage.assetFile); completed steps \(completedSteps)/50; handles \(reuseThisStep ? "retained" : "single-stage scope")"
                     lastPhase = phase
                     try requirePreviewMemoryBudget()
-                    let stageLog = lines + cacheRepair.events + [phase]
-                    saveProgress(stageLog, profile: .denoiser)
-                    await progress(stageLog.joined(separator: "\n"))
+                    let stageLog = diagnosticThreeSteps ? [runHeader,phase] : lines + cacheRepair.events + [phase]
+                    if diagnosticThreeSteps {
+                        interleavingPhaseProgress(prefix: runHeader, fileName: "last-sampling-diagnostic-phase.txt")(phase)
+                        await progress("Uji langkah aktual \(index+1)/3; tahap \(stageIndex+1)/14: \(stage.assetFile)")
+                    } else {
+                        saveProgress(stageLog, profile: .denoiser)
+                        await progress(stageLog.joined(separator: "\n"))
+                    }
                     var inputs: [String: NDArray] = [:]
                     for (name, shape) in stage.inputShapes {
                         guard let array = state[name], array.shape == shape else { throw ShardError.invalidManifest }
@@ -1150,9 +1169,14 @@ enum CoreAIDecoderProbe {
                     let result = try await runPreviewSamplingStage(stage, folder: folder, inputs: inputs, aot: preparedAOT,
                         reuseStages: reuseThisStep, pool: &samplingPool, stats: &retention,
                         allowCacheRepair: window == .long1024, cacheRepair: &cacheRepair,
-                        phaseProgress: previewPhaseProgress(prefix: stageLog.joined(separator: "\n")))
-                    if index == 0 {
+                        phaseProgress: diagnosticThreeSteps
+                            ? interleavingPhaseProgress(prefix: stageLog.joined(separator: "\n"), fileName: "last-sampling-diagnostic-phase.txt")
+                            : previewPhaseProgress(prefix: stageLog.joined(separator: "\n")))
+                    if index == 0 && !diagnosticThreeSteps {
                         lines.append("First sampling step stage \(stageIndex+1)/14 \(stage.assetFile): load ms \(result.loadMs); \(result.phases.report)")
+                    }
+                    if diagnosticThreeSteps {
+                        lines.append("Actual-prefix step \(index+1)/3 asset \(stage.assetFile): \(result.phases.report); thermal \(ProcessInfo.processInfo.thermalState.rawValue)")
                     }
                     guard let bindings = stage.outputBindings else { throw ShardError.invalidManifest }
                     for (name, array) in result.values {
@@ -1163,15 +1187,25 @@ enum CoreAIDecoderProbe {
                 guard let velocity = state["velocity"] else { throw ProbeError.invalidOutputTensor }
                 lastPhase = "Phase: sampling step \(index+1)/50, apg-euler.aimodel"
                 try requirePreviewMemoryBudget()
-                let apgLog = lines + cacheRepair.events + [lastPhase]
-                saveProgress(apgLog, profile: .denoiser)
-                await progress(apgLog.joined(separator: "\n"))
+                let apgLog = diagnosticThreeSteps ? [runHeader,lastPhase] : lines + cacheRepair.events + [lastPhase]
+                if diagnosticThreeSteps {
+                    interleavingPhaseProgress(prefix: runHeader, fileName: "last-sampling-diagnostic-phase.txt")(lastPhase)
+                    await progress("Uji langkah aktual \(index+1)/3: APG Euler")
+                } else {
+                    saveProgress(apgLog, profile: .denoiser)
+                    await progress(apgLog.joined(separator: "\n"))
+                }
                 let result = try await runPreviewSamplingStage(apgStage, folder: folder,
                     inputs: ["velocity":velocity,"latent":latent,"momentum":momentum,
                              "dt":NDArray(scalars: [times[index]-times[index+1]], shape: [1])], aot: preparedAOT,
                     reuseStages: reuseThisStep, pool: &samplingPool, stats: &retention,
                     allowCacheRepair: window == .long1024, cacheRepair: &cacheRepair,
-                    phaseProgress: previewPhaseProgress(prefix: apgLog.joined(separator: "\n")))
+                    phaseProgress: diagnosticThreeSteps
+                        ? interleavingPhaseProgress(prefix: apgLog.joined(separator: "\n"), fileName: "last-sampling-diagnostic-phase.txt")
+                        : previewPhaseProgress(prefix: apgLog.joined(separator: "\n")))
+                if diagnosticThreeSteps {
+                    lines.append("Actual-prefix step \(index+1)/3 asset apg-euler.aimodel: \(result.phases.report); thermal \(ProcessInfo.processInfo.thermalState.rawValue)")
+                }
                 guard let next = result.values["latent_next"], let nextMomentum = result.values["momentum_next"],
                       result.values["guided_velocity"] != nil else { throw ProbeError.invalidOutputTensor }
                 latent = next; momentum = nextMomentum
@@ -1190,13 +1224,15 @@ enum CoreAIDecoderProbe {
                 }
                 completedSteps += 1
                 lines.append("Sampling step \(index+1)/50 complete; ms \(ms(stepStart.duration(to: clock.now)))")
+                if diagnosticThreeSteps { saveProgress(lines + cacheRepair.events, profile: .denoiser) }
             }
-            let expectedOpens = (reuseSamplingStages ? (sequentialFirstStep ? 30 : 15) : 750) + cacheRepair.attempts
-            let expectedBinds = reuseSamplingStages ? (sequentialFirstStep ? 30 : 15) : 750
-            let expectedHits = reuseSamplingStages ? (sequentialFirstStep ? 720 : 735) : 0
+            let expectedCalls = 15 * plannedSteps
+            let expectedOpens = (reuseSamplingStages ? (sequentialFirstStep ? 30 : 15) : expectedCalls) + cacheRepair.attempts
+            let expectedBinds = reuseSamplingStages ? (sequentialFirstStep ? 30 : 15) : expectedCalls
+            let expectedHits = reuseSamplingStages ? expectedCalls - expectedBinds : 0
             try checkManifest(retention.modelOpens, expectedOpens, "preview.model_opens")
             try checkManifest(retention.functionBinds, expectedBinds, "preview.function_binds")
-            try checkManifest(retention.completedCalls, 750, "preview.completed_calls")
+            try checkManifest(retention.completedCalls, expectedCalls, "preview.completed_calls")
             try checkManifest(retention.cacheHits, expectedHits, "preview.reuse_hits")
             try checkManifest(cacheRepair.successfulRetries, cacheRepair.attempts, "preview.cache_repair_successes")
             let scope = reuseSamplingStages ? (sequentialFirstStep ? "first-step-single-stage-then-retained" : "retained-stage") : "single-stage"
@@ -1208,72 +1244,79 @@ enum CoreAIDecoderProbe {
                 samplingPool.removeAll()
                 lines.append("Retained sampling pool released before decoder; native cache eviction NOT GUARANTEED")
             }
-            let values = try copiedValues(latent, shape: [1,window.latentFrames,64])
-            var decoderInput = [Float](repeating: 0, count: window.latentFrames*64)
-            for t in 0..<window.latentFrames { for c in 0..<64 { decoderInput[c*window.latentFrames+t] = values[t*64+c] } }
-            lastPhase = "Phase: decoder.aimodel loading/binding/inference"
-            try requirePreviewMemoryBudget()
-            lines.append("Phase: loading full \(window.seconds)-second VAE decoder; sampling Swift handles released, native eviction unverified")
-            let decoderLog = lines + cacheRepair.events
-            saveProgress(decoderLog, profile: .denoiser); await progress(decoderLog.joined(separator: "\n"))
-            let decoderStage = Contract.Stage(assetFile: "decoder.aimodel", layerIndices: [],
-                inputShapes: ["latent":[1,64,window.latentFrames]], outputShapes: ["audio":[1,2,window.samples]], outputBindings: nil)
-            let decoded = try await runSequentialPreviewStage(decoderStage, folder: folder,
-                inputs: ["latent":NDArray(scalars: decoderInput, shape: [1,64,window.latentFrames])], aot: preparedAOT, stats: &retention,
-                phaseProgress: previewPhaseProgress(prefix: (decoderLog + [lastPhase]).joined(separator: "\n")))
-            guard let audioArray = decoded.values["audio"] else { throw ProbeError.invalidOutputTensor }
-            let audio = try copiedValues(audioArray, shape: [1,2,window.samples])
-            if referenceMode {
-                for kind in ["reference","fp32-reference"] {
-                    guard let expected = references["audio-\(kind).f32le"] else { throw ShardError.invalidManifest }
-                    let stats = try compare(actual: audio, expected: expected, absoluteTolerance: ref.absoluteTolerance,
-                                            relativeTolerance: ref.relativeTolerance, relativeRmseTolerance: ref.relativeRmseTolerance)
-                    lines.append("Decoded audio vs \(kind): max abs error \(stats.maxError); normalized RMSE \(stats.normalizedRmse); \(stats.passed ? "PASS" : "NOT PASSED")")
-                    allParity = allParity && stats.passed; checks += 1
+            if diagnosticThreeSteps {
+                try checkManifest(checks, 0, "actual_prefix.no_matching_output_references")
+                lines.append("Actual-input sampling diagnostic: COMPLETED (3/3 prefix steps, 45 calls); full generation NOT COMPLETED (3/50)")
+                lines.append("Generation numerical parity: NOT EVALUATED; no matching host outputs. Existing conditioning checks retain their own scope.")
+                lines.append("Decoder NOT RUN; WAV generated on device: NO (intentional diagnostic); no preview audio or baseline replacement")
+            } else {
+                let values = try copiedValues(latent, shape: [1,window.latentFrames,64])
+                var decoderInput = [Float](repeating: 0, count: window.latentFrames*64)
+                for t in 0..<window.latentFrames { for c in 0..<64 { decoderInput[c*window.latentFrames+t] = values[t*64+c] } }
+                lastPhase = "Phase: decoder.aimodel loading/binding/inference"
+                try requirePreviewMemoryBudget()
+                lines.append("Phase: loading full \(window.seconds)-second VAE decoder; sampling Swift handles released, native eviction unverified")
+                let decoderLog = lines + cacheRepair.events
+                saveProgress(decoderLog, profile: .denoiser); await progress(decoderLog.joined(separator: "\n"))
+                let decoderStage = Contract.Stage(assetFile: "decoder.aimodel", layerIndices: [],
+                    inputShapes: ["latent":[1,64,window.latentFrames]], outputShapes: ["audio":[1,2,window.samples]], outputBindings: nil)
+                let decoded = try await runSequentialPreviewStage(decoderStage, folder: folder,
+                    inputs: ["latent":NDArray(scalars: decoderInput, shape: [1,64,window.latentFrames])], aot: preparedAOT, stats: &retention,
+                    phaseProgress: previewPhaseProgress(prefix: (decoderLog + [lastPhase]).joined(separator: "\n")))
+                guard let audioArray = decoded.values["audio"] else { throw ProbeError.invalidOutputTensor }
+                let audio = try copiedValues(audioArray, shape: [1,2,window.samples])
+                if referenceMode {
+                    for kind in ["reference","fp32-reference"] {
+                        guard let expected = references["audio-\(kind).f32le"] else { throw ShardError.invalidManifest }
+                        let stats = try compare(actual: audio, expected: expected, absoluteTolerance: ref.absoluteTolerance,
+                                                relativeTolerance: ref.relativeTolerance, relativeRmseTolerance: ref.relativeRmseTolerance)
+                        lines.append("Decoded audio vs \(kind): max abs error \(stats.maxError); normalized RMSE \(stats.normalizedRmse); \(stats.passed ? "PASS" : "NOT PASSED")")
+                        allParity = allParity && stats.passed; checks += 1
+                    }
                 }
+                try checkManifest(checks, expectedOutputChecks, "preview.output_checks")
+                lastPhase = "writing bass and listening-mix WAV files"
+                let sourceRef = try decoder.decode(SourceContextContract.self, from: Data(contentsOf: sourceFolder.appendingPathComponent("reference.json")))
+                let piano: [Float]
+                if let importedPiano {
+                    piano = importedPiano.planarPCM
+                } else {
+                    piano = try readFloats(folder: sourceFolder, name: "audio.f32le", count: 2*window.samples, hashes: sourceRef.artifactSha256)
+                }
+                guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { throw ShardError.missingPreparedBundle }
+                let output = documents.appendingPathComponent("bass-preview-" + UUID().uuidString)
+                try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+                let stem = output.appendingPathComponent("bass.wav"), mixed = output.appendingPathComponent("piano-with-bass.wav")
+                try writeStereoFloatWAV(audio, frames: window.samples, to: stem)
+                let pianoClip = output.appendingPathComponent("piano.wav")
+                try writeStereoFloatWAV(piano, frames: window.samples, to: pianoClip)
+                if let importedPiano {
+                    let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                    try encoder.encode(importedPiano.metadata).write(to: output.appendingPathComponent("input.json"), options: .atomic)
+                }
+                var mix = zip(piano,audio).map { Float(0.78)*$0.0 + Float(0.55)*$0.1 }
+                let mixPeak = mix.reduce(Float(0)) { max($0,abs($1)) }
+                let gain = mixPeak > 0.98 ? Float(0.98)/mixPeak : Float(1)
+                if gain < 1 { mix = mix.map { $0 * gain } }
+                try writeStereoFloatWAV(mix, frames: window.samples, to: mixed)
+                bassURL = stem; mixURL = mixed
+                if referenceMode {
+                    lines.append("Integrated bass preview numerical parity: \(allParity ? "PASS" : "NOT PASSED") (10 comparisons; fixture scope)")
+                } else {
+                    lines.append("Imported-recording generation: COMPLETED; numerical parity NOT EVALUATED (0 matching output-reference comparisons)")
+                }
+                lines.append("WAV generated on device: YES; bass.wav and piano-with-bass.wav, \(window.seconds) s stereo Float32/48 kHz")
+                lines.append("WAV bass SHA-256: \(try streamingSHA256(stem))")
+                lines.append("WAV listening mix SHA-256: \(try streamingSHA256(mixed))")
+                lines.append("WAV input piano SHA-256: \(try streamingSHA256(pianoClip))")
+                lines.append("Raw bass peak: \(audio.reduce(Float(0)) { max($0,abs($1)) }); listening mix gain: \(gain)")
+                if referenceMode && !allParity { lines.append("Audio is diagnostic: numerical gate did not pass; numerical baseline NOT accepted. Listener approval is tracked separately.") }
+                lines.append("Musical quality is not evaluated by this probe; full-song behavior and total model/device RAM: NOT VALIDATED")
+                try lines.joined(separator: "\n").write(to: output.appendingPathComponent("report.txt"), atomically: true, encoding: .utf8)
             }
-            try checkManifest(checks, expectedOutputChecks, "preview.output_checks")
-            lastPhase = "writing bass and listening-mix WAV files"
-            let sourceRef = try decoder.decode(SourceContextContract.self, from: Data(contentsOf: sourceFolder.appendingPathComponent("reference.json")))
-            let piano: [Float]
-            if let importedPiano {
-                piano = importedPiano.planarPCM
-            } else {
-                piano = try readFloats(folder: sourceFolder, name: "audio.f32le", count: 2*window.samples, hashes: sourceRef.artifactSha256)
-            }
-            guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { throw ShardError.missingPreparedBundle }
-            let output = documents.appendingPathComponent("bass-preview-" + UUID().uuidString)
-            try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
-            let stem = output.appendingPathComponent("bass.wav"), mixed = output.appendingPathComponent("piano-with-bass.wav")
-            try writeStereoFloatWAV(audio, frames: window.samples, to: stem)
-            let pianoClip = output.appendingPathComponent("piano.wav")
-            try writeStereoFloatWAV(piano, frames: window.samples, to: pianoClip)
-            if let importedPiano {
-                let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-                try encoder.encode(importedPiano.metadata).write(to: output.appendingPathComponent("input.json"), options: .atomic)
-            }
-            var mix = zip(piano,audio).map { Float(0.78)*$0.0 + Float(0.55)*$0.1 }
-            let mixPeak = mix.reduce(Float(0)) { max($0,abs($1)) }
-            let gain = mixPeak > 0.98 ? Float(0.98)/mixPeak : Float(1)
-            if gain < 1 { mix = mix.map { $0 * gain } }
-            try writeStereoFloatWAV(mix, frames: window.samples, to: mixed)
-            bassURL = stem; mixURL = mixed
-            if referenceMode {
-                lines.append("Integrated bass preview numerical parity: \(allParity ? "PASS" : "NOT PASSED") (10 comparisons; fixture scope)")
-            } else {
-                lines.append("Imported-recording generation: COMPLETED; numerical parity NOT EVALUATED (0 matching output-reference comparisons)")
-            }
-            lines.append("WAV generated on device: YES; bass.wav and piano-with-bass.wav, \(window.seconds) s stereo Float32/48 kHz")
-            lines.append("WAV bass SHA-256: \(try streamingSHA256(stem))")
-            lines.append("WAV listening mix SHA-256: \(try streamingSHA256(mixed))")
-            lines.append("WAV input piano SHA-256: \(try streamingSHA256(pianoClip))")
-            lines.append("Raw bass peak: \(audio.reduce(Float(0)) { max($0,abs($1)) }); listening mix gain: \(gain)")
-            if referenceMode && !allParity { lines.append("Audio is diagnostic: numerical gate did not pass; numerical baseline NOT accepted. Listener approval is tracked separately.") }
-            lines.append("Musical quality is not evaluated by this probe; full-song behavior and total model/device RAM: NOT VALIDATED")
-            try lines.joined(separator: "\n").write(to: output.appendingPathComponent("report.txt"), atomically: true, encoding: .utf8)
         } catch {
             samplingPool.removeAll()
-            lines.append("Integrated bass preview: NOT COMPLETED")
+            lines.append(diagnosticThreeSteps ? "Actual-input sampling diagnostic: NOT COMPLETED" : "Integrated bass preview: NOT COMPLETED")
             lines.append("Last pipeline phase: \(lastPhase)")
             if let stageError = error as? StageExecutionFailure {
                 lines.append("Failing asset: \(stageError.asset)")
@@ -1570,11 +1613,11 @@ enum CoreAIDecoderProbe {
     // Keep live native breadcrumbs separate from the complete report. Capturing
     // the growing report here makes repeated writes/rendering grow with call
     // position and can confound an order-sensitive timing experiment.
-    private static func interleavingPhaseProgress(prefix: String) -> @Sendable (String) -> Void {
+    private static func interleavingPhaseProgress(prefix: String, fileName: String = "last-interleaving-phase.txt") -> @Sendable (String) -> Void {
         return { phase in
             guard let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
             try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-            try? (prefix + "\n" + phase).write(to: root.appendingPathComponent("last-interleaving-phase.txt"),
+            try? (prefix + "\n" + phase).write(to: root.appendingPathComponent(fileName),
                 atomically: true, encoding: .utf8)
         }
     }

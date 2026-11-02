@@ -99,6 +99,14 @@ lengkapi sweep pasangan K=12 dengan `--pairs 12 --expand-existing`: 540 calls,
 38 opens/binds. Memori proses tersampel 97,677 MiB bukan bukti residency atau
 penurunan total RAM model. Tidak ada perubahan BF16 atau toleransi.
 
+[K=12 selesai](../reviews/coreai-iphone17pro-interleaving-k12/README.md): 540 calls,
+38 opens/binds, nominal; mean per pasangan 52–56 ms, drift kontrol +5,64%,
+switching +0,48–6,04%. Parity NOT PASSED 400/540; tetap hanya 00–01 dan 14–15
+yang gagal. Sweep pool pasangan selesai tanpa mereproduksi perlambatan besar.
+Berikutnya [diagnosis prefix input aktual](coreai-actual-prefix-probe.md): tiga
+langkah pertama dari schedule 50 yang sama, front/tail/APG dan feedback aktual,
+45 sampling calls, tanpa decoder/WAV. Default generasi tetap 50 langkah.
+
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
 masih memakai mode AOT satu-scope; hasil CPU ini tidak memvalidasinya. Default
