@@ -100,6 +100,41 @@ Biarkan app di foreground selama proses. Auto-lock dinonaktifkan saat app aktif
 dan sedang bekerja, lalu dipulihkan saat selesai atau tidak aktif; ini bukan
 implementasi generasi background.
 
+### Jika berhenti pada 0/50 dengan BNNS `Cannot allocate memory`
+
+[Percobaan perangkat](../reviews/coreai-iphone17pro-1024-bnns-allocation/README.md)
+menyelesaikan `front` dan `blocks-00-01`, lalu gagal memetakan IR compiler saat
+membuka `blocks-02-03`. Belum ada satu langkah Euler lengkap, sehingga 0/50
+benar. Footprint sebelum pemuatan sekitar 305,83 MiB tidak mengukur lonjakan
+compiler atau seluruh alokasi native.
+
+Mitigasi kode untuk profil 10,24 detik: langkah sampling pertama menjalankan
+seluruh 14 shard dan APG dengan satu scope model/fungsi Swift per aset. Mulai
+langkah kedua, 15 handle ditahan untuk pemakaian berulang. Tidak ada inferensi
+pemanasan tambahan: tetap 50 langkah, 750 panggilan sampling dan input feedback
+yang sama. Target accounting menjadi **30 opens, 30 binds, 720 hits**. Profil
+5,12 detik tetap 15 opens, 15 binds, 735 hits. Override reuse `0` tetap memakai
+scope tunggal untuk seluruh langkah.
+
+Ini mengurangi ownership Swift saat pemuatan awal; eviction native, kecukupan
+memori compiler dan keberhasilan di iPhone belum terbukti. Tidak ada retry
+otomatis atau penghapusan cache baru. Jika API compiler tidak kembali, app
+tidak dapat menjamin pembatalannya: tekan Stop di Xcode sebelum memperbarui.
+
+Untuk mencoba perubahan ini, tutup Xcode dan update kode saja:
+
+```bash
+git fetch origin main &&
+python3 scripts/update_coreai_project.py &&
+open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
+```
+
+Tidak perlu menjalankan ulang persiapan atau mengekspor bobot. Pilih scheme
+**CoreAIProbe Reuse**, Cmd+R, pilih rekaman, lalu Generate sekali. Laporan
+menyebut `first actual sampling step` dan `completed steps` beserta aset aktif.
+Jika gagal lagi, simpan laporan dan baris BNNS terakhir; jangan menekan Generate
+berulang pada operasi native yang masih tersangkut.
+
 Tidak ada perubahan gain mix: piano 0,78, bass 0,55, gain bersama bila peak
 melebihi 0,98. Stem bass mentah tetap Float32. Kontrol level per track, lagu
 panjang/chunking, offset cuplikan, prompt bebas dan RNG perangkat belum termasuk.

@@ -865,9 +865,14 @@ enum CoreAIDecoderProbe {
         let aotFolderPresent = Bundle.main.resourceURL.map {
             FileManager.default.fileExists(atPath: $0.appendingPathComponent("ModelCandidates/bass-preview-512-aot").path)
         } ?? false
-        // The fixed source CPU case is now device-validated with retained handles.
+        // The 5.12-second source CPU case is device-validated with retained handles.
         // AOT remains one-scope unless explicitly overridden (then rejected below).
         let reuseSamplingStages = reuseOverride == "1" || (reuseOverride != "0" && !aotFolderPresent)
+        // The long profile failed in BNNS compilation at the third asset while
+        // earlier handles were retained. Complete its first actual Euler step
+        // with one Swift model/function scope at a time, then retain from step 2.
+        // This is not a hidden warmup or a guarantee of native cache eviction.
+        let sequentialFirstStep = reuseSamplingStages && window == .long1024
         var samplingPool: [String: RetainedStage] = [:]
         defer { samplingPool.removeAll() }
         var retention = RetentionStats()
@@ -886,7 +891,9 @@ enum CoreAIDecoderProbe {
                         : "Input mode: iPhone Files import; on-device PCM decode/resampling; fixed bass prompt and host epsilon/noise fixtures; arbitrary prompts and on-device RNG NOT tested",
                      "Actual component outputs feed sampling; host references are comparisons only",
                      reuseSamplingStages
-                        ? "Execution: retain at most 15 source CPU sampling model/function handles across steps; release before decoder; native residency/eviction NOT GUARANTEED"
+                        ? (sequentialFirstStep
+                            ? "Execution: first actual sampling step uses one Swift model/function scope per asset; retain at most 15 source CPU handles from step 2; release before decoder; native residency/eviction NOT GUARANTEED"
+                            : "Execution: retain at most 15 source CPU sampling model/function handles across steps; release before decoder; native residency/eviction NOT GUARANTEED")
                         : "Execution: single live Swift model/function scope per asset; detached CPU copies; native cache eviction NOT GUARANTEED",
                      "Raw-source cache repair: only blocks-18-19 after its saved BNNS graphLoadFailed; skipped for AOT; no automatic retry",
                      "Native API phase markers are persisted before calls; observer overhead is included in total pipeline time",
@@ -1107,10 +1114,19 @@ enum CoreAIDecoderProbe {
                 outputShapes: ["latent_next":[1,window.latentFrames,64],"momentum_next":[1,window.latentFrames,64],"guided_velocity":[1,window.latentFrames,64]], outputBindings: nil)
             for index in 0..<50 {
                 let stepStart = clock.now
+                let reuseThisStep = reuseSamplingStages && (!sequentialFirstStep || index > 0)
+                if sequentialFirstStep && index == 1 {
+                    try checkManifest(samplingPool.count, 0, "preview.first_step_retained_handles")
+                    try checkManifest(retention.modelOpens, 15, "preview.first_step_model_opens")
+                    try checkManifest(retention.functionBinds, 15, "preview.first_step_function_binds")
+                    try checkManifest(retention.completedCalls, 15, "preview.first_step_calls")
+                    try checkManifest(retention.cacheHits, 0, "preview.first_step_hits")
+                    lines.append("First actual step completed with zero retained Swift sampling handles; opening retained handles from step 2; compiled-cache reuse is backend-managed and unverified")
+                }
                 var state = ["noise":latent,"condition":conditionInput,"context":contextInput,
                              "timestep":NDArray(scalars: [times[index]], shape: [1])]
                 for (stageIndex, stage) in ref.stages.enumerated() {
-                    let phase = "Phase: sampling step \(index+1)/50, stage \(stageIndex+1)/14 \(stage.assetFile)"
+                    let phase = "Phase: sampling step \(index+1)/50, stage \(stageIndex+1)/14 \(stage.assetFile); completed steps \(completedSteps)/50; handles \(reuseThisStep ? "retained" : "single-stage scope")"
                     lastPhase = phase
                     try requirePreviewMemoryBudget()
                     saveProgress(lines + [phase], profile: .denoiser)
@@ -1121,7 +1137,7 @@ enum CoreAIDecoderProbe {
                         inputs[name] = array
                     }
                     let result = try await runPreviewSamplingStage(stage, folder: folder, inputs: inputs, aot: preparedAOT,
-                        reuseStages: reuseSamplingStages, pool: &samplingPool, stats: &retention,
+                        reuseStages: reuseThisStep, pool: &samplingPool, stats: &retention,
                         phaseProgress: previewPhaseProgress(prefix: (lines + [phase]).joined(separator: "\n")))
                     if index == 0 {
                         lines.append("First sampling step stage \(stageIndex+1)/14 \(stage.assetFile): load ms \(result.loadMs); \(result.phases.report)")
@@ -1140,7 +1156,7 @@ enum CoreAIDecoderProbe {
                 let result = try await runPreviewSamplingStage(apgStage, folder: folder,
                     inputs: ["velocity":velocity,"latent":latent,"momentum":momentum,
                              "dt":NDArray(scalars: [times[index]-times[index+1]], shape: [1])], aot: preparedAOT,
-                    reuseStages: reuseSamplingStages, pool: &samplingPool, stats: &retention,
+                    reuseStages: reuseThisStep, pool: &samplingPool, stats: &retention,
                     phaseProgress: previewPhaseProgress(prefix: (lines + [lastPhase]).joined(separator: "\n")))
                 guard let next = result.values["latent_next"], let nextMomentum = result.values["momentum_next"],
                       result.values["guided_velocity"] != nil else { throw ProbeError.invalidOutputTensor }
@@ -1161,13 +1177,13 @@ enum CoreAIDecoderProbe {
                 completedSteps += 1
                 lines.append("Sampling step \(index+1)/50 complete; ms \(ms(stepStart.duration(to: clock.now)))")
             }
-            let expectedOpens = reuseSamplingStages ? 15 : 750
-            let expectedHits = reuseSamplingStages ? 735 : 0
+            let expectedOpens = reuseSamplingStages ? (sequentialFirstStep ? 30 : 15) : 750
+            let expectedHits = reuseSamplingStages ? (sequentialFirstStep ? 720 : 735) : 0
             try checkManifest(retention.modelOpens, expectedOpens, "preview.model_opens")
             try checkManifest(retention.functionBinds, expectedOpens, "preview.function_binds")
             try checkManifest(retention.completedCalls, 750, "preview.completed_calls")
             try checkManifest(retention.cacheHits, expectedHits, "preview.reuse_hits")
-            let scope = reuseSamplingStages ? "retained-stage" : "single-stage"
+            let scope = reuseSamplingStages ? (sequentialFirstStep ? "first-step-single-stage-then-retained" : "retained-stage") : "single-stage"
             lines.append("Sampling \(scope) scope: \(retention.modelOpens) opens, \(retention.functionBinds) binds, \(retention.cacheHits) hits, \(retention.completedCalls) calls")
             if reuseSamplingStages {
                 lastPhase = "Phase: releasing retained sampling pool before decoder"
