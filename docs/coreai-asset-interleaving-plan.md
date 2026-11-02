@@ -51,6 +51,12 @@ pada seluruh pasangan. Sweep ini ditutup; langkah terbaru adalah
 lebih besar. Front/tail/APG dan feedback masuk pengukuran, tanpa decoder/WAV
 dan tanpa mengubah 50 langkah produksi atau toleransi.
 
+[Prefix aktual berhasil](../reviews/coreai-iphone17pro-actual-prefix-3/README.md):
+step 3 1,069 s setelah step 1/2 ~14,9 s, pada reported input/PCM hashes sama
+dengan baseline. Berikutnya validasi generasi normal 50/50 dengan pelaporan
+sampling/decoder panjang yang dibatasi (`generation-bounded-v1`), bukan sweep
+pool atau prefix lagi. Aset dan algoritme tetap; hasil penuh belum tersedia.
+
 ## Persiapan dan menjalankan
 
 Gunakan checkout yang sudah memuat perubahan ini di Mac. Bundle

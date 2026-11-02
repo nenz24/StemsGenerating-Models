@@ -28,6 +28,12 @@ steps including front/tail/APG and feedback, then releases the pool without a
 decoder/WAV. Default production remains 50 steps. New Apple build/runtime
 validation is pending.
 
+The [actual-input prefix report](../../reviews/coreai-iphone17pro-actual-prefix-3/README.md)
+now completes 45 calls: step 3 is 1.069 s after two ~14.9 s passes. Long-profile
+production sampling/decoder progress is now bounded too (`generation-bounded-v1`),
+with per-step API deltas. Next validate one normal 50-step generation and WAV
+hashes using the same piano and existing bundles; no full-loop gain is yet claimed.
+
 Initial target: iPhone 17 Pro, iOS 27.0, Xcode 27.0 / 27A266a. These Swift
 sources use APIs declared in the six public interfaces supplied by the user.
 The user has built and run the device probe on an iPhone with iOS 27.0.1:

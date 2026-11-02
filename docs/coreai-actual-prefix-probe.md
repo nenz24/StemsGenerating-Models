@@ -70,3 +70,14 @@ termasuk urutan 24 layer, guidance, schedule, finite gate dan preservasi output.
 Pemeriksaan whitespace lulus. Pemeriksaan sumber memastikan default 50 langkah
 dan branch diagnostik tanpa decoder/WAV. Linux tidak memiliki Apple SDK/Swift
 compiler: build baru, prefix aktual dan accounting perangkat belum diverifikasi.
+
+## Hasil dan langkah terbaru
+
+[Run pertama](../reviews/coreai-iphone17pro-actual-prefix-3/README.md) berhasil
+3/3 prefix, 45 calls: step 1/2 ~14,9 s, step 3 1,069 s. Input/PCM cocok dengan
+baseline; imported parity tetap NOT EVALUATED, enam preset checks PASS.
+Progres singkat kini diterapkan pada sampling/decoder generasi panjang
+(`generation-bounded-v1`). Langkah terbaru: update kode/build lalu tekan
+**Generate bass dari rekaman** untuk 50/50 pada input sama, bukan mengulangi
+prefix. Tidak perlu aktivasi/preparation ulang bila profil generasi panjang
+masih aktif. Jadwal dan baseline tetap; hasil penuh pending.

@@ -107,6 +107,15 @@ Berikutnya [diagnosis prefix input aktual](coreai-actual-prefix-probe.md): tiga
 langkah pertama dari schedule 50 yang sama, front/tail/APG dan feedback aktual,
 45 sampling calls, tanpa decoder/WAV. Default generasi tetap 50 langkah.
 
+[Prefix aktual selesai](../reviews/coreai-iphone17pro-actual-prefix-3/README.md):
+input/PCM cocok dengan baseline, 45 calls/30 opens/binds/15 hits, nominal.
+Step 1/2 sekitar 14,9 s, tetapi step 3 **1,069 s** dengan backend 760,580 ms;
+tail/APG sangat kecil. Ini satu warm step, bukan bukti 50 langkah lebih cepat.
+Progres sampling/decoder panjang pada jalur produksi kini dibatasi juga, dengan
+penanda `generation-bounded-v1` dan delta API per step. Berikutnya satu run
+generasi **50/50** pada piano yang sama, tanpa preparation/export ulang; bandingkan
+laporan dan hash WAV baseline. Semua model, dtype, gate dan jumlah langkah tetap.
+
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
 masih memakai mode AOT satu-scope; hasil CPU ini tidak memvalidasinya. Default

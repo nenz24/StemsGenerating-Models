@@ -929,6 +929,11 @@ enum CoreAIDecoderProbe {
         var bassURL: URL?, mixURL: URL?
         let plannedSteps = diagnosticThreeSteps ? 3 : 50
         let runHeader = lines[2]
+        let boundedSamplingProgress = window == .long1024
+        let samplingBreadcrumb = diagnosticThreeSteps ? "last-sampling-diagnostic-phase.txt" : "last-bass-sampling-phase.txt"
+        if boundedSamplingProgress && !diagnosticThreeSteps {
+            lines.append("Instrumentation revision: generation-bounded-v1; short sampling/decoder live progress; separate native breadcrumb; complete report checkpointed after each step")
+        }
         if diagnosticThreeSteps {
             lines.append("Actual-input sampling diagnostic: THREE-STEP PREFIX ONLY; no decoder or WAV; production remains 50 steps")
             lines.append("Instrumentation revision: actual-prefix-bounded-v1; short live progress, separate native breadcrumb, full checkpoint after each completed step")
@@ -1138,6 +1143,8 @@ enum CoreAIDecoderProbe {
                 outputShapes: ["latent_next":[1,window.latentFrames,64],"momentum_next":[1,window.latentFrames,64],"guided_velocity":[1,window.latentFrames,64]], outputBindings: nil)
             for index in 0..<plannedSteps {
                 let stepStart = clock.now
+                let backendBefore = retention.phaseTotals.backendAwaitMs
+                let copyBefore = retention.phaseTotals.outputCopyMs
                 let reuseThisStep = reuseSamplingStages && (!sequentialFirstStep || index > 0)
                 if sequentialFirstStep && index == 1 {
                     try checkManifest(samplingPool.count, 0, "preview.first_step_retained_handles")
@@ -1153,10 +1160,10 @@ enum CoreAIDecoderProbe {
                     let phase = "Phase: sampling step \(index+1)/50, stage \(stageIndex+1)/14 \(stage.assetFile); completed steps \(completedSteps)/50; handles \(reuseThisStep ? "retained" : "single-stage scope")"
                     lastPhase = phase
                     try requirePreviewMemoryBudget()
-                    let stageLog = diagnosticThreeSteps ? [runHeader,phase] : lines + cacheRepair.events + [phase]
-                    if diagnosticThreeSteps {
-                        interleavingPhaseProgress(prefix: runHeader, fileName: "last-sampling-diagnostic-phase.txt")(phase)
-                        await progress("Uji langkah aktual \(index+1)/3; tahap \(stageIndex+1)/14: \(stage.assetFile)")
+                    let stageLog = boundedSamplingProgress ? [runHeader,phase] : lines + cacheRepair.events + [phase]
+                    if boundedSamplingProgress {
+                        interleavingPhaseProgress(prefix: runHeader, fileName: samplingBreadcrumb)(phase)
+                        await progress("\(diagnosticThreeSteps ? "Uji langkah aktual" : "Sampling bass") \(index+1)/\(plannedSteps); tahap \(stageIndex+1)/14: \(stage.assetFile)")
                     } else {
                         saveProgress(stageLog, profile: .denoiser)
                         await progress(stageLog.joined(separator: "\n"))
@@ -1169,8 +1176,8 @@ enum CoreAIDecoderProbe {
                     let result = try await runPreviewSamplingStage(stage, folder: folder, inputs: inputs, aot: preparedAOT,
                         reuseStages: reuseThisStep, pool: &samplingPool, stats: &retention,
                         allowCacheRepair: window == .long1024, cacheRepair: &cacheRepair,
-                        phaseProgress: diagnosticThreeSteps
-                            ? interleavingPhaseProgress(prefix: stageLog.joined(separator: "\n"), fileName: "last-sampling-diagnostic-phase.txt")
+                        phaseProgress: boundedSamplingProgress
+                            ? interleavingPhaseProgress(prefix: stageLog.joined(separator: "\n"), fileName: samplingBreadcrumb)
                             : previewPhaseProgress(prefix: stageLog.joined(separator: "\n")))
                     if index == 0 && !diagnosticThreeSteps {
                         lines.append("First sampling step stage \(stageIndex+1)/14 \(stage.assetFile): load ms \(result.loadMs); \(result.phases.report)")
@@ -1187,10 +1194,10 @@ enum CoreAIDecoderProbe {
                 guard let velocity = state["velocity"] else { throw ProbeError.invalidOutputTensor }
                 lastPhase = "Phase: sampling step \(index+1)/50, apg-euler.aimodel"
                 try requirePreviewMemoryBudget()
-                let apgLog = diagnosticThreeSteps ? [runHeader,lastPhase] : lines + cacheRepair.events + [lastPhase]
-                if diagnosticThreeSteps {
-                    interleavingPhaseProgress(prefix: runHeader, fileName: "last-sampling-diagnostic-phase.txt")(lastPhase)
-                    await progress("Uji langkah aktual \(index+1)/3: APG Euler")
+                let apgLog = boundedSamplingProgress ? [runHeader,lastPhase] : lines + cacheRepair.events + [lastPhase]
+                if boundedSamplingProgress {
+                    interleavingPhaseProgress(prefix: runHeader, fileName: samplingBreadcrumb)(lastPhase)
+                    await progress("\(diagnosticThreeSteps ? "Uji langkah aktual" : "Sampling bass") \(index+1)/\(plannedSteps): APG Euler")
                 } else {
                     saveProgress(apgLog, profile: .denoiser)
                     await progress(apgLog.joined(separator: "\n"))
@@ -1200,8 +1207,8 @@ enum CoreAIDecoderProbe {
                              "dt":NDArray(scalars: [times[index]-times[index+1]], shape: [1])], aot: preparedAOT,
                     reuseStages: reuseThisStep, pool: &samplingPool, stats: &retention,
                     allowCacheRepair: window == .long1024, cacheRepair: &cacheRepair,
-                    phaseProgress: diagnosticThreeSteps
-                        ? interleavingPhaseProgress(prefix: apgLog.joined(separator: "\n"), fileName: "last-sampling-diagnostic-phase.txt")
+                    phaseProgress: boundedSamplingProgress
+                        ? interleavingPhaseProgress(prefix: apgLog.joined(separator: "\n"), fileName: samplingBreadcrumb)
                         : previewPhaseProgress(prefix: apgLog.joined(separator: "\n")))
                 if diagnosticThreeSteps {
                     lines.append("Actual-prefix step \(index+1)/3 asset apg-euler.aimodel: \(result.phases.report); thermal \(ProcessInfo.processInfo.thermalState.rawValue)")
@@ -1224,7 +1231,11 @@ enum CoreAIDecoderProbe {
                 }
                 completedSteps += 1
                 lines.append("Sampling step \(index+1)/50 complete; ms \(ms(stepStart.duration(to: clock.now)))")
-                if diagnosticThreeSteps { saveProgress(lines + cacheRepair.events, profile: .denoiser) }
+                if boundedSamplingProgress {
+                    let footprint = CoreAIProcessFootprintSampler.currentFootprint().map { String(Double($0)/1048576) } ?? "unavailable"
+                    lines.append("Sampling step \(index+1)/50 API deltas: backend-await ms \(retention.phaseTotals.backendAwaitMs-backendBefore); output-copy ms \(retention.phaseTotals.outputCopyMs-copyBefore); thermal \(ProcessInfo.processInfo.thermalState.rawValue); footprint MiB \(footprint)")
+                    saveProgress(lines + cacheRepair.events, profile: .denoiser)
+                }
             }
             let expectedCalls = 15 * plannedSteps
             let expectedOpens = (reuseSamplingStages ? (sequentialFirstStep ? 30 : 15) : expectedCalls) + cacheRepair.attempts
@@ -1240,7 +1251,7 @@ enum CoreAIDecoderProbe {
             if reuseSamplingStages {
                 lastPhase = "Phase: releasing retained sampling pool before decoder"
                 saveProgress(lines + cacheRepair.events + [lastPhase], profile: .denoiser)
-                await progress((lines + cacheRepair.events + [lastPhase]).joined(separator: "\n"))
+                await progress(boundedSamplingProgress ? lastPhase : (lines + cacheRepair.events + [lastPhase]).joined(separator: "\n"))
                 samplingPool.removeAll()
                 lines.append("Retained sampling pool released before decoder; native cache eviction NOT GUARANTEED")
             }
@@ -1257,12 +1268,15 @@ enum CoreAIDecoderProbe {
                 try requirePreviewMemoryBudget()
                 lines.append("Phase: loading full \(window.seconds)-second VAE decoder; sampling Swift handles released, native eviction unverified")
                 let decoderLog = lines + cacheRepair.events
-                saveProgress(decoderLog, profile: .denoiser); await progress(decoderLog.joined(separator: "\n"))
+                saveProgress(decoderLog, profile: .denoiser)
+                await progress(boundedSamplingProgress ? lastPhase : decoderLog.joined(separator: "\n"))
                 let decoderStage = Contract.Stage(assetFile: "decoder.aimodel", layerIndices: [],
                     inputShapes: ["latent":[1,64,window.latentFrames]], outputShapes: ["audio":[1,2,window.samples]], outputBindings: nil)
                 let decoded = try await runSequentialPreviewStage(decoderStage, folder: folder,
                     inputs: ["latent":NDArray(scalars: decoderInput, shape: [1,64,window.latentFrames])], aot: preparedAOT, stats: &retention,
-                    phaseProgress: previewPhaseProgress(prefix: (decoderLog + [lastPhase]).joined(separator: "\n")))
+                    phaseProgress: boundedSamplingProgress
+                        ? interleavingPhaseProgress(prefix: runHeader + "\n" + lastPhase, fileName: samplingBreadcrumb)
+                        : previewPhaseProgress(prefix: (decoderLog + [lastPhase]).joined(separator: "\n")))
                 guard let audioArray = decoded.values["audio"] else { throw ProbeError.invalidOutputTensor }
                 let audio = try copiedValues(audioArray, shape: [1,2,window.samples])
                 if referenceMode {
