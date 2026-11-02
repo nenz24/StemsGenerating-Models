@@ -453,7 +453,7 @@ enum CoreAIDecoderProbe {
 
     static func runBassConditioning(progress: @MainActor @Sendable (String) -> Void) async -> String {
         let clock = ContinuousClock(); let start = clock.now
-        let memory = CoreAIProcessFootprintSampler(); memory.start()
+        let memory = CoreAIProcessFootprintSampler()
         var lines = [
             "Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
             "CoreAI architecture: \(AIModel.deviceArchitectureName)",
