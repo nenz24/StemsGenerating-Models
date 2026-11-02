@@ -142,6 +142,15 @@ struct CoreAIDeviceProbeApp: App {
                             }
                         }
                         .disabled(runningModel)
+                        Button("Uji audio-context piano") {
+                            runningModel = true
+                            report = "Mengubah audio piano menjadi posterior sample dan konteks lego…"
+                            Task {
+                                report = await CoreAIDecoderProbe.runSourceContext { text in self.report = text }
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
                         Text(report)
                             .font(.system(.footnote, design: .monospaced))
                             .textSelection(.enabled)

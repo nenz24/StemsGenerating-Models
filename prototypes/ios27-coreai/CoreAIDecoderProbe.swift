@@ -222,6 +222,161 @@ enum CoreAIDecoderProbe {
 
     private typealias StageResult = (values: [String: NDArray], loadMs: Double, runMs: Double, phases: StagePhases)
 
+    private struct SourceContextContract: Decodable {
+        struct Recording: Decodable {
+            let name: String
+            let sha256: String
+            let startSeconds: Double
+        }
+        let schemaVersion: Int
+        let profile: String
+        let assetFile: String
+        let functionName: String
+        let inputShapes: [String: [Int]]
+        let outputShapes: [String: [Int]]
+        let scalarType: String
+        let byteOrder: String
+        let sampleRate: Int
+        let audioSeconds: Double
+        let taskType: String
+        let isCovers: Bool
+        let posteriorMode: String
+        let checkpointDigest: String
+        let checkpointFullSha256Verified: Bool
+        let hostDistributionSampleParityExact: Bool
+        let hostWeightNormFoldingParityExact: Bool
+        let recording: Recording
+        let artifactSha256: [String: String]
+        let absoluteTolerance: Double
+        let relativeTolerance: Double
+        let relativeRmseTolerance: Double
+    }
+
+    static func runSourceContext(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+                     "CoreAI architecture: \(AIModel.deviceArchitectureName)",
+                     "Test: actual recording -> VAE posterior sample -> full-range lego audio context",
+                     "Scope: audio side only; NO text embedding, ConditionEncoder, denoiser or bass generation",
+                     "Requested compute policy: cpuOnly; accelerator placement NOT MEASURED",
+                     "Audio: 5.12 s / 48000 Hz stereo; 128 latent frames",
+                     "Posterior: mean + (softplus(scale) + 1e-4) * explicit epsilon; fixture epsilon reused for parity",
+                     "PCM decode/resampling happens during Mac preparation; raw recording import on iPhone NOT tested",
+                     "Footprint guard before model and each call: 2000 MiB; NOT an OS peak-memory guarantee"]
+        #if targetEnvironment(simulator)
+        lines.append("Target: Simulator; not physical-device evidence")
+        #else
+        lines.append("Target: iOS device build")
+        #endif
+        let clock = ContinuousClock(); let start = clock.now
+        let memory = CoreAIProcessFootprintSampler()
+        var completed = 0
+        do {
+            guard let folder = Bundle.main.resourceURL?.appendingPathComponent("ModelCandidates/source-context"),
+                  FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
+                lines.append("Prepare on Mac: bash scripts/prepare_coreai_source_context.sh; choose your piano recording, then rebuild app.")
+                throw ShardError.missingPreparedBundle
+            }
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let ref = try decoder.decode(SourceContextContract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
+            let shapes = ["audio":[1,2,245760],"epsilon":[1,64,128],"chunk_mask":[1,128,64]]
+            let outputShapes = ["posterior_mean":[1,64,128],"posterior_std":[1,64,128],
+                                "source_latents":[1,128,64],"context_latents":[1,128,128]]
+            try checkManifest(ref.schemaVersion, 1, "source_context.schema_version")
+            try checkManifest(ref.profile, "source-context", "source_context.profile")
+            try checkManifest(ref.assetFile, "source-context.aimodel", "source_context.asset_file")
+            try checkManifest(ref.functionName, "main", "source_context.function_name")
+            try checkManifest(ref.inputShapes, shapes, "source_context.input_shapes")
+            try checkManifest(ref.outputShapes, outputShapes, "source_context.output_shapes")
+            try checkManifest(ref.scalarType, "float32", "source_context.scalar_type")
+            try checkManifest(ref.byteOrder, "little", "source_context.byte_order")
+            try checkManifest(ref.sampleRate, 48000, "source_context.sample_rate")
+            try checkManifest(ref.audioSeconds, 5.12, "source_context.audio_seconds")
+            try checkManifest(ref.taskType, "lego", "source_context.task_type")
+            try checkManifest(ref.isCovers, false, "source_context.is_covers")
+            try checkManifest(ref.posteriorMode, "sample_with_explicit_epsilon", "source_context.posterior_mode")
+            try checkManifest(ref.checkpointDigest, Profile.encoderOneSecond.checkpointDigest, "source_context.checkpoint_digest")
+            try checkManifest(ref.checkpointFullSha256Verified, true, "source_context.checkpoint_verified")
+            try checkManifest(ref.hostDistributionSampleParityExact, true, "source_context.host_distribution_exact")
+            try checkManifest(ref.hostWeightNormFoldingParityExact, true, "source_context.host_weight_norm_exact")
+            try checkManifest(ref.absoluteTolerance, 1e-4, "source_context.absolute_tolerance")
+            try checkManifest(ref.relativeTolerance, 1e-3, "source_context.relative_tolerance")
+            try checkManifest(ref.relativeRmseTolerance, 1e-3, "source_context.relative_rmse_tolerance")
+            var inputs: [String: NDArray] = [:]
+            for (name, shape) in shapes {
+                let values = try readFloats(folder: folder, name: "\(name).f32le", count: shape.reduce(1,*), hashes: ref.artifactSha256)
+                if name == "chunk_mask" { try checkManifest(values.allSatisfy({ $0 == 1 }), true, "source_context.full_range_mask") }
+                inputs[name] = NDArray(scalars: values, shape: shape)
+            }
+            var expected: [String: [Float]] = [:]
+            for (name, shape) in outputShapes {
+                expected[name] = try readFloats(folder: folder, name: "\(name)-reference.f32le", count: shape.reduce(1,*), hashes: ref.artifactSha256)
+            }
+            lines.append("Recording: \(ref.recording.name); segment start seconds: \(ref.recording.startSeconds)")
+            lines.append("Original recording SHA-256 (recorded by Mac preparation): \(ref.recording.sha256)")
+            lines.append("SHA-256: VERIFIED all three input and four output-reference binaries; pretrained checkpoint verified by preparation")
+            lines.append("Phase: opening source-context model and binding one function")
+            saveProgress(lines, profile: .denoiser)
+            await progress(lines.joined(separator: "\n"))
+            guard let footprint = CoreAIProcessFootprintSampler.currentFootprint() else { throw ShardError.footprintUnavailable }
+            guard footprint < 2000 * 1048576 else { throw ShardError.memoryBudgetReached }
+            let openStart = clock.now
+            let probe = try await CoreAIModelProbe(contentsOf: folder.appendingPathComponent(ref.assetFile), options: .cpuOnly)
+            let openMs = ms(openStart.duration(to: clock.now))
+            var setup = CoreAIModelProbe.StatelessTimings()
+            let function = try probe.loadStatelessFunction(functionNamed: ref.functionName, inputs: inputs, timings: &setup)
+            defer {
+                withExtendedLifetime(function) {}
+                withExtendedLifetime(probe) {}
+            }
+            lines.append("Setup: model-open ms \(openMs); function-bind ms \(setup.functionBindMs); input-validation ms \(setup.inputValidationMs)")
+            for iteration in 1...3 {
+                guard let footprint = CoreAIProcessFootprintSampler.currentFootprint() else { throw ShardError.footprintUnavailable }
+                lines.append("Before audio-context run \(iteration)/3 footprint MiB: \(Double(footprint)/1048576)")
+                guard footprint < 2000 * 1048576 else { throw ShardError.memoryBudgetReached }
+                let phase = "Phase: audio-context run \(iteration)/3 on same actual PCM and epsilon"
+                saveProgress(lines + [phase], profile: .denoiser)
+                await progress((lines + [phase]).joined(separator: "\n"))
+                let result = try await runSourceContextFunction(function: function, inputs: inputs, shapes: outputShapes)
+                lines.append("Audio-context run \(iteration): backend-await ms \(result.backendMs); readback+checks ms \(result.copyMs)")
+                for name in ["posterior_mean","posterior_std","source_latents","context_latents"] {
+                    guard let actual = result.values[name], let reference = expected[name] else { throw ProbeError.invalidOutputTensor }
+                    let stats = try compare(actual: actual, expected: reference,
+                                            absoluteTolerance: ref.absoluteTolerance, relativeTolerance: ref.relativeTolerance,
+                                            relativeRmseTolerance: ref.relativeRmseTolerance)
+                    lines.append("Audio-context run \(iteration) \(name): max abs error \(stats.maxError); RMSE \(stats.rmse); normalized RMSE \(stats.normalizedRmse); \(stats.passed ? "PASS" : "NOT PASSED")")
+                    guard stats.passed else { throw ProbeError.numericalParityFailed }
+                }
+                completed += 1
+                saveProgress(lines, profile: .denoiser)
+                await progress(lines.joined(separator: "\n"))
+            }
+            lines.append("Real-recording audio-context parity: PASS (three runs, all four outputs)")
+        } catch {
+            lines.append("Real-recording audio-context parity: NOT PASSED")
+            lines.append("Error: \(String(reflecting: error))")
+        }
+        let usage = memory.finish()
+        if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
+        lines.append("Completed audio-context parity runs: \(completed)/3; total probe ms: \(ms(start.duration(to: clock.now)))")
+        lines.append("Scope: sampled process footprint only, not total model RAM; no bass/audio output generated")
+        saveProgress(lines, profile: .denoiser)
+        return lines.joined(separator: "\n")
+    }
+
+    private static func runSourceContextFunction(function: InferenceFunction, inputs: [String: NDArray], shapes: [String: [Int]]) async throws
+        -> (values: [String: [Float]], backendMs: Double, copyMs: Double) {
+        let clock = ContinuousClock(); let start = clock.now
+        var outputs = try await function.run(inputs: inputs)
+        let copyStart = clock.now
+        var values: [String: [Float]] = [:]
+        for (name, shape) in shapes {
+            guard let value = outputs.remove(name), let tensor = value.ndArray else { throw ProbeError.invalidOutputTensor }
+            values[name] = try copiedValues(tensor, shape: shape)
+        }
+        return (values, ms(start.duration(to: copyStart)), ms(copyStart.duration(to: clock.now)))
+    }
+
     private struct PairReuseContract: Decodable {
         let schemaVersion: Int
         let profile: String
@@ -1061,6 +1216,13 @@ enum CoreAIDecoderProbe {
 
     private static func compare(actual: [Float], expected: [Float], contract: Contract) throws
         -> (maxError: Double, rmse: Double, normalizedRmse: Double, passed: Bool) {
+        try compare(actual: actual, expected: expected, absoluteTolerance: contract.absoluteTolerance,
+                    relativeTolerance: contract.relativeTolerance, relativeRmseTolerance: contract.relativeRmseTolerance)
+    }
+
+    private static func compare(actual: [Float], expected: [Float], absoluteTolerance: Double,
+                                relativeTolerance: Double, relativeRmseTolerance: Double) throws
+        -> (maxError: Double, rmse: Double, normalizedRmse: Double, passed: Bool) {
         guard actual.count == expected.count, !expected.isEmpty else { throw ProbeError.invalidOutputTensor }
         var maxError = 0.0
         var squaredError = 0.0
@@ -1072,12 +1234,12 @@ enum CoreAIDecoderProbe {
             maxError = max(maxError, error)
             squaredError += error * error
             squaredReference += Double(reference) * Double(reference)
-            if error > contract.absoluteTolerance + contract.relativeTolerance * abs(Double(reference)) { elementwisePass = false }
+            if error > absoluteTolerance + relativeTolerance * abs(Double(reference)) { elementwisePass = false }
         }
         let rmse = sqrt(squaredError / Double(expected.count))
         let referenceRms = sqrt(squaredReference / Double(expected.count))
         let normalizedRmse = rmse / max(referenceRms, 1e-12)
-        return (maxError, rmse, normalizedRmse, elementwisePass && normalizedRmse <= contract.relativeRmseTolerance)
+        return (maxError, rmse, normalizedRmse, elementwisePass && normalizedRmse <= relativeRmseTolerance)
     }
 
     private static func readFloats(folder: URL, name: String, count: Int, hashes: [String: String]) throws -> [Float] {

@@ -11,7 +11,7 @@ Ini urutan dependensi, bukan janji jumlah run atau tanggal selesai.
 | Tahap | Hasil yang harus tersedia | Posisi sekarang |
 | --- | --- | --- |
 | 1. Jalur eksekusi yang layak | Keputusan eksekusi berdasarkan waktu/memori: first-use vs reuse, backend/precision atau ukuran model jika diperlukan | Selesai untuk keputusan jalur prototipe: kedua uji utama PASS |
-| 2. Conditioning dari rekaman dan instrumen tujuan | Piano/gitar pengguna serta prompt menghasilkan context/condition/mask yang benar, mengikuti jalur ACE yang dipin | Belum diimplementasikan; tensor conditioning sekarang sintetis |
+| 2. Conditioning dari rekaman dan instrumen tujuan | Piano/gitar pengguna serta prompt menghasilkan context/condition/mask yang benar, mengikuti jalur ACE yang dipin | Audio-context rekaman nyata sudah diimplementasikan/diekspor; uji iPhone pending, embedding teks/ConditionEncoder belum ada |
 | 3. Pipeline lengkap menjadi WAV pendek | Conditioning → sampling dengan jumlah langkah/guidance yang sesuai → VAE decoder → file audio yang bisa didengar; kontrak tensor diperpanjang untuk preview pendek | Komponen dan loop pendek sudah lolos secara terpisah; integrasi audio belum ada |
 | 4. Pengiring yang layak didengar | Akor, groove, timing, timbre serta level dinilai terhadap baseline CUDA; lanjut ke tiga instrumen secara berurutan | Baseline CUDA tersedia; evaluasi hasil iPhone belum bisa dilakukan |
 

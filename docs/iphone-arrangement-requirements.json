@@ -583,7 +583,8 @@
     },
     "selected_prototype_execution_route": "Separate native assets, retain model AND function lazily across denoising steps, copy outputs to fresh CPU NDArrays, release Swift pool before subsequent components",
     "stage2_scope_doc": "docs/coreai-recording-conditioning.md",
-    "stage2_first_path": "piano recording -> electric bass, short clip, accepted CUDA preset as reference"
+    "stage2_first_path": "piano recording -> electric bass, short clip, accepted CUDA preset as reference",
+    "stage2_audio_side": "Real-recording posterior/source-context implemented, actual native export and host checks passed; device test pending; text/ConditionEncoder still unimplemented"
   },
   "pretrained_retained_denoiser_loop_probe": {
     "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
@@ -627,5 +628,67 @@
     "selected_for_prototype": true,
     "controlled_repeatable_speedup_verified": false,
     "production_full_song_feasibility_verified": false
+  },
+  "recording_audio_context_probe": {
+    "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
+    "button": "Uji audio-context piano",
+    "preparation_script": "scripts/prepare_coreai_source_context.sh",
+    "exporter": "scripts/export_coreai_source_context.py",
+    "guide": "docs/coreai-source-context.md",
+    "local_ignored_bundle": "prototypes/ios27-coreai/ModelCandidates/source-context",
+    "runtime_source_manifest": "configs/coreai-lego-preprocessing.json",
+    "actual_recording_host_export_verified": true,
+    "audio_seconds": 5.12,
+    "latent_frames": 128,
+    "input_shapes": {
+      "audio": [
+        1,
+        2,
+        245760
+      ],
+      "epsilon": [
+        1,
+        64,
+        128
+      ],
+      "chunk_mask": [
+        1,
+        128,
+        64
+      ]
+    },
+    "output_shapes": {
+      "posterior_mean": [
+        1,
+        64,
+        128
+      ],
+      "posterior_std": [
+        1,
+        64,
+        128
+      ],
+      "source_latents": [
+        1,
+        128,
+        64
+      ],
+      "context_latents": [
+        1,
+        128,
+        128
+      ]
+    },
+    "posterior": "sample with explicit epsilon; Oobleck softplus(scale)+1e-4",
+    "host_distribution_sample_parity_exact": true,
+    "host_weight_norm_folding_parity_exact": true,
+    "host_lego_source_preservation_exact": true,
+    "native_asset_bytes": 337145559,
+    "recording_and_derived_binaries_committed": false,
+    "new_swift_apple_build_verified": false,
+    "device_parity_verified": false,
+    "raw_recording_import_resampling_on_device_verified": false,
+    "text_embedding_or_condition_encoder_implemented": false,
+    "bass_generation_verified": false
   }
 }

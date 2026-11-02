@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "repo": "ace-step/ACE-Step-1.5",
+  "revision": "ca1e85fe9430179831e6bc6be790c332190a3866",
+  "files": [
+    {
+      "path": "acestep/core/generation/handler/conditioning_masks.py",
+      "size": 4738,
+      "git_blob_sha1": "7973c6a4285af2f072506d3673e0edff547d24ac",
+      "sha256": "5d9c1fdb249931794af76db83166347be0e8a081f958338c9a7963131e87a365"
+    },
+    {
+      "path": "acestep/core/generation/handler/vae_encode.py",
+      "size": 3140,
+      "git_blob_sha1": "2f1dda2b851756c74752282e982d190c25dcb679",
+      "sha256": "c91896380556bddd0bd2f581db6d3c9e0cb7798e4ccb27508fdb01b7873300f7"
+    },
+    {
+      "path": "acestep/core/generation/handler/conditioning_target.py",
+      "size": 8663,
+      "git_blob_sha1": "4446b2897e818c8f3ac55b1b152035a41720a6aa",
+      "sha256": "472b302837800f54972b5b5a3d6374b7855ee3eac9e05762757fcb41d5455068"
+    },
+    {
+      "path": "acestep/core/generation/handler/batch_prep.py",
+      "size": 4266,
+      "git_blob_sha1": "37ef7b1300d3cb9491e9552343a116bc081f152f",
+      "sha256": "0bf0f6f40e7a74dfee5cbe1d3c9cbb6ab5359371341dd38da408f17769b735e3"
+    },
+    {
+      "path": "acestep/core/generation/handler/conditioning_embed.py",
+      "size": 6741,
+      "git_blob_sha1": "ef9e4a572233ce3646782f8cd397c1ae080e0121",
+      "sha256": "45e80702219496edcef5712fa8403583c61f0df128833b9657d0d129d035a3f2"
+    },
+    {
+      "path": "acestep/core/generation/handler/conditioning_text.py",
+      "size": 9177,
+      "git_blob_sha1": "5641afdb921d4393aa6f3c842e238a3a8c141543",
+      "sha256": "0313ef5fc5ade1baa5a806f3748e5c853961768d057045e040fcb28a33a153b6"
+    }
+  ],
+  "source_context_scope": {
+    "task_type": "lego",
+    "audio_code_hints": null,
+    "is_covers": false,
+    "sample_rate": 48000,
+    "latent_rate_hz": 25,
+    "minimum_latent_frames": 128,
+    "posterior": "mean + (softplus(scale) + 1e-4) * epsilon",
+    "full_range_chunk_mask": "all True from pinned helper, expanded across 64 channels",
+    "normalization": "No amplitude normalization in this canonical-PCM source-context test",
+    "mp3_resampler_equivalence_claimed": false
+  }
+}

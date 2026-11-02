@@ -92,6 +92,13 @@ lagu panjang dan seluruh RAM model belum tervalidasi.
 memisahkan pekerjaan eksekusi, conditioning, pipeline WAV pendek dan kualitas pengiring.
 Ini belum generasi instrumen lengkap.
 
+**Tahap 2a kini memakai rekaman piano nyata:** encoder posterior VAE dan
+penyusunan audio-context `lego` sudah diimplementasikan dan berhasil diekspor.
+Jalankan `bash scripts/prepare_coreai_source_context.sh`, pilih rekaman, build
+ulang lalu tekan **Uji audio-context piano**. Checkpoint VAE cache dipakai ulang;
+graph baru dan tensor audio disimpan lokal. Hasil iPhone, embedding teks dan
+ConditionEncoder masih menunggu. [Panduan](docs/coreai-source-context.md).
+
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:
 Base, seed 0, CFG 7, 50 langkah. Lihat

@@ -282,3 +282,17 @@ sebelum setiap tahap dan backend. [Mode ini sudah PASS di iPhone](../../reviews/
 18,52 detik total, langkah 3/4 sekitar 0,50/0,53 detik pada run itu.
 Kedua uji utama tahap 1 selesai untuk keputusan prototipe. Berikutnya conditioning
 rekaman; kelayakan lagu panjang tetap terbuka. [Panduan uji kedua](../../docs/coreai-retained-loop.md).
+
+## Audio-context dari rekaman piano
+
+Jalankan `bash scripts/prepare_coreai_source_context.sh` pada Mac dan pilih
+rekaman piano (minimal 5,12 detik). Skrip memakai checkpoint VAE cache dan
+mengekspor graph posterior/audio-context baru tanpa menimpa bundle lama.
+Jika sudah ada, bundle diverifikasi dan dipakai ulang. Build lalu tekan
+**Uji audio-context piano**; targetnya tiga run dan empat output per run lolos.
+
+Outputnya mean/std posterior, sampled source latent dan context `lego` dari
+audio nyata. PCM/epsilon/mask dan referensi dibuat pada Mac lalu ikut bundle
+lokal ignored, tidak ikut GitHub. Ini belum import rekaman langsung di iPhone,
+embedding teks, ConditionEncoder atau generasi bass. Ekspor host berhasil;
+kode baru perlu build dan uji perangkat. [Panduan](../../docs/coreai-source-context.md).

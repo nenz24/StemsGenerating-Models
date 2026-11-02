@@ -45,7 +45,11 @@ masa pakainya; menambahkan footprint dari laporan terpisah bukan pengukuran
 peak gabungan pipeline. Keputusan menahan pool denoiser tidak otomatis berarti
 menahan semua model conditioning dan codec bersamaan.
 
-Dokumen ini mencatat ruang lingkup dan temuan source, **belum implementasi atau
-ekspor conditioning**. Setelah conditioning benar, tahap 3 merangkainya dengan
-sampling/guidance dan decoder menjadi WAV pendek yang bisa didengar. Tidak ada
-uji tambahan tahap 1 yang diminta oleh dokumen ini.
+**Bagian audio kini diimplementasikan:** [audio-context piano](coreai-source-context.md)
+memakai encoder posterior dengan sample eksplisit dan mask helper `lego` asli,
+128 latent frame dari rekaman nyata. Ekspor native dan host parity berhasil;
+kode baru perlu build dan pengujian iPhone. Embedding teks dan ConditionEncoder
+belum diimplementasikan. Uji ini memvalidasi PCM yang dikanonisasi pada host,
+belum raw-recording import/resampling langsung di iPhone. Setelah conditioning
+benar, tahap 3 merangkainya dengan sampling/guidance dan decoder menjadi WAV
+pendek yang bisa didengar. Tidak ada uji tambahan tahap 1 yang diminta.
