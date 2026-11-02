@@ -120,7 +120,7 @@
     "apple_compilation_evidence": "User executed complete bass conditioning caller (40 layers, 27 assets, six checks) successfully on iPhone; no independent Apple SDK build on Linux",
     "physical_device_execution_verified": true,
     "device_execution_report": "reviews/coreai-iphone17pro-bass-conditioning/report.json",
-    "device_execution_scope": "Retained synthetic full denoiser loop, actual piano audio-context and complete bass text/ConditionEncoder all PASS separately; integrated sampling-to-WAV unimplemented; host audio canonicalization/tokenization still required",
+    "device_execution_scope": "Retained synthetic full denoiser loop, actual piano audio-context and complete bass text/ConditionEncoder PASS separately; integrated sampling-to-WAV code/host references prepared but not yet tested on iPhone; host canonicalization/tokenization still required",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -154,7 +154,7 @@
     "native_model_reference": "prototypes/ios27-coreai/ModelCandidates/affine-native-reference.json",
     "current_native_probe_apple_compilation_verified": true,
     "native_inference_report": "reviews/coreai-iphone17pro-native-affine/report.json",
-    "checkpoint_conversion_scope": "VAE, complete sharded Base denoiser, real-piano audio-context and full Qwen/ConditionEncoder native exports have reported device parity; integrated music generation unimplemented"
+    "checkpoint_conversion_scope": "Component device gates pass; new real-shape 14-shard denoiser + APG update + 128-frame decoder exported and host-validated for 5.12 s preview; integrated iPhone generation pending"
   },
   "audio_component_audit": {
     "report": "reviews/coreai-ace-component-audit/report.json",
@@ -588,7 +588,7 @@
     "stage2_target_side": "PASS on iPhone: full Qwen + ACE ConditionEncoder, 40 layers across 27 assets and 6 dual-reference checks; 9.463 s total; fixed prompt tokenization remains on Mac",
     "stage2_component_gates_complete_for_fixed_fixture": true,
     "stage2_completion_scope": "Separate component parity on canonical piano PCM and host-tokenized fixed bass preset; joint pipeline, raw recording import/resampling, prompt tokenization on device and arbitrary inputs unverified",
-    "stage3_next_work": "Match denoiser to 128 source latent frames and 117 condition tokens, integrate real context/condition/mask with sampling/guidance and VAE decoding, then export short WAV"
+    "stage3_next_work": "Integrated preview implemented and host-validated: actual component outputs -> 50 APG-guided Euler steps -> full VAE decoder -> WAV; Apple build/device execution and listening review pending"
   },
   "pretrained_retained_denoiser_loop_probe": {
     "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
@@ -735,7 +735,7 @@
     "reference_audio_mode": "publisher_silence_750",
     "apple_build_verified": true,
     "device_parity_verified": true,
-    "combined_source_context_sampler_decoder_implemented": false,
+    "combined_source_context_sampler_decoder_implemented": true,
     "instrument_generation_verified": false,
     "device_report": "reviews/coreai-iphone17pro-bass-conditioning/report.json",
     "device_evidence_source": "User-pasted physical iPhone report; not independently reproduced in Linux",
@@ -744,5 +744,42 @@
     "device_parity_checks_passed": 6,
     "device_sampled_process_maximum_mib": 783.9873199462891,
     "memory_scope": "10 ms sampled whole app process phys_footprint; not exact peak, total model/device RAM or combined pipeline measurement"
+  },
+  "bass_preview_pipeline": {
+    "preparation_script": "scripts/prepare_coreai_bass_preview.sh",
+    "exporter": "scripts/export_coreai_bass_preview.py",
+    "button": "Generate bass 5,12 detik",
+    "guide": "docs/coreai-bass-preview.md",
+    "host_report": "reviews/coreai-bass-preview-export/reference.json",
+    "local_ignored_bundle": "prototypes/ios27-coreai/ModelCandidates/bass-preview-512",
+    "audio_seconds": 5.12,
+    "sample_rate": 48000,
+    "latent_frames": 128,
+    "condition_tokens": 117,
+    "sampling_steps": 50,
+    "guidance_scale": 7,
+    "method": "APG-guided Euler ODE",
+    "apg_momentum": -0.75,
+    "apg_norm_threshold": 2.5,
+    "apg_projection_dims": [
+      1
+    ],
+    "projection_precision": "Float32 on device, tested at identical inputs against original Float64 projection",
+    "actual_source_and_condition_outputs_feed_sampling": true,
+    "host_references_used_as_device_condition_or_context": false,
+    "new_native_assets": 16,
+    "native_asset_bytes": 3491592039,
+    "host_identical_input_apg_checks_passed": 50,
+    "host_latent_trajectory_checks_passed": 50,
+    "host_decoder_waveform_parity_passed": true,
+    "raw_guided_velocity_diagnostics_not_gating": true,
+    "device_output_reference_comparisons": 10,
+    "raw_recording_import_or_prompt_tokenization_on_iphone_implemented": false,
+    "on_device_rng_implemented": false,
+    "new_apple_build_verified": false,
+    "device_integrated_inference_verified": false,
+    "device_wav_generation_verified": false,
+    "musical_quality_verified": false,
+    "diagnostic_wav_may_be_saved_if_numerical_checks_fail": true
   }
 }

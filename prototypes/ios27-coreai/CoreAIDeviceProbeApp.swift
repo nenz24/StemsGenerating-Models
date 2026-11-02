@@ -1,6 +1,7 @@
 // API declarations checked against the user's Xcode 27 SDK interfaces.
 // The user reported a successful tensor probe on iOS 27.0.1; see reviews/.
 // Component gates passed; a complete 24-layer denoiser forward is next.
+import AVFoundation
 import CoreAI
 import SwiftUI
 import UIKit
@@ -10,6 +11,9 @@ import UIKit
 struct CoreAIDeviceProbeApp: App {
     @State private var report = CoreAIDecoderProbe.savedDenoiserReport() ?? "Belum dijalankan."
     @State private var runningModel = false
+    @State private var generatedBass: URL?
+    @State private var generatedMix: URL?
+    @State private var audioPlayer: AVAudioPlayer?
 
     var body: some Scene {
         WindowGroup {
@@ -160,6 +164,30 @@ struct CoreAIDeviceProbeApp: App {
                             }
                         }
                         .disabled(runningModel)
+                        Button("Generate bass 5,12 detik") {
+                            audioPlayer?.stop()
+                            generatedBass = nil; generatedMix = nil
+                            runningModel = true
+                            report = "Menjalankan pipeline piano ke WAV bass pendek…"
+                            Task {
+                                let result = await CoreAIDecoderProbe.generateBassPreview { text in self.report = text }
+                                report = result.report
+                                generatedBass = result.bassURL
+                                generatedMix = result.mixURL
+                                runningModel = false
+                            }
+                        }
+                        .disabled(runningModel)
+                        if let generatedBass {
+                            Button("Dengarkan bass") { playPreview(generatedBass) }
+                                .disabled(runningModel)
+                            ShareLink(item: generatedBass) { Label("Bagikan WAV bass", systemImage: "square.and.arrow.up") }
+                        }
+                        if let generatedMix {
+                            Button("Dengarkan bersama piano") { playPreview(generatedMix) }
+                                .disabled(runningModel)
+                            ShareLink(item: generatedMix) { Label("Bagikan WAV piano + bass", systemImage: "square.and.arrow.up") }
+                        }
                         Text(report)
                             .font(.system(.footnote, design: .monospaced))
                             .textSelection(.enabled)
@@ -171,6 +199,18 @@ struct CoreAIDeviceProbeApp: App {
                 }
                 .navigationTitle("CoreAI Device Probe")
             }
+        }
+    }
+
+    private func playPreview(_ url: URL) {
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .default)
+            try session.setActive(true)
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.play()
+        } catch {
+            report += "\nAudio playback error: \(error)"
         }
     }
 }

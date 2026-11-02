@@ -314,3 +314,18 @@ Lookup token, semua 28 layer Qwen dan ConditionEncoder lengkap (8 lyric +
 berikutnya integrasi sampling/decoder pada tahap 3. Tokenisasi prompt bass tetap di Mac,
 belum ada prompt bebas di iPhone. Tidak ada sampler/CFG atau suara bass pada
 gate ini. [Panduan](../../docs/coreai-bass-conditioning.md).
+
+## Generasi WAV bass pendek
+
+Jalankan `bash scripts/prepare_coreai_bass_preview.sh`, tunggu Ready, lalu build
+Cmd+R dan tekan **Generate bass 5,12 detik**. Bundle piano dan conditioning bass
+sebelumnya dipakai kembali; tidak ada file picker. Persiapan menghitung dua
+lintasan referensi 50 langkah dan mengekspor 16 aset sekitar 3,49 GB.
+
+Pipeline menjalankan encoder sumber dan seluruh conditioning secara nyata,
+50 APG-guided Euler steps, lalu decoder penuh. Setelah selesai, gunakan tombol
+dengar/bagikan WAV bass, campuran piano+bass dan laporan. Target: 50/50 langkah,
+10 pembandingan dan WAV generated YES. WAV finite tetap bisa disimpan sebagai
+diagnostik saat pembandingan numerik tidak lolos; laporan tidak menandainya PASS.
+Ekspor/gate host lolos; build Apple dan pipeline iPhone belum diuji.
+[Panduan dan batas fixture](../../docs/coreai-bass-preview.md).

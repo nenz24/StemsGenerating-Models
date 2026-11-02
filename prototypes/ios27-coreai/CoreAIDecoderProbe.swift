@@ -253,6 +253,12 @@ enum CoreAIDecoderProbe {
     }
 
     static func runSourceContext(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        let result = await executeSourceContext(repetitions: 3, progress: progress)
+        return result.report
+    }
+
+    private static func executeSourceContext(repetitions: Int, progress: @escaping @MainActor @Sendable (String) -> Void) async
+        -> (report: String, context: [Float]?) {
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",
                      "Test: actual recording -> VAE posterior sample -> full-range lego audio context",
@@ -270,6 +276,7 @@ enum CoreAIDecoderProbe {
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
         var completed = 0
+        var capturedContext: [Float]?
         do {
             guard let folder = Bundle.main.resourceURL?.appendingPathComponent("ModelCandidates/source-context"),
                   FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
@@ -329,11 +336,11 @@ enum CoreAIDecoderProbe {
                 withExtendedLifetime(probe) {}
             }
             lines.append("Setup: model-open ms \(openMs); function-bind ms \(setup.functionBindMs); input-validation ms \(setup.inputValidationMs)")
-            for iteration in 1...3 {
+            for iteration in 1...repetitions {
                 guard let footprint = CoreAIProcessFootprintSampler.currentFootprint() else { throw ShardError.footprintUnavailable }
-                lines.append("Before audio-context run \(iteration)/3 footprint MiB: \(Double(footprint)/1048576)")
+                lines.append("Before audio-context run \(iteration)/\(repetitions) footprint MiB: \(Double(footprint)/1048576)")
                 guard footprint < 2000 * 1048576 else { throw ShardError.memoryBudgetReached }
-                let phase = "Phase: audio-context run \(iteration)/3 on same actual PCM and epsilon"
+                let phase = "Phase: audio-context run \(iteration)/\(repetitions) on same actual PCM and epsilon"
                 saveProgress(lines + [phase], profile: .denoiser)
                 await progress((lines + [phase]).joined(separator: "\n"))
                 let result = try await runSourceContextFunction(function: function, inputs: inputs, shapes: outputShapes)
@@ -346,11 +353,12 @@ enum CoreAIDecoderProbe {
                     lines.append("Audio-context run \(iteration) \(name): max abs error \(stats.maxError); RMSE \(stats.rmse); normalized RMSE \(stats.normalizedRmse); \(stats.passed ? "PASS" : "NOT PASSED")")
                     guard stats.passed else { throw ProbeError.numericalParityFailed }
                 }
+                capturedContext = result.values["context_latents"]
                 completed += 1
                 saveProgress(lines, profile: .denoiser)
                 await progress(lines.joined(separator: "\n"))
             }
-            lines.append("Real-recording audio-context parity: PASS (three runs, all four outputs)")
+            lines.append(repetitions == 3 ? "Real-recording audio-context parity: PASS (three runs, all four outputs)" : "Real-recording audio-context parity: PASS (one integrated call, all four outputs)")
         } catch {
             lines.append("Real-recording audio-context parity: NOT PASSED")
             lines.append("Error: \(String(reflecting: error))")
@@ -358,10 +366,10 @@ enum CoreAIDecoderProbe {
         let usage = memory.finish()
         if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
         if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
-        lines.append("Completed audio-context parity runs: \(completed)/3; total probe ms: \(ms(start.duration(to: clock.now)))")
+        lines.append("Completed audio-context parity runs: \(completed)/\(repetitions); total probe ms: \(ms(start.duration(to: clock.now)))")
         lines.append("Scope: sampled process footprint only, not total model RAM; no bass/audio output generated")
         saveProgress(lines, profile: .denoiser)
-        return lines.joined(separator: "\n")
+        return (lines.joined(separator: "\n"), completed == repetitions ? capturedContext : nil)
     }
 
     private static func runSourceContextFunction(function: InferenceFunction, inputs: [String: NDArray], shapes: [String: [Int]]) async throws
@@ -452,6 +460,12 @@ enum CoreAIDecoderProbe {
     }
 
     static func runBassConditioning(progress: @MainActor @Sendable (String) -> Void) async -> String {
+        let result = await executeBassConditioning(progress: progress)
+        return result.report
+    }
+
+    private static func executeBassConditioning(progress: @MainActor @Sendable (String) -> Void) async
+        -> (report: String, condition: [Float]?, mask: [Float]?) {
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
         var lines = [
@@ -472,6 +486,7 @@ enum CoreAIDecoderProbe {
         lines.append("Target: iOS device build")
         #endif
         var completed = 0, checks = 0
+        var capturedCondition: [Float]?, capturedMask: [Float]?
         do {
             guard let folder = Bundle.main.resourceURL?.appendingPathComponent("ModelCandidates/bass-conditioning"),
                   FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
@@ -541,6 +556,8 @@ enum CoreAIDecoderProbe {
                 for (name, values) in result.values {
                     guard let shape = stage.outputShapes[name], let binding = stage.outputBindings[name] else { throw ShardError.invalidManifest }
                     state[binding] = NDArray(scalars: values, shape: shape)
+                    if name == "condition" { capturedCondition = values }
+                    if name == "condition_mask" { capturedMask = values }
                     if milestones[name] != nil {
                         if name == "condition_mask" { try checkManifest(values.allSatisfy({ $0 == 1 }), true, "conditioning.full_valid_mask") }
                         for kind in ["reference","fp32-reference"] {
@@ -567,7 +584,7 @@ enum CoreAIDecoderProbe {
         lines.append("Completed conditioning stages: \(completed)/27; parity checks: \(checks)/6; total probe ms: \(ms(start.duration(to: clock.now)))")
         lines.append("Scope: sampled app process only; total model/device RAM, native cache eviction and raw recording import unmeasured; no bass generated")
         saveProgress(lines, profile: .denoiser)
-        return lines.joined(separator: "\n")
+        return (lines.joined(separator: "\n"), completed == 27 && checks == 6 ? capturedCondition : nil, completed == 27 && checks == 6 ? capturedMask : nil)
     }
 
     private static func runBassConditioningStage(folder: URL, stage: BassConditioningStage, inputs: [String: NDArray]) async throws
@@ -578,9 +595,319 @@ enum CoreAIDecoderProbe {
         let function = try probe.loadStatelessFunction(functionNamed: "main", inputs: inputs, timings: &timings)
         let loadMs = ms(start.duration(to: clock.now))
         defer { withExtendedLifetime(function) {}; withExtendedLifetime(probe) {} }
+        try requirePreviewMemoryBudget()
         let result = try await runSourceContextFunction(function: function, inputs: inputs, shapes: stage.outputShapes)
         // Return detached scalar arrays; no native output/model/function escapes.
         return (result.values, loadMs, result.backendMs, result.copyMs)
+    }
+
+    struct BassPreviewResult: Sendable {
+        let report: String
+        let bassURL: URL?
+        let mixURL: URL?
+    }
+
+    private enum BassPreviewError: Error {
+        case componentNotCompleted(String)
+    }
+
+    private struct BassPreviewContract: Decodable {
+        let schemaVersion: Int
+        let profile: String
+        let functionName: String
+        let stages: [Contract.Stage]
+        let inferenceSteps: Int
+        let guidanceScale: Double
+        let shift: Double
+        let method: String
+        let apgMomentum: Double
+        let apgNormThreshold: Double
+        let apgProjectionDims: [Int]
+        let apgProjectionPrecision: String
+        let checkpoints: [Int]
+        let latentFrames: Int
+        let conditionTokens: Int
+        let sampleRate: Int
+        let audioSeconds: Double
+        let scalarType: String
+        let byteOrder: String
+        let checkpointDigest: String
+        let vaeCheckpointDigest: String
+        let allCheckpointsVerified: Bool
+        let hostDualTrajectoryParityPassed: Bool
+        let hostDecoderFoldingExact: Bool
+        let sourceReferenceSha256: String
+        let conditionReferenceSha256: String
+        let artifactSha256: [String: String]
+        let absoluteTolerance: Double
+        let relativeTolerance: Double
+        let relativeRmseTolerance: Double
+    }
+
+    private static func bassPreviewStages() -> [Contract.Stage] {
+        let shared = ["hidden":[2,64,2048],"condition":[2,117,2048],"temb":[2,6,2048],
+                      "rope_cos":[1,64,128],"rope_sin":[1,64,128],"self_mask":[1,1,64,64],
+                      "local_mask":[1,1,64,64],"cross_mask":[1,1,64,117]]
+        var frontOutputs = shared
+        frontOutputs.removeValue(forKey: "condition")
+        frontOutputs["condition_projected"] = [2,117,2048]
+        frontOutputs["final_temb"] = [2,2048]
+        var frontBindings = Dictionary(uniqueKeysWithValues: frontOutputs.keys.map { ($0, $0) })
+        frontBindings["condition_projected"] = "condition"
+        var result = [Contract.Stage(assetFile: "front.aimodel", layerIndices: [],
+            inputShapes: ["noise":[1,128,64],"condition":[1,117,2048],"context":[1,128,128],"timestep":[1]],
+            outputShapes: frontOutputs, outputBindings: frontBindings)]
+        for i in stride(from: 0, to: 24, by: 2) {
+            result.append(Contract.Stage(assetFile: String(format: "blocks-%02d-%02d.aimodel", i, i+1), layerIndices: [i,i+1],
+                inputShapes: shared, outputShapes: ["hidden_out":[2,64,2048]], outputBindings: ["hidden_out":"hidden"]))
+        }
+        result.append(Contract.Stage(assetFile: "tail.aimodel", layerIndices: [],
+            inputShapes: ["hidden":[2,64,2048],"final_temb":[2,2048]],
+            outputShapes: ["velocity":[2,128,64]], outputBindings: ["velocity":"velocity"]))
+        return result
+    }
+
+    private static func requirePreviewMemoryBudget() throws {
+        guard let footprint = CoreAIProcessFootprintSampler.currentFootprint() else { throw ShardError.footprintUnavailable }
+        guard footprint < 2000 * 1048576 else { throw ShardError.memoryBudgetReached }
+    }
+
+    private static func verifyReferenceIdentity(_ url: URL, expected: String) throws {
+        let data = try Data(contentsOf: url)
+        let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        try checkManifest(digest, expected, "preview.component_reference_sha256")
+    }
+
+    static func generateBassPreview(progress: @escaping @MainActor @Sendable (String) -> Void) async -> BassPreviewResult {
+        let clock = ContinuousClock(); let start = clock.now
+        let memory = CoreAIProcessFootprintSampler()
+        var pool: [String: RetainedStage] = [:]
+        var retention = RetentionStats()
+        var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+                     "CoreAI architecture: \(AIModel.deviceArchitectureName)",
+                     "Test: actual piano -> VAE posterior -> full Qwen/ConditionEncoder -> 50 APG-guided Euler steps -> bass WAV",
+                     "Audio: 5.12 s / 48000 Hz stereo; 128 latent frames / 117 condition tokens",
+                     "Guidance 7; APG momentum -0.75, threshold 2.5, projection over latent time (dim 1); shift 1",
+                     "APG projection FP32, compared on host against original FP64 projection; not plain CFG",
+                     "Requested compute policy: cpuOnly; accelerator placement NOT MEASURED",
+                     "Fixed host PCM/tokenization/epsilon/noise fixtures; raw recording import, arbitrary prompts and on-device RNG NOT tested",
+                     "Actual component outputs feed sampling; host references are comparisons only",
+                     "15 model/function assets retained during sampling, then released before decoder; backend cache eviction NOT GUARANTEED",
+                     "Footprint guard 2000 MiB before each stage and after bind; NOT an OS peak-memory guarantee"]
+        #if targetEnvironment(simulator)
+        lines.append("Target: Simulator; not physical-device evidence")
+        #else
+        lines.append("Target: iOS device build")
+        #endif
+        var completedSteps = 0, checks = 0, allParity = true
+        var bassURL: URL?, mixURL: URL?
+        do {
+            guard let resources = Bundle.main.resourceURL else { throw ShardError.missingPreparedBundle }
+            let folder = resources.appendingPathComponent("ModelCandidates/bass-preview-512")
+            let sourceFolder = resources.appendingPathComponent("ModelCandidates/source-context")
+            let conditionFolder = resources.appendingPathComponent("ModelCandidates/bass-conditioning")
+            guard FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
+                lines.append("Prepare on Mac: bash scripts/prepare_coreai_bass_preview.sh; wait for Ready then rebuild app.")
+                throw ShardError.missingPreparedBundle
+            }
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let ref = try decoder.decode(BassPreviewContract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
+            try checkManifest(ref.schemaVersion, 1, "preview.schema")
+            try checkManifest(ref.profile, "bass-preview-512", "preview.profile")
+            try checkManifest(ref.functionName, "main", "preview.function")
+            try checkManifest(ref.inferenceSteps, 50, "preview.steps")
+            try checkManifest(ref.guidanceScale, 7, "preview.guidance")
+            try checkManifest(ref.shift, 1, "preview.shift")
+            try checkManifest(ref.method, "euler_ode_apg", "preview.method")
+            try checkManifest(ref.apgMomentum, -0.75, "preview.momentum")
+            try checkManifest(ref.apgNormThreshold, 2.5, "preview.threshold")
+            try checkManifest(ref.apgProjectionDims, [1], "preview.projection_dims")
+            try checkManifest(ref.apgProjectionPrecision, "float32_validated_against_original_float64", "preview.projection_precision")
+            try checkManifest(ref.checkpoints, [1,10,25,50], "preview.checkpoints")
+            try checkManifest(ref.latentFrames, 128, "preview.frames")
+            try checkManifest(ref.conditionTokens, 117, "preview.condition_tokens")
+            try checkManifest(ref.sampleRate, 48000, "preview.sample_rate")
+            try checkManifest(ref.audioSeconds, 5.12, "preview.seconds")
+            try checkManifest(ref.scalarType, "float32", "preview.dtype")
+            try checkManifest(ref.byteOrder, "little", "preview.byte_order")
+            try checkManifest(ref.checkpointDigest, "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b", "preview.base_digest")
+            try checkManifest(ref.vaeCheckpointDigest, Profile.encoderOneSecond.checkpointDigest, "preview.vae_digest")
+            try checkManifest(ref.allCheckpointsVerified, true, "preview.checkpoints_verified")
+            try checkManifest(ref.hostDualTrajectoryParityPassed, true, "preview.host_trajectory")
+            try checkManifest(ref.hostDecoderFoldingExact, true, "preview.decoder_fold")
+            try checkManifest(ref.absoluteTolerance, 1e-4, "preview.abs")
+            try checkManifest(ref.relativeTolerance, 1e-3, "preview.rel")
+            try checkManifest(ref.relativeRmseTolerance, 1e-3, "preview.nrmse")
+            let expectedStages = bassPreviewStages()
+            try checkManifest(ref.stages.count, expectedStages.count, "preview.stage_count")
+            for (actual, expected) in zip(ref.stages, expectedStages) {
+                try checkManifest(actual.assetFile, expected.assetFile, "preview.asset_order")
+                try checkManifest(actual.layerIndices, expected.layerIndices, "preview.layer_order")
+                try checkManifest(actual.inputShapes, expected.inputShapes, "preview.input_shapes")
+                try checkManifest(actual.outputShapes, expected.outputShapes, "preview.output_shapes")
+                try checkManifest(actual.outputBindings, expected.outputBindings, "preview.output_bindings")
+            }
+            try verifyReferenceIdentity(sourceFolder.appendingPathComponent("reference.json"), expected: ref.sourceReferenceSha256)
+            try verifyReferenceIdentity(conditionFolder.appendingPathComponent("reference.json"), expected: ref.conditionReferenceSha256)
+            let noise = try readFloats(folder: folder, name: "initial-noise.f32le", count: 128*64, hashes: ref.artifactSha256)
+            let times = try readFloats(folder: folder, name: "timesteps.f32le", count: 51, hashes: ref.artifactSha256)
+            try checkManifest(times[0], Float(1), "preview.time_start")
+            try checkManifest(times[50], Float(0), "preview.time_end")
+            guard zip(times, times.dropFirst()).allSatisfy({ $0.0 > $0.1 }) else { throw ShardError.invalidManifest }
+            // Verify every numerical reference before expensive device execution.
+            var references: [String: [Float]] = [:]
+            for step in ref.checkpoints {
+                for name in ["latent"] {
+                    for kind in ["reference","fp32-reference"] {
+                        let file = "step-\(step)-\(name)-\(kind).f32le"
+                        references[file] = try readFloats(folder: folder, name: file, count: 128*64, hashes: ref.artifactSha256)
+                    }
+                }
+            }
+            for kind in ["reference","fp32-reference"] {
+                let file = "audio-\(kind).f32le"
+                references[file] = try readFloats(folder: folder, name: file, count: 2*245760, hashes: ref.artifactSha256)
+            }
+            lines.append("SHA-256: VERIFIED component identities, initial noise, schedule and 10 output references")
+            let sourcePrefix = lines.joined(separator: "\n") + "\n=== Integrated source encoding ===\n"
+            let source = await executeSourceContext(repetitions: 1) { text in progress(sourcePrefix + text) }
+            lines.append("=== Source component before sampling ===\n" + source.report)
+            guard let actualContext = source.context else { throw BassPreviewError.componentNotCompleted("source-context; see component report") }
+            let conditionPrefix = lines.joined(separator: "\n") + "\n=== Integrated bass conditioning ===\n"
+            let conditioning = await executeBassConditioning { text in progress(conditionPrefix + text) }
+            lines.append("=== Bass conditioning before sampling ===\n" + conditioning.report)
+            guard let actualCondition = conditioning.condition, let mask = conditioning.mask,
+                  mask.count == 117, mask.allSatisfy({ $0 == 1 }) else { throw BassPreviewError.componentNotCompleted("bass conditioning; see component report") }
+            let contextInput = NDArray(scalars: actualContext, shape: [1,128,128])
+            let conditionInput = NDArray(scalars: actualCondition, shape: [1,117,2048])
+            lines.append("=== Sampling and waveform generation ===")
+            var latent = NDArray(scalars: noise, shape: [1,128,64])
+            var momentum = NDArray(scalars: [Float](repeating: 0, count: 128*64), shape: [1,128,64])
+            let apgStage = Contract.Stage(assetFile: "apg-euler.aimodel", layerIndices: [],
+                inputShapes: ["velocity":[2,128,64],"latent":[1,128,64],"momentum":[1,128,64],"dt":[1]],
+                outputShapes: ["latent_next":[1,128,64],"momentum_next":[1,128,64],"guided_velocity":[1,128,64]], outputBindings: nil)
+            for index in 0..<50 {
+                let stepStart = clock.now
+                var state = ["noise":latent,"condition":conditionInput,"context":contextInput,
+                             "timestep":NDArray(scalars: [times[index]], shape: [1])]
+                for (stageIndex, stage) in ref.stages.enumerated() {
+                    try requirePreviewMemoryBudget()
+                    let phase = "Phase: sampling step \(index+1)/50, stage \(stageIndex+1)/14 \(stage.assetFile)"
+                    saveProgress(lines + [phase], profile: .denoiser)
+                    await progress((lines + [phase]).joined(separator: "\n"))
+                    var inputs: [String: NDArray] = [:]
+                    for (name, shape) in stage.inputShapes {
+                        guard let array = state[name], array.shape == shape else { throw ShardError.invalidManifest }
+                        inputs[name] = array
+                    }
+                    let result = try await runRetainedStage(stage, folder: folder, inputs: inputs, pool: &pool, stats: &retention)
+                    guard let bindings = stage.outputBindings else { throw ShardError.invalidManifest }
+                    for (name, array) in result.values {
+                        guard let binding = bindings[name] else { throw ShardError.invalidManifest }
+                        state[binding] = array
+                    }
+                }
+                guard let velocity = state["velocity"] else { throw ProbeError.invalidOutputTensor }
+                try requirePreviewMemoryBudget()
+                let result = try await runRetainedStage(apgStage, folder: folder,
+                    inputs: ["velocity":velocity,"latent":latent,"momentum":momentum,
+                             "dt":NDArray(scalars: [times[index]-times[index+1]], shape: [1])], pool: &pool, stats: &retention)
+                guard let next = result.values["latent_next"], let nextMomentum = result.values["momentum_next"],
+                      result.values["guided_velocity"] != nil else { throw ProbeError.invalidOutputTensor }
+                latent = next; momentum = nextMomentum
+                if ref.checkpoints.contains(index+1) {
+                    for (name, array) in [("latent",latent)] {
+                        let actual = try copiedValues(array, shape: [1,128,64])
+                        for kind in ["reference","fp32-reference"] {
+                            let file = "step-\(index+1)-\(name)-\(kind).f32le"
+                            guard let expected = references[file] else { throw ShardError.invalidManifest }
+                            let stats = try compare(actual: actual, expected: expected, absoluteTolerance: ref.absoluteTolerance,
+                                                    relativeTolerance: ref.relativeTolerance, relativeRmseTolerance: ref.relativeRmseTolerance)
+                            lines.append("Step \(index+1) \(name) vs \(kind): max abs error \(stats.maxError); normalized RMSE \(stats.normalizedRmse); \(stats.passed ? "PASS" : "NOT PASSED")")
+                            allParity = allParity && stats.passed; checks += 1
+                        }
+                    }
+                }
+                completedSteps += 1
+                lines.append("Sampling step \(index+1)/50 complete; ms \(ms(stepStart.duration(to: clock.now)))")
+            }
+            try checkManifest(retention.modelOpens, 15, "preview.retained_opens")
+            try checkManifest(retention.functionBinds, 15, "preview.retained_binds")
+            try checkManifest(retention.completedCalls, 750, "preview.retained_calls")
+            try checkManifest(retention.cacheHits, 735, "preview.retained_hits")
+            lines.append("Sampling retention: \(retention.modelOpens) opens, \(retention.functionBinds) binds, \(retention.cacheHits) hits, \(retention.completedCalls) calls")
+            pool.removeAll()
+            let values = try copiedValues(latent, shape: [1,128,64])
+            var decoderInput = [Float](repeating: 0, count: 128*64)
+            for t in 0..<128 { for c in 0..<64 { decoderInput[c*128+t] = values[t*64+c] } }
+            try requirePreviewMemoryBudget()
+            lines.append("Phase: loading full 5.12-second VAE decoder; Swift denoiser pool released, native eviction unverified")
+            saveProgress(lines, profile: .denoiser); await progress(lines.joined(separator: "\n"))
+            let decoderStage = Contract.Stage(assetFile: "decoder.aimodel", layerIndices: [],
+                inputShapes: ["latent":[1,64,128]], outputShapes: ["audio":[1,2,245760]], outputBindings: nil)
+            let decoded = try await runRetainedStage(decoderStage, folder: folder,
+                inputs: ["latent":NDArray(scalars: decoderInput, shape: [1,64,128])], pool: &pool, stats: &retention)
+            pool.removeAll()
+            guard let audioArray = decoded.values["audio"] else { throw ProbeError.invalidOutputTensor }
+            let audio = try copiedValues(audioArray, shape: [1,2,245760])
+            for kind in ["reference","fp32-reference"] {
+                guard let expected = references["audio-\(kind).f32le"] else { throw ShardError.invalidManifest }
+                let stats = try compare(actual: audio, expected: expected, absoluteTolerance: ref.absoluteTolerance,
+                                        relativeTolerance: ref.relativeTolerance, relativeRmseTolerance: ref.relativeRmseTolerance)
+                lines.append("Decoded audio vs \(kind): max abs error \(stats.maxError); normalized RMSE \(stats.normalizedRmse); \(stats.passed ? "PASS" : "NOT PASSED")")
+                allParity = allParity && stats.passed; checks += 1
+            }
+            try checkManifest(checks, 10, "preview.output_checks")
+            let sourceRef = try decoder.decode(SourceContextContract.self, from: Data(contentsOf: sourceFolder.appendingPathComponent("reference.json")))
+            let piano = try readFloats(folder: sourceFolder, name: "audio.f32le", count: 2*245760, hashes: sourceRef.artifactSha256)
+            guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { throw ShardError.missingPreparedBundle }
+            let output = documents.appendingPathComponent("bass-preview-" + UUID().uuidString)
+            try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+            let stem = output.appendingPathComponent("bass.wav"), mixed = output.appendingPathComponent("piano-with-bass.wav")
+            try writeStereoFloatWAV(audio, frames: 245760, to: stem)
+            var mix = zip(piano,audio).map { Float(0.78)*$0.0 + Float(0.55)*$0.1 }
+            let mixPeak = mix.reduce(Float(0)) { max($0,abs($1)) }
+            let gain = mixPeak > 0.98 ? Float(0.98)/mixPeak : Float(1)
+            if gain < 1 { mix = mix.map { $0 * gain } }
+            try writeStereoFloatWAV(mix, frames: 245760, to: mixed)
+            bassURL = stem; mixURL = mixed
+            lines.append("Integrated bass preview numerical parity: \(allParity ? "PASS" : "NOT PASSED") (10 comparisons; fixture scope)")
+            lines.append("WAV generated on device: YES; bass.wav and piano-with-bass.wav, 5.12 s stereo Float32/48 kHz")
+            lines.append("Raw bass peak: \(audio.reduce(Float(0)) { max($0,abs($1)) }); listening mix gain: \(gain)")
+            if !allParity { lines.append("Audio is diagnostic: numerical gate did not pass; musical/device baseline NOT accepted") }
+            lines.append("Musical quality, full-song behavior and total pipeline RAM: NOT VALIDATED")
+            try lines.joined(separator: "\n").write(to: output.appendingPathComponent("report.txt"), atomically: true, encoding: .utf8)
+        } catch {
+            lines.append("Integrated bass preview: NOT COMPLETED")
+            lines.append("Error: \(String(reflecting: error))")
+        }
+        pool.removeAll()
+        let usage = memory.finish()
+        if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
+        lines.append("Completed sampling steps: \(completedSteps)/50; output checks: \(checks)/10; total pipeline ms: \(ms(start.duration(to: clock.now)))")
+        lines.append("Memory scope: sampled app process, not exact peak or total model/device RAM")
+        saveProgress(lines, profile: .denoiser)
+        if let bassURL { try? lines.joined(separator: "\n").write(to: bassURL.deletingLastPathComponent().appendingPathComponent("report.txt"), atomically: true, encoding: .utf8) }
+        return BassPreviewResult(report: lines.joined(separator: "\n"), bassURL: bassURL, mixURL: mixURL)
+    }
+
+    private static func writeStereoFloatWAV(_ planar: [Float], frames: Int, to url: URL) throws {
+        guard frames > 0, planar.count == frames*2, planar.allSatisfy({ $0.isFinite }), frames <= (Int(UInt32.max)-50)/8 else {
+            throw ProbeError.invalidFloatData
+        }
+        var data = Data(); data.reserveCapacity(58 + frames*8)
+        func number<T: FixedWidthInteger>(_ value: T) {
+            var little = value.littleEndian
+            withUnsafeBytes(of: &little) { data.append(contentsOf: $0) }
+        }
+        data.append(contentsOf: "RIFF".utf8); number(UInt32(50+frames*8)); data.append(contentsOf: "WAVEfmt ".utf8)
+        number(UInt32(18)); number(UInt16(3)); number(UInt16(2)); number(UInt32(48000)); number(UInt32(48000*8))
+        number(UInt16(8)); number(UInt16(32)); number(UInt16(0))
+        data.append(contentsOf: "fact".utf8); number(UInt32(4)); number(UInt32(frames))
+        data.append(contentsOf: "data".utf8); number(UInt32(frames*8))
+        for index in 0..<frames { number(planar[index].bitPattern); number(planar[frames+index].bitPattern) }
+        try data.write(to: url, options: .atomic)
     }
 
     private struct PairReuseContract: Decodable {

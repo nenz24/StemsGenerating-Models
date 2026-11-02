@@ -91,4 +91,5 @@ Uji ini belum menggabungkan audio-context, conditioning, denoiser, CFG dan
 decoder, serta belum menghasilkan bass. Condition 117 token dan source-context
 128 frame memerlukan penyesuaian kontrak denoiser sebelum integrasi; fixture
 sintetis lama 64 token/25 frame tidak langsung dipakai. Gate ini sudah lolos;
-pekerjaan berikutnya adalah merangkainya menjadi WAV pendek pada tahap 3.
+[pipeline tahap 3](coreai-bass-preview.md) kini diimplementasikan dan lolos gate
+host, dengan uji WAV gabungan iPhone sebagai langkah berikutnya.

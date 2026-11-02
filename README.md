@@ -106,8 +106,16 @@ mencatat seluruh 40 layer, 27/27 aset dan 6/6 pembandingan lolos. Total 9,46 det
 footprint aplikasi maksimum tersampel 783,99 MiB. Kedua gate conditioning selesai
 secara terpisah untuk fixture ini. Tahap aktif kini 3: integrasi audio-context,
 conditioning, sampling/guidance dan decoder menjadi WAV pendek. Tokenisasi dan
-kanonisasi audio masih di Mac; belum ada bass yang dihasilkan.
+kanonisasi audio masih di Mac; belum ada bass yang dihasilkan di iPhone.
 [Panduan conditioning](docs/coreai-bass-conditioning.md).
+
+**Pipeline WAV pendek siap dicoba:** jalankan `bash scripts/prepare_coreai_bass_preview.sh`,
+build ke iPhone lalu tekan **Generate bass 5,12 detik**. Encoder dan conditioning
+aktual diteruskan ke 50 langkah APG-guided Euler dan decoder; tersedia tombol
+dengar/bagikan bass serta campuran piano+bass. Ekspor native dan gate host
+latent/WAV lolos; build Apple, hasil generasi iPhone dan kualitas suara masih
+menunggu. Aset native baru sekitar 3,49 GB, checkpoint cache dipakai ulang.
+[Instruksi](docs/coreai-bass-preview.md).
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:

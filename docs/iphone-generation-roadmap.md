@@ -1,8 +1,9 @@
 # Dari probe CoreAI ke generasi instrumen
 
 ACE pretrained sudah tersedia. Encoder/decoder VAE, semua 24 layer denoiser,
-loop empat langkah sintetis dan profiling sudah lolos di iPhone. Input loop
-masih tensor sintetis: belum ada pipeline dari rekaman pengguna ke audio pengiring.
+loop empat langkah sintetis dan profiling sudah lolos di iPhone. Loop yang sudah
+diuji di iPhone memakai tensor sintetis. Pipeline dari rekaman ke WAV kini
+diimplementasikan dan lolos pembandingan host; uji gabungan iPhone masih menunggu.
 
 Perkiraan saat ini adalah **empat tahap besar** menuju preview pengiring pendek
 dari rekaman, dengan beberapa pengujian atau revisi di dalam setiap tahap.
@@ -12,7 +13,7 @@ Ini urutan dependensi, bukan janji jumlah run atau tanggal selesai.
 | --- | --- | --- |
 | 1. Jalur eksekusi yang layak | Keputusan eksekusi berdasarkan waktu/memori: first-use vs reuse, backend/precision atau ukuran model jika diperlukan | Selesai untuk keputusan jalur prototipe: kedua uji utama PASS |
 | 2. Conditioning dari rekaman dan instrumen tujuan | Piano/gitar pengguna serta prompt menghasilkan context/condition/mask yang benar, mengikuti jalur ACE yang dipin | Gate audio-context dan Qwen/ConditionEncoder PASS secara terpisah untuk fixture piano/preset bass; kanonisasi audio dan tokenisasi di Mac |
-| 3. Pipeline lengkap menjadi WAV pendek | Conditioning → sampling dengan jumlah langkah/guidance yang sesuai → VAE decoder → file audio yang bisa didengar; kontrak tensor diperpanjang untuk preview pendek | Komponen dan loop pendek sudah lolos secara terpisah; integrasi audio belum ada |
+| 3. Pipeline lengkap menjadi WAV pendek | Conditioning → sampling dengan jumlah langkah/guidance yang sesuai → VAE decoder → file audio yang bisa didengar; kontrak tensor diperpanjang untuk preview pendek | Pipeline 5,12 detik/50 APG steps diimplementasikan dan host-validated; build Apple, generasi iPhone dan hasil dengar pending |
 | 4. Pengiring yang layak didengar | Akor, groove, timing, timbre serta level dinilai terhadap baseline CUDA; lanjut ke tiga instrumen secara berurutan | Baseline CUDA tersedia; evaluasi hasil iPhone belum bisa dilakukan |
 
 Setelah preview itu, lagu panjang/chunking, sambungan antarchunk, ekspor/mixer,
@@ -38,7 +39,9 @@ Kedua gate komponen tahap 2 juga selesai untuk fixture piano/preset bass:
 PASS seluruh 40 layer/27 aset/6 pembandingan. **Tahap aktif kini 3: integrasi
 sampling dan decoder menjadi WAV pendek.** Condition 117 token dan source 128
 latent frame membutuhkan kontrak denoiser yang sesuai; fixture sintetis lama
-64 token/25 frame tidak langsung dipakai. Komponen belum dijalankan bersama.
+64 token/25 frame tidak langsung dipakai. [Pipeline gabungan](coreai-bass-preview.md)
+sekarang diimplementasikan dengan shard baru, APG update dan decoder penuh.
+Gate host seluruh lintasan latent/WAV lolos; eksekusi gabungan iPhone belum diuji.
 Kanonisasi PCM dan tokenisasi tetap pada host; raw recording import dan prompt
 bebas di iPhone belum tervalidasi. Setelah pipeline WAV tersedia, tahap 4 menilai
 kualitas musikal dan melanjutkan tiga instrumen. Model dan referensi
