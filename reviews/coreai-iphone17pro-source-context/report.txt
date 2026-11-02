@@ -1,0 +1,39 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: actual recording -> VAE posterior sample -> full-range lego audio context
+Scope: audio side only; NO text embedding, ConditionEncoder, denoiser or bass generation
+Requested compute policy: cpuOnly; accelerator placement NOT MEASURED
+Audio: 5.12 s / 48000 Hz stereo; 128 latent frames
+Posterior: mean + (softplus(scale) + 1e-4) * explicit epsilon; fixture epsilon reused for parity
+PCM decode/resampling happens during Mac preparation; raw recording import on iPhone NOT tested
+Footprint guard before model and each call: 2000 MiB; NOT an OS peak-memory guarantee
+Target: iOS device build
+Recording: piano.mp3; segment start seconds: 0.0
+Original recording SHA-256 (recorded by Mac preparation): ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189
+SHA-256: VERIFIED all three input and four output-reference binaries; pretrained checkpoint verified by preparation
+Phase: opening source-context model and binding one function
+Setup: model-open ms 1011.133833; function-bind ms 76.392667; input-validation ms 0.08425
+Before audio-context run 1/3 footprint MiB: 34.298927307128906
+Audio-context run 1: backend-await ms 1051.218042; readback+checks ms 1.5925
+Audio-context run 1 posterior_mean: max abs error 0.0001207590103149414; RMSE 1.0258971108631715e-05; normalized RMSE 1.0366594379968696e-05; PASS
+Audio-context run 1 posterior_std: max abs error 7.12461769580841e-08; RMSE 3.4538392561307407e-08; normalized RMSE 8.350372828409277e-05; PASS
+Audio-context run 1 source_latents: max abs error 0.0001207590103149414; RMSE 1.0258929150490128e-05; normalized RMSE 1.0366516296775327e-05; PASS
+Audio-context run 1 context_latents: max abs error 0.0001207590103149414; RMSE 7.254158370023917e-06; normalized RMSE 7.291898554009533e-06; PASS
+Before audio-context run 2/3 footprint MiB: 34.78382873535156
+Audio-context run 2: backend-await ms 1017.439167; readback+checks ms 1.442208
+Audio-context run 2 posterior_mean: max abs error 0.0001207590103149414; RMSE 1.0258971108631715e-05; normalized RMSE 1.0366594379968696e-05; PASS
+Audio-context run 2 posterior_std: max abs error 7.12461769580841e-08; RMSE 3.4538392561307407e-08; normalized RMSE 8.350372828409277e-05; PASS
+Audio-context run 2 source_latents: max abs error 0.0001207590103149414; RMSE 1.0258929150490128e-05; normalized RMSE 1.0366516296775327e-05; PASS
+Audio-context run 2 context_latents: max abs error 0.0001207590103149414; RMSE 7.254158370023917e-06; normalized RMSE 7.291898554009533e-06; PASS
+Before audio-context run 3/3 footprint MiB: 32.34632873535156
+Audio-context run 3: backend-await ms 1041.502042; readback+checks ms 1.472125
+Audio-context run 3 posterior_mean: max abs error 0.0001207590103149414; RMSE 1.0258971108631715e-05; normalized RMSE 1.0366594379968696e-05; PASS
+Audio-context run 3 posterior_std: max abs error 7.12461769580841e-08; RMSE 3.4538392561307407e-08; normalized RMSE 8.350372828409277e-05; PASS
+Audio-context run 3 source_latents: max abs error 0.0001207590103149414; RMSE 1.0258929150490128e-05; normalized RMSE 1.0366516296775327e-05; PASS
+Audio-context run 3 context_latents: max abs error 0.0001207590103149414; RMSE 7.254158370023917e-06; normalized RMSE 7.291898554009533e-06; PASS
+Real-recording audio-context parity: PASS (three runs, all four outputs)
+Process baseline MiB: 20.236129760742188
+Sampled process maximum MiB (10 ms): 398.20570373535156
+Completed audio-context parity runs: 3/3; total probe ms: 4338.059625
+Scope: sampled process footprint only, not total model RAM; no bass/audio output generated

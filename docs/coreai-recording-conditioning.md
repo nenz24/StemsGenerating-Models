@@ -47,8 +47,10 @@ menahan semua model conditioning dan codec bersamaan.
 
 **Bagian audio kini diimplementasikan:** [audio-context piano](coreai-source-context.md)
 memakai encoder posterior dengan sample eksplisit dan mask helper `lego` asli,
-128 latent frame dari rekaman nyata. Ekspor native dan host parity berhasil;
-kode baru perlu build dan pengujian iPhone. Embedding teks dan ConditionEncoder
+128 latent frame dari rekaman nyata. Ekspor native, host parity dan
+[uji iPhone](../reviews/coreai-iphone17pro-source-context/README.md) berhasil:
+3 run dan seluruh 12 output lolos. Bagian audio selesai untuk fixture ini;
+tidak perlu mengulang uji yang sama sekarang. Embedding teks dan ConditionEncoder
 belum diimplementasikan. Uji ini memvalidasi PCM yang dikanonisasi pada host,
 belum raw-recording import/resampling langsung di iPhone. Setelah conditioning
 benar, tahap 3 merangkainya dengan sampling/guidance dan decoder menjadi WAV

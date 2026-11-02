@@ -6,6 +6,12 @@ conditioning: posterior mean/std → sampled source latent → context dengan ma
 `lego`. Embedding teks, ConditionEncoder, sampling bass dan WAV pengiring belum
 disambungkan dalam perubahan ini.
 
+**Uji iPhone sudah PASS:** [laporan perangkat](../reviews/coreai-iphone17pro-source-context/README.md)
+memuat 3/3 run dan 12/12 pembandingan output. Rata-rata backend 1,037 detik;
+footprint aplikasi maksimum tersampel 398,21 MiB, bukan seluruh RAM model atau
+peak eksak. Bagian audio tahap 2 selesai untuk rekaman/fixture ini. Tidak perlu
+mengulang uji ini sekarang; lanjut conditioning teks/instrumen dan ConditionEncoder.
+
 ## Jalankan di Mac dan iPhone
 
 ```bash
@@ -79,6 +85,6 @@ fixture dengan stream RNG CUDA pada run musikal lama. Epsilon tetap hanya
 untuk membandingkan implementasi posterior yang sama.
 
 [Ekspor host sudah berhasil](../reviews/coreai-source-context-export/README.md).
-Kode Swift baru masih perlu build dan pengujian perangkat; workspace Linux
-tidak memiliki Apple SDK. Tahap 2 berikutnya adalah embedding prompt/lyrics,
+Build dan eksekusi Swift telah dilaporkan pengguna pada iPhone; workspace Linux
+tidak memiliki Apple SDK untuk mereproduksinya. Tahap 2 berikutnya adalah embedding prompt/lyrics,
 condition encoder dan mask aktual, lalu integrasi ke sampler/decoder pada tahap 3.

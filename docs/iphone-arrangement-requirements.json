@@ -102,12 +102,12 @@
     "generation_schedule_candidate": "sequential"
   },
   "unverified": {
-    "coreai_sdk_custom_audio_model_support": "Pretrained encoder posterior mean at 1 s and decoder at 0.2/1 s Float32 parity reported; joint codec, stochastic posterior and full conditional generator unverified",
+    "coreai_sdk_custom_audio_model_support": "VAE/DiT and real-recording posterior/source-context device gates pass; complete text/audio conditioning, joint pipeline and instrument generation unverified",
     "model_import_format_and_operators": "Native affine, VAE and DiT verified on iPhone; complete 14-asset denoiser passed both references for three same-case same-process forwards; full generation unverified",
     "accelerator_and_precision_support": "Float32 affine and VAE encoder/decoder parity verified under requested CPU-only policy; actual placement and GPU/Neural Engine inference unmeasured",
     "minimum_iphone_model": null,
     "ram_latency_thermal_budgets": null,
-    "model_conversion_training_and_device_benchmarks": "Four-step synthetic sharded Euler loop passes dual velocity/latent parity on iPhone, 53.001 s; performance causes, cold launches, long-run memory and recording conditioning/full music generation remain unverified"
+    "model_conversion_training_and_device_benchmarks": "Retained synthetic four-step loop PASS (18.522 s); real-recording audio-context PASS (~1.037 s per call). Full conditioning/sampling/WAV integration, cold launches, long-run and full-song behavior remain unverified."
   },
   "local_prototype_status": {
     "source_directory": "prototypes/ios27-coreai",
@@ -120,7 +120,7 @@
     "apple_compilation_evidence": "User executed full retained-loop caller successfully on iPhone; no independent Apple SDK compilation on Linux",
     "physical_device_execution_verified": true,
     "device_execution_report": "reviews/coreai-iphone17pro-retained-loop/report.json",
-    "device_execution_scope": "Full retained four-step denoiser loop PASS, all 24 layers/56 calls/16 reference checks, prototype retention route selected; real recording conditioning and WAV still unimplemented",
+    "device_execution_scope": "Retained four-step full denoiser loop PASS on synthetic tensors; separate real-recording posterior/audio-context gate PASS (3 runs/12 checks). Text/ConditionEncoder and integrated sampling-to-WAV remain unimplemented.",
     "numerical_compatibility_candidate": {
       "asset": "prototypes/ios27-coreai/ModelCandidates/affine.mlpackage",
       "exporter": "coremltools 9.0",
@@ -154,7 +154,7 @@
     "native_model_reference": "prototypes/ios27-coreai/ModelCandidates/affine-native-reference.json",
     "current_native_probe_apple_compilation_verified": true,
     "native_inference_report": "reviews/coreai-iphone17pro-native-affine/report.json",
-    "checkpoint_conversion_scope": "VAE and complete 24-layer Base denoiser FP16-storage/FP32-math exported; four-step synthetic Euler loop prepared with host dual references; recording conditioning/full generation unimplemented"
+    "checkpoint_conversion_scope": "VAE, complete sharded 24-layer Base denoiser and real-recording posterior/source-context exported with device parity; text/ConditionEncoder and integrated instrument generation unimplemented"
   },
   "audio_component_audit": {
     "report": "reviews/coreai-ace-component-audit/report.json",
@@ -584,7 +584,7 @@
     "selected_prototype_execution_route": "Separate native assets, retain model AND function lazily across denoising steps, copy outputs to fresh CPU NDArrays, release Swift pool before subsequent components",
     "stage2_scope_doc": "docs/coreai-recording-conditioning.md",
     "stage2_first_path": "piano recording -> electric bass, short clip, accepted CUDA preset as reference",
-    "stage2_audio_side": "Real-recording posterior/source-context implemented, actual native export and host checks passed; device test pending; text/ConditionEncoder still unimplemented"
+    "stage2_audio_side": "PASS on iPhone: actual 5.12 s piano posterior/source-context, 3 runs and 12 comparisons; text embedding/ConditionEncoder still unimplemented; raw recording import/resampling on device untested"
   },
   "pretrained_retained_denoiser_loop_probe": {
     "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
@@ -685,10 +685,17 @@
     "host_lego_source_preservation_exact": true,
     "native_asset_bytes": 337145559,
     "recording_and_derived_binaries_committed": false,
-    "new_swift_apple_build_verified": false,
-    "device_parity_verified": false,
+    "new_swift_apple_build_verified": true,
+    "device_parity_verified": true,
     "raw_recording_import_resampling_on_device_verified": false,
     "text_embedding_or_condition_encoder_implemented": false,
-    "bass_generation_verified": false
+    "bass_generation_verified": false,
+    "device_report": "reviews/coreai-iphone17pro-source-context/report.json",
+    "device_evidence_source": "User-pasted physical iPhone report; not independently reproduced in Linux",
+    "device_completed_runs": 3,
+    "device_output_comparisons_passed": 12,
+    "device_backend_await_mean_ms": 1036.7197503333334,
+    "device_sampled_process_maximum_mib": 398.20570373535156,
+    "memory_scope": "10 ms sampled app process phys_footprint; not exact peak or total model/device RAM; no combined-pipeline measurement"
   }
 }

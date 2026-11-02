@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "evidence_source": "User-pasted physical iPhone report; not independently reproduced in Linux",
+  "source_report": "report.txt",
+  "source_report_sha256": "184daff311a8c0a93f674b1ba83777b163b8282ba91180761a59df8ea17e2c45",
+  "runtime": "CoreAI",
+  "device_model": "iPhone 17 Pro (user-reported target; report identifies architecture only)",
+  "os": "Version 27.0.1 (Build 24A446)",
+  "architecture": "h18p",
+  "requested_compute_policy": "cpuOnly",
+  "accelerator_placement_measured": false,
+  "scope": "Actual recording -> posterior sample -> full-range lego audio context; audio side only",
+  "recording": {
+    "name": "piano.mp3",
+    "original_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+    "segment_start_seconds": 0.0,
+    "audio_seconds": 5.12,
+    "sample_rate": 48000,
+    "channels": 2,
+    "latent_frames": 128,
+    "pcm_decode_resampling": "Host preparation; identical canonical PCM shipped to device"
+  },
+  "input_shapes": {
+    "audio": [
+      1,
+      2,
+      245760
+    ],
+    "epsilon": [
+      1,
+      64,
+      128
+    ],
+    "chunk_mask": [
+      1,
+      128,
+      64
+    ]
+  },
+  "posterior": "mean + (softplus(scale) + 1e-4) * explicit epsilon; fixture epsilon reused",
+  "three_input_and_four_reference_binary_hashes_verified": true,
+  "publisher_checkpoint_verified_by_preparation": true,
+  "numerical_tolerances": {
+    "absolute": 0.0001,
+    "relative": 0.001,
+    "normalized_rmse": 0.001,
+    "pointwise_rule": "abs(actual-reference) <= absolute + relative * abs(reference)"
+  },
+  "setup_ms": {
+    "model_open": 1011.133833,
+    "function_bind": 76.392667,
+    "input_validation": 0.08425
+  },
+  "runs": [
+    {
+      "run": 1,
+      "before_process_footprint_mib": 34.298927307128906,
+      "backend_await_ms": 1051.218042,
+      "readback_and_checks_ms": 1.5925,
+      "outputs": {
+        "posterior_mean": {
+          "max_absolute_error": 0.0001207590103149414,
+          "rmse": 1.0258971108631715e-05,
+          "normalized_rmse": 1.0366594379968696e-05,
+          "parity_passed": true
+        },
+        "posterior_std": {
+          "max_absolute_error": 7.12461769580841e-08,
+          "rmse": 3.4538392561307407e-08,
+          "normalized_rmse": 8.350372828409277e-05,
+          "parity_passed": true
+        },
+        "source_latents": {
+          "max_absolute_error": 0.0001207590103149414,
+          "rmse": 1.0258929150490128e-05,
+          "normalized_rmse": 1.0366516296775327e-05,
+          "parity_passed": true
+        },
+        "context_latents": {
+          "max_absolute_error": 0.0001207590103149414,
+          "rmse": 7.254158370023917e-06,
+          "normalized_rmse": 7.291898554009533e-06,
+          "parity_passed": true
+        }
+      }
+    },
+    {
+      "run": 2,
+      "before_process_footprint_mib": 34.78382873535156,
+      "backend_await_ms": 1017.439167,
+      "readback_and_checks_ms": 1.442208,
+      "outputs": {
+        "posterior_mean": {
+          "max_absolute_error": 0.0001207590103149414,
+          "rmse": 1.0258971108631715e-05,
+          "normalized_rmse": 1.0366594379968696e-05,
+          "parity_passed": true
+        },
+        "posterior_std": {
+          "max_absolute_error": 7.12461769580841e-08,
+          "rmse": 3.4538392561307407e-08,
+          "normalized_rmse": 8.350372828409277e-05,
+          "parity_passed": true
+        },
+        "source_latents": {
+          "max_absolute_error": 0.0001207590103149414,
+          "rmse": 1.0258929150490128e-05,
+          "normalized_rmse": 1.0366516296775327e-05,
+          "parity_passed": true
+        },
+        "context_latents": {
+          "max_absolute_error": 0.0001207590103149414,
+          "rmse": 7.254158370023917e-06,
+          "normalized_rmse": 7.291898554009533e-06,
+          "parity_passed": true
+        }
+      }
+    },
+    {
+      "run": 3,
+      "before_process_footprint_mib": 32.34632873535156,
+      "backend_await_ms": 1041.502042,
+      "readback_and_checks_ms": 1.472125,
+      "outputs": {
+        "posterior_mean": {
+          "max_absolute_error": 0.0001207590103149414,
+          "rmse": 1.0258971108631715e-05,
+          "normalized_rmse": 1.0366594379968696e-05,
+          "parity_passed": true
+        },
+        "posterior_std": {
+          "max_absolute_error": 7.12461769580841e-08,
+          "rmse": 3.4538392561307407e-08,
+          "normalized_rmse": 8.350372828409277e-05,
+          "parity_passed": true
+        },
+        "source_latents": {
+          "max_absolute_error": 0.0001207590103149414,
+          "rmse": 1.0258929150490128e-05,
+          "normalized_rmse": 1.0366516296775327e-05,
+          "parity_passed": true
+        },
+        "context_latents": {
+          "max_absolute_error": 0.0001207590103149414,
+          "rmse": 7.254158370023917e-06,
+          "normalized_rmse": 7.291898554009533e-06,
+          "parity_passed": true
+        }
+      }
+    }
+  ],
+  "summary": {
+    "completed_runs": 3,
+    "output_comparisons_passed": 12,
+    "audio_context_parity_passed": true,
+    "backend_await_mean_ms": 1036.7197503333334,
+    "total_probe_ms": 4338.059625,
+    "process_baseline_mib": 20.236129760742188,
+    "sampled_process_maximum_mib": 398.20570373535156
+  },
+  "decision": {
+    "stage2_audio_side_gate_complete": true,
+    "current_major_stage": 2,
+    "next_work": "Text/instrument conditioning and ConditionEncoder according to pinned CUDA lego path; then integrate real context into sampling and WAV pipeline",
+    "additional_same_audio_context_run_required": false
+  },
+  "limits": {
+    "raw_recording_import_resampling_on_iphone_verified": false,
+    "text_embedding_or_condition_encoder_executed": false,
+    "denoiser_executed_by_this_probe": false,
+    "bass_or_waveform_generated": false,
+    "random_epsilon_stream_equivalence_to_cuda_verified": false,
+    "bit_exact_output_parity_verified": false,
+    "memory_scope": "10 ms sampled app process phys_footprint; not exact peak or total model/device RAM; no combined-pipeline measurement"
+  }
+}

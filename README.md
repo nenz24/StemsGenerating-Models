@@ -96,8 +96,11 @@ Ini belum generasi instrumen lengkap.
 penyusunan audio-context `lego` sudah diimplementasikan dan berhasil diekspor.
 Jalankan `bash scripts/prepare_coreai_source_context.sh`, pilih rekaman, build
 ulang lalu tekan **Uji audio-context piano**. Checkpoint VAE cache dipakai ulang;
-graph baru dan tensor audio disimpan lokal. Hasil iPhone, embedding teks dan
-ConditionEncoder masih menunggu. [Panduan](docs/coreai-source-context.md).
+graph baru dan tensor audio disimpan lokal. [Hasil iPhone sudah PASS](reviews/coreai-iphone17pro-source-context/README.md):
+3 run, seluruh 12 pembandingan, rata-rata backend 1,037 detik per run;
+footprint aplikasi maksimum tersampel 398,21 MiB. Bagian audio tahap 2 selesai
+untuk fixture ini; embedding teks/ConditionEncoder dan integrasi generasi masih
+menunggu. [Panduan](docs/coreai-source-context.md).
 
 **Pilihan aktif: Electric Bass.** Pengguna memilih hasil bass elektrik petikan
 natural pada CUDA/T4 FP32. Preset menyimpan caption dan setting yang sama:

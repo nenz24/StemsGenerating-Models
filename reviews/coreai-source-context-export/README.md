@@ -36,7 +36,10 @@ unit tests are marked non-executable and never used as inference evidence.
 
 The source-context native graph accepts PCM, explicit epsilon and chunk mask;
 it emits mean, std, sampled source and context. The iPhone caller uses one
-retained model/function and checks all four outputs for three calls. Apple SDK
-compilation, actual device parity, latency and memory are pending.
+retained model/function and checks all four outputs for three calls. The later
+[user-supplied iPhone report](../coreai-iphone17pro-source-context/README.md)
+confirms build/execution and all twelve comparisons PASS. Mean backend-await
+is 1.037 s, sampled app-process maximum 398.21 MiB; these are not isolated
+kernel time, exact peak or total model/device RAM.
 There is no Qwen text embedding, ConditionEncoder, denoiser/CFG loop or generated
 bass in this gate. See [Mac/device instructions](../../docs/coreai-source-context.md).

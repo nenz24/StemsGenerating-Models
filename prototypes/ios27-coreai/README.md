@@ -294,5 +294,7 @@ Jika sudah ada, bundle diverifikasi dan dipakai ulang. Build lalu tekan
 Outputnya mean/std posterior, sampled source latent dan context `lego` dari
 audio nyata. PCM/epsilon/mask dan referensi dibuat pada Mac lalu ikut bundle
 lokal ignored, tidak ikut GitHub. Ini belum import rekaman langsung di iPhone,
-embedding teks, ConditionEncoder atau generasi bass. Ekspor host berhasil;
-kode baru perlu build dan uji perangkat. [Panduan](../../docs/coreai-source-context.md).
+embedding teks, ConditionEncoder atau generasi bass. [Uji iPhone sudah PASS](../../reviews/coreai-iphone17pro-source-context/README.md):
+3/3 run dan 12/12 output, rata-rata backend 1,037 detik, footprint maksimum
+tersampel 398,21 MiB. Bagian audio tahap 2 selesai untuk fixture ini; lanjut
+conditioning teks/instrumen. [Panduan](../../docs/coreai-source-context.md).
