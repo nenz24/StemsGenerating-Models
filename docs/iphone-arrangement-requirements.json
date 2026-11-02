@@ -588,7 +588,13 @@
     "stage2_target_side": "PASS on iPhone: full Qwen + ACE ConditionEncoder, 40 layers across 27 assets and 6 dual-reference checks; 9.463 s total; fixed prompt tokenization remains on Mac",
     "stage2_component_gates_complete_for_fixed_fixture": true,
     "stage2_completion_scope": "Separate component parity on canonical piano PCM and host-tokenized fixed bass preset; joint pipeline, raw recording import/resampling, prompt tokenization on device and arbitrary inputs unverified",
-    "stage3_next_work": "Integrated preview implemented and host-validated: actual component outputs -> 50 APG-guided Euler steps -> full VAE decoder -> WAV; Apple build/device execution and listening review pending"
+    "stage3_next_work": "Integrated preview implemented and host-validated: actual component outputs -> 50 APG-guided Euler steps -> full VAE decoder -> WAV; Apple build/device execution and listening review pending",
+    "real_shape_execution_override": {
+      "policy": "Single live Swift model/function scope per preview asset; sequential 750 sampling calls without retaining handles across assets",
+      "reason": "blocks-18-19 fails graph binding after ten earlier sampling assets while previous handles remain retained",
+      "report": "reviews/coreai-iphone17pro-bass-preview-block1819/report.json",
+      "device_validation_pending": true
+    }
   },
   "pretrained_retained_denoiser_loop_probe": {
     "source": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
@@ -795,11 +801,18 @@
     "numerical_tolerances_changed": false,
     "updated_device_diagnostic_status_build_verified": true,
     "device_component_sequence_verified": true,
-    "device_report": "reviews/coreai-iphone17pro-bass-preview-specialization/report.json",
-    "device_last_error": "AIModelError.failedToSpecialize; BNNS console confirms mmap write allocation failure for bnns.ir; exact source asset still unlogged",
+    "device_report": "reviews/coreai-iphone17pro-bass-preview-block1819/report.json",
+    "device_last_error": "BNNS graphLoadFailed at stage 11/14 blocks-18-19 during function-bind/input-validation; 10 completed sampling assets, 0/50 completed steps",
     "specialization_failure_trace_implemented": true,
-    "specialization_failure_trace_apple_build_verified": false,
+    "specialization_failure_trace_apple_build_verified": true,
     "bnns_compile_allocation_failure_reported": true,
-    "aot_mitigation_status": "Official coreai-build AOT documented; Mac tool unavailable; Metal Toolchain prerequisite requested, CPU/architecture CLI options awaiting installed-tool help"
+    "aot_mitigation_status": "Official coreai-build AOT documented; Mac tool unavailable; Metal Toolchain prerequisite requested, CPU/architecture CLI options awaiting installed-tool help",
+    "runtime_ownership_policy": "Single live Swift model/function scope per preview asset; detached CPU copies; native cache eviction unguaranteed",
+    "expected_sampling_model_opens": 750,
+    "expected_sampling_function_binds": 750,
+    "expected_sampling_reuse_hits": 0,
+    "targeted_cache_recovery": "Delete only blocks-18-19 cpuOnly compiled entry if prior saved report has its BNNS graphLoadFailed; no source asset or checkpoint changes",
+    "sequential_preview_apple_build_verified": false,
+    "sequential_preview_device_execution_verified": false
   }
 }

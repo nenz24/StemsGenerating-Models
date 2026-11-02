@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "evidence_source": "User-pasted physical iPhone report; not independently reproduced in Linux",
+  "source_report": "report.txt",
+  "source_report_sha256": "ed403ffa0c8e3f662ac35929b8772edb5685cd47fc54cb95c364ea2bc37809bc",
+  "runtime": "CoreAI",
+  "os": "Version 27.0.1 (Build 24A446)",
+  "architecture": "h18p",
+  "requested_compute_policy": "cpuOnly",
+  "host_preparation_status": "bounded_diagnostic",
+  "source_and_complete_bass_conditioning_passed": true,
+  "completed_first_step_assets": [
+    {
+      "stage": 1,
+      "asset_file": "front.aimodel",
+      "model_open_ms": 2.023792
+    },
+    {
+      "stage": 2,
+      "asset_file": "blocks-00-01.aimodel",
+      "model_open_ms": 1.981042
+    },
+    {
+      "stage": 3,
+      "asset_file": "blocks-02-03.aimodel",
+      "model_open_ms": 2.117459
+    },
+    {
+      "stage": 4,
+      "asset_file": "blocks-04-05.aimodel",
+      "model_open_ms": 1.991334
+    },
+    {
+      "stage": 5,
+      "asset_file": "blocks-06-07.aimodel",
+      "model_open_ms": 2.12075
+    },
+    {
+      "stage": 6,
+      "asset_file": "blocks-08-09.aimodel",
+      "model_open_ms": 2.169917
+    },
+    {
+      "stage": 7,
+      "asset_file": "blocks-10-11.aimodel",
+      "model_open_ms": 2.051209
+    },
+    {
+      "stage": 8,
+      "asset_file": "blocks-12-13.aimodel",
+      "model_open_ms": 1190.722333
+    },
+    {
+      "stage": 9,
+      "asset_file": "blocks-14-15.aimodel",
+      "model_open_ms": 800.975042
+    },
+    {
+      "stage": 10,
+      "asset_file": "blocks-16-17.aimodel",
+      "model_open_ms": 831.98925
+    }
+  ],
+  "failing_asset": "blocks-18-19.aimodel",
+  "failing_stage": 11,
+  "failing_operation": "function-bind/input-validation",
+  "retained_handle_reused": false,
+  "error": "BNNSCoreAIDelegate.BNNSDelegate.BNNSError.graphLoadFailed",
+  "error_domain": "BNNSCoreAIDelegate.BNNSDelegate.BNNSError",
+  "error_code": 1,
+  "successful_calls": 10,
+  "model_opens": 11,
+  "function_binds": 10,
+  "reuse_hits": 0,
+  "completed_sampling_steps": 0,
+  "completed_output_checks": 0,
+  "total_pipeline_ms": 19683.4925,
+  "process_baseline_mib": 35.12675476074219,
+  "sampled_process_maximum_mib": 687.7238235473633,
+  "wav_generated": false,
+  "interpretation": "Failure localized after ten sampling assets with ten retained model/function pairs; retention is a controllable pressure source, not proven sole cause. Previous console reported BNNS mmap allocation failure.",
+  "change": {
+    "swift_ownership_policy": "single live model/function scope per asset, released after detached CPU copy",
+    "expected_sampling_opens": 750,
+    "expected_sampling_binds": 750,
+    "expected_sampling_calls": 750,
+    "expected_reuse_hits": 0,
+    "targeted_compiled_cache_recovery": "Only blocks-18-19 cpuOnly entry, only if saved prior report records its BNNS graphLoadFailed, via public AIModelCache.deleteEntry; failure to remove is logged",
+    "original_weights_references_or_math_changed": false,
+    "automatic_retry_added": false,
+    "all_cache_deletion_added": false,
+    "new_model_export_required": false,
+    "metal_toolchain_required_for_this_change": false
+  },
+  "limits": {
+    "updated_apple_build_verified": false,
+    "updated_device_execution_verified": false,
+    "native_cache_eviction_guaranteed": false,
+    "cache_corruption_proven": false,
+    "retention_as_sole_root_cause_proven": false,
+    "accelerator_placement_measured": false,
+    "memory_scope": "10 ms sampled app footprint, not compiler-worker memory, exact peak or total device/model RAM"
+  }
+}

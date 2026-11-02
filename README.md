@@ -126,6 +126,13 @@ mapping IR; aset yang gagal dan kebutuhan memorinya masih perlu diidentifikasi.
 Mitigasi AOT resmi Apple memerlukan Metal Toolchain di Mac, yang belum tersedia
 pada probe utilitas pengguna.
 
+Laporan terbaru [menunjuk blok 18–19 saat binding fungsi](reviews/coreai-iphone17pro-bass-preview-block1819/README.md),
+setelah sepuluh aset sampling berhasil. Preview sekarang melepas model/fungsi
+Swift per aset dan hanya memulihkan cache kompilasi CPU blok itu bila laporan
+sebelumnya mencatat graph-load failure yang sama. Pull/build ulang untuk mencoba;
+bobot, referensi dan perhitungan tetap dipakai, tanpa ekspor atau Metal Toolchain.
+Perubahan runtime ini masih menunggu validasi iPhone.
+
 Persiapan Mac dapat menemukan drift pointwise yang tidak terjadi pada ekspor
 Linux. [Perbaikan status diagnostik](reviews/coreai-mac-bass-preview-drift/README.md)
 mengizinkan ekspor hanya jika error tetap finite dan normalized RMSE terbatas,

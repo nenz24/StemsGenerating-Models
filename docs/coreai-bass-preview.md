@@ -13,6 +13,19 @@ gagal tetap tersimpan, sehingga hasil bisa didengar tanpa mengklaim parity PASS.
 
 ## Jalankan di Mac dan iPhone
 
+**Update setelah kegagalan `blocks-18-19`:** [laporan terlokalisasi](../reviews/coreai-iphone17pro-bass-preview-block1819/README.md)
+berhasil menjalankan sepuluh aset sampling, lalu gagal binding aset ke-11.
+Preview kini melepas scope model/fungsi Swift setelah setiap aset dan menyalin
+output ke CPU. Jika laporan tersimpan mencatat BNNS graph-load failure pada
+blok 18–19, hanya cache kompilasi CPU aset tersebut yang diminta untuk dibangun
+ulang. Aksi/hasil pemulihan muncul di laporan. Bobot/referensi tidak berubah.
+
+Untuk mencoba perbaikan ini: `git pull --ff-only`, **Stop** aplikasi di Xcode,
+lalu **Cmd+R → Generate bass 5,12 detik**. Tidak perlu menjalankan skrip ekspor
+ulang atau menunggu Metal Toolchain. Proses bisa lebih lambat karena model/fungsi
+dibuka ulang per aset; hasil numerik dan penggunaan memori aktual masih perlu
+divalidasi di iPhone.
+
 **Jika paket sudah Ready dan iPhone berhenti pada `failedToSpecialize`:**
 [laporan pertama](../reviews/coreai-iphone17pro-bass-preview-specialization/README.md)
 menunjukkan source/conditioning PASS, lalu kegagalan specialization sebelum
@@ -105,10 +118,11 @@ latent (dim 1), bukan sekadar rumus CFG linear. Native update menghitung
 projection FP32; host membandingkannya pada input identik dengan projection
 FP64 asli setiap langkah. Timestep-r sama dengan timestep; KV cache dimatikan.
 
-Ada 15 aset model/fungsi yang dipertahankan selama sampling: 14 denoiser shard
-+ APG update. Targetnya 15 open, 15 bind, 735 reuse dan 750 call. Pool Swift
-dilepas sebelum decoder penuh `[1,64,128] → [1,2,245760]`; eviction backend
-belum dijamin. Guard footprint 2000 MiB diperiksa sebelum aset dan sesudah bind,
+Ada 15 jenis aset sampling: 14 denoiser shard + APG update. Sekarang hanya satu
+scope model/fungsi Swift yang hidup per aset; setiap hasil disalin ke CPU lalu
+scope dilepas. Targetnya 750 open, 750 bind, nol reuse dan 750 call sampling.
+Decoder penuh `[1,64,128] → [1,2,245760]` juga memakai scope terpisah. Cache backend
+tidak dijamin ikut dilepas. Guard footprint 2000 MiB diperiksa sebelum aset dan sesudah bind,
 bukan jaminan peak OS. Sampler memori mencakup aplikasi selama seluruh pipeline,
 namun tidak mengukur total RAM model/perangkat atau peak eksak.
 

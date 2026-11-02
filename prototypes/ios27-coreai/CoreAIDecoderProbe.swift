@@ -695,7 +695,7 @@ enum CoreAIDecoderProbe {
     static func generateBassPreview(progress: @escaping @MainActor @Sendable (String) -> Void) async -> BassPreviewResult {
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
-        var pool: [String: RetainedStage] = [:]
+        let priorReport = savedDenoiserReport()
         var retention = RetentionStats()
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",
@@ -706,7 +706,8 @@ enum CoreAIDecoderProbe {
                      "Requested compute policy: cpuOnly; accelerator placement NOT MEASURED",
                      "Fixed host PCM/tokenization/epsilon/noise fixtures; raw recording import, arbitrary prompts and on-device RNG NOT tested",
                      "Actual component outputs feed sampling; host references are comparisons only",
-                     "15 model/function assets retained during sampling, then released before decoder; backend cache eviction NOT GUARANTEED",
+                     "Execution: single live Swift model/function scope per asset; detached CPU copies; native cache eviction NOT GUARANTEED",
+                     "Compiled cache repair: only blocks-18-19 if the saved prior run reports its BNNS graphLoadFailed; no automatic retry",
                      "Footprint guard 2000 MiB before each stage and after bind; NOT an OS peak-memory guarantee"]
         #if targetEnvironment(simulator)
         lines.append("Target: Simulator; not physical-device evidence")
@@ -818,6 +819,23 @@ enum CoreAIDecoderProbe {
                 references[file] = try readFloats(folder: folder, name: file, count: 2*245760, hashes: ref.artifactSha256)
             }
             lines.append("SHA-256: VERIFIED component identities, initial noise, schedule and 10 output references")
+            // Repair only the observed failing derived CPU cache entry, before
+            // any model is opened. Bundled assets/weights/references are untouched.
+            // The saved report is captured before component progress overwrites it.
+            if let priorReport,
+               priorReport.contains("Failing asset: blocks-18-19.aimodel"),
+               priorReport.contains("BNNSCoreAIDelegate.BNNSDelegate.BNNSError.graphLoadFailed") {
+                lastPhase = "targeted compiled-cache recovery for blocks-18-19.aimodel"
+                lines.append("Cache recovery requested by prior failure: blocks-18-19.aimodel / cpuOnly; derived cache only")
+                saveProgress(lines, profile: .denoiser); await progress(lines.joined(separator: "\n"))
+                do {
+                    try AIModelCache.default.deleteEntry(for: folder.appendingPathComponent("blocks-18-19.aimodel"), options: .cpuOnly)
+                    lines.append("Targeted compiled-cache removal: completed; asset will specialize again when needed")
+                } catch {
+                    lines.append("Targeted compiled-cache removal: not completed; continuing with single-stage residency")
+                    lines.append(contentsOf: modelErrorDetails(error))
+                }
+            }
             let sourcePrefix = lines.joined(separator: "\n") + "\n=== Integrated source encoding ===\n"
             lastPhase = "source-context.aimodel: source encoding"
             let source = await executeSourceContext(repetitions: 1) { text in progress(sourcePrefix + text) }
@@ -852,7 +870,7 @@ enum CoreAIDecoderProbe {
                         guard let array = state[name], array.shape == shape else { throw ShardError.invalidManifest }
                         inputs[name] = array
                     }
-                    let result = try await runRetainedStage(stage, folder: folder, inputs: inputs, pool: &pool, stats: &retention)
+                    let result = try await runSequentialPreviewStage(stage, folder: folder, inputs: inputs, stats: &retention)
                     if index == 0 {
                         lines.append("First sampling step stage \(stageIndex+1)/14 \(stage.assetFile): load ms \(result.loadMs); \(result.phases.report)")
                     }
@@ -867,9 +885,9 @@ enum CoreAIDecoderProbe {
                 try requirePreviewMemoryBudget()
                 saveProgress(lines + [lastPhase], profile: .denoiser)
                 await progress((lines + [lastPhase]).joined(separator: "\n"))
-                let result = try await runRetainedStage(apgStage, folder: folder,
+                let result = try await runSequentialPreviewStage(apgStage, folder: folder,
                     inputs: ["velocity":velocity,"latent":latent,"momentum":momentum,
-                             "dt":NDArray(scalars: [times[index]-times[index+1]], shape: [1])], pool: &pool, stats: &retention)
+                             "dt":NDArray(scalars: [times[index]-times[index+1]], shape: [1])], stats: &retention)
                 guard let next = result.values["latent_next"], let nextMomentum = result.values["momentum_next"],
                       result.values["guided_velocity"] != nil else { throw ProbeError.invalidOutputTensor }
                 latent = next; momentum = nextMomentum
@@ -889,24 +907,22 @@ enum CoreAIDecoderProbe {
                 completedSteps += 1
                 lines.append("Sampling step \(index+1)/50 complete; ms \(ms(stepStart.duration(to: clock.now)))")
             }
-            try checkManifest(retention.modelOpens, 15, "preview.retained_opens")
-            try checkManifest(retention.functionBinds, 15, "preview.retained_binds")
-            try checkManifest(retention.completedCalls, 750, "preview.retained_calls")
-            try checkManifest(retention.cacheHits, 735, "preview.retained_hits")
-            lines.append("Sampling retention: \(retention.modelOpens) opens, \(retention.functionBinds) binds, \(retention.cacheHits) hits, \(retention.completedCalls) calls")
-            pool.removeAll()
+            try checkManifest(retention.modelOpens, 750, "preview.sequential_opens")
+            try checkManifest(retention.functionBinds, 750, "preview.sequential_binds")
+            try checkManifest(retention.completedCalls, 750, "preview.sequential_calls")
+            try checkManifest(retention.cacheHits, 0, "preview.sequential_hits")
+            lines.append("Sampling single-stage scope: \(retention.modelOpens) opens, \(retention.functionBinds) binds, \(retention.cacheHits) hits, \(retention.completedCalls) calls")
             let values = try copiedValues(latent, shape: [1,128,64])
             var decoderInput = [Float](repeating: 0, count: 128*64)
             for t in 0..<128 { for c in 0..<64 { decoderInput[c*128+t] = values[t*64+c] } }
             lastPhase = "Phase: decoder.aimodel loading/binding/inference"
             try requirePreviewMemoryBudget()
-            lines.append("Phase: loading full 5.12-second VAE decoder; Swift denoiser pool released, native eviction unverified")
+            lines.append("Phase: loading full 5.12-second VAE decoder; previous Swift stage scope released, native eviction unverified")
             saveProgress(lines, profile: .denoiser); await progress(lines.joined(separator: "\n"))
             let decoderStage = Contract.Stage(assetFile: "decoder.aimodel", layerIndices: [],
                 inputShapes: ["latent":[1,64,128]], outputShapes: ["audio":[1,2,245760]], outputBindings: nil)
-            let decoded = try await runRetainedStage(decoderStage, folder: folder,
-                inputs: ["latent":NDArray(scalars: decoderInput, shape: [1,64,128])], pool: &pool, stats: &retention)
-            pool.removeAll()
+            let decoded = try await runSequentialPreviewStage(decoderStage, folder: folder,
+                inputs: ["latent":NDArray(scalars: decoderInput, shape: [1,64,128])], stats: &retention)
             guard let audioArray = decoded.values["audio"] else { throw ProbeError.invalidOutputTensor }
             let audio = try copiedValues(audioArray, shape: [1,2,245760])
             for kind in ["reference","fp32-reference"] {
@@ -950,7 +966,6 @@ enum CoreAIDecoderProbe {
             }
             lines.append("Sampling/decoder calls completed: \(retention.completedCalls); model opens: \(retention.modelOpens); function binds: \(retention.functionBinds); reuse hits: \(retention.cacheHits)")
         }
-        pool.removeAll()
         let usage = memory.finish()
         if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
         if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
@@ -1553,6 +1568,16 @@ enum CoreAIDecoderProbe {
             current = underlying
         }
         return lines
+    }
+
+    // The result owns fresh CPU NDArrays. The only model/function pair lives
+    // inside this helper and is dropped on success or failure before the next
+    // stage starts. This bounds our Swift ownership, not backend cache residency.
+    private static func runSequentialPreviewStage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray],
+                                                   stats: inout RetentionStats) async throws -> StageResult {
+        var owned: [String: RetainedStage] = [:]
+        defer { owned.removeAll() }
+        return try await runRetainedStage(stage, folder: folder, inputs: inputs, pool: &owned, stats: &stats)
     }
 
     private static func runRetainedStage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray],
