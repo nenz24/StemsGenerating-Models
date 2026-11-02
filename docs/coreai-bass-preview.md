@@ -1,3 +1,7 @@
+> Untuk memilih rekaman baru langsung dari Files di iPhone, ikuti
+> [panduan impor audio](coreai-iphone-audio-import.md). Alur di bawah tetap
+> menjelaskan uji baseline dengan PCM host dan pembandingan referensinya.
+
 # Tahap 3: piano menjadi WAV bass pendek
 
 > Pembaruan perangkat: [AOT/default crash di compiler Metal/MPS](../reviews/coreai-iphone17pro-aot-metal-crash/README.md).
@@ -89,7 +93,7 @@ terminal menampilkan langkah gold, langkah partition dan nama aset ekspor.
 Setelah terminal menampilkan **Ready**:
 
 1. Jalankan **Cmd+R** di Xcode ke iPhone.
-2. Tekan **Generate bass 5,12 detik**, lalu biarkan aplikasi terbuka sampai selesai.
+2. Tekan **Uji baseline piano 5,12 detik**, lalu biarkan aplikasi terbuka sampai selesai.
 3. Tekan **Dengarkan bass** dan **Dengarkan bersama piano**.
 4. Bagikan laporan serta WAV bass dan piano+bass menggunakan tombol yang muncul.
 

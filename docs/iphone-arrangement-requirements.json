@@ -754,7 +754,7 @@
   "bass_preview_pipeline": {
     "preparation_script": "scripts/prepare_coreai_bass_preview.sh",
     "exporter": "scripts/export_coreai_bass_preview.py",
-    "button": "Generate bass 5,12 detik",
+    "button": "Uji baseline piano 5,12 detik",
     "guide": "docs/coreai-bass-preview.md",
     "host_report": "reviews/coreai-bass-preview-export/reference.json",
     "local_ignored_bundle": "prototypes/ios27-coreai/ModelCandidates/bass-preview-512",
@@ -780,7 +780,7 @@
     "host_decoder_waveform_parity_passed": true,
     "raw_guided_velocity_diagnostics_not_gating": true,
     "device_output_reference_comparisons": 10,
-    "raw_recording_import_or_prompt_tokenization_on_iphone_implemented": false,
+    "raw_recording_import_or_prompt_tokenization_on_iphone_implemented": true,
     "on_device_rng_implemented": false,
     "new_apple_build_verified": true,
     "device_integrated_inference_verified": true,
@@ -855,7 +855,7 @@
     "device_mac_reference_waveform_checks_passed": 2,
     "device_final_latent_reference_checks_failed": 2,
     "performance_scope": "One confirmed Release -O retained CPU-request 5.12-second run, 59.235s, 450.42 MiB sampled process maximum; not exact peak, total RAM, cold-start or full-song guarantee.",
-    "next_measurement": "No additional same-case test required to accept this observed route; next development addresses raw audio import, repeatability/performance and longer inputs separately",
+    "next_measurement": "On-device Files import: first 5.12 seconds of existing piano.mp3, then new piano; no host reference parity claim for imported audio.",
     "release_measurement_prepared": true,
     "release_measurement_apple_build_verified": true,
     "latest_profiled_report": "reviews/coreai-iphone17pro-bass-preview-reuse/summary.json",
@@ -886,6 +886,38 @@
       "sampling_function_binds": 750,
       "sampling_reuse_hits": 0,
       "sampling_calls": 750
+    },
+    "raw_recording_import_on_iphone_implemented": true,
+    "arbitrary_prompt_tokenization_on_iphone_implemented": false,
+    "audio_import": {
+      "guide": "docs/coreai-iphone-audio-import.md",
+      "implemented": true,
+      "apple_build_verified": false,
+      "device_execution_verified": false,
+      "source": "Files via security-scoped URL and NSFileCoordinator",
+      "audio_window_seconds": 5.12,
+      "segment_start_seconds": 0,
+      "canonical_sample_rate": 48000,
+      "canonical_channels": 2,
+      "canonical_frames": 245760,
+      "supported_input_channels": [
+        1,
+        2
+      ],
+      "normalization_applied": false,
+      "original_file_preserved": true,
+      "decode_buffers_frames": 4096,
+      "preset": "existing fixed bass prompt",
+      "epsilon_and_initial_noise": "existing verified host fixtures; no on-device RNG",
+      "new_input_numerical_parity": "NOT EVALUATED; no matching host references",
+      "new_input_output_reference_checks": 0,
+      "fixed_preset_conditioning_checks": 6,
+      "fixed_reference_regression_preserved": true,
+      "new_model_weights_required": false,
+      "new_output_files": [
+        "piano.wav",
+        "input.json"
+      ]
     }
   }
 }

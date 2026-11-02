@@ -5,6 +5,7 @@ import AVFoundation
 import CoreAI
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 @main
 @MainActor
@@ -15,6 +16,8 @@ struct CoreAIDeviceProbeApp: App {
     @State private var generatedMix: URL?
     @State private var audioPlayer: AVAudioPlayer?
     @State private var restoredPreview = false
+    @State private var showingAudioImporter = false
+    @State private var importedPiano: CoreAIImportedPiano?
 
     init() {
         let saved = CoreAIDecoderProbe.latestSavedBassPreview()
@@ -29,7 +32,24 @@ struct CoreAIDeviceProbeApp: App {
             NavigationStack {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Periksa runtime dan tensor CoreAI pada perangkat ini.")
+                        if hasResource("bass-preview-512/reference.json") {
+                            Text("Buat bass untuk bagian awal rekaman piano Anda.")
+                            Text("Pilih audio mono atau stereo minimal 5,12 detik. File asli disimpan; generasi memakai 5,12 detik awal.")
+                                .font(.footnote)
+                            Button("Pilih rekaman piano") { showingAudioImporter = true }
+                                .disabled(runningModel)
+                            if let importedPiano {
+                                Text(importedPiano.metadata.name)
+                                    .font(.callout)
+                                Button("Dengarkan bagian piano") { playPreview(importedPiano.previewURL) }
+                                    .disabled(runningModel)
+                                Button("Generate bass dari rekaman") { startGeneration(importedPiano: importedPiano) }
+                                    .disabled(runningModel)
+                            }
+                            Divider()
+                        }
+                        Text("Pemeriksaan dan baseline")
+                            .font(.headline)
                         Button("Jalankan pemeriksaan") {
                             do {
                                 report = try CoreAIDeviceProbe.run()
@@ -182,23 +202,7 @@ struct CoreAIDeviceProbeApp: App {
                             .disabled(runningModel)
                         }
                         if hasResource("bass-preview-512/reference.json") {
-                            Button("Generate bass 5,12 detik") {
-                                audioPlayer?.stop()
-                                generatedBass = nil; generatedMix = nil
-                                restoredPreview = false
-                                runningModel = true
-                                report = "Menjalankan pipeline piano ke WAV bass pendek…"
-                                Task {
-                                    let update: @MainActor @Sendable (String) -> Void = { text in self.report = text }
-                                    let result = await Task.detached(priority: .userInitiated) {
-                                        await CoreAIDecoderProbe.generateBassPreview(progress: update)
-                                    }.value
-                                    report = result.report
-                                    generatedBass = result.bassURL
-                                    generatedMix = result.mixURL
-                                    runningModel = false
-                                }
-                            }
+                            Button("Uji baseline piano 5,12 detik") { startGeneration() }
                             .disabled(runningModel)
                         }
                         if let generatedBass {
@@ -220,11 +224,23 @@ struct CoreAIDeviceProbeApp: App {
                             Button("Dengarkan bass") { playPreview(generatedBass) }
                                 .disabled(runningModel)
                             ShareLink(item: generatedBass) { Label("Bagikan WAV bass", systemImage: "square.and.arrow.up") }
+                                .disabled(runningModel)
+                            let pianoClip = generatedBass.deletingLastPathComponent().appendingPathComponent("piano.wav")
+                            if FileManager.default.fileExists(atPath: pianoClip.path) {
+                                ShareLink(item: pianoClip) { Label("Bagikan piano 5,12 detik", systemImage: "square.and.arrow.up") }
+                                    .disabled(runningModel)
+                            }
+                            let inputMetadata = generatedBass.deletingLastPathComponent().appendingPathComponent("input.json")
+                            if FileManager.default.fileExists(atPath: inputMetadata.path) {
+                                ShareLink(item: inputMetadata) { Label("Bagikan info rekaman", systemImage: "square.and.arrow.up") }
+                                    .disabled(runningModel)
+                            }
                         }
                         if let generatedMix {
                             Button("Dengarkan bersama piano") { playPreview(generatedMix) }
                                 .disabled(runningModel)
                             ShareLink(item: generatedMix) { Label("Bagikan WAV piano + bass", systemImage: "square.and.arrow.up") }
+                                .disabled(runningModel)
                         }
                         Text(report)
                             .font(.system(.footnote, design: .monospaced))
@@ -236,7 +252,57 @@ struct CoreAIDeviceProbeApp: App {
                     .padding()
                 }
                 .navigationTitle("CoreAI Device Probe")
+                .fileImporter(isPresented: $showingAudioImporter, allowedContentTypes: [.audio], allowsMultipleSelection: false) { result in
+                    importRecording(result)
+                }
             }
+        }
+    }
+
+    private func importRecording(_ selection: Result<[URL], Error>) {
+        guard !runningModel else { return }
+        switch selection {
+        case .failure(let error):
+            report = "Pemilihan audio tidak berhasil: \(error.localizedDescription)"
+        case .success(let urls):
+            guard let selectedURL = urls.first else { return }
+            audioPlayer?.stop()
+            importedPiano = nil
+            runningModel = true
+            report = "Menyalin rekaman dan menyiapkan 5,12 detik awal di iPhone…"
+            Task {
+                do {
+                    let imported = try await Task.detached(priority: .userInitiated) {
+                        try CoreAIAudioImport.importPiano(from: selectedURL)
+                    }.value
+                    importedPiano = imported
+                    report = "Rekaman siap: \(imported.metadata.name)\nBagian awal 5,12 detik, stereo 48 kHz. File asli disimpan tanpa diubah.\nDengarkan bagian piano, lalu tekan Generate bass dari rekaman."
+                } catch {
+                    report = "Impor gagal: \(error.localizedDescription)"
+                }
+                runningModel = false
+            }
+        }
+    }
+
+    private func startGeneration(importedPiano: CoreAIImportedPiano? = nil) {
+        guard !runningModel else { return }
+        audioPlayer?.stop()
+        generatedBass = nil; generatedMix = nil
+        restoredPreview = false
+        runningModel = true
+        report = importedPiano == nil
+            ? "Menjalankan uji baseline piano ke WAV bass pendek…"
+            : "Membuat bass untuk rekaman pilihan Anda…"
+        Task {
+            let update: @MainActor @Sendable (String) -> Void = { text in self.report = text }
+            let result = await Task.detached(priority: .userInitiated) {
+                await CoreAIDecoderProbe.generateBassPreview(importedPiano: importedPiano, progress: update)
+            }.value
+            report = result.report
+            generatedBass = result.bassURL
+            generatedMix = result.mixURL
+            runningModel = false
         }
     }
 

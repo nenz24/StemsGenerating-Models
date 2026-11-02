@@ -139,6 +139,12 @@ dengan hash kedua WAV identik. Release `-O` terkonfirmasi. Ini baseline runtime
 untuk klip pendek, bukan cold-start/full-song guarantee; source CPU standalone
 kini memilih reuse secara default.
 
+**Input piano baru dari Files di iPhone sudah diimplementasikan:** pilih rekaman,
+dengarkan bagian awal 5,12 detik lalu generate bass dengan model/preset yang sama.
+Decode/resampling dilakukan di iPhone; tidak perlu export model ulang untuk file
+baru. Jalur impor masih menunggu build/uji perangkat. [Langkah penggunaan dan
+batas pembandingan](docs/coreai-iphone-audio-import.md).
+
 
 [Percobaan gabungan iPhone pertama](reviews/coreai-iphone17pro-bass-preview-specialization/README.md)
 melewati encoder/conditioning tetapi gagal `failedToSpecialize` sebelum sampling

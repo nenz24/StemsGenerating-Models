@@ -261,7 +261,7 @@ enum CoreAIDecoderProbe {
         return result.report
     }
 
-    private static func executeSourceContext(repetitions: Int, progress: @escaping @MainActor @Sendable (String) -> Void) async
+    private static func executeSourceContext(repetitions: Int, importedPiano: CoreAIImportedPiano? = nil, progress: @escaping @MainActor @Sendable (String) -> Void) async
         -> (report: String, context: [Float]?) {
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",
@@ -269,8 +269,10 @@ enum CoreAIDecoderProbe {
                      "Scope: audio side only; NO text embedding, ConditionEncoder, denoiser or bass generation",
                      "Requested compute policy: cpuOnly; accelerator placement NOT MEASURED",
                      "Audio: 5.12 s / 48000 Hz stereo; 128 latent frames",
-                     "Posterior: mean + (softplus(scale) + 1e-4) * explicit epsilon; fixture epsilon reused for parity",
-                     "PCM decode/resampling happens during Mac preparation; raw recording import on iPhone NOT tested",
+                     "Posterior: mean + (softplus(scale) + 1e-4) * explicit epsilon; fixed host epsilon reused",
+                     importedPiano == nil
+                        ? "PCM decode/resampling happens during Mac preparation; fixed-reference input"
+                        : "Input: Files import decoded/resampled on iPhone; numerical parity NOT EVALUATED for new recording",
                      "Footprint guard before model and each call: 2000 MiB; NOT an OS peak-memory guarantee"]
         #if targetEnvironment(simulator)
         lines.append("Target: Simulator; not physical-device evidence")
@@ -314,17 +316,31 @@ enum CoreAIDecoderProbe {
             try checkManifest(ref.relativeRmseTolerance, 1e-3, "source_context.relative_rmse_tolerance")
             var inputs: [String: NDArray] = [:]
             for (name, shape) in shapes {
-                let values = try readFloats(folder: folder, name: "\(name).f32le", count: shape.reduce(1,*), hashes: ref.artifactSha256)
+                let values: [Float]
+                if name == "audio", let importedPiano {
+                    try importedPiano.validatePCM()
+                    values = importedPiano.planarPCM
+                } else {
+                    values = try readFloats(folder: folder, name: "\(name).f32le", count: shape.reduce(1,*), hashes: ref.artifactSha256)
+                }
                 if name == "chunk_mask" { try checkManifest(values.allSatisfy({ $0 == 1 }), true, "source_context.full_range_mask") }
                 inputs[name] = NDArray(scalars: values, shape: shape)
             }
             var expected: [String: [Float]] = [:]
-            for (name, shape) in outputShapes {
-                expected[name] = try readFloats(folder: folder, name: "\(name)-reference.f32le", count: shape.reduce(1,*), hashes: ref.artifactSha256)
+            if let importedPiano {
+                lines.append("Recording imported on iPhone: \(importedPiano.metadata.name); segment start seconds: 0")
+                lines.append("Original recording SHA-256: \(importedPiano.metadata.originalSHA256)")
+                lines.append("Imported planar PCM SHA-256: \(importedPiano.metadata.planarPCMSHA256)")
+                lines.append("SHA-256: VERIFIED imported PCM, fixture epsilon and full-range mask; pretrained checkpoint verified by preparation")
+                lines.append("No old-recording output references loaded; output shape and finite-value checks remain required")
+            } else {
+                for (name, shape) in outputShapes {
+                    expected[name] = try readFloats(folder: folder, name: "\(name)-reference.f32le", count: shape.reduce(1,*), hashes: ref.artifactSha256)
+                }
+                lines.append("Recording: \(ref.recording.name); segment start seconds: \(ref.recording.startSeconds)")
+                lines.append("Original recording SHA-256 (recorded by Mac preparation): \(ref.recording.sha256)")
+                lines.append("SHA-256: VERIFIED all three input and four output-reference binaries; pretrained checkpoint verified by preparation")
             }
-            lines.append("Recording: \(ref.recording.name); segment start seconds: \(ref.recording.startSeconds)")
-            lines.append("Original recording SHA-256 (recorded by Mac preparation): \(ref.recording.sha256)")
-            lines.append("SHA-256: VERIFIED all three input and four output-reference binaries; pretrained checkpoint verified by preparation")
             lines.append("Phase: opening source-context model and binding one function")
             saveProgress(lines, profile: .denoiser)
             await progress(lines.joined(separator: "\n"))
@@ -350,7 +366,14 @@ enum CoreAIDecoderProbe {
                 let result = try await runSourceContextFunction(function: function, inputs: inputs, shapes: outputShapes)
                 lines.append("Audio-context run \(iteration): backend-await ms \(result.backendMs); readback+checks ms \(result.copyMs)")
                 for name in ["posterior_mean","posterior_std","source_latents","context_latents"] {
-                    guard let actual = result.values[name], let reference = expected[name] else { throw ProbeError.invalidOutputTensor }
+                    guard let actual = result.values[name] else { throw ProbeError.invalidOutputTensor }
+                    if importedPiano != nil {
+                        // runSourceContextFunction has already checked actual shape/type/finiteness.
+                        if name == "posterior_std", !actual.allSatisfy({ $0 >= 0 }) { throw ProbeError.invalidOutputTensor }
+                        lines.append("Imported audio-context \(name): shape and finite values verified; numerical parity NOT EVALUATED")
+                        continue
+                    }
+                    guard let reference = expected[name] else { throw ProbeError.invalidOutputTensor }
                     let stats = try compare(actual: actual, expected: reference,
                                             absoluteTolerance: ref.absoluteTolerance, relativeTolerance: ref.relativeTolerance,
                                             relativeRmseTolerance: ref.relativeRmseTolerance)
@@ -362,15 +385,19 @@ enum CoreAIDecoderProbe {
                 saveProgress(lines, profile: .denoiser)
                 await progress(lines.joined(separator: "\n"))
             }
-            lines.append(repetitions == 3 ? "Real-recording audio-context parity: PASS (three runs, all four outputs)" : "Real-recording audio-context parity: PASS (one integrated call, all four outputs)")
+            if importedPiano != nil {
+                lines.append("Imported audio-context execution: COMPLETED; numerical parity NOT EVALUATED (no matching host reference)")
+            } else {
+                lines.append(repetitions == 3 ? "Real-recording audio-context parity: PASS (three runs, all four outputs)" : "Real-recording audio-context parity: PASS (one integrated call, all four outputs)")
+            }
         } catch {
-            lines.append("Real-recording audio-context parity: NOT PASSED")
+            lines.append(importedPiano == nil ? "Real-recording audio-context parity: NOT PASSED" : "Imported audio-context execution: NOT COMPLETED")
             lines.append("Error: \(String(reflecting: error))")
         }
         let usage = memory.finish()
         if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
         if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
-        lines.append("Completed audio-context parity runs: \(completed)/\(repetitions); total probe ms: \(ms(start.duration(to: clock.now)))")
+        lines.append("Completed audio-context runs: \(completed)/\(repetitions); reference comparisons enabled: \(importedPiano == nil); total probe ms: \(ms(start.duration(to: clock.now)))")
         lines.append("Scope: sampled process footprint only, not total model RAM; no bass/audio output generated")
         saveProgress(lines, profile: .denoiser)
         return (lines.joined(separator: "\n"), completed == repetitions ? capturedContext : nil)
@@ -715,7 +742,7 @@ enum CoreAIDecoderProbe {
         let assets: [String: String]
     }
 
-    private static func streamingSHA256(_ url: URL) throws -> String {
+    static func streamingSHA256(_ url: URL) throws -> String {
         let file = try FileHandle(forReadingFrom: url)
         defer { try? file.close() }
         var digest = SHA256()
@@ -811,10 +838,12 @@ enum CoreAIDecoderProbe {
         }
     }
 
-    static func generateBassPreview(progress: @escaping @MainActor @Sendable (String) -> Void) async -> BassPreviewResult {
+    static func generateBassPreview(importedPiano: CoreAIImportedPiano? = nil, progress: @escaping @MainActor @Sendable (String) -> Void) async -> BassPreviewResult {
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
         let priorReport = savedDenoiserReport()
+        let referenceMode = importedPiano == nil
+        let expectedOutputChecks = referenceMode ? 10 : 0
         let reuseOverride = ProcessInfo.processInfo.environment["COREAI_PREVIEW_REUSE"]
         let aotFolderPresent = Bundle.main.resourceURL.map {
             FileManager.default.fileExists(atPath: $0.appendingPathComponent("ModelCandidates/bass-preview-512-aot").path)
@@ -835,7 +864,9 @@ enum CoreAIDecoderProbe {
                      "Guidance 7; APG momentum -0.75, threshold 2.5, projection over latent time (dim 1); shift 1",
                      "APG projection FP32, compared on host against original FP64 projection; not plain CFG",
                      "Requested compute policy: source/Qwen cpuOnly; sampling/decoder policy below; accelerator placement NOT MEASURED",
-                     "Fixed host PCM/tokenization/epsilon/noise fixtures; raw recording import, arbitrary prompts and on-device RNG NOT tested",
+                     referenceMode
+                        ? "Input mode: fixed host PCM regression; host tokenization/epsilon/noise fixtures; arbitrary prompts and on-device RNG NOT tested"
+                        : "Input mode: iPhone Files import; on-device PCM decode/resampling; fixed bass prompt and host epsilon/noise fixtures; arbitrary prompts and on-device RNG NOT tested",
                      "Actual component outputs feed sampling; host references are comparisons only",
                      reuseSamplingStages
                         ? "Execution: retain at most 15 source CPU sampling model/function handles across steps; release before decoder; native residency/eviction NOT GUARANTEED"
@@ -859,6 +890,14 @@ enum CoreAIDecoderProbe {
         var completedSteps = 0, checks = 0, allParity = true
         var bassURL: URL?, mixURL: URL?
         do {
+            if let importedPiano {
+                try importedPiano.validatePCM()
+                lines.append("Imported recording: \(importedPiano.metadata.name); first 5.12 s, no input normalization")
+                lines.append("Original recording SHA-256: \(importedPiano.metadata.originalSHA256)")
+                lines.append("Imported planar PCM SHA-256: \(importedPiano.metadata.planarPCMSHA256)")
+                lines.append("Generation numerical parity: NOT EVALUATED; no matching host trajectory/waveform for this input")
+                lines.append("Fixed text/timbre preset conditioning still uses its own six matching reference checks")
+            }
             guard let resources = Bundle.main.resourceURL else { throw ShardError.missingPreparedBundle }
             let folder = resources.appendingPathComponent("ModelCandidates/bass-preview-512")
             let sourceFolder = resources.appendingPathComponent("ModelCandidates/source-context")
@@ -920,9 +959,10 @@ enum CoreAIDecoderProbe {
             if let claimed = ref.hostExportStatus {
                 try checkManifest(claimed, hostStatus, "preview.host_export_status")
             } else if !hostStrict { throw ShardError.invalidManifest }
-            allParity = hostStrict
-            lines.append("Host preparation: \(hostStatus); strict gate \(hostStrict ? "PASS" : "NOT PASSED"); original tolerances unchanged")
-            if !hostStrict {
+            allParity = referenceMode && hostStrict
+            lines.append("Baseline export provenance: \(hostStatus); original tolerances unchanged; applies to fixed prepared input only")
+            if referenceMode { lines.append("Host preparation: \(hostStatus); strict gate \(hostStrict ? "PASS" : "NOT PASSED"); original tolerances unchanged") }
+            if referenceMode && !hostStrict {
                 lines.append("Bounded diagnostic bundle: finite, normalized RMSE <= 0.001; pointwise gate failed. Result cannot be labeled overall numerical PASS.")
             }
             try checkManifest(ref.hostDecoderFoldingExact, true, "preview.decoder_fold")
@@ -958,21 +998,25 @@ enum CoreAIDecoderProbe {
             try checkManifest(times[0], Float(1), "preview.time_start")
             try checkManifest(times[50], Float(0), "preview.time_end")
             guard zip(times, times.dropFirst()).allSatisfy({ $0.0 > $0.1 }) else { throw ShardError.invalidManifest }
-            // Verify every numerical reference before expensive device execution.
+            // Only the regression input has matching host output references.
             var references: [String: [Float]] = [:]
-            for step in ref.checkpoints {
-                for name in ["latent"] {
-                    for kind in ["reference","fp32-reference"] {
-                        let file = "step-\(step)-\(name)-\(kind).f32le"
-                        references[file] = try readFloats(folder: folder, name: file, count: 128*64, hashes: ref.artifactSha256)
+            if referenceMode {
+                for step in ref.checkpoints {
+                    for name in ["latent"] {
+                        for kind in ["reference","fp32-reference"] {
+                            let file = "step-\(step)-\(name)-\(kind).f32le"
+                            references[file] = try readFloats(folder: folder, name: file, count: 128*64, hashes: ref.artifactSha256)
+                        }
                     }
                 }
+                for kind in ["reference","fp32-reference"] {
+                    let file = "audio-\(kind).f32le"
+                    references[file] = try readFloats(folder: folder, name: file, count: 2*245760, hashes: ref.artifactSha256)
+                }
             }
-            for kind in ["reference","fp32-reference"] {
-                let file = "audio-\(kind).f32le"
-                references[file] = try readFloats(folder: folder, name: file, count: 2*245760, hashes: ref.artifactSha256)
-            }
-            lines.append("SHA-256: VERIFIED component identities, initial noise, schedule and 10 output references")
+            lines.append(referenceMode
+                ? "SHA-256: VERIFIED component identities, initial noise, schedule and 10 output references"
+                : "SHA-256: VERIFIED component identities, initial noise and schedule; no old-recording output references loaded")
             // Repair only the observed failing derived CPU cache entry, before
             // any model is opened. Bundled assets/weights/references are untouched.
             // The saved report is captured before component progress overwrites it.
@@ -992,7 +1036,7 @@ enum CoreAIDecoderProbe {
             }
             let sourcePrefix = lines.joined(separator: "\n") + "\n=== Integrated source encoding ===\n"
             lastPhase = "source-context.aimodel: source encoding"
-            let source = await executeSourceContext(repetitions: 1) { text in progress(sourcePrefix + text) }
+            let source = await executeSourceContext(repetitions: 1, importedPiano: importedPiano) { text in progress(sourcePrefix + text) }
             lines.append("=== Source component before sampling ===\n" + source.report)
             guard let actualContext = source.context else { throw BassPreviewError.componentNotCompleted("source-context; see component report") }
             let conditionPrefix = lines.joined(separator: "\n") + "\n=== Integrated bass conditioning ===\n"
@@ -1049,7 +1093,7 @@ enum CoreAIDecoderProbe {
                 guard let next = result.values["latent_next"], let nextMomentum = result.values["momentum_next"],
                       result.values["guided_velocity"] != nil else { throw ProbeError.invalidOutputTensor }
                 latent = next; momentum = nextMomentum
-                if ref.checkpoints.contains(index+1) {
+                if referenceMode && ref.checkpoints.contains(index+1) {
                     for (name, array) in [("latent",latent)] {
                         let actual = try copiedValues(array, shape: [1,128,64])
                         for kind in ["reference","fp32-reference"] {
@@ -1094,34 +1138,52 @@ enum CoreAIDecoderProbe {
                 phaseProgress: previewPhaseProgress(prefix: (lines + [lastPhase]).joined(separator: "\n")))
             guard let audioArray = decoded.values["audio"] else { throw ProbeError.invalidOutputTensor }
             let audio = try copiedValues(audioArray, shape: [1,2,245760])
-            for kind in ["reference","fp32-reference"] {
-                guard let expected = references["audio-\(kind).f32le"] else { throw ShardError.invalidManifest }
-                let stats = try compare(actual: audio, expected: expected, absoluteTolerance: ref.absoluteTolerance,
-                                        relativeTolerance: ref.relativeTolerance, relativeRmseTolerance: ref.relativeRmseTolerance)
-                lines.append("Decoded audio vs \(kind): max abs error \(stats.maxError); normalized RMSE \(stats.normalizedRmse); \(stats.passed ? "PASS" : "NOT PASSED")")
-                allParity = allParity && stats.passed; checks += 1
+            if referenceMode {
+                for kind in ["reference","fp32-reference"] {
+                    guard let expected = references["audio-\(kind).f32le"] else { throw ShardError.invalidManifest }
+                    let stats = try compare(actual: audio, expected: expected, absoluteTolerance: ref.absoluteTolerance,
+                                            relativeTolerance: ref.relativeTolerance, relativeRmseTolerance: ref.relativeRmseTolerance)
+                    lines.append("Decoded audio vs \(kind): max abs error \(stats.maxError); normalized RMSE \(stats.normalizedRmse); \(stats.passed ? "PASS" : "NOT PASSED")")
+                    allParity = allParity && stats.passed; checks += 1
+                }
             }
-            try checkManifest(checks, 10, "preview.output_checks")
+            try checkManifest(checks, expectedOutputChecks, "preview.output_checks")
             lastPhase = "writing bass and listening-mix WAV files"
             let sourceRef = try decoder.decode(SourceContextContract.self, from: Data(contentsOf: sourceFolder.appendingPathComponent("reference.json")))
-            let piano = try readFloats(folder: sourceFolder, name: "audio.f32le", count: 2*245760, hashes: sourceRef.artifactSha256)
+            let piano: [Float]
+            if let importedPiano {
+                piano = importedPiano.planarPCM
+            } else {
+                piano = try readFloats(folder: sourceFolder, name: "audio.f32le", count: 2*245760, hashes: sourceRef.artifactSha256)
+            }
             guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { throw ShardError.missingPreparedBundle }
             let output = documents.appendingPathComponent("bass-preview-" + UUID().uuidString)
             try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
             let stem = output.appendingPathComponent("bass.wav"), mixed = output.appendingPathComponent("piano-with-bass.wav")
             try writeStereoFloatWAV(audio, frames: 245760, to: stem)
+            let pianoClip = output.appendingPathComponent("piano.wav")
+            try writeStereoFloatWAV(piano, frames: 245760, to: pianoClip)
+            if let importedPiano {
+                let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                try encoder.encode(importedPiano.metadata).write(to: output.appendingPathComponent("input.json"), options: .atomic)
+            }
             var mix = zip(piano,audio).map { Float(0.78)*$0.0 + Float(0.55)*$0.1 }
             let mixPeak = mix.reduce(Float(0)) { max($0,abs($1)) }
             let gain = mixPeak > 0.98 ? Float(0.98)/mixPeak : Float(1)
             if gain < 1 { mix = mix.map { $0 * gain } }
             try writeStereoFloatWAV(mix, frames: 245760, to: mixed)
             bassURL = stem; mixURL = mixed
-            lines.append("Integrated bass preview numerical parity: \(allParity ? "PASS" : "NOT PASSED") (10 comparisons; fixture scope)")
+            if referenceMode {
+                lines.append("Integrated bass preview numerical parity: \(allParity ? "PASS" : "NOT PASSED") (10 comparisons; fixture scope)")
+            } else {
+                lines.append("Imported-recording generation: COMPLETED; numerical parity NOT EVALUATED (0 matching output-reference comparisons)")
+            }
             lines.append("WAV generated on device: YES; bass.wav and piano-with-bass.wav, 5.12 s stereo Float32/48 kHz")
             lines.append("WAV bass SHA-256: \(try streamingSHA256(stem))")
             lines.append("WAV listening mix SHA-256: \(try streamingSHA256(mixed))")
+            lines.append("WAV input piano SHA-256: \(try streamingSHA256(pianoClip))")
             lines.append("Raw bass peak: \(audio.reduce(Float(0)) { max($0,abs($1)) }); listening mix gain: \(gain)")
-            if !allParity { lines.append("Audio is diagnostic: numerical gate did not pass; numerical baseline NOT accepted. Listener approval is tracked separately.") }
+            if referenceMode && !allParity { lines.append("Audio is diagnostic: numerical gate did not pass; numerical baseline NOT accepted. Listener approval is tracked separately.") }
             lines.append("Musical quality is not evaluated by this probe; full-song behavior and total model/device RAM: NOT VALIDATED")
             try lines.joined(separator: "\n").write(to: output.appendingPathComponent("report.txt"), atomically: true, encoding: .utf8)
         } catch {
@@ -1150,14 +1212,14 @@ enum CoreAIDecoderProbe {
         let usage = memory.finish()
         if let baseline = usage.baseline { lines.append("Process baseline MiB: \(Double(baseline)/1048576)") }
         if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
-        lines.append("Completed sampling steps: \(completedSteps)/50; output checks: \(checks)/10; total pipeline ms: \(ms(start.duration(to: clock.now)))")
+        lines.append("Completed sampling steps: \(completedSteps)/50; output checks: \(checks)/\(expectedOutputChecks); total pipeline ms: \(ms(start.duration(to: clock.now)))")
         lines.append("Memory scope: sampled app process, not exact peak or total model/device RAM")
         saveProgress(lines, profile: .denoiser)
         if let bassURL { try? lines.joined(separator: "\n").write(to: bassURL.deletingLastPathComponent().appendingPathComponent("report.txt"), atomically: true, encoding: .utf8) }
         return BassPreviewResult(report: lines.joined(separator: "\n"), bassURL: bassURL, mixURL: mixURL)
     }
 
-    private static func writeStereoFloatWAV(_ planar: [Float], frames: Int, to url: URL) throws {
+    static func writeStereoFloatWAV(_ planar: [Float], frames: Int, to url: URL) throws {
         guard frames > 0, planar.count == frames*2, planar.allSatisfy({ $0.isFinite }), frames <= (Int(UInt32.max)-50)/8 else {
             throw ProbeError.invalidFloatData
         }

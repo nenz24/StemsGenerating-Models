@@ -388,8 +388,8 @@ gate ini. [Panduan](../../docs/coreai-bass-conditioning.md).
 ## Generasi WAV bass pendek
 
 Jalankan `bash scripts/prepare_coreai_bass_preview.sh`, tunggu Ready, lalu build
-Cmd+R dan tekan **Generate bass 5,12 detik**. Bundle piano dan conditioning bass
-sebelumnya dipakai kembali; tidak ada file picker. Persiapan menghitung dua
+Cmd+R dan tekan **Uji baseline piano 5,12 detik**. Bundle piano dan conditioning bass
+sebelumnya dipakai kembali untuk uji baseline. Persiapan menghitung dua
 lintasan referensi 50 langkah dan mengekspor 16 aset sekitar 3,49 GB.
 
 Pipeline menjalankan encoder sumber dan seluruh conditioning secara nyata,
@@ -411,3 +411,12 @@ Aplikasi mencatat pemakaian `.aimodelc` dan policy sampling/decoder `default`
 diberikan pengguna tidak menyediakan opsi preferensi CPU. AOT/caller baru
 belum divalidasi pada Mac/iPhone dan masih dapat memerlukan specialization.
 [Panduan](../../docs/coreai-bass-preview-aot.md).
+
+## Impor piano dari Files
+
+Setelah update kode, pilih scheme **CoreAIProbe Reuse**, Cmd+R, lalu
+**Pilih rekaman piano** → **Dengarkan bagian piano** → **Generate bass dari rekaman**.
+Bagian awal 5,12 detik dikonversi di iPhone dan diteruskan ke pipeline yang sama.
+Tidak perlu menjalankan export/persiapan model ulang. File asli disalin tanpa
+diubah; hasil mencakup input piano, bass, mix, metadata dan laporan. Implementasi
+impor baru menunggu build dan uji perangkat. [Panduan](../../docs/coreai-iphone-audio-import.md).
