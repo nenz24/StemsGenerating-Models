@@ -142,8 +142,10 @@ kini memilih reuse secara default.
 **Input piano baru dari Files di iPhone sudah diimplementasikan:** pilih rekaman,
 dengarkan bagian awal 5,12 detik lalu generate bass dengan model/preset yang sama.
 Decode/resampling dilakukan di iPhone; tidak perlu export model ulang untuk file
-baru. Jalur impor masih menunggu build/uji perangkat. [Langkah penggunaan dan
-batas pembandingan](docs/coreai-iphone-audio-import.md).
+baru. [Run impor pertama selesai](reviews/coreai-iphone17pro-audio-import/README.md):
+50/50 langkah, generasi 65,88 s dan footprint maksimum proses tersampel
+472,71 MiB; tahap impor sebelumnya tidak termasuk pengukuran ini. Pemeriksaan
+WAV dan kualitas musikal run baru masih menunggu. [Panduan](docs/coreai-iphone-audio-import.md).
 
 
 [Percobaan gabungan iPhone pertama](reviews/coreai-iphone17pro-bass-preview-specialization/README.md)

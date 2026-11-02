@@ -419,4 +419,7 @@ Setelah update kode, pilih scheme **CoreAIProbe Reuse**, Cmd+R, lalu
 Bagian awal 5,12 detik dikonversi di iPhone dan diteruskan ke pipeline yang sama.
 Tidak perlu menjalankan export/persiapan model ulang. File asli disalin tanpa
 diubah; hasil mencakup input piano, bass, mix, metadata dan laporan. Implementasi
-impor baru menunggu build dan uji perangkat. [Panduan](../../docs/coreai-iphone-audio-import.md).
+impor sudah menyelesaikan satu run MP3 stereo 44,1 kHz pada iPhone: 50/50 langkah,
+65,88 detik generasi, footprint maksimum tersampel 472,71 MiB. Angka tersebut
+mengecualikan tahap impor sebelumnya; WAV dan uji dengar run baru masih menunggu.
+[Panduan](../../docs/coreai-iphone-audio-import.md).

@@ -697,7 +697,7 @@
     "recording_and_derived_binaries_committed": false,
     "new_swift_apple_build_verified": true,
     "device_parity_verified": true,
-    "raw_recording_import_resampling_on_device_verified": false,
+    "raw_recording_import_resampling_on_device_verified": true,
     "text_embedding_or_condition_encoder_implemented": true,
     "bass_generation_verified": false,
     "device_report": "reviews/coreai-iphone17pro-source-context/report.json",
@@ -706,7 +706,8 @@
     "device_output_comparisons_passed": 12,
     "device_backend_await_mean_ms": 1036.7197503333334,
     "device_sampled_process_maximum_mib": 398.20570373535156,
-    "memory_scope": "10 ms sampled app process phys_footprint; not exact peak or total model/device RAM; no combined-pipeline measurement"
+    "memory_scope": "10 ms sampled app process phys_footprint; not exact peak or total model/device RAM; no combined-pipeline measurement",
+    "raw_recording_import_report": "reviews/coreai-iphone17pro-audio-import/summary.json"
   },
   "bass_text_conditioning_probe": {
     "preparation_script": "scripts/prepare_coreai_bass_conditioning.sh",
@@ -855,7 +856,7 @@
     "device_mac_reference_waveform_checks_passed": 2,
     "device_final_latent_reference_checks_failed": 2,
     "performance_scope": "One confirmed Release -O retained CPU-request 5.12-second run, 59.235s, 450.42 MiB sampled process maximum; not exact peak, total RAM, cold-start or full-song guarantee.",
-    "next_measurement": "On-device Files import: first 5.12 seconds of existing piano.mp3, then new piano; no host reference parity claim for imported audio.",
+    "next_measurement": "Inspect uploaded bass/mix/input WAV for this imported recording, including >unity stem peak, then listen/review a genuinely different piano recording.",
     "release_measurement_prepared": true,
     "release_measurement_apple_build_verified": true,
     "latest_profiled_report": "reviews/coreai-iphone17pro-bass-preview-reuse/summary.json",
@@ -892,8 +893,8 @@
     "audio_import": {
       "guide": "docs/coreai-iphone-audio-import.md",
       "implemented": true,
-      "apple_build_verified": false,
-      "device_execution_verified": false,
+      "apple_build_verified": true,
+      "device_execution_verified": true,
       "source": "Files via security-scoped URL and NSFileCoordinator",
       "audio_window_seconds": 5.12,
       "segment_start_seconds": 0,
@@ -917,7 +918,18 @@
       "new_output_files": [
         "piano.wav",
         "input.json"
-      ]
+      ],
+      "device_report": "reviews/coreai-iphone17pro-audio-import/summary.json",
+      "verified_input_scope": "One MP3, 44.1 kHz stereo, same original piano file as baseline; first 5.12 seconds. No new-input musical approval or waveform-byte audit yet.",
+      "generation_total_ms": 65877.000375,
+      "generation_timing_excludes_prior_import": true,
+      "generation_sampled_process_maximum_mib": 472.7055892944336,
+      "input_metadata_and_report_hashes_match": true,
+      "generation_steps_completed": 50,
+      "generation_wav_reported": true,
+      "raw_bass_peak_reported": 1.037155,
+      "musical_quality_verified": false,
+      "waveform_bytes_verified": false
     }
   }
 }

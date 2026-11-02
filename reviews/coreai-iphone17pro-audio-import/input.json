@@ -1,0 +1,18 @@
+{
+  "channels" : 2,
+  "frames" : 245760,
+  "importID" : "0C7BE99A-19A1-4C8E-BE40-74CD850B0BF9",
+  "monoDuplicatedToStereo" : false,
+  "name" : "piano.mp3",
+  "normalizationApplied" : false,
+  "originalChannels" : 2,
+  "originalDurationSeconds" : 243.33061224489796,
+  "originalSHA256" : "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "originalSampleRate" : 44100,
+  "planarPCMSHA256" : "2c602ebc5f47bd9b1780de1813d229f037ca826ea041c204fa8f02f1b0974b86",
+  "previewWAVSHA256" : "be09b799dd655ab0d4593436cbdfea21b0814e6d145c82d88b694d25b2bfdf87",
+  "sampleRate" : 48000,
+  "schemaVersion" : 1,
+  "seconds" : 5.12,
+  "segmentStartSeconds" : 0
+}

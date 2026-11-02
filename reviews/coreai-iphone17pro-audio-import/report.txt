@@ -1,0 +1,210 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+Probe run: 2DCBE0FA-DE16-4EF8-A516-49F904093F89; started UTC: 2026-11-02T12:54:43Z
+CoreAI architecture: h18p
+App build configuration: Release
+Swift app optimization: -O; native backend optimization is separate
+Test: actual piano -> VAE posterior -> full Qwen/ConditionEncoder -> 50 APG-guided Euler steps -> bass WAV
+Audio: 5.12 s / 48000 Hz stereo; 128 latent frames / 117 condition tokens
+Guidance 7; APG momentum -0.75, threshold 2.5, projection over latent time (dim 1); shift 1
+APG projection FP32, compared on host against original FP64 projection; not plain CFG
+Requested compute policy: source/Qwen cpuOnly; sampling/decoder policy below; accelerator placement NOT MEASURED
+Input mode: iPhone Files import; on-device PCM decode/resampling; fixed bass prompt and host epsilon/noise fixtures; arbitrary prompts and on-device RNG NOT tested
+Actual component outputs feed sampling; host references are comparisons only
+Execution: retain at most 15 source CPU sampling model/function handles across steps; release before decoder; native residency/eviction NOT GUARANTEED
+Raw-source cache repair: only blocks-18-19 after its saved BNNS graphLoadFailed; skipped for AOT; no automatic retry
+Native API phase markers are persisted before calls; observer overhead is included in total pipeline time
+Footprint guard 2000 MiB before each stage and after bind; NOT an OS peak-memory guarantee
+Target: iOS device build
+Swift DEBUG compilation condition: OFF
+Sampling handle reuse requested: true
+Sampling reuse selection: launch override
+Imported recording: piano.mp3; first 5.12 s, no input normalization
+Original recording SHA-256: ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189
+Imported planar PCM SHA-256: 2c602ebc5f47bd9b1780de1813d229f037ca826ea041c204fa8f02f1b0974b86
+Generation numerical parity: NOT EVALUATED; no matching host trajectory/waveform for this input
+Fixed text/timbre preset conditioning still uses its own six matching reference checks
+Baseline export provenance: bounded_diagnostic; original tolerances unchanged; applies to fixed prepared input only
+Sampling/decoder assets: source .aimodel; requested policy cpuOnly; device compilation required
+SHA-256: VERIFIED component identities, initial noise and schedule; no old-recording output references loaded
+=== Source component before sampling ===
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: actual recording -> VAE posterior sample -> full-range lego audio context
+Scope: audio side only; NO text embedding, ConditionEncoder, denoiser or bass generation
+Requested compute policy: cpuOnly; accelerator placement NOT MEASURED
+Audio: 5.12 s / 48000 Hz stereo; 128 latent frames
+Posterior: mean + (softplus(scale) + 1e-4) * explicit epsilon; fixed host epsilon reused
+Input: Files import decoded/resampled on iPhone; numerical parity NOT EVALUATED for new recording
+Footprint guard before model and each call: 2000 MiB; NOT an OS peak-memory guarantee
+Target: iOS device build
+Recording imported on iPhone: piano.mp3; segment start seconds: 0
+Original recording SHA-256: ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189
+Imported planar PCM SHA-256: 2c602ebc5f47bd9b1780de1813d229f037ca826ea041c204fa8f02f1b0974b86
+SHA-256: VERIFIED imported PCM, fixture epsilon and full-range mask; pretrained checkpoint verified by preparation
+No old-recording output references loaded; output shape and finite-value checks remain required
+Phase: opening source-context model and binding one function
+Setup: model-open ms 3.620292; function-bind ms 67.976417; input-validation ms 0.029
+Before audio-context run 1/1 footprint MiB: 30.033050537109375
+Audio-context run 1: backend-await ms 1225.889958; readback+checks ms 0.051042
+Imported audio-context posterior_mean: shape and finite values verified; numerical parity NOT EVALUATED
+Imported audio-context posterior_std: shape and finite values verified; numerical parity NOT EVALUATED
+Imported audio-context source_latents: shape and finite values verified; numerical parity NOT EVALUATED
+Imported audio-context context_latents: shape and finite values verified; numerical parity NOT EVALUATED
+Imported audio-context execution: COMPLETED; numerical parity NOT EVALUATED (no matching host reference)
+Process baseline MiB: 24.423675537109375
+Sampled process maximum MiB (10 ms): 402.5020751953125
+Completed audio-context runs: 1/1; reference comparisons enabled: false; total probe ms: 1341.466209
+Scope: sampled process footprint only, not total model RAM; no bass/audio output generated
+=== Bass conditioning before sampling ===
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+CoreAI architecture: h18p
+Test: bass prompt -> all 28 Qwen blocks -> complete ACE ConditionEncoder (8 lyric + 4 timbre blocks)
+Scope: text/target conditioning; fixed host-tokenized prompt; NO denoiser or bass waveform
+Requested compute policy: cpuOnly; accelerator placement NOT MEASURED
+27 sequential native assets; FP16 stored weights, FP32 calculations; detached CPU copies between assets
+Prompt tokenization on Mac; arbitrary prompt entry/tokenization on iPhone NOT tested
+No timbre reference recording: publisher silence latent, first 750 frames; single batch with all tokens valid
+Output: condition [1,117,2048], mask [1,117]; source audio context tested separately
+Footprint guard before each stage: 2000 MiB; NOT an OS peak-memory guarantee
+Target: iOS device build
+SHA-256: VERIFIED three inputs and six references; all checkpoint hashes verified during preparation
+Stage 1/27 token-embedding.aimodel: load+bind ms 2.808792; backend-await ms 9.727459; readback ms 0.083416
+Stage 2/27 qwen-00-01.aimodel: load+bind ms 2.774167; backend-await ms 229.229; readback ms 0.051666
+Stage 3/27 qwen-02-03.aimodel: load+bind ms 2.506667; backend-await ms 231.104166; readback ms 0.050334
+Stage 4/27 qwen-04-05.aimodel: load+bind ms 2.597666; backend-await ms 231.664375; readback ms 0.049417
+Stage 5/27 qwen-06-07.aimodel: load+bind ms 2.500375; backend-await ms 225.93375; readback ms 0.055458
+Stage 6/27 qwen-08-09.aimodel: load+bind ms 2.628875; backend-await ms 233.66325; readback ms 0.05875
+Stage 7/27 qwen-10-11.aimodel: load+bind ms 2.742459; backend-await ms 232.269416; readback ms 0.054459
+Stage 8/27 qwen-12-13.aimodel: load+bind ms 2.552417; backend-await ms 228.887667; readback ms 0.057542
+Stage 9/27 qwen-14-15.aimodel: load+bind ms 2.669875; backend-await ms 231.250667; readback ms 0.056666
+Stage 10/27 qwen-16-17.aimodel: load+bind ms 2.802292; backend-await ms 228.3745; readback ms 0.057042
+Stage 11/27 qwen-18-19.aimodel: load+bind ms 2.613292; backend-await ms 234.262208; readback ms 0.057833
+Stage 12/27 qwen-20-21.aimodel: load+bind ms 2.741542; backend-await ms 230.307958; readback ms 0.055167
+Stage 13/27 qwen-22-23.aimodel: load+bind ms 2.587625; backend-await ms 244.375583; readback ms 0.054875
+Stage 14/27 qwen-24-25.aimodel: load+bind ms 2.582042; backend-await ms 310.721833; readback ms 0.056167
+Stage 15/27 qwen-26-27.aimodel: load+bind ms 2.621708; backend-await ms 323.654; readback ms 0.052917
+Stage 16/27 qwen-norm.aimodel: load+bind ms 2.568167; backend-await ms 0.153625; readback ms 0.042542
+text_embeddings vs reference: max abs error 0.00012969970703125; RMSE 1.2159641049163495e-05; normalized RMSE 3.6186846834860243e-06; PASS
+text_embeddings vs fp32-reference: max abs error 0.00018310546875; RMSE 1.2263274014012788e-05; normalized RMSE 3.6495256000142243e-06; PASS
+Stage 17/27 lyric-front.aimodel: load+bind ms 2.390541; backend-await ms 18.126958; readback ms 0.016542
+Stage 18/27 lyric-00-01.aimodel: load+bind ms 2.610375; backend-await ms 832.574417; readback ms 0.015833
+Stage 19/27 lyric-02-03.aimodel: load+bind ms 2.459542; backend-await ms 931.439791; readback ms 0.017209
+Stage 20/27 lyric-04-05.aimodel: load+bind ms 2.612833; backend-await ms 884.417083; readback ms 0.0215
+Stage 21/27 lyric-06-07.aimodel: load+bind ms 2.492292; backend-await ms 877.017083; readback ms 0.02
+Stage 22/27 lyric-norm.aimodel: load+bind ms 2.289791; backend-await ms 0.105959; readback ms 0.009333
+Stage 23/27 timbre-front.aimodel: load+bind ms 4.493; backend-await ms 1.777083; readback ms 0.817125
+Stage 24/27 timbre-00-01.aimodel: load+bind ms 2.490167; backend-await ms 1052.202417; readback ms 0.676333
+Stage 25/27 timbre-02-03.aimodel: load+bind ms 2.59825; backend-await ms 1047.802; readback ms 0.84175
+Stage 26/27 timbre-norm.aimodel: load+bind ms 2.481083; backend-await ms 0.835; readback ms 0.011709
+Stage 27/27 condition-pack.aimodel: load+bind ms 2.377; backend-await ms 19.071334; readback ms 0.143583
+condition_mask vs reference: max abs error 0.0; RMSE 0.0; normalized RMSE 0.0; PASS
+condition_mask vs fp32-reference: max abs error 0.0; RMSE 0.0; normalized RMSE 0.0; PASS
+condition vs reference: max abs error 9.250640869140625e-05; RMSE 1.3496339060605427e-05; normalized RMSE 3.594115685058006e-06; PASS
+condition vs fp32-reference: max abs error 9.918212890625e-05; RMSE 1.3620884084145896e-05; normalized RMSE 3.6272825649971524e-06; PASS
+Bass text/ConditionEncoder dual parity: PASS (all 40 layers, six checks)
+Process baseline MiB: 30.82994842529297
+Sampled process maximum MiB (10 ms): 133.89258575439453
+Completed conditioning stages: 27/27; parity checks: 6/6; total probe ms: 9433.81225
+Scope: sampled app process only; total model/device RAM, native cache eviction and raw recording import unmeasured; no bass generated
+=== Sampling and waveform generation ===
+First sampling step stage 1/14 front.aimodel: load ms 2.002875; model-open ms 2.002875; function-bind ms 0.961041; input-validation ms 0.004208; backend-await ms 243.1975; output-copy ms 24.759417; run-other ms 2.4748759999999805
+First sampling step stage 2/14 blocks-00-01.aimodel: load ms 1.805542; model-open ms 1.805542; function-bind ms 0.650792; input-validation ms 0.005792; backend-await ms 1237.276084; output-copy ms 8.218541; run-other ms 2.3654990000001863
+First sampling step stage 3/14 blocks-02-03.aimodel: load ms 2.05475; model-open ms 2.05475; function-bind ms 0.692875; input-validation ms 0.007583; backend-await ms 1187.067167; output-copy ms 8.299958; run-other ms 2.7332090000000484
+First sampling step stage 4/14 blocks-04-05.aimodel: load ms 2.007125; model-open ms 2.007125; function-bind ms 0.691292; input-validation ms 0.006959; backend-await ms 1218.587042; output-copy ms 8.251709; run-other ms 2.668414999999987
+First sampling step stage 5/14 blocks-06-07.aimodel: load ms 2.134291; model-open ms 2.134291; function-bind ms 0.711375; input-validation ms 0.006042; backend-await ms 1189.348833; output-copy ms 8.2535; run-other ms 2.6489999999999174
+First sampling step stage 6/14 blocks-08-09.aimodel: load ms 2.251167; model-open ms 2.251167; function-bind ms 0.67025; input-validation ms 0.006167; backend-await ms 1163.360584; output-copy ms 8.184208; run-other ms 2.394374000000097
+First sampling step stage 7/14 blocks-10-11.aimodel: load ms 2.052166; model-open ms 2.052166; function-bind ms 0.691959; input-validation ms 0.006584; backend-await ms 1223.760833; output-copy ms 8.564167; run-other ms 2.402041000000052
+First sampling step stage 8/14 blocks-12-13.aimodel: load ms 2.364875; model-open ms 2.364875; function-bind ms 0.874833; input-validation ms 0.006542; backend-await ms 1215.438042; output-copy ms 8.102084; run-other ms 2.639540999999886
+First sampling step stage 9/14 blocks-14-15.aimodel: load ms 2.0775; model-open ms 2.0775; function-bind ms 0.705334; input-validation ms 0.006333; backend-await ms 1181.938875; output-copy ms 8.089959; run-other ms 2.427623999999831
+First sampling step stage 10/14 blocks-16-17.aimodel: load ms 2.32025; model-open ms 2.32025; function-bind ms 0.701959; input-validation ms 0.006292; backend-await ms 1237.8335; output-copy ms 8.346375; run-other ms 2.543040999999983
+First sampling step stage 11/14 blocks-18-19.aimodel: load ms 2.171542; model-open ms 2.171542; function-bind ms 0.840167; input-validation ms 0.007625; backend-await ms 1242.1605; output-copy ms 8.170458; run-other ms 2.2694580000000393
+First sampling step stage 12/14 blocks-20-21.aimodel: load ms 2.3145; model-open ms 2.3145; function-bind ms 0.894; input-validation ms 0.007042; backend-await ms 1230.453541; output-copy ms 8.438458; run-other ms 2.8393759999999837
+First sampling step stage 13/14 blocks-22-23.aimodel: load ms 1.991125; model-open ms 1.991125; function-bind ms 1.598542; input-validation ms 0.006709; backend-await ms 1201.335875; output-copy ms 8.28325; run-other ms 2.402708000000027
+First sampling step stage 14/14 tail.aimodel: load ms 2.371375; model-open ms 2.371375; function-bind ms 0.583916; input-validation ms 0.004625; backend-await ms 4.214167; output-copy ms 0.585625; run-other ms 2.2724170000000004
+Sampling step 1/50 complete; ms 15010.57175
+Sampling step 2/50 complete; ms 2954.095666
+Sampling step 3/50 complete; ms 692.913791
+Sampling step 4/50 complete; ms 645.16975
+Sampling step 5/50 complete; ms 723.644083
+Sampling step 6/50 complete; ms 659.585417
+Sampling step 7/50 complete; ms 669.168125
+Sampling step 8/50 complete; ms 686.470625
+Sampling step 9/50 complete; ms 686.325083
+Sampling step 10/50 complete; ms 679.752542
+Sampling step 11/50 complete; ms 646.29325
+Sampling step 12/50 complete; ms 691.994792
+Sampling step 13/50 complete; ms 664.066917
+Sampling step 14/50 complete; ms 646.86725
+Sampling step 15/50 complete; ms 642.897167
+Sampling step 16/50 complete; ms 900.286209
+Sampling step 17/50 complete; ms 2853.519417
+Sampling step 18/50 complete; ms 729.819791
+Sampling step 19/50 complete; ms 754.609417
+Sampling step 20/50 complete; ms 730.987958
+Sampling step 21/50 complete; ms 699.917416
+Sampling step 22/50 complete; ms 690.454541
+Sampling step 23/50 complete; ms 676.934708
+Sampling step 24/50 complete; ms 705.330958
+Sampling step 25/50 complete; ms 648.726583
+Sampling step 26/50 complete; ms 702.582459
+Sampling step 27/50 complete; ms 673.447583
+Sampling step 28/50 complete; ms 687.413167
+Sampling step 29/50 complete; ms 691.774583
+Sampling step 30/50 complete; ms 731.06925
+Sampling step 31/50 complete; ms 660.896042
+Sampling step 32/50 complete; ms 673.671791
+Sampling step 33/50 complete; ms 669.180416
+Sampling step 34/50 complete; ms 673.425666
+Sampling step 35/50 complete; ms 706.260875
+Sampling step 36/50 complete; ms 705.697833
+Sampling step 37/50 complete; ms 669.473917
+Sampling step 38/50 complete; ms 669.676208
+Sampling step 39/50 complete; ms 712.4545
+Sampling step 40/50 complete; ms 706.657875
+Sampling step 41/50 complete; ms 715.481167
+Sampling step 42/50 complete; ms 688.406667
+Sampling step 43/50 complete; ms 666.64825
+Sampling step 44/50 complete; ms 685.256791
+Sampling step 45/50 complete; ms 723.142542
+Sampling step 46/50 complete; ms 681.363334
+Sampling step 47/50 complete; ms 675.837875
+Sampling step 48/50 complete; ms 719.476417
+Sampling step 49/50 complete; ms 691.502792
+Sampling step 50/50 complete; ms 700.949292
+Sampling retained-stage scope: 15 opens, 15 binds, 735 hits, 750 calls
+Retained sampling pool released before decoder; native cache eviction NOT GUARANTEED
+Phase: loading full 5.12-second VAE decoder; sampling Swift handles released, native eviction unverified
+Imported-recording generation: COMPLETED; numerical parity NOT EVALUATED (0 matching output-reference comparisons)
+WAV generated on device: YES; bass.wav and piano-with-bass.wav, 5.12 s stereo Float32/48 kHz
+WAV bass SHA-256: 736874aef04814e0c2a2d39e5d2b1bae526e1ebe81a3b087a8fac5d4c29a782d
+WAV listening mix SHA-256: 9b9bc35d2871f94697dc6c39e1586b9415716241894f9c8bfd1a69ff6647fc69
+WAV input piano SHA-256: be09b799dd655ab0d4593436cbdfea21b0814e6d145c82d88b694d25b2bfdf87
+Raw bass peak: 1.037155; listening mix gain: 1.0
+Musical quality is not evaluated by this probe; full-song behavior and total model/device RAM: NOT VALIDATED
+Completed sampling/decoder asset API timings (751 calls): model-open ms 37.201; function-bind ms 14.126084999999998; input-validation ms 4.755998; backend-await ms 43066.47218100002; output-copy ms 7723.925237999987; run-other ms 2035.7917930000003
+First observed call per asset (16 calls, NOT guaranteed cold cache): model-open ms 37.201; function-bind ms 14.126084999999998; input-validation ms 0.09708599999999999; backend-await ms 16344.870626000002; output-copy ms 146.94795899999997; run-other ms 40.64174599999988
+Repeated asset calls (735 calls; sampling handle reuse requested: true): model-open ms 0.0; function-bind ms 0.0; input-validation ms 4.658912000000001; backend-await ms 26721.60155500002; output-copy ms 7576.977278999991; run-other ms 1995.1500470000008
+Asset timing total apg-euler.aimodel (50 calls): model-open ms 1.898167; function-bind ms 0.5795; input-validation ms 0.25216999999999995; backend-await ms 9.594833999999999; output-copy ms 51.63291999999999; run-other ms 125.796575
+Asset timing total blocks-00-01.aimodel (50 calls): model-open ms 1.805542; function-bind ms 0.650792; input-validation ms 0.37454200000000015; backend-await ms 4407.9054590000005; output-copy ms 513.880632; run-other ms 152.55149500000036
+Asset timing total blocks-02-03.aimodel (50 calls): model-open ms 2.05475; function-bind ms 0.692875; input-validation ms 0.34042; backend-await ms 3636.278628999999; output-copy ms 504.10737400000016; run-other ms 138.44565699999998
+Asset timing total blocks-04-05.aimodel (50 calls): model-open ms 2.007125; function-bind ms 0.691292; input-validation ms 0.32408300000000007; backend-await ms 3084.9773339999997; output-copy ms 494.980829; run-other ms 132.45283499999994
+Asset timing total blocks-06-07.aimodel (50 calls): model-open ms 2.134291; function-bind ms 0.711375; input-validation ms 0.328166; backend-await ms 3882.0750369999996; output-copy ms 496.1707060000001; run-other ms 131.77954999999983
+Asset timing total blocks-08-09.aimodel (50 calls): model-open ms 2.251167; function-bind ms 0.67025; input-validation ms 0.31749900000000003; backend-await ms 4195.568750000001; output-copy ms 499.0160339999999; run-other ms 130.8860850000002
+Asset timing total blocks-10-11.aimodel (50 calls): model-open ms 2.052166; function-bind ms 0.691959; input-validation ms 0.34054000000000006; backend-await ms 3100.422043000001; output-copy ms 494.0017950000001; run-other ms 133.74920800000004
+Asset timing total blocks-12-13.aimodel (50 calls): model-open ms 2.364875; function-bind ms 0.874833; input-validation ms 0.33157999999999993; backend-await ms 3064.84846; output-copy ms 500.7889169999999; run-other ms 133.15975099999986
+Asset timing total blocks-14-15.aimodel (50 calls): model-open ms 2.0775; function-bind ms 0.705334; input-validation ms 0.3229139999999999; backend-await ms 3001.7209180000013; output-copy ms 497.9942900000001; run-other ms 133.77704699999984
+Asset timing total blocks-16-17.aimodel (50 calls): model-open ms 2.32025; function-bind ms 0.701959; input-validation ms 0.355537; backend-await ms 3051.3661209999996; output-copy ms 493.91758399999986; run-other ms 141.66726100000002
+Asset timing total blocks-18-19.aimodel (50 calls): model-open ms 2.171542; function-bind ms 0.840167; input-validation ms 0.32192000000000004; backend-await ms 3043.869247000001; output-copy ms 501.93320700000004; run-other ms 133.85683099999997
+Asset timing total blocks-20-21.aimodel (50 calls): model-open ms 2.3145; function-bind ms 0.894; input-validation ms 0.32650000000000007; backend-await ms 3049.4303400000013; output-copy ms 499.362294; run-other ms 131.54290799999998
+Asset timing total blocks-22-23.aimodel (50 calls): model-open ms 1.991125; function-bind ms 1.598542; input-validation ms 0.3253769999999999; backend-await ms 3008.243585999999; output-copy ms 500.96245700000014; run-other ms 137.365
+Asset timing total decoder.aimodel (1 calls): model-open ms 5.38375; function-bind ms 2.27825; input-validation ms 0.004208; backend-await ms 1568.423333; output-copy ms 21.57625; run-other ms 3.171416999999863
+Asset timing total front.aimodel (50 calls): model-open ms 2.002875; function-bind ms 0.961041; input-validation ms 0.2809189999999999; backend-await ms 922.8938359999999; output-copy ms 1619.4304139999995; run-other ms 152.97458500000002
+Asset timing total tail.aimodel (50 calls): model-open ms 2.371375; function-bind ms 0.583916; input-validation ms 0.20962299999999998; backend-await ms 38.854254; output-copy ms 34.169535; run-other ms 122.61558800000005
+Timing scope: completed sampling/decoder API intervals; backend-await is not isolated kernel time; total pipeline includes components, validation, logging, UI waits, scope release and file writing
+Process baseline MiB: 24.189300537109375
+Sampled process maximum MiB (10 ms): 472.7055892944336
+Completed sampling steps: 50/50; output checks: 0/0; total pipeline ms: 65877.000375
+Memory scope: sampled app process, not exact peak or total model/device RAM

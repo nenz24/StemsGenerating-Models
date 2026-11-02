@@ -2,8 +2,11 @@
 
 Tahap ini menambahkan input baru ke pipeline bass pendek yang sudah berjalan.
 Impor, decode/resampling, encoder sumber, conditioning, 50 langkah APG dan decoder
-berjalan di iPhone. Implementasi baru masih memerlukan build dan uji perangkat;
-59,24 detik pada run sebelumnya adalah hasil fixture tetap, bukan pengukuran impor.
+berjalan di iPhone. [Laporan perangkat pertama](../reviews/coreai-iphone17pro-audio-import/README.md)
+mencatat generasi dari MP3 stereo 44,1 kHz selesai: 50/50 langkah, 65,88 detik,
+footprint maksimum proses tersampel 472,71 MiB. Waktu dan sampler generasi ini
+tidak mencakup tahap penyalinan/decode/resampling/hash yang sudah selesai
+sebelumnya; kualitas audio input baru masih menunggu pemeriksaan WAV/uji dengar.
 
 ## Jalankan
 
@@ -84,9 +87,11 @@ Kecocokan nada/groove pada input baru harus didengar.
 Sebanyak 78 uji regresi host lulus pada 2 November 2026, mencakup kontrak model,
 APG, referensi, staging resource dan helper update proyek. Struktur proyek, empat
 source Swift dan scheme Release/reuse juga berhasil diperiksa. Workspace
-Linux tidak memiliki Swift compiler/Apple SDK; file picker, security scope,
-AVAudioConverter dan generasi input baru belum dijalankan di iPhone.
-Uji perangkat pertama perlu mengonfirmasi file MP3 44,1 kHz stereo, decode dan
-preview 5,12 detik, penyelesaian 50 langkah, WAV serta input/mix yang sesuai.
-Sesudah itu periksa mono, stereo 48 kHz, penolakan audio pendek dan pembatalan
-picker. Tidak diperlukan perubahan checkpoint untuk pemeriksaan tersebut.
+Linux tidak memiliki Swift compiler/Apple SDK. Laporan pengguna kemudian
+mengonfirmasi build Release dan penyelesaian impor MP3 44,1 kHz stereo hingga
+WAV pada iPhone. Hash input konsisten dengan metadata; WAV aktual dan playback
+run ini belum diperiksa. Peak bass yang dilaporkan 1,037155 memerlukan pemeriksaan
+headroom pada WAV Float32, tanpa langsung menyimpulkan hard clipping.
+Selanjutnya periksa WAV dan uji dengar, rekaman berbeda, mono, stereo 48 kHz,
+penolakan audio pendek dan pembatalan picker. Tidak diperlukan perubahan
+checkpoint untuk pemeriksaan tersebut.
