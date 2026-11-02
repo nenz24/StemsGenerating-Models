@@ -1,0 +1,123 @@
+non-launching port is incompatible with service identifier "com.apple.PointerUI.pointeruid.default-service"
+cannot add handler to 0 from 0 - dropping
+cannot add handler to 0 from 0 - dropping
+cannot add handler to 0 from 0 - dropping
+59638328 Plugin query method called
+(501) Invalidation handler invoked, clearing connection
+(501) personaAttributesForPersonaType for type:0 failed with error Error Domain=NSCocoaErrorDomain Code=4099 "The connection to service named com.apple.mobile.usermanagerd.xpc was invalidated from this process." UserInfo={NSDebugDescription=The connection to service named com.apple.mobile.usermanagerd.xpc was invalidated from this process.}
+cannot add handler to 0 from 0 - dropping
+LaunchServices: store (null) or url (null) was nil: Error Domain=NSOSStatusErrorDomain Code=-54 "process may not map database" UserInfo={_LSLine=80, _LSFunction=_LSServer_GetServerStoreForConnectionWithCompletionHandler, _LSFile=LSDReadService.mm, NSDebugDescription=process may not map database}
+Attempt to map database failed: permission was denied. This attempt will not be retried.
+Failed to initialize client context with error Error Domain=NSOSStatusErrorDomain Code=-54 "process may not map database" UserInfo={_LSLine=80, _LSFunction=_LSServer_GetServerStoreForConnectionWithCompletionHandler, _LSFile=LSDReadService.mm, NSDebugDescription=process may not map database}
+cannot add handler to 0 from 0 - dropping
+cannot add handler to 0 from 0 - dropping
+Reading from public effective user settings.
+cannot add handler to 0 from 0 - dropping
+Native phase: model-open/specialization; asset: front.aimodel; cpuOnly requested: true; footprint MiB: 96.78309631347656
+Native phase: function-bind/input-validation; asset: front.aimodel; cpuOnly requested: true; footprint MiB: 96.89247131347656
+Native phase: post-bind-memory-guard; asset: front.aimodel; cpuOnly requested: true; footprint MiB: 96.97059631347656
+Native phase: backend-await; asset: front.aimodel; cpuOnly requested: true; footprint MiB: 96.98622131347656
+Native phase: output-readback; asset: front.aimodel; cpuOnly requested: true; footprint MiB: 83.64265441894531
+Native phase: Swift stage scope release; asset: front.aimodel
+Native phase: model-open/specialization; asset: blocks-00-01.aimodel; cpuOnly requested: true; footprint MiB: 88.68934631347656
+Native phase: function-bind/input-validation; asset: blocks-00-01.aimodel; cpuOnly requested: true; footprint MiB: 88.72059631347656
+Native phase: post-bind-memory-guard; asset: blocks-00-01.aimodel; cpuOnly requested: true; footprint MiB: 88.73622131347656
+Native phase: backend-await; asset: blocks-00-01.aimodel; cpuOnly requested: true; footprint MiB: 88.75184631347656
+Native phase: output-readback; asset: blocks-00-01.aimodel; cpuOnly requested: true; footprint MiB: 73.92408752441406
+Native phase: Swift stage scope release; asset: blocks-00-01.aimodel
+Native phase: model-open/specialization; asset: blocks-02-03.aimodel; cpuOnly requested: true; footprint MiB: 73.68936920166016
+Native phase: function-bind/input-validation; asset: blocks-02-03.aimodel; cpuOnly requested: true; footprint MiB: 345.0961456298828
+Native phase: post-bind-memory-guard; asset: blocks-02-03.aimodel; cpuOnly requested: true; footprint MiB: 345.12744140625
+Native phase: backend-await; asset: blocks-02-03.aimodel; cpuOnly requested: true; footprint MiB: 345.12744140625
+Native phase: output-readback; asset: blocks-02-03.aimodel; cpuOnly requested: true; footprint MiB: 345.3778076171875
+Native phase: Swift stage scope release; asset: blocks-02-03.aimodel
+Native phase: model-open/specialization; asset: blocks-04-05.aimodel; cpuOnly requested: true; footprint MiB: 347.14306640625
+Native phase: function-bind/input-validation; asset: blocks-04-05.aimodel; cpuOnly requested: true; footprint MiB: 311.4403305053711
+Native phase: post-bind-memory-guard; asset: blocks-04-05.aimodel; cpuOnly requested: true; footprint MiB: 311.4403305053711
+Native phase: backend-await; asset: blocks-04-05.aimodel; cpuOnly requested: true; footprint MiB: 311.4403305053711
+Native phase: output-readback; asset: blocks-04-05.aimodel; cpuOnly requested: true; footprint MiB: 311.6906967163086
+Native phase: Swift stage scope release; asset: blocks-04-05.aimodel
+Native phase: model-open/specialization; asset: blocks-06-07.aimodel; cpuOnly requested: true; footprint MiB: 311.4403305053711
+Native phase: function-bind/input-validation; asset: blocks-06-07.aimodel; cpuOnly requested: true; footprint MiB: 279.893798828125
+Native phase: post-bind-memory-guard; asset: blocks-06-07.aimodel; cpuOnly requested: true; footprint MiB: 279.893798828125
+Native phase: backend-await; asset: blocks-06-07.aimodel; cpuOnly requested: true; footprint MiB: 279.893798828125
+Native phase: output-readback; asset: blocks-06-07.aimodel; cpuOnly requested: true; footprint MiB: 280.1441650390625
+Native phase: Swift stage scope release; asset: blocks-06-07.aimodel
+Native phase: model-open/specialization; asset: blocks-08-09.aimodel; cpuOnly requested: true; footprint MiB: 279.893798828125
+Native phase: function-bind/input-validation; asset: blocks-08-09.aimodel; cpuOnly requested: true; footprint MiB: 190.39407348632812
+Native phase: post-bind-memory-guard; asset: blocks-08-09.aimodel; cpuOnly requested: true; footprint MiB: 190.39407348632812
+Native phase: backend-await; asset: blocks-08-09.aimodel; cpuOnly requested: true; footprint MiB: 190.39407348632812
+Native phase: output-readback; asset: blocks-08-09.aimodel; cpuOnly requested: true; footprint MiB: 190.62881469726562
+Native phase: Swift stage scope release; asset: blocks-08-09.aimodel
+Native phase: model-open/specialization; asset: blocks-10-11.aimodel; cpuOnly requested: true; footprint MiB: 192.39407348632812
+Native phase: function-bind/input-validation; asset: blocks-10-11.aimodel; cpuOnly requested: true; footprint MiB: 186.70689392089844
+Native phase: post-bind-memory-guard; asset: blocks-10-11.aimodel; cpuOnly requested: true; footprint MiB: 186.70689392089844
+Native phase: backend-await; asset: blocks-10-11.aimodel; cpuOnly requested: true; footprint MiB: 186.70689392089844
+Native phase: output-readback; asset: blocks-10-11.aimodel; cpuOnly requested: true; footprint MiB: 186.97288513183594
+Native phase: Swift stage scope release; asset: blocks-10-11.aimodel
+Native phase: model-open/specialization; asset: blocks-12-13.aimodel; cpuOnly requested: true; footprint MiB: 186.73814392089844
+Native phase: function-bind/input-validation; asset: blocks-12-13.aimodel; cpuOnly requested: true; footprint MiB: 259.58226013183594
+Native phase: post-bind-memory-guard; asset: blocks-12-13.aimodel; cpuOnly requested: true; footprint MiB: 259.58226013183594
+Native phase: backend-await; asset: blocks-12-13.aimodel; cpuOnly requested: true; footprint MiB: 259.58226013183594
+Native phase: output-readback; asset: blocks-12-13.aimodel; cpuOnly requested: true; footprint MiB: 259.83262634277344
+Native phase: Swift stage scope release; asset: blocks-12-13.aimodel
+Native phase: model-open/specialization; asset: blocks-14-15.aimodel; cpuOnly requested: true; footprint MiB: 259.59788513183594
+Native phase: function-bind/input-validation; asset: blocks-14-15.aimodel; cpuOnly requested: true; footprint MiB: 259.80137634277344
+Native phase: post-bind-memory-guard; asset: blocks-14-15.aimodel; cpuOnly requested: true; footprint MiB: 259.81700134277344
+Native phase: backend-await; asset: blocks-14-15.aimodel; cpuOnly requested: true; footprint MiB: 259.81700134277344
+Native phase: output-readback; asset: blocks-14-15.aimodel; cpuOnly requested: true; footprint MiB: 260.27049255371094
+Native phase: Swift stage scope release; asset: blocks-14-15.aimodel
+Native phase: model-open/specialization; asset: blocks-16-17.aimodel; cpuOnly requested: true; footprint MiB: 260.02012634277344
+Native phase: function-bind/input-validation; asset: blocks-16-17.aimodel; cpuOnly requested: true; footprint MiB: 204.28604888916016
+Native phase: post-bind-memory-guard; asset: blocks-16-17.aimodel; cpuOnly requested: true; footprint MiB: 204.30167388916016
+Native phase: backend-await; asset: blocks-16-17.aimodel; cpuOnly requested: true; footprint MiB: 204.30167388916016
+Native phase: output-readback; asset: blocks-16-17.aimodel; cpuOnly requested: true; footprint MiB: 204.55204010009766
+Native phase: Swift stage scope release; asset: blocks-16-17.aimodel
+Native phase: model-open/specialization; asset: blocks-18-19.aimodel; cpuOnly requested: true; footprint MiB: 204.30167388916016
+Native phase: function-bind/input-validation; asset: blocks-18-19.aimodel; cpuOnly requested: true; footprint MiB: 254.22389221191406
+Native phase: post-bind-memory-guard; asset: blocks-18-19.aimodel; cpuOnly requested: true; footprint MiB: 254.22389221191406
+Native phase: backend-await; asset: blocks-18-19.aimodel; cpuOnly requested: true; footprint MiB: 254.22389221191406
+Native phase: output-readback; asset: blocks-18-19.aimodel; cpuOnly requested: true; footprint MiB: 254.47425842285156
+Native phase: Swift stage scope release; asset: blocks-18-19.aimodel
+Native phase: model-open/specialization; asset: blocks-20-21.aimodel; cpuOnly requested: true; footprint MiB: 254.22389221191406
+Native phase: function-bind/input-validation; asset: blocks-20-21.aimodel; cpuOnly requested: true; footprint MiB: 294.44303131103516
+Native phase: post-bind-memory-guard; asset: blocks-20-21.aimodel; cpuOnly requested: true; footprint MiB: 294.44303131103516
+Native phase: backend-await; asset: blocks-20-21.aimodel; cpuOnly requested: true; footprint MiB: 294.44303131103516
+Native phase: output-readback; asset: blocks-20-21.aimodel; cpuOnly requested: true; footprint MiB: 294.66214752197266
+Native phase: Swift stage scope release; asset: blocks-20-21.aimodel
+Native phase: model-open/specialization; asset: blocks-22-23.aimodel; cpuOnly requested: true; footprint MiB: 294.41178131103516
+Native phase: function-bind/input-validation; asset: blocks-22-23.aimodel; cpuOnly requested: true; footprint MiB: 255.06835174560547
+Native phase: post-bind-memory-guard; asset: blocks-22-23.aimodel; cpuOnly requested: true; footprint MiB: 255.06835174560547
+Native phase: backend-await; asset: blocks-22-23.aimodel; cpuOnly requested: true; footprint MiB: 255.06835174560547
+Native phase: output-readback; asset: blocks-22-23.aimodel; cpuOnly requested: true; footprint MiB: 255.31871795654297
+Native phase: Swift stage scope release; asset: blocks-22-23.aimodel
+Native phase: model-open/specialization; asset: tail.aimodel; cpuOnly requested: true; footprint MiB: 255.06835174560547
+Native phase: function-bind/input-validation; asset: tail.aimodel; cpuOnly requested: true; footprint MiB: 276.6933288574219
+Native phase: post-bind-memory-guard; asset: tail.aimodel; cpuOnly requested: true; footprint MiB: 276.6933288574219
+Native phase: backend-await; asset: tail.aimodel; cpuOnly requested: true; footprint MiB: 276.6933288574219
+Native phase: output-readback; asset: tail.aimodel; cpuOnly requested: true; footprint MiB: 276.6933288574219
+Native phase: Swift stage scope release; asset: tail.aimodel
+Native phase: model-open/specialization; asset: apg-euler.aimodel; cpuOnly requested: true; footprint MiB: 276.8339538574219
+Native phase: function-bind/input-validation; asset: apg-euler.aimodel; cpuOnly requested: true; footprint MiB: 297.8339538574219
+Native phase: post-bind-memory-guard; asset: apg-euler.aimodel; cpuOnly requested: true; footprint MiB: 297.8339538574219
+Native phase: backend-await; asset: apg-euler.aimodel; cpuOnly requested: true; footprint MiB: 297.8339538574219
+Native phase: output-readback; asset: apg-euler.aimodel; cpuOnly requested: true; footprint MiB: 297.8339538574219
+Native phase: Swift stage scope release; asset: apg-euler.aimodel
+Native phase: model-open/specialization; asset: front.aimodel; cpuOnly requested: true; footprint MiB: 273.2402038574219
+Native phase: function-bind/input-validation; asset: front.aimodel; cpuOnly requested: true; footprint MiB: 273.2402038574219
+Native phase: post-bind-memory-guard; asset: front.aimodel; cpuOnly requested: true; footprint MiB: 273.2402038574219
+Native phase: backend-await; asset: front.aimodel; cpuOnly requested: true; footprint MiB: 273.2402038574219
+Native phase: output-readback; asset: front.aimodel; cpuOnly requested: true; footprint MiB: 254.49040985107422
+Native phase: model-open/specialization; asset: blocks-00-01.aimodel; cpuOnly requested: true; footprint MiB: 260.7404098510742
+Native phase: function-bind/input-validation; asset: blocks-00-01.aimodel; cpuOnly requested: true; footprint MiB: 260.7404098510742
+Native phase: post-bind-memory-guard; asset: blocks-00-01.aimodel; cpuOnly requested: true; footprint MiB: 260.7560348510742
+Native phase: backend-await; asset: blocks-00-01.aimodel; cpuOnly requested: true; footprint MiB: 260.7560348510742
+Native phase: output-readback; asset: blocks-00-01.aimodel; cpuOnly requested: true; footprint MiB: 164.91260528564453
+Native phase: model-open/specialization; asset: blocks-02-03.aimodel; cpuOnly requested: true; footprint MiB: 164.91260528564453
+Native phase: function-bind/input-validation; asset: blocks-02-03.aimodel; cpuOnly requested: true; footprint MiB: 164.91260528564453
+Native phase: post-bind-memory-guard; asset: blocks-02-03.aimodel; cpuOnly requested: true; footprint MiB: 164.94385528564453
+Native phase: backend-await; asset: blocks-02-03.aimodel; cpuOnly requested: true; footprint MiB: 164.97510528564453
+Native phase: output-readback; asset: blocks-02-03.aimodel; cpuOnly requested: true; footprint MiB: 115.27230072021484
+Native phase: model-open/specialization; asset: blocks-04-05.aimodel; cpuOnly requested: true; footprint MiB: 93.08480072021484
+Native phase: function-bind/input-validation; asset: blocks-04-05.aimodel; cpuOnly requested: true; footprint MiB: 93.11605072021484
+<0x15a7aa6c0> Gesture: System gesture gate timed out.

@@ -117,9 +117,30 @@ yang sama. Target accounting menjadi **30 opens, 30 binds, 720 hits**. Profil
 scope tunggal untuk seluruh langkah.
 
 Ini mengurangi ownership Swift saat pemuatan awal; eviction native, kecukupan
-memori compiler dan keberhasilan di iPhone belum terbukti. Tidak ada retry
-otomatis atau penghapusan cache baru. Jika API compiler tidak kembali, app
-tidak dapat menjamin pembatalannya: tekan Stop di Xcode sebelum memperbarui.
+memori compiler dan keberhasilan seluruh generasi di iPhone belum terbukti.
+[Percobaan berikutnya](../reviews/coreai-iphone17pro-1024-cache-bind/README.md)
+menyelesaikan langkah pertama, lalu gagal dengan BNNS `graphLoadFailed` saat
+binding `blocks-04-05` di langkah kedua. Pengguna melaporkan 148 GB ruang kosong;
+penyimpanan penuh tidak ditetapkan sebagai penyebab. Log ini juga tidak
+membuktikan bahwa file cache korup.
+
+Pemulihan sekarang dibatasi **satu kali untuk seluruh generasi 10,24 detik**:
+hanya error BNNS domain/code dan `graphLoadFailed` yang cocok, saat binding
+handle baru sebelum pemanggilan inferensi, boleh menghapus cache turunan CPU
+untuk **aset itu saja** melalui `AIModelCache.deleteEntry`. App lalu mencoba
+aset yang sama sekali lagi dengan input yang sama. Jika deletion/retry gagal,
+atau aset lain gagal setelah budget terpakai, proses berhenti. Error load,
+backend/inference, validasi tensor, parity dan AOT tidak memicu pemulihan ini.
+Bobot/source bundle tidak diubah, cache seluruh app tidak dihapus, kebijakan
+purge default tetap berlaku dan tidak ada replay langkah sampling.
+
+Jika pemulihan berhasil pada binding, target accounting menjadi **31 opens,
+30 binds, 720 hits, 750 sampling calls**; bind yang gagal menambah satu model
+open tanpa menambah inference call. Laporan menyimpan error asli, operasi
+pemulihan dan hasil retry. Keberhasilan recovery native masih perlu diuji pada
+iPhone; API deletion tidak membuktikan eviction native. Jika API compiler tidak
+kembali, app tidak dapat menjamin pembatalannya: tekan Stop di Xcode sebelum
+memperbarui.
 
 Untuk mencoba perubahan ini, tutup Xcode dan update kode saja:
 

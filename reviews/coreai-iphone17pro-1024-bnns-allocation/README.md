@@ -34,6 +34,10 @@ This is a pending hardware experiment. Release of Swift ownership does not
 guarantee native cache eviction or prevent another compiler allocation failure.
 No Apple build or device execution is available in the Linux workspace.
 
+Follow-up: the [next device attempt](../coreai-iphone17pro-1024-cache-bind/README.md)
+completed the first actual step, including all 24 layers and APG, then failed
+when binding a cached asset in step 2. Full generation is still unverified.
+
 Validation: seven existing window/selection/precision integrity tests and six
 trajectory-diagnostic gate tests pass. The patch changes only Swift lifecycle
 selection and reporting plus documentation; native assets are reused. These
