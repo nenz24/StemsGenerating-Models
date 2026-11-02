@@ -55,6 +55,39 @@ download. A Simulator result is labelled and is not an iPhone measurement.
 Reported compute availability does not prove a model ran on that accelerator.
 The device probe does not call model inference or measure audio generation.
 
+## Pull tertahan perubahan lokal project.pbxproj
+
+Jika `git pull --ff-only` menampilkan **Your local changes would be overwritten**
+untuk proyek CoreAI, tutup Xcode terlebih dahulu, lalu jalankan dari repository:
+
+```bash
+git fetch origin main &&
+coreai_update_script="$(mktemp /tmp/stems-coreai-update.XXXXXX)" &&
+git show origin/main:scripts/update_coreai_project.py > "$coreai_update_script" &&
+python3 "$coreai_update_script" &&
+open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
+```
+
+`fetch` bisa berjalan meskipun perubahan lokal menghalangi pull. Skrip membuat
+backup kecil di folder sejajar repository: pbxproj lokal dan staged, patch proyek,
+dan konfigurasi signing lokal bila ada. **Folder model, working copy AOT dan
+cache tidak diarsipkan.** Team eksplisit yang unik di proyek dipindahkan ke
+`Signing.local.xcconfig` yang diabaikan Git; pengaturan lain di include tetap ada.
+Tanpa Team eksplisit, include lama dipertahankan byte demi byte.
+
+Hanya pbxproj dipulihkan dari HEAD, lalu branch main di-fast-forward ke hasil
+fetch. Perubahan proyek selain Team tersedia di backup, bukan dicampur otomatis
+ke proyek terbaru. File kerja lain dan stash tidak dipulihkan/dihapus. Skrip
+berhenti sebelum restore jika ada konflik, merge/rebase aktif, branch berbeda,
+histori divergen, Team ambigu, atau perubahan file lain bertumpang tindih dengan
+update. Ini berbeda dari pemulihan konflik autostash di bagian berikut.
+
+Untuk update berikutnya yang kembali tertahan oleh perubahan proyek Xcode:
+
+```bash
+git fetch origin main && python3 scripts/update_coreai_project.py
+```
+
 ## Konflik setelah Applying autostash
 
 Jika log sudah menyatakan fast-forward, versi repository sebenarnya sudah masuk;
