@@ -815,7 +815,13 @@ enum CoreAIDecoderProbe {
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
         let priorReport = savedDenoiserReport()
-        let reuseSamplingStages = ProcessInfo.processInfo.environment["COREAI_PREVIEW_REUSE"] == "1"
+        let reuseOverride = ProcessInfo.processInfo.environment["COREAI_PREVIEW_REUSE"]
+        let aotFolderPresent = Bundle.main.resourceURL.map {
+            FileManager.default.fileExists(atPath: $0.appendingPathComponent("ModelCandidates/bass-preview-512-aot").path)
+        } ?? false
+        // The fixed source CPU case is now device-validated with retained handles.
+        // AOT remains one-scope unless explicitly overridden (then rejected below).
+        let reuseSamplingStages = reuseOverride == "1" || (reuseOverride != "0" && !aotFolderPresent)
         var samplingPool: [String: RetainedStage] = [:]
         defer { samplingPool.removeAll() }
         var retention = RetentionStats()
@@ -848,6 +854,7 @@ enum CoreAIDecoderProbe {
         lines.append("Swift DEBUG compilation condition: OFF")
         #endif
         lines.append("Sampling handle reuse requested: \(reuseSamplingStages)")
+        lines.append("Sampling reuse selection: \(reuseOverride == nil ? "app default for selected resources" : "launch override")")
         var lastPhase = "preview manifest/reference validation"
         var completedSteps = 0, checks = 0, allParity = true
         var bassURL: URL?, mixURL: URL?

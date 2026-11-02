@@ -27,3 +27,11 @@ Git stores metadata/measurements; the original uploads and iPhone Documents
 retain the WAV files. Models/checkpoints and audio are not added to app resources
 or this Git folder. The app can recover an existing saved pair/report for
 playback and **Bagikan laporan generasi** without generating it again.
+
+## Runtime pendek yang dipilih
+
+[Report Release/reuse](../../reviews/coreai-iphone17pro-bass-preview-reuse/README.md)
+mengonfirmasi 59,24 s, sampled app maximum 450,42 MiB, 15 opens/15 binds/735 hits,
+dan kedua hash WAV identik. Route ini dipilih untuk prototype pendek, dengan
+pool dilepas sebelum decoder. Cold-start/repeatability dan full-song memory
+belum diukur; sampled app footprint bukan total RAM atau exact peak.

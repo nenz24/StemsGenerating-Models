@@ -133,8 +133,11 @@ hasil tersimpan serta membagikan laporan per-output. [Pengukuran Release](docs/c
 berikutnya memakai model/preset yang sama. Run kedua memakan 755,29 s dengan
 hash WAV identik; build metadata unrecorded sehingga Release belum dikonfirmasi.
 Backend-await menyerap 96,7% total. Uji berikutnya memakai scheme
-**CoreAIProbe Reuse**, dengan 15 model/fungsi sampling dipakai ulang per run;
-shape-specific timing/memory belum tervalidasi.
+**CoreAIProbe Reuse** kini [terkonfirmasi selesai di iPhone](reviews/coreai-iphone17pro-bass-preview-reuse/README.md):
+**59,24 s**, sampled process maximum **450,42 MiB**, 15 opens/15 binds/735 hits,
+dengan hash kedua WAV identik. Release `-O` terkonfirmasi. Ini baseline runtime
+untuk klip pendek, bukan cold-start/full-song guarantee; source CPU standalone
+kini memilih reuse secara default.
 
 
 [Percobaan gabungan iPhone pertama](reviews/coreai-iphone17pro-bass-preview-specialization/README.md)

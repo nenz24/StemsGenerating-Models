@@ -57,7 +57,9 @@
     "uploaded_wav_metrics": "../../reviews/coreai-iphone17pro-bass-preview-waveforms/metrics.json",
     "per_output_generation_report": "../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.txt",
     "per_output_generation_summary": "../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.json",
-    "subsequent_profiled_run": "../../reviews/coreai-iphone17pro-bass-preview-repeat/summary.json"
+    "subsequent_profiled_run": "../../reviews/coreai-iphone17pro-bass-preview-repeat/summary.json",
+    "retained_runtime_report": "../../reviews/coreai-iphone17pro-bass-preview-reuse/report.txt",
+    "retained_runtime_summary": "../../reviews/coreai-iphone17pro-bass-preview-reuse/summary.json"
   },
   "numerical_status": {
     "comparison_scope": "Linux WAV comparison plus subsequently supplied Mac/device per-output report; reference scopes kept separate",
@@ -75,7 +77,6 @@
   },
   "preservation_scope": "Metadata, hashes and measurements in Git; original uploads and iPhone Documents retain WAVs. No audio/weights added to app or Git.",
   "remaining_validation": [
-    "Same-case retained source CPU performance test via CoreAIProbe Reuse; explicit build plist/DEBUG fallback",
     "Cold-start/repeatability and longer clips",
     "Raw recording import and arbitrary input handling on iPhone",
     "Full-song and other instrument generation on iPhone"
@@ -93,5 +94,17 @@
     "build_configuration": "unrecorded",
     "waveform_hashes_match_baseline": true,
     "comparison_scope": "Observed different run, not controlled reproducible Release speedup/regression proof"
+  },
+  "preferred_runtime": {
+    "scope": "One observed fixed 5.12-second source CPU Release run; not cold-start/full-song guarantee",
+    "scheme": "CoreAIProbe Reuse",
+    "build": "Release -O",
+    "sampling_model_opens": 15,
+    "sampling_function_binds": 15,
+    "sampling_handle_reuse_hits": 735,
+    "sampling_calls": 750,
+    "pipeline_seconds": 59.23537225,
+    "sampled_app_process_maximum_mib": 450.4243392944336,
+    "waveform_hashes_match_audition_baseline": true
   }
 }

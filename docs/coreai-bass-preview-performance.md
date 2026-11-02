@@ -1,31 +1,56 @@
-# Uji performa preview bass CoreAI
+# Performa preview bass CoreAI
 
-Dua laporan perangkat kini tersedia untuk klip dan waveform yang sama:
+Tiga laporan perangkat kini tersedia untuk audio yang sama:
 
-| Pengukuran | Run awal | Run berikutnya |
-| --- | ---: | ---: |
-| Durasi audio | 5,12 s | 5,12 s |
-| Waktu pipeline | 85,95 s | 755,29 s (12 menit 35 detik) |
-| Sampled maximum proses app | 417,19 MiB | 436,47 MiB |
-| Sampling | 50/50 | 50/50 |
-| Dua waveform vs referensi Mac | PASS | PASS |
+| Pengukuran | Awal, satu scope | Ulang, satu scope | Release + reuse |
+| --- | ---: | ---: | ---: |
+| Durasi audio | 5,12 s | 5,12 s | 5,12 s |
+| Waktu pipeline | 85,95 s | 755,29 s | **59,24 s** |
+| Sampled maximum proses app | 417,19 MiB | 436,47 MiB | **450,42 MiB** |
+| Sampling | 50/50 | 50/50 | 50/50 |
+| Build flags tercatat | Tidak tersedia | Unrecorded | **Release / -O / DEBUG OFF** |
+| Dua waveform vs referensi Mac | PASS | PASS | PASS |
 
-[Laporan awal](../reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.json)
-dan [laporan berikutnya](../reviews/coreai-iphone17pro-bass-preview-repeat/summary.json)
-bukan controlled cold-cache benchmark. Sampled process footprint bukan exact
-peak atau total model/device RAM. Laporan kedua mengandung SHA-256 WAV yang
-persis sama dengan baseline uji dengar yang disetujui, tetapi **build flags
-masih unrecorded**. Karena itu Release belum bisa dikonfirmasi atau dituduh
-sebagai penyebab perlambatan.
+[Laporan reuse lengkap](../reviews/coreai-iphone17pro-bass-preview-reuse/README.md)
+mengonfirmasi 15 opens, 15 binds, 735 reuse hits dan 750 sampling calls, lalu
+pool dilepas sebelum decoder. Hash dua WAV persis sama dengan baseline uji
+dengar yang disetujui. Delapan output comparison PASS, dua latent terakhir
+NOT PASSED; host `bounded_diagnostic` menjaga overall gate NOT PASSED.
 
-Pada run kedua, backend-await memakan **730,38 s / 96,7% total pipeline**;
-model-open dan bind gabungan hanya 2,09 s, copy output 6,45 s. Panggilan backend
-ulang tetap mahal. Interval ini dapat memuat deferred work/initialization dan
-execution; bukan bukti kernel time atau kompilasi ulang tertentu.
+Waktu 59,24 s sekitar 12,75 kali lebih cepat daripada run 755,29 s yang diamati,
+dan 1,45 kali daripada run awal 85,95 s. Ini perbandingan antar-run, bukan
+controlled cold-cache/thermal benchmark atau bukti pengaruh Release terpisah.
+Untuk audio 5,12 s, rasio wall/audio masih 11,57: belum real-time.
 
-## Satu pengukuran berikutnya: reuse model dan fungsi
+Backend-await run reuse adalah 37,14 s; copy output 7,71 s. Step pertama
+15,07 s, langkah 2–50 rata-rata 651,59 ms. Backend-await adalah interval API,
+bukan kernel time. Penyebab internal seluruh perbedaan antar-run belum
+terisolasi. Angka memori adalah sampled app process, bukan exact peak atau
+total model/device RAM, dan bukan jaminan skalabilitas full song.
 
-Tutup Xcode, lalu dari repository:
+## Jalur prototype yang dipilih
+
+**Source CPU memakai reuse secara default saat fresh launch tanpa override**,
+termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
+masih memakai mode AOT satu-scope; hasil CPU ini tidak memvalidasinya. Default
+baru hanya mengubah pemilihan lifecycle ke jalur yang sudah diuji pada klip ini.
+Model, guidance 7, 50 langkah APG, dtype, referensi dan batas numerik tetap sama.
+
+Pool lazy berisi maksimal 14 shard DiT + satu APG model/fungsi, dilepas sebelum
+decoder dan saat gagal. Encoder piano dan Qwen tidak masuk pool. Guard proses
+2000 MiB sebelum stage dan sesudah bind tetap aktif. Retention dapat menaikkan
+live memory; guard tidak menjamin transient compiler peak/native eviction.
+Tidak ada retry atau fallback mode diam-diam.
+
+## Scheme dan penggunaan berikutnya
+
+- **CoreAIProbe Reuse**: Release, `COREAI_PREVIEW_REUSE=1`; jalur rekomendasi.
+- **CoreAIProbe Performance**: Release, override `0`; kontrol satu-scope.
+- **CoreAIProbe**: Debug, override `0`; kontrol satu-scope.
+
+Override hanya berlaku untuk proses yang diluncurkan scheme tersebut. Fresh
+launch tanpa override memilih reuse untuk source CPU. Membuka ikon saat proses
+lama masih hidup tidak mengubah environment proses itu.
 
 ```bash
 git fetch origin main &&
@@ -33,62 +58,16 @@ python3 scripts/update_coreai_project.py &&
 open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
 ```
 
-Di toolbar pilih **CoreAIProbe Reuse** dan iPhone yang sama, lalu Cmd+R.
-Scheme ini memakai Release dan mengaktifkan `COREAI_PREVIEW_REUSE=1` hanya
-untuk peluncuran tersebut. Saat membuka app dari ikon sendiri, environment
-scheme tidak diasumsikan tersedia; mode biasa tetap default.
+Pilih **CoreAIProbe Reuse** untuk pengembangan berikutnya. Tidak perlu generate
+ulang untuk menyimpan hasil yang sudah diterima ini. Bila mengukur perubahan
+selanjutnya, gunakan input yang sama dan **Bagikan laporan generasi**, termasuk
+hash WAV, flag build dan ringkasan API timing. Base `CoreAIProbe-Info.plist` dan
+DEBUG fallback kini terbukti bekerja pada report perangkat. SDK/build untuk
+pemilihan default terbaru masih perlu verifikasi Mac; jalur reuse sendiri
+sudah teramati selesai.
 
-Tekan **Generate bass 5,12 detik** sekali. Laporan baru harus mencatat:
-
-```text
-App build configuration: Release
-Swift app optimization: -O
-Swift DEBUG compilation condition: OFF
-Sampling handle reuse requested: true
-Sampling retained-stage scope: 15 opens, 15 binds, 735 hits, 750 calls
-```
-
-Setelah selesai, kirim **Bagikan laporan generasi**. Hash WAV dicatat untuk
-memeriksa kesamaan audio. Tidak perlu preparation, ekspor model/referensi atau
-kompilasi AOT. Hasil lama tetap tersimpan; keluaran run baru tidak menimpanya.
-
-Empat belas shard DiT dan satu APG model/fungsi ditahan lintas 50 langkah,
-dimuat secara lazy. Pool dibatasi **15 entri**, lalu dilepas sebelum decoder.
-Encoder piano dan Qwen tetap selesai sebelum pool sampling dibuat terisi.
-Ini memakai jalur retained-stage yang pernah
-[PASS pada uji sintetis empat langkah](coreai-retained-loop.md), dengan scope
-real-conditioning/batch yang sekarang masih perlu diuji.
-
-Guard proses 2000 MiB sebelum stage dan sesudah bind tetap aktif. Retention
-bisa meningkatkan memori; guard itu tidak menjamin transient compiler peak
-atau native eviction. Jika gagal, pool Swift dibersihkan dan laporan dipertahankan;
-tidak ada fallback/retry diam-diam. AOT/default yang pernah crash Metal tidak
-dipakai untuk eksperimen reuse CPU source ini.
-
-## Konfigurasi dan pembanding
-
-- **CoreAIProbe**: Debug, satu scope per aset seperti baseline eksekusi.
-- **CoreAIProbe Performance**: Release, satu scope per aset; kontrol tanpa reuse.
-- **CoreAIProbe Reuse**: Release, reuse 15 sampling handle per satu generasi.
-
-Pencatatan build yang dulu memakai custom `INFOPLIST_KEY_*` kini menggunakan
-base `CoreAIProbe-Info.plist` yang nyata dengan ekspansi build settings.
-Compile-time DEBUG field menjadi cross-check tambahan. Scheme/plist dapat
-diaudit di host; Apple build dan runtime berikutnya tetap perlu divalidasi.
-Tidak ada perubahan model, guidance 7, 50 langkah APG, dtype, referensi atau
-batas numerik. Satu run berikutnya menguji hipotesis lifecycle model/fungsi;
-cache, kondisi termal dan native residency tetap belum terisolasi.
-
-Release pertama memakai produk build sendiri dan menyalin resource aktif;
-model/cache source dipakai ulang, probe lama/AOT tidak ditambahkan ke app.
-Debugger LLDB masih tersedia. Waktu API per aset, pertama/ulang, total pipeline,
-serta sampled footprint dicatat. Jangan mengekstrapolasi klip ini secara linear
-ke 90 detik/full song, atau menjanjikan speedup sebelum pengukuran.
-
-## Status numerik dan musikal
-
-Kedua run mengevaluasi sepuluh output: delapan PASS, dua latent langkah ke-50
-NOT PASSED. Dua waveform terhadap referensi Mac PASS. Host
-`bounded_diagnostic` menjaga overall strict gate NOT PASSED. Baseline uji dengar
-pendek diterima pengguna; numerical baseline terpisah. Wording laporan hanya
-memperjelas perbedaan itu. Seluruh gate tersebut tetap dipakai pada uji reuse.
+Baseline musikal 5,12 detik dan baseline runtime pendek ini tidak menggantikan
+baseline CUDA 90 detik. Cold starts/repeatability, input rekaman baru langsung
+di iPhone, durasi lebih panjang, instrumen lain dan full song tetap belum
+tercakup. Jangan mengekstrapolasi waktu/memori klip ini secara linear ke lagu
+penuh atau mengklaim numerical PASS dari persetujuan pendengaran.

@@ -26,19 +26,18 @@ pasangan WAV/report lengkap terbaru dimuat untuk playback/share tanpa model
 inference; audio ini diberi label tersimpan. Progress/error terakhir tetap
 tersedia secara terpisah. Helper pemulihan/UI baru menunggu validasi build Apple.
 
-## Pengukuran performa berikutnya
+## Runtime CPU yang dipilih
 
-Run kedua membutuhkan 755,29 s, dengan hash WAV sama dan 96,7% waktu di
-backend-await. Build flags masih unrecorded. Project sekarang memakai base
-`CoreAIProbe-Info.plist` dan compile-time DEBUG fallback untuk mencatatnya.
+[Run Release/reuse](../../reviews/coreai-iphone17pro-bass-preview-reuse/README.md)
+menghasilkan waveform dengan hash yang sama dalam 59,24 s (sampled app maximum
+450,42 MiB), dengan 15 opens, 15 binds dan 735 hits. Source CPU fresh launch tanpa
+override kini memakai reuse default; pengujian itu belum membuktikan full-song
+atau cold-start safety. Pool dilepas sebelum decoder, guard 2000 MiB tetap aktif.
 
-Pilih scheme **CoreAIProbe Reuse** (Release), Cmd+R, Generate satu kali, lalu
-**Bagikan laporan generasi**. Scheme mengaktifkan pool maksimal 15 sampling
-model/fungsi untuk 50 langkah; pool dilepas sebelum decoder. Model, preset,
-referensi dan toleransi tidak berubah. Guard footprint tetap 2000 MiB, tanpa
-jaminan compiler peak/native eviction. Mode ordinary **CoreAIProbe** tetap
-Debug satu-scope; **CoreAIProbe Performance** tetap Release satu-scope.
-[Instruksi dan batas pengukuran](../../docs/coreai-bass-preview-performance.md).
+Gunakan **CoreAIProbe Reuse** untuk pengembangan Release. **CoreAIProbe**
+(Debug) dan **CoreAIProbe Performance** (Release) mengirim override reuse=0
+sebagai kontrol. Tidak perlu mengulangi generation untuk menyimpan hasil ini.
+[Pengukuran dan batasnya](../../docs/coreai-bass-preview-performance.md).
 
 ## Resource build
 

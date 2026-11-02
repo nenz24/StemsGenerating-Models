@@ -200,3 +200,10 @@ jadi belum membuktikan Release. Biaya dominan berada pada backend API; uji
 berikutnya memakai **CoreAIProbe Reuse**, model/fungsi sampling yang ditahan
 lintas langkah dan dilepas sebelum decoder. [Performa](coreai-bass-preview-performance.md)
 menjelaskan pilihan mode dan risiko memory scope yang lebih panjang.
+
+[Release/reuse pada klip nyata kini selesai](../reviews/coreai-iphone17pro-bass-preview-reuse/README.md)
+dalam 59,24 s dengan sampled process maximum 450,42 MiB; hash kedua WAV tetap
+identik dengan baseline pendengaran. Source CPU fresh launch tanpa override
+memakai reuse default. Gunakan scheme **CoreAIProbe Reuse**; dua scheme kontrol
+mengatur override 0. Ini menetapkan route prototype pendek, bukan jaminan
+cold start/full song atau numerical PASS.

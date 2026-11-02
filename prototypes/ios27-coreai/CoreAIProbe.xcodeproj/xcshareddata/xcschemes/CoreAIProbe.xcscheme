@@ -14,6 +14,9 @@
       <BuildableProductRunnable runnableDebuggingMode="0">
          <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="A50000000000000000000001" BuildableName="CoreAIProbe.app" BlueprintName="CoreAIProbe" ReferencedContainer="container:CoreAIProbe.xcodeproj"/>
       </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable key="COREAI_PREVIEW_REUSE" value="0" isEnabled="YES"/>
+      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction buildConfiguration="Release" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES">
       <BuildableProductRunnable runnableDebuggingMode="0">
