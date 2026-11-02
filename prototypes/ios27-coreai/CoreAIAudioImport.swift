@@ -28,11 +28,11 @@ struct CoreAIImportedPiano: Sendable {
     let previewURL: URL
     let planarPCM: [Float]
 
-    func validatePCM() throws {
+    func validatePCM(window: CoreAIPreviewWindow = .bundled) throws {
         guard metadata.sampleRate == 48000, metadata.channels == 2,
-              metadata.frames == 245760, metadata.seconds == 5.12,
+              metadata.frames == window.samples, metadata.seconds == window.seconds,
               metadata.segmentStartSeconds == 0, !metadata.normalizationApplied,
-              planarPCM.count == 2 * 245760, planarPCM.allSatisfy({ $0.isFinite }),
+              planarPCM.count == 2 * window.samples, planarPCM.allSatisfy({ $0.isFinite }),
               CoreAIAudioImport.pcmSHA256(planarPCM) == metadata.planarPCMSHA256 else {
             throw CoreAIAudioImport.ImportError.invalidPCM
         }
@@ -40,17 +40,17 @@ struct CoreAIImportedPiano: Sendable {
 }
 
 enum CoreAIAudioImport {
-    static let frames = 245760
     static let sampleRate = 48000.0
 
     enum ImportError: LocalizedError {
-        case invalidFile, unsupportedChannels, invalidFormat, tooShort, invalidPCM, conversionFailed
+        case invalidFile, unsupportedChannels, invalidFormat, invalidPCM, conversionFailed
+        case tooShort(Double)
         var errorDescription: String? {
             switch self {
             case .invalidFile: return "File audio tidak dapat dibaca. Pilih file audio dari Files."
             case .unsupportedChannels: return "Tahap ini mendukung rekaman mono atau stereo."
             case .invalidFormat: return "Format audio ini belum dapat didekode. Coba WAV, M4A, MP3, atau AIFF."
-            case .tooShort: return "Rekaman harus menyediakan minimal 5,12 detik audio."
+            case .tooShort(let seconds): return "Rekaman harus menyediakan minimal \(seconds) detik audio."
             case .invalidPCM: return "Data audio tidak valid atau mengandung nilai nonfinite."
             case .conversionFailed: return "Konversi audio ke 48 kHz tidak berhasil."
             }
@@ -59,7 +59,8 @@ enum CoreAIAudioImport {
 
     // Only immutable Swift values/URLs leave this synchronous helper. AVAudioFile,
     // converter and buffers stay on the calling worker, outside the UI actor.
-    static func importPiano(from selectedURL: URL) throws -> CoreAIImportedPiano {
+    static func importPiano(from selectedURL: URL, window: CoreAIPreviewWindow = .bundled) throws -> CoreAIImportedPiano {
+        let frames = window.samples
         guard selectedURL.isFileURL else { throw ImportError.invalidFile }
         let access = selectedURL.startAccessingSecurityScopedResource()
         defer { if access { selectedURL.stopAccessingSecurityScopedResource() } }
@@ -87,8 +88,8 @@ enum CoreAIAudioImport {
                   inputFormat.commonFormat == .pcmFormatFloat32, !inputFormat.isInterleaved else { throw ImportError.invalidFormat }
             guard inputFormat.channelCount == 1 || inputFormat.channelCount == 2 else { throw ImportError.unsupportedChannels }
             let duration = Double(file.length) / inputFormat.sampleRate
-            guard duration >= Double(frames)/sampleRate else { throw ImportError.tooShort }
-            let pcm = try decodeWindow(file: file)
+            guard duration >= Double(frames)/sampleRate else { throw ImportError.tooShort(window.seconds) }
+            let pcm = try decodeWindow(file: file, window: window)
             guard pcm.count == 2 * frames, pcm.allSatisfy({ $0.isFinite }) else { throw ImportError.invalidPCM }
             let preview = folder.appendingPathComponent("piano-preview.wav")
             try CoreAIDecoderProbe.writeStereoFloatWAV(pcm, frames: frames, to: preview)
@@ -96,7 +97,7 @@ enum CoreAIAudioImport {
                 originalSHA256: try CoreAIDecoderProbe.streamingSHA256(original),
                 originalSampleRate: inputFormat.sampleRate, originalChannels: inputFormat.channelCount,
                 originalDurationSeconds: duration, segmentStartSeconds: 0,
-                sampleRate: 48000, channels: 2, frames: frames, seconds: 5.12,
+                sampleRate: 48000, channels: 2, frames: frames, seconds: window.seconds,
                 planarPCMSHA256: pcmSHA256(pcm), previewWAVSHA256: try CoreAIDecoderProbe.streamingSHA256(preview),
                 monoDuplicatedToStereo: inputFormat.channelCount == 1, normalizationApplied: false)
             let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -115,7 +116,8 @@ enum CoreAIAudioImport {
         return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
-    private static func decodeWindow(file: AVAudioFile) throws -> [Float] {
+    private static func decodeWindow(file: AVAudioFile, window: CoreAIPreviewWindow) throws -> [Float] {
+        let frames = window.samples
         let format = file.processingFormat
         guard let input = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4096) else { throw ImportError.invalidFormat }
         var left: [Float] = []; left.reserveCapacity(frames)
@@ -130,7 +132,7 @@ enum CoreAIAudioImport {
         if format.sampleRate == sampleRate {
             while left.count < frames {
                 try file.read(into: input, frameCount: AVAudioFrameCount(min(4096, frames - left.count)))
-                guard input.frameLength > 0 else { throw ImportError.tooShort }
+                guard input.frameLength > 0 else { throw ImportError.tooShort(window.seconds) }
                 try append(input)
             }
         } else {
@@ -153,7 +155,7 @@ enum CoreAIAudioImport {
                 if left.count == frames { break }
                 switch status {
                 case .error: throw ImportError.conversionFailed
-                case .endOfStream: throw ImportError.tooShort
+                case .endOfStream: throw ImportError.tooShort(window.seconds)
                 case .haveData, .inputRanDry:
                     emptyRounds = output.frameLength == 0 ? emptyRounds + 1 : 0
                     guard emptyRounds < 16 else { throw ImportError.conversionFailed }

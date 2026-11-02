@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "profile": "source-context-1024",
+  "asset_file": "source-context.aimodel",
+  "function_name": "main",
+  "input_shapes": {
+    "audio": [
+      1,
+      2,
+      491520
+    ],
+    "epsilon": [
+      1,
+      64,
+      256
+    ],
+    "chunk_mask": [
+      1,
+      256,
+      64
+    ]
+  },
+  "output_shapes": {
+    "posterior_mean": [
+      1,
+      64,
+      256
+    ],
+    "posterior_std": [
+      1,
+      64,
+      256
+    ],
+    "source_latents": [
+      1,
+      256,
+      64
+    ],
+    "context_latents": [
+      1,
+      256,
+      128
+    ]
+  },
+  "scalar_type": "float32",
+  "byte_order": "little",
+  "sample_rate": 48000,
+  "audio_seconds": 10.24,
+  "task_type": "lego",
+  "is_covers": false,
+  "posterior_mode": "sample_with_explicit_epsilon",
+  "epsilon_seed_host_fixture": 31,
+  "recording": {
+    "name": "piano.mp3",
+    "sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+    "start_seconds": 0.0,
+    "canonicalization": "Host ffmpeg -> 48 kHz stereo Float32, planar tensor, no peak normalization; same PCM sent to device"
+  },
+  "checkpoint_digest": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+  "checkpoint_full_sha256_verified": true,
+  "host_distribution_sample_parity_exact": true,
+  "host_weight_norm_folding_parity_exact": true,
+  "lego_mask": {
+    "is_covers": [
+      false
+    ],
+    "spans": [
+      [
+        "repainting",
+        0,
+        256
+      ]
+    ],
+    "mask_dtype_before_expand": "torch.bool",
+    "source_preservation_exact": true,
+    "full_range_mask": true
+  },
+  "handler_source_revision": "ca1e85fe9430179831e6bc6be790c332190a3866",
+  "parameter_count": 84264832,
+  "versions": {
+    "torch": "2.8.0+cpu",
+    "diffusers": "0.37.0",
+    "coreai-torch": "0.4.3",
+    "coreai-core": "1.0.0b3"
+  },
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "artifact_sha256": {
+    "audio.f32le": "9517cc6938df8b56a7bafe57d2484f00a0661b17356395ac1a0b5e23810bb945",
+    "chunk_mask.f32le": "3513f7981d1ead42bde088485afbba413d675b83c061c6362634bcb044bf8613",
+    "context_latents-reference.f32le": "ca4cc0679b1ef6a18a071d806130d2045bda0f14aa8cb821e04a5e0fc1553a7e",
+    "epsilon.f32le": "b2b3a04cc431334fc4bc687fee0e388d7e7e49effc1f857569155f11270b8d1c",
+    "posterior_mean-reference.f32le": "1c55dfe04e60b94700f56cf4a2cef45e8cae918716e1cc4de7510f7c8cc9441d",
+    "posterior_std-reference.f32le": "0281f357be7e233b21801ef14d49fc50c954f1ef89aebb420c4fa26809047e25",
+    "source-context.aimodel/main.hash": "fbea743dfae33d7ad71c9ce0e0a84f3b5c962039d483f539c4fe2ee90cfd88d8",
+    "source-context.aimodel/main.mlirb": "f1abb88aca9cabba007025a767eeae8367d217352ec74889277dbcc68af348a8",
+    "source-context.aimodel/metadata.json": "d58b2c357ab3d6432407963934bd1ccfb6ab84c32abbc1b99c93a841632a9197",
+    "source_latents-reference.f32le": "2f3afc9081cb7f4c3e0c6ff9fabbe4db42d1c18764605400874d8c38a7bc2f80"
+  },
+  "scope": "Real-recording audio side of lego conditioning only; text/ConditionEncoder/full generation NOT implemented here",
+  "device_execution_verified": false
+}

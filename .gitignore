@@ -39,3 +39,7 @@ DerivedData/
 /prototypes/ios27-coreai/ModelCandidates/bass-conditioning/
 /prototypes/ios27-coreai/ModelCandidates/bass-preview-512/
 /prototypes/ios27-coreai/ModelCandidates/bass-preview-512-aot/
+/prototypes/ios27-coreai/ModelCandidates/source-context-1024/
+/prototypes/ios27-coreai/ModelCandidates/bass-conditioning-1024/
+/prototypes/ios27-coreai/ModelCandidates/bass-preview-1024/
+/prototypes/ios27-coreai/ModelCandidates/active-preview.json

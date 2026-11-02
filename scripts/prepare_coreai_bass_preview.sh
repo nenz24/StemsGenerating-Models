@@ -19,4 +19,5 @@ if [ -e "$bundle" ]; then
 else
     "$environment_python" -u scripts/export_coreai_bass_preview.py --out "$bundle"
 fi
-printf '\nReady: %s\nBuild on iPhone, then tap Generate bass 5,12 detik. Existing bundles retained; no new recording picker.\n' "$bundle"
+"$environment_python" scripts/prepare_coreai_preview_window.py --seconds 5.12 --activate-only
+printf '\nReady: %s\nBuild on iPhone, then tap Uji baseline piano 5,12 detik or choose a recording in Files. Only this active profile is bundled.\n' "$bundle"

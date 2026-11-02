@@ -1,0 +1,145 @@
+{
+  "evidence": "Executed native-source export and host PyTorch comparisons in this Linux workspace; NOT Apple/CoreAI device inference",
+  "host_system": "Linux x86_64",
+  "python": "3.12.14",
+  "audio_seconds": 10.24,
+  "sample_rate": 48000,
+  "pcm_frames_per_channel": 491520,
+  "latent_frames": 256,
+  "hidden_tokens": 128,
+  "text_tokens": 106,
+  "condition_tokens": 118,
+  "windowing": "one full window; no chunk concatenation",
+  "weight_storage_dtype": "bfloat16",
+  "calculation_dtype": "float32",
+  "apg_projection_dtype": "float32; compared at identical inputs with original FP64 publisher projection",
+  "source_distribution_sampling_exact": true,
+  "source_weight_norm_folding_exact": true,
+  "conditioning_partition_vs_fp32": {
+    "parity_passed": true,
+    "outputs": {
+      "text_embeddings": {
+        "finite": true,
+        "max_absolute_error": 0.0,
+        "rmse": 0.0,
+        "normalized_rmse": 0.0,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "condition": {
+        "finite": true,
+        "max_absolute_error": 0.0,
+        "rmse": 0.0,
+        "normalized_rmse": 0.0,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "condition_mask": {
+        "finite": true,
+        "max_absolute_error": 0.0,
+        "rmse": 0.0,
+        "normalized_rmse": 0.0,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    }
+  },
+  "conditioning_storage16_vs_fp32": {
+    "parity_passed": true,
+    "outputs": {
+      "text_embeddings": {
+        "finite": true,
+        "max_absolute_error": 0.0,
+        "rmse": 0.0,
+        "normalized_rmse": 0.0,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "condition": {
+        "finite": true,
+        "max_absolute_error": 0.0,
+        "rmse": 0.0,
+        "normalized_rmse": 0.0,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      },
+      "condition_mask": {
+        "finite": true,
+        "max_absolute_error": 0.0,
+        "rmse": 0.0,
+        "normalized_rmse": 0.0,
+        "elementwise_fraction_over_bound": 0.0,
+        "parity_passed": true
+      }
+    }
+  },
+  "host_export_status": "bounded_diagnostic",
+  "host_full_numerical_gate_passed": false,
+  "full_original_fp32_conditioning_and_denoiser_plus_publisher_apg_reference_used": true,
+  "host_latent_comparisons": 50,
+  "host_latent_normalized_rmse_max": 0.0004463341104504616,
+  "host_latent_final": {
+    "finite": true,
+    "max_absolute_error": 0.007311701774597168,
+    "rmse": 0.0004578447383736869,
+    "normalized_rmse": 0.0004463341104504616,
+    "elementwise_fraction_over_bound": 0.18572998046875,
+    "parity_passed": false
+  },
+  "host_apg_same_input_checks": 50,
+  "host_apg_same_input_all_strict_passed": true,
+  "host_audio_vs_fp32": {
+    "finite": true,
+    "max_absolute_error": 0.0013987720012664795,
+    "rmse": 0.00011796601606677664,
+    "normalized_rmse": 0.0003733595587113707,
+    "elementwise_fraction_over_bound": 0.02791748046875,
+    "parity_passed": false
+  },
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "normalized_rmse_limit": 0.001,
+  "tolerances_changed": false,
+  "native_assets_exported": 44,
+  "native_sampling_decoder_assets": 16,
+  "native_source_assets": 1,
+  "native_conditioning_assets": 27,
+  "source_reference_sha256": "0b1d932fc8a2022ed2c228c6fb54c3965a6896ec585cad006546017227315b13",
+  "conditioning_reference_sha256": "976c0e0a523abf96b25e5785be5ce100f3c7c4b8dbe32cdd10fb80931cab4732",
+  "preview_reference_sha256": "a74a5b184dcf0052404cc17693be30e924f2b3b617875988436ddc9477618851",
+  "active_resource_profile": "bass-source-1024",
+  "app_resource_bytes": 6261242886,
+  "excluded_local_resource_bytes": 11440690458,
+  "packaged_file_count": 163,
+  "only_one_window_profile_packaged": true,
+  "packaging_verified_dry_run": true,
+  "regression_tests_passed": 85,
+  "apple_compilation_verified": false,
+  "coreai_native_runtime_execution_verified": false,
+  "physical_iphone_generation_verified": false,
+  "musical_quality_verified": false,
+  "source_checkpoint_reused": true,
+  "old_accepted_bundles_preserved": true,
+  "audio_and_weights_committed": false,
+  "bf16_storage_probe": {
+    "scope": "Representative actual checkpoint matrices; not a count for the entire model",
+    "decoder.layers.0.self_attn.q_proj.weight": {
+      "fp16_changed_values": 551,
+      "fp16_max_absolute_change": 2.9802322387695312e-08,
+      "bf16_preserved_exactly": true
+    },
+    "decoder.layers.0.mlp.gate_proj.weight": {
+      "fp16_changed_values": 1350,
+      "fp16_max_absolute_change": 2.9802322387695312e-08,
+      "bf16_preserved_exactly": true
+    }
+  },
+  "versions": {
+    "torch": "2.8.0+cpu",
+    "transformers": "4.57.3",
+    "diffusers": "0.37.0",
+    "coreai-torch": "0.4.3",
+    "coreai-core": "1.0.0b3"
+  },
+  "weight_storage_scope": "BF16 conditioning/denoiser; FP32 VAE encoder/decoder and analytical buffers"
+}

@@ -425,3 +425,11 @@ mengecualikan tahap impor sebelumnya. Hash WAV/PCM dan mix sudah diperiksa;
 pengguna menerima nada/feel klip impor ini. Bass mentah Float32 memiliki sedikit
 sample >unity; mix tetap di bawah unity. Lihat baseline dan batas audit di panduan.
 [Panduan](../../docs/coreai-iphone-audio-import.md).
+
+## Preview satu jendela 10,24 detik
+
+Jalankan `bash scripts/prepare_coreai_bass_preview_1024.sh`, pilih file audio
+piano minimal 10,24 detik untuk referensi host, tunggu Ready, lalu Cmd+R pada
+scheme **CoreAIProbe Reuse**. Pilih rekaman melalui Files di iPhone dan generate
+seperti sebelumnya; UI harus menyebut 10,24 detik. App hanya memuat profil aktif,
+profil pendek tetap disimpan di Mac. [Panduan dan lingkup referensi](../../docs/coreai-bass-preview-1024.md).

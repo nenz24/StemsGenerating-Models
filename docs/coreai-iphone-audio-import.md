@@ -1,3 +1,7 @@
+> Untuk memperpanjang cuplikan menjadi satu jendela 10,24 detik, gunakan
+> [profil panjang](coreai-bass-preview-1024.md). Panduan di bawah mencatat alur
+> dan bukti baseline 5,12 detik; UI mengikuti profil yang disertakan build.
+
 # Impor rekaman piano dari Files di iPhone
 
 Tahap ini menambahkan input baru ke pipeline bass pendek yang sudah berjalan.

@@ -19,6 +19,7 @@ import struct
 import sys
 import tempfile
 
+from coreai_preview_window import SHORT, PreviewWindow
 from export_coreai_decoder import ROOT, checkpoint_path, sha256
 from export_coreai_dit_block import records, verified_source, convert_storage16, precision_metrics
 from export_coreai_denoiser import load_full_upstream
@@ -57,7 +58,7 @@ def stage_plan(text_tokens,lyric_tokens):
     return plan
 
 
-def format_prompts():
+def format_prompts(audio_seconds=5.12):
     """Execute pinned formatting methods/constants, retaining empty baseline lyrics."""
     constants_path,_=verified_handler_source('constants.py')
     constants={}
@@ -73,12 +74,12 @@ def format_prompts():
     prompt=ns['PromptMixin']();meta=ns['MetadataMixin']()
     preset=json.loads((ROOT/'configs/electric-bass.json').read_text())
     instruction=prompt._format_instruction('Generate the bass track based on the audio context:')
-    metadata=meta._dict_to_meta_string(meta._build_metadata_dict(None,'','',5.12))
+    metadata=meta._dict_to_meta_string(meta._build_metadata_dict(None,'','',audio_seconds))
     caption_prompt=constants['SFT_GEN_PROMPT'].format(instruction,preset['caption'],metadata)
     lyrics_prompt=prompt._format_lyrics('','unknown')
     return {'instruction':instruction,'caption':preset['caption'],'metadata':metadata,
             'text_prompt':caption_prompt,'lyric_prompt':lyrics_prompt,'lyrics':'','vocal_language':'unknown',
-            'preset_sha256':sha256(ROOT/'configs/electric-bass.json'),'audio_seconds':5.12}
+            'preset_sha256':sha256(ROOT/'configs/electric-bass.json'),'audio_seconds':audio_seconds}
 
 
 def load_condition_encoder(paths):
@@ -100,23 +101,23 @@ def load_condition_encoder(paths):
     return cfg,model,ns.create_4d_mask
 
 
-def verify_bundle(folder):
+def verify_bundle(folder,window=SHORT):
     ref=json.loads((folder/'reference.json').read_text()); nt=ref.get('text_tokens',0);nl=ref.get('lyric_tokens',0)
     plan=stage_plan(nt,nl)
-    if (ref.get('schema_version')!=1 or ref.get('profile')!=PROFILE or ref.get('function_name')!='main'
-            or nt!=105 or nl!=11
+    if (ref.get('schema_version')!=1 or ref.get('profile')!=window.condition_bundle or ref.get('function_name')!='main'
+            or nt!=window.text_tokens or nl!=11
             or ref.get('stages')!=plan or ref.get('qwen_layer_count')!=28 or ref.get('lyric_layer_count')!=8
             or ref.get('timbre_layer_count')!=4 or ref.get('batch_size')!=1
             or ref.get('qwen_checkpoint_digest')!=QWEN_DIGEST or ref.get('base_checkpoint_digest')!=BASE_DIGEST
             or ref.get('silence_digest')!=SILENCE_DIGEST or ref.get('all_checkpoint_hashes_verified') is not True
             or ref.get('scalar_type')!='float32' or ref.get('byte_order')!='little'
-            or ref.get('weight_storage_dtype')!='float16' or ref.get('compute_dtype')!='float32'
+            or ref.get('weight_storage_dtype')!=window.weight_storage_dtype or ref.get('compute_dtype')!='float32'
             or ref.get('absolute_tolerance')!=1e-4 or ref.get('relative_tolerance')!=1e-3
             or ref.get('relative_rmse_tolerance')!=1e-3 or ref.get('all_valid_single_reference_specialization') is not True
             or ref.get('reference_audio_mode')!='publisher_silence_750' or ref.get('tokenization_on_device') is not False
             or ref.get('host_partition_vs_original_fp32',{}).get('parity_passed') is not True
             or ref.get('host_storage16_vs_original_fp32',{}).get('parity_passed') is not True
-            or ref.get('prompts')!=format_prompts()):
+            or ref.get('prompts')!=format_prompts(window.seconds)):
         raise ValueError('Unexpected bass-conditioning contract; preserve bundle')
     shapes={**plan[0]['input_shapes'],'reference_audio':[1,750,64]}
     required={f'{n}.f32le':s for n,s in shapes.items()}
@@ -140,11 +141,16 @@ def verify_bundle(folder):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--out',type=Path,default=ROOT/'prototypes/ios27-coreai/ModelCandidates/bass-conditioning')
+    parser.add_argument('--seconds',type=float,choices=[5.12,10.24],default=5.12)
+    parser.add_argument('--reuse-native-from',type=Path)
+    parser.add_argument('--out',type=Path,default=None)
     parser.add_argument('--verify-only',action='store_true')
     args=parser.parse_args()
+    window=PreviewWindow.for_seconds(args.seconds)
+    args.out=args.out or ROOT/'prototypes/ios27-coreai/ModelCandidates'/window.condition_bundle
+    reusable=verify_bundle(args.reuse_native_from) if args.reuse_native_from else None
     if args.verify_only:
-        verify_bundle(args.out);print('Bass-conditioning bundle VERIFIED; no re-export');return
+        verify_bundle(args.out,window);print('Bass-conditioning bundle VERIFIED; no re-export');return
     if args.out.exists():raise FileExistsError(f'Output already exists: {args.out}; preserved')
     import numpy as np
     import torch
@@ -164,11 +170,12 @@ def main():
         if sha256(tok_destination)!=tokenizer_record['digest']:raise ValueError('Existing tokenizer mismatch; preserved')
     else:shutil.copyfile(tok_path,tok_destination)
     tokenizer=AutoTokenizer.from_pretrained(source_dir/'Qwen3-Embedding-0.6B',local_files_only=True)
-    prompts=format_prompts()
+    prompts=format_prompts(window.seconds)
     text=tokenizer(prompts['text_prompt'],padding='longest',truncation=True,max_length=256,return_tensors='pt')
     lyric=tokenizer(prompts['lyric_prompt'],padding='longest',truncation=True,max_length=2048,return_tensors='pt')
     if not text.attention_mask.all() or not lyric.attention_mask.all():raise ValueError('Single-example all-valid specialization only')
     nt,nl=text.input_ids.shape[1],lyric.input_ids.shape[1];plan=stage_plan(nt,nl)
+    if nt!=window.text_tokens or nl!=11:raise ValueError('Unexpected duration-prompt token count; no export')
     print(f'Bass conditioning: {nt} text / {nl} lyric tokens; {len(plan)} assets; all 40 transformer layers.',flush=True)
     qpath=checkpoint_path(qrecords['Qwen3-Embedding-0.6B/model.safetensors'])
     publisher=records();base_path=checkpoint_path(publisher['model.safetensors']);silence_path=checkpoint_path(publisher['silence_latent.pt'])
@@ -258,7 +265,7 @@ def main():
     partition=forward_pipeline();gold={'text_embeddings':gold_text,'condition':gold_cond,'condition_mask':gold_mask.float()}
     part_metrics={n:precision_metrics(partition[n],gold[n]) for n in gold}
     if not all(v['parity_passed'] for v in part_metrics.values()):raise ValueError(f'FP32 partition parity failed: {part_metrics}')
-    for module in modules:convert_storage16(module);module.eval().requires_grad_(False)
+    for module in modules:convert_storage16(module,window.weight_storage_dtype);module.eval().requires_grad_(False)
     storage=forward_pipeline();storage_metrics={n:precision_metrics(storage[n],gold[n]) for n in gold}
     if not all(v['parity_passed'] for v in storage_metrics.values()):raise ValueError(f'Storage16 whole-pipeline drift: {storage_metrics}')
     print('Partition and storage16 dual host parity PASS; exporting native assets.',flush=True)
@@ -274,16 +281,24 @@ def main():
         args_tuple=tuple(state[n] for n in s['input_shapes'])
         with torch.no_grad():out=module(*args_tuple)
         if not isinstance(out,tuple):out=(out,)
-        exported=torch.export.export(module,args_tuple).run_decompositions(get_decomp_table())
-        program=TorchConverter().add_exported_program(exported,input_names=list(s['input_shapes']),output_names=list(s['output_shapes'])).to_coreai()
-        program.save_asset(stage/s['asset_file'])
+        compatible=next((old for old in reusable['stages'] if old==s),None) if reusable and reusable['weight_storage_dtype']==window.weight_storage_dtype else None
+        if compatible:
+            # Duration-dependent text stages have different shapes and cannot
+            # enter this branch. Reuse only exact shape/binding contracts from
+            # the verified original checkpoint; copy preserves the old bundle.
+            shutil.copytree(args.reuse_native_from/s['asset_file'],stage/s['asset_file'])
+        else:
+            exported=torch.export.export(module,args_tuple).run_decompositions(get_decomp_table())
+            program=TorchConverter().add_exported_program(exported,input_names=list(s['input_shapes']),output_names=list(s['output_shapes'])).to_coreai()
+            program.save_asset(stage/s['asset_file'])
+            del exported,program
         for (name,shape),v in zip(s['output_shapes'].items(),out):state[s['output_bindings'][name]]=v.contiguous()
-        del exported,program;gc.collect()
+        gc.collect()
     hashes={str(p.relative_to(stage)):sha256(p) for p in stage.rglob('*') if p.is_file()}
-    ref={'schema_version':1,'profile':PROFILE,'function_name':'main','batch_size':1,'text_tokens':nt,'lyric_tokens':nl,
+    ref={'schema_version':1,'profile':window.condition_bundle,'function_name':'main','batch_size':1,'text_tokens':nt,'lyric_tokens':nl,
          'qwen_layer_count':28,'lyric_layer_count':8,'timbre_layer_count':4,'stages':plan,'scalar_type':'float32','byte_order':'little',
          'qwen_checkpoint_digest':QWEN_DIGEST,'base_checkpoint_digest':BASE_DIGEST,'silence_digest':SILENCE_DIGEST,
-         'all_checkpoint_hashes_verified':True,'weight_storage_dtype':'float16','compute_dtype':'float32',
+         'all_checkpoint_hashes_verified':True,'weight_storage_dtype':window.weight_storage_dtype,'compute_dtype':'float32',
          'absolute_tolerance':1e-4,'relative_tolerance':1e-3,'relative_rmse_tolerance':1e-3,
          'prompts':prompts,'tokenization_on_device':False,'reference_audio_mode':'publisher_silence_750',
          'all_valid_single_reference_specialization':True,'host_partition_vs_original_fp32':{'parity_passed':True,'outputs':part_metrics},
@@ -291,7 +306,7 @@ def main():
          'native_asset_bytes':sum(p.stat().st_size for p in stage.rglob('*') if p.is_file() and '.aimodel/' in str(p)),
          'versions':{n:importlib.metadata.version(n) for n in ['torch','transformers','coreai-torch','coreai-core']},
          'scope':'All neural text/lyric/timbre conditioning on device; fixed host-tokenized bass prompt; no source-context, denoiser, CFG or audio output'}
-    (stage/'reference.json').write_text(json.dumps(ref,indent=2)+'\n');verify_bundle(stage)
+    (stage/'reference.json').write_text(json.dumps(ref,indent=2)+'\n');verify_bundle(stage,window)
     args.out.parent.mkdir(parents=True,exist_ok=True);shutil.move(str(stage),str(args.out))
     print(f'Ready: {args.out}; {ref["native_asset_bytes"]/1e9:.3f} GB native assets. Rebuild app.',flush=True)
 

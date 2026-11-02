@@ -261,14 +261,14 @@ enum CoreAIDecoderProbe {
         return result.report
     }
 
-    private static func executeSourceContext(repetitions: Int, importedPiano: CoreAIImportedPiano? = nil, progress: @escaping @MainActor @Sendable (String) -> Void) async
+    private static func executeSourceContext(repetitions: Int, window: CoreAIPreviewWindow = .bundled, importedPiano: CoreAIImportedPiano? = nil, progress: @escaping @MainActor @Sendable (String) -> Void) async
         -> (report: String, context: [Float]?) {
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",
                      "Test: actual recording -> VAE posterior sample -> full-range lego audio context",
                      "Scope: audio side only; NO text embedding, ConditionEncoder, denoiser or bass generation",
                      "Requested compute policy: cpuOnly; accelerator placement NOT MEASURED",
-                     "Audio: 5.12 s / 48000 Hz stereo; 128 latent frames",
+                     "Audio: \(window.seconds) s / 48000 Hz stereo; \(window.latentFrames) latent frames",
                      "Posterior: mean + (softplus(scale) + 1e-4) * explicit epsilon; fixed host epsilon reused",
                      importedPiano == nil
                         ? "PCM decode/resampling happens during Mac preparation; fixed-reference input"
@@ -284,18 +284,20 @@ enum CoreAIDecoderProbe {
         var completed = 0
         var capturedContext: [Float]?
         do {
-            guard let folder = Bundle.main.resourceURL?.appendingPathComponent("ModelCandidates/source-context"),
+            guard let folder = Bundle.main.resourceURL?.appendingPathComponent("ModelCandidates/" + window.sourceBundle),
                   FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
-                lines.append("Prepare on Mac: bash scripts/prepare_coreai_source_context.sh; choose your piano recording, then rebuild app.")
+                lines.append(window == .short512
+                    ? "Prepare on Mac: bash scripts/prepare_coreai_source_context.sh; choose your piano recording, then rebuild app."
+                    : "Prepare on Mac: bash scripts/prepare_coreai_bass_preview_1024.sh; wait for Ready then rebuild app.")
                 throw ShardError.missingPreparedBundle
             }
             let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
             let ref = try decoder.decode(SourceContextContract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
-            let shapes = ["audio":[1,2,245760],"epsilon":[1,64,128],"chunk_mask":[1,128,64]]
-            let outputShapes = ["posterior_mean":[1,64,128],"posterior_std":[1,64,128],
-                                "source_latents":[1,128,64],"context_latents":[1,128,128]]
+            let shapes = ["audio":[1,2,window.samples],"epsilon":[1,64,window.latentFrames],"chunk_mask":[1,window.latentFrames,64]]
+            let outputShapes = ["posterior_mean":[1,64,window.latentFrames],"posterior_std":[1,64,window.latentFrames],
+                                "source_latents":[1,window.latentFrames,64],"context_latents":[1,window.latentFrames,128]]
             try checkManifest(ref.schemaVersion, 1, "source_context.schema_version")
-            try checkManifest(ref.profile, "source-context", "source_context.profile")
+            try checkManifest(ref.profile, window.sourceBundle, "source_context.profile")
             try checkManifest(ref.assetFile, "source-context.aimodel", "source_context.asset_file")
             try checkManifest(ref.functionName, "main", "source_context.function_name")
             try checkManifest(ref.inputShapes, shapes, "source_context.input_shapes")
@@ -303,7 +305,7 @@ enum CoreAIDecoderProbe {
             try checkManifest(ref.scalarType, "float32", "source_context.scalar_type")
             try checkManifest(ref.byteOrder, "little", "source_context.byte_order")
             try checkManifest(ref.sampleRate, 48000, "source_context.sample_rate")
-            try checkManifest(ref.audioSeconds, 5.12, "source_context.audio_seconds")
+            try checkManifest(ref.audioSeconds, window.seconds, "source_context.audio_seconds")
             try checkManifest(ref.taskType, "lego", "source_context.task_type")
             try checkManifest(ref.isCovers, false, "source_context.is_covers")
             try checkManifest(ref.posteriorMode, "sample_with_explicit_epsilon", "source_context.posterior_mode")
@@ -318,7 +320,7 @@ enum CoreAIDecoderProbe {
             for (name, shape) in shapes {
                 let values: [Float]
                 if name == "audio", let importedPiano {
-                    try importedPiano.validatePCM()
+                    try importedPiano.validatePCM(window: window)
                     values = importedPiano.planarPCM
                 } else {
                     values = try readFloats(folder: folder, name: "\(name).f32le", count: shape.reduce(1,*), hashes: ref.artifactSha256)
@@ -458,8 +460,8 @@ enum CoreAIDecoderProbe {
 
     // Mirrors the fixed host contract independently. Every transformer pair is
     // required once, in order; arbitrary stage omission/reordering is rejected.
-    private static func bassConditioningStages() -> [BassConditioningStage] {
-        let nt = 105, nl = 11
+    private static func bassConditioningStages(window: CoreAIPreviewWindow = .bundled) -> [BassConditioningStage] {
+        let nt = window.textTokens, nl = 11
         var plan: [BassConditioningStage] = []
         func add(_ asset: String, _ inputs: [String: [Int]], _ outputs: [String: [Int]], _ bindings: [String: String]? = nil) {
             let outputBindings = bindings ?? Dictionary(uniqueKeysWithValues: outputs.keys.map { ($0, $0) })
@@ -495,7 +497,7 @@ enum CoreAIDecoderProbe {
         return result.report
     }
 
-    private static func executeBassConditioning(progress: @MainActor @Sendable (String) -> Void) async
+    private static func executeBassConditioning(window: CoreAIPreviewWindow = .bundled, progress: @MainActor @Sendable (String) -> Void) async
         -> (report: String, condition: [Float]?, mask: [Float]?) {
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
@@ -505,10 +507,10 @@ enum CoreAIDecoderProbe {
             "Test: bass prompt -> all 28 Qwen blocks -> complete ACE ConditionEncoder (8 lyric + 4 timbre blocks)",
             "Scope: text/target conditioning; fixed host-tokenized prompt; NO denoiser or bass waveform",
             "Requested compute policy: cpuOnly; accelerator placement NOT MEASURED",
-            "27 sequential native assets; FP16 stored weights, FP32 calculations; detached CPU copies between assets",
+            "27 sequential native assets; \(window.weightStorageDtype) stored weights, FP32 calculations; detached CPU copies between assets",
             "Prompt tokenization on Mac; arbitrary prompt entry/tokenization on iPhone NOT tested",
             "No timbre reference recording: publisher silence latent, first 750 frames; single batch with all tokens valid",
-            "Output: condition [1,117,2048], mask [1,117]; source audio context tested separately",
+            "Output: condition [1,\(window.conditionTokens),2048], mask [1,\(window.conditionTokens)]; duration prompt \(window.seconds) s; source audio context tested separately",
             "Footprint guard before each stage: 2000 MiB; NOT an OS peak-memory guarantee"
         ]
         #if targetEnvironment(simulator)
@@ -519,30 +521,32 @@ enum CoreAIDecoderProbe {
         var completed = 0, checks = 0
         var capturedCondition: [Float]?, capturedMask: [Float]?
         do {
-            guard let folder = Bundle.main.resourceURL?.appendingPathComponent("ModelCandidates/bass-conditioning"),
+            guard let folder = Bundle.main.resourceURL?.appendingPathComponent("ModelCandidates/" + window.conditionBundle),
                   FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
-                lines.append("Prepare on Mac: bash scripts/prepare_coreai_bass_conditioning.sh; wait for Ready, then rebuild app.")
+                lines.append(window == .short512
+                    ? "Prepare on Mac: bash scripts/prepare_coreai_bass_conditioning.sh; wait for Ready, then rebuild app."
+                    : "Prepare on Mac: bash scripts/prepare_coreai_bass_preview_1024.sh; wait for Ready then rebuild app.")
                 throw ShardError.missingPreparedBundle
             }
             let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
             let ref = try decoder.decode(BassConditioningContract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
             try checkManifest(ref.schemaVersion, 1, "conditioning.schema_version")
-            try checkManifest(ref.profile, "bass-conditioning", "conditioning.profile")
+            try checkManifest(ref.profile, window.conditionBundle, "conditioning.profile")
             try checkManifest(ref.functionName, "main", "conditioning.function")
             try checkManifest(ref.batchSize, 1, "conditioning.batch")
-            try checkManifest(ref.textTokens, 105, "conditioning.text_tokens")
+            try checkManifest(ref.textTokens, window.textTokens, "conditioning.text_tokens")
             try checkManifest(ref.lyricTokens, 11, "conditioning.lyric_tokens")
             try checkManifest(ref.qwenLayerCount, 28, "conditioning.qwen_layers")
             try checkManifest(ref.lyricLayerCount, 8, "conditioning.lyric_layers")
             try checkManifest(ref.timbreLayerCount, 4, "conditioning.timbre_layers")
-            try checkManifest(ref.stages, bassConditioningStages(), "conditioning.ordered_stages")
+            try checkManifest(ref.stages, bassConditioningStages(window: window), "conditioning.ordered_stages")
             try checkManifest(ref.qwenCheckpointDigest, "0437e45c94563b09e13cb7a64478fc406947a93cb34a7e05870fc8dcd48e23fd", "conditioning.qwen_digest")
             try checkManifest(ref.baseCheckpointDigest, "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b", "conditioning.base_digest")
             try checkManifest(ref.silenceDigest, "a778e9dd942f5e8b2c09c55370782d318834432b03dabbcdf70e6ed49ad6358b", "conditioning.silence_digest")
             try checkManifest(ref.allCheckpointHashesVerified, true, "conditioning.checkpoints_verified")
             try checkManifest(ref.scalarType, "float32", "conditioning.scalar")
             try checkManifest(ref.byteOrder, "little", "conditioning.byte_order")
-            try checkManifest(ref.weightStorageDtype, "float16", "conditioning.storage")
+            try checkManifest(ref.weightStorageDtype, window.weightStorageDtype, "conditioning.storage")
             try checkManifest(ref.computeDtype, "float32", "conditioning.compute")
             try checkManifest(ref.absoluteTolerance, 1e-4, "conditioning.abs_tolerance")
             try checkManifest(ref.relativeTolerance, 1e-3, "conditioning.rel_tolerance")
@@ -553,10 +557,10 @@ enum CoreAIDecoderProbe {
             try checkManifest(ref.hostPartitionVsOriginalFp32.parityPassed, true, "conditioning.partition_gold")
             try checkManifest(ref.hostStorage16VsOriginalFp32.parityPassed, true, "conditioning.storage_gold")
             try checkManifest(ref.prompts.instruction, "Generate the bass track based on the audio context:", "conditioning.instruction")
-            try checkManifest(ref.prompts.audioSeconds, 5.12, "conditioning.clip_seconds")
+            try checkManifest(ref.prompts.audioSeconds, window.seconds, "conditioning.clip_seconds")
             try checkManifest(ref.prompts.presetSha256, "4bacacb4f9fb1a9e66c98958869e2756878e6420910b2af065bea6522cb6ef63", "conditioning.preset")
             var state: [String: NDArray] = [:]
-            let inputs = ["text_ids":[1,105],"lyric_ids":[1,11],"reference_audio":[1,750,64]]
+            let inputs = ["text_ids":[1,window.textTokens],"lyric_ids":[1,11],"reference_audio":[1,750,64]]
             for (name, shape) in inputs {
                 let values = try readFloats(folder: folder, name: "\(name).f32le", count: shape.reduce(1,*), hashes: ref.artifactSha256)
                 if name.hasSuffix("_ids") {
@@ -564,7 +568,7 @@ enum CoreAIDecoderProbe {
                 }
                 state[name] = NDArray(scalars: values, shape: shape)
             }
-            let milestones = ["text_embeddings":[1,105,1024],"condition":[1,117,2048],"condition_mask":[1,117]]
+            let milestones = ["text_embeddings":[1,window.textTokens,1024],"condition":[1,window.conditionTokens,2048],"condition_mask":[1,window.conditionTokens]]
             var references: [String: [Float]] = [:]
             for (name, shape) in milestones {
                 for kind in ["reference","fp32-reference"] {
@@ -664,6 +668,8 @@ enum CoreAIDecoderProbe {
         let apgNormThreshold: Double
         let apgProjectionDims: [Int]
         let apgProjectionPrecision: String
+        let referenceConditioningScope: String?
+        let weightStorageDtype: String?
         let checkpoints: [Int]
         let latentFrames: Int
         let conditionTokens: Int
@@ -689,26 +695,26 @@ enum CoreAIDecoderProbe {
         let relativeRmseTolerance: Double
     }
 
-    private static func bassPreviewStages() -> [Contract.Stage] {
-        let shared = ["hidden":[2,64,2048],"condition":[2,117,2048],"temb":[2,6,2048],
-                      "rope_cos":[1,64,128],"rope_sin":[1,64,128],"self_mask":[1,1,64,64],
-                      "local_mask":[1,1,64,64],"cross_mask":[1,1,64,117]]
+    private static func bassPreviewStages(window: CoreAIPreviewWindow = .short512) -> [Contract.Stage] {
+        let shared = ["hidden":[2,window.hiddenTokens,2048],"condition":[2,window.conditionTokens,2048],"temb":[2,6,2048],
+                      "rope_cos":[1,window.hiddenTokens,128],"rope_sin":[1,window.hiddenTokens,128],"self_mask":[1,1,window.hiddenTokens,window.hiddenTokens],
+                      "local_mask":[1,1,window.hiddenTokens,window.hiddenTokens],"cross_mask":[1,1,window.hiddenTokens,window.conditionTokens]]
         var frontOutputs = shared
         frontOutputs.removeValue(forKey: "condition")
-        frontOutputs["condition_projected"] = [2,117,2048]
+        frontOutputs["condition_projected"] = [2,window.conditionTokens,2048]
         frontOutputs["final_temb"] = [2,2048]
         var frontBindings = Dictionary(uniqueKeysWithValues: frontOutputs.keys.map { ($0, $0) })
         frontBindings["condition_projected"] = "condition"
         var result = [Contract.Stage(assetFile: "front.aimodel", layerIndices: [],
-            inputShapes: ["noise":[1,128,64],"condition":[1,117,2048],"context":[1,128,128],"timestep":[1]],
+            inputShapes: ["noise":[1,window.latentFrames,64],"condition":[1,window.conditionTokens,2048],"context":[1,window.latentFrames,128],"timestep":[1]],
             outputShapes: frontOutputs, outputBindings: frontBindings)]
         for i in stride(from: 0, to: 24, by: 2) {
             result.append(Contract.Stage(assetFile: String(format: "blocks-%02d-%02d.aimodel", i, i+1), layerIndices: [i,i+1],
-                inputShapes: shared, outputShapes: ["hidden_out":[2,64,2048]], outputBindings: ["hidden_out":"hidden"]))
+                inputShapes: shared, outputShapes: ["hidden_out":[2,window.hiddenTokens,2048]], outputBindings: ["hidden_out":"hidden"]))
         }
         result.append(Contract.Stage(assetFile: "tail.aimodel", layerIndices: [],
-            inputShapes: ["hidden":[2,64,2048],"final_temb":[2,2048]],
-            outputShapes: ["velocity":[2,128,64]], outputBindings: ["velocity":"velocity"]))
+            inputShapes: ["hidden":[2,window.hiddenTokens,2048],"final_temb":[2,2048]],
+            outputShapes: ["velocity":[2,window.latentFrames,64]], outputBindings: ["velocity":"velocity"]))
         return result
     }
 
@@ -838,7 +844,7 @@ enum CoreAIDecoderProbe {
         }
     }
 
-    static func generateBassPreview(importedPiano: CoreAIImportedPiano? = nil, progress: @escaping @MainActor @Sendable (String) -> Void) async -> BassPreviewResult {
+    static func generateBassPreview(window: CoreAIPreviewWindow = .bundled, importedPiano: CoreAIImportedPiano? = nil, progress: @escaping @MainActor @Sendable (String) -> Void) async -> BassPreviewResult {
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
         let priorReport = savedDenoiserReport()
@@ -860,7 +866,7 @@ enum CoreAIDecoderProbe {
                      "App build configuration: \(Bundle.main.object(forInfoDictionaryKey: "CoreAIProbeBuildConfiguration") as? String ?? "unrecorded")",
                      "Swift app optimization: \(Bundle.main.object(forInfoDictionaryKey: "CoreAIProbeSwiftOptimizationLevel") as? String ?? "unrecorded"); native backend optimization is separate",
                      "Test: actual piano -> VAE posterior -> full Qwen/ConditionEncoder -> 50 APG-guided Euler steps -> bass WAV",
-                     "Audio: 5.12 s / 48000 Hz stereo; 128 latent frames / 117 condition tokens",
+                     "Audio: \(window.seconds) s / 48000 Hz stereo; \(window.latentFrames) latent frames / \(window.conditionTokens) condition tokens",
                      "Guidance 7; APG momentum -0.75, threshold 2.5, projection over latent time (dim 1); shift 1",
                      "APG projection FP32, compared on host against original FP64 projection; not plain CFG",
                      "Requested compute policy: source/Qwen cpuOnly; sampling/decoder policy below; accelerator placement NOT MEASURED",
@@ -884,6 +890,7 @@ enum CoreAIDecoderProbe {
         #else
         lines.append("Swift DEBUG compilation condition: OFF")
         #endif
+        lines.append("Preview profile: \(window.previewBundle); source \(window.sourceBundle); conditioning \(window.conditionBundle)")
         lines.append("Sampling handle reuse requested: \(reuseSamplingStages)")
         lines.append("Sampling reuse selection: \(reuseOverride == nil ? "app default for selected resources" : "launch override")")
         var lastPhase = "preview manifest/reference validation"
@@ -891,25 +898,27 @@ enum CoreAIDecoderProbe {
         var bassURL: URL?, mixURL: URL?
         do {
             if let importedPiano {
-                try importedPiano.validatePCM()
-                lines.append("Imported recording: \(importedPiano.metadata.name); first 5.12 s, no input normalization")
+                try importedPiano.validatePCM(window: window)
+                lines.append("Imported recording: \(importedPiano.metadata.name); first \(window.seconds) s, no input normalization")
                 lines.append("Original recording SHA-256: \(importedPiano.metadata.originalSHA256)")
                 lines.append("Imported planar PCM SHA-256: \(importedPiano.metadata.planarPCMSHA256)")
                 lines.append("Generation numerical parity: NOT EVALUATED; no matching host trajectory/waveform for this input")
                 lines.append("Fixed text/timbre preset conditioning still uses its own six matching reference checks")
             }
             guard let resources = Bundle.main.resourceURL else { throw ShardError.missingPreparedBundle }
-            let folder = resources.appendingPathComponent("ModelCandidates/bass-preview-512")
-            let sourceFolder = resources.appendingPathComponent("ModelCandidates/source-context")
-            let conditionFolder = resources.appendingPathComponent("ModelCandidates/bass-conditioning")
+            let folder = resources.appendingPathComponent("ModelCandidates/" + window.previewBundle)
+            let sourceFolder = resources.appendingPathComponent("ModelCandidates/" + window.sourceBundle)
+            let conditionFolder = resources.appendingPathComponent("ModelCandidates/" + window.conditionBundle)
             guard FileManager.default.fileExists(atPath: folder.appendingPathComponent("reference.json").path) else {
-                lines.append("Prepare on Mac: bash scripts/prepare_coreai_bass_preview.sh; wait for Ready then rebuild app.")
+                lines.append(window == .short512
+                    ? "Prepare on Mac: bash scripts/prepare_coreai_bass_preview.sh; wait for Ready then rebuild app."
+                    : "Prepare on Mac: bash scripts/prepare_coreai_bass_preview_1024.sh; wait for Ready then rebuild app.")
                 throw ShardError.missingPreparedBundle
             }
             let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
             let ref = try decoder.decode(BassPreviewContract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
             try checkManifest(ref.schemaVersion, 1, "preview.schema")
-            try checkManifest(ref.profile, "bass-preview-512", "preview.profile")
+            try checkManifest(ref.profile, window.previewBundle, "preview.profile")
             try checkManifest(ref.functionName, "main", "preview.function")
             try checkManifest(ref.inferenceSteps, 50, "preview.steps")
             try checkManifest(ref.guidanceScale, 7, "preview.guidance")
@@ -918,12 +927,17 @@ enum CoreAIDecoderProbe {
             try checkManifest(ref.apgMomentum, -0.75, "preview.momentum")
             try checkManifest(ref.apgNormThreshold, 2.5, "preview.threshold")
             try checkManifest(ref.apgProjectionDims, [1], "preview.projection_dims")
-            try checkManifest(ref.apgProjectionPrecision, "float32_validated_against_original_float64", "preview.projection_precision")
+            try checkManifest(ref.apgProjectionPrecision, window.apgProjectionPrecision, "preview.projection_precision")
+            if window == .long1024 {
+                try checkManifest(ref.referenceConditioningScope, Optional("original_fp32_vs_storage16_conditioning"), "preview.reference_conditioning_scope")
+                try checkManifest(ref.weightStorageDtype, Optional(window.weightStorageDtype), "preview.weight_storage_dtype")
+                lines.append("Long-window storage: BF16 constants preserve original checkpoint values; calculations remain FP32; full original FP32 conditioning/denoiser reference retained")
+            }
             try checkManifest(ref.checkpoints, [1,10,25,50], "preview.checkpoints")
-            try checkManifest(ref.latentFrames, 128, "preview.frames")
-            try checkManifest(ref.conditionTokens, 117, "preview.condition_tokens")
+            try checkManifest(ref.latentFrames, window.latentFrames, "preview.frames")
+            try checkManifest(ref.conditionTokens, window.conditionTokens, "preview.condition_tokens")
             try checkManifest(ref.sampleRate, 48000, "preview.sample_rate")
-            try checkManifest(ref.audioSeconds, 5.12, "preview.seconds")
+            try checkManifest(ref.audioSeconds, window.seconds, "preview.seconds")
             try checkManifest(ref.scalarType, "float32", "preview.dtype")
             try checkManifest(ref.byteOrder, "little", "preview.byte_order")
             try checkManifest(ref.checkpointDigest, "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b", "preview.base_digest")
@@ -969,7 +983,7 @@ enum CoreAIDecoderProbe {
             try checkManifest(ref.absoluteTolerance, 1e-4, "preview.abs")
             try checkManifest(ref.relativeTolerance, 1e-3, "preview.rel")
             try checkManifest(ref.relativeRmseTolerance, 1e-3, "preview.nrmse")
-            let expectedStages = bassPreviewStages()
+            let expectedStages = bassPreviewStages(window: window)
             try checkManifest(ref.stages.count, expectedStages.count, "preview.stage_count")
             for (actual, expected) in zip(ref.stages, expectedStages) {
                 try checkManifest(actual.assetFile, expected.assetFile, "preview.asset_order")
@@ -983,7 +997,13 @@ enum CoreAIDecoderProbe {
             lastPhase = "verifying optional architecture-matched AOT bundle"
             saveProgress(lines + [lastPhase], profile: .denoiser)
             await progress((lines + [lastPhase]).joined(separator: "\n"))
-            let preparedAOT = try await preparedBassPreviewAOT(source: folder, reportLines: lines + [lastPhase], progress: progress)
+            let preparedAOT: PreviewAOTSelection?
+            if window == .short512 {
+                preparedAOT = try await preparedBassPreviewAOT(source: folder, reportLines: lines + [lastPhase], progress: progress)
+            } else {
+                preparedAOT = nil
+                lines.append("10.24 s profile: source CPU only; AOT is not selected")
+            }
             try checkManifest(!reuseSamplingStages || preparedAOT == nil, true, "retained_preview_requires_source_cpuOnly")
             if let preparedAOT {
                 lines.append("Sampling/decoder assets: AOT .aimodelc; architecture \(AIModel.deviceArchitectureName); 16 compiled assets SHA-256 VERIFIED")
@@ -993,7 +1013,7 @@ enum CoreAIDecoderProbe {
             } else {
                 lines.append("Sampling/decoder assets: source .aimodel; requested policy cpuOnly; device compilation required")
             }
-            let noise = try readFloats(folder: folder, name: "initial-noise.f32le", count: 128*64, hashes: ref.artifactSha256)
+            let noise = try readFloats(folder: folder, name: "initial-noise.f32le", count: window.latentFrames*64, hashes: ref.artifactSha256)
             let times = try readFloats(folder: folder, name: "timesteps.f32le", count: 51, hashes: ref.artifactSha256)
             try checkManifest(times[0], Float(1), "preview.time_start")
             try checkManifest(times[50], Float(0), "preview.time_end")
@@ -1005,13 +1025,13 @@ enum CoreAIDecoderProbe {
                     for name in ["latent"] {
                         for kind in ["reference","fp32-reference"] {
                             let file = "step-\(step)-\(name)-\(kind).f32le"
-                            references[file] = try readFloats(folder: folder, name: file, count: 128*64, hashes: ref.artifactSha256)
+                            references[file] = try readFloats(folder: folder, name: file, count: window.latentFrames*64, hashes: ref.artifactSha256)
                         }
                     }
                 }
                 for kind in ["reference","fp32-reference"] {
                     let file = "audio-\(kind).f32le"
-                    references[file] = try readFloats(folder: folder, name: file, count: 2*245760, hashes: ref.artifactSha256)
+                    references[file] = try readFloats(folder: folder, name: file, count: 2*window.samples, hashes: ref.artifactSha256)
                 }
             }
             lines.append(referenceMode
@@ -1036,23 +1056,23 @@ enum CoreAIDecoderProbe {
             }
             let sourcePrefix = lines.joined(separator: "\n") + "\n=== Integrated source encoding ===\n"
             lastPhase = "source-context.aimodel: source encoding"
-            let source = await executeSourceContext(repetitions: 1, importedPiano: importedPiano) { text in progress(sourcePrefix + text) }
+            let source = await executeSourceContext(repetitions: 1, window: window, importedPiano: importedPiano) { text in progress(sourcePrefix + text) }
             lines.append("=== Source component before sampling ===\n" + source.report)
             guard let actualContext = source.context else { throw BassPreviewError.componentNotCompleted("source-context; see component report") }
             let conditionPrefix = lines.joined(separator: "\n") + "\n=== Integrated bass conditioning ===\n"
             lastPhase = "bass conditioning pipeline"
-            let conditioning = await executeBassConditioning { text in progress(conditionPrefix + text) }
+            let conditioning = await executeBassConditioning(window: window) { text in progress(conditionPrefix + text) }
             lines.append("=== Bass conditioning before sampling ===\n" + conditioning.report)
             guard let actualCondition = conditioning.condition, let mask = conditioning.mask,
-                  mask.count == 117, mask.allSatisfy({ $0 == 1 }) else { throw BassPreviewError.componentNotCompleted("bass conditioning; see component report") }
-            let contextInput = NDArray(scalars: actualContext, shape: [1,128,128])
-            let conditionInput = NDArray(scalars: actualCondition, shape: [1,117,2048])
+                  mask.count == window.conditionTokens, mask.allSatisfy({ $0 == 1 }) else { throw BassPreviewError.componentNotCompleted("bass conditioning; see component report") }
+            let contextInput = NDArray(scalars: actualContext, shape: [1,window.latentFrames,128])
+            let conditionInput = NDArray(scalars: actualCondition, shape: [1,window.conditionTokens,2048])
             lines.append("=== Sampling and waveform generation ===")
-            var latent = NDArray(scalars: noise, shape: [1,128,64])
-            var momentum = NDArray(scalars: [Float](repeating: 0, count: 128*64), shape: [1,128,64])
+            var latent = NDArray(scalars: noise, shape: [1,window.latentFrames,64])
+            var momentum = NDArray(scalars: [Float](repeating: 0, count: window.latentFrames*64), shape: [1,window.latentFrames,64])
             let apgStage = Contract.Stage(assetFile: "apg-euler.aimodel", layerIndices: [],
-                inputShapes: ["velocity":[2,128,64],"latent":[1,128,64],"momentum":[1,128,64],"dt":[1]],
-                outputShapes: ["latent_next":[1,128,64],"momentum_next":[1,128,64],"guided_velocity":[1,128,64]], outputBindings: nil)
+                inputShapes: ["velocity":[2,window.latentFrames,64],"latent":[1,window.latentFrames,64],"momentum":[1,window.latentFrames,64],"dt":[1]],
+                outputShapes: ["latent_next":[1,window.latentFrames,64],"momentum_next":[1,window.latentFrames,64],"guided_velocity":[1,window.latentFrames,64]], outputBindings: nil)
             for index in 0..<50 {
                 let stepStart = clock.now
                 var state = ["noise":latent,"condition":conditionInput,"context":contextInput,
@@ -1095,7 +1115,7 @@ enum CoreAIDecoderProbe {
                 latent = next; momentum = nextMomentum
                 if referenceMode && ref.checkpoints.contains(index+1) {
                     for (name, array) in [("latent",latent)] {
-                        let actual = try copiedValues(array, shape: [1,128,64])
+                        let actual = try copiedValues(array, shape: [1,window.latentFrames,64])
                         for kind in ["reference","fp32-reference"] {
                             let file = "step-\(index+1)-\(name)-\(kind).f32le"
                             guard let expected = references[file] else { throw ShardError.invalidManifest }
@@ -1124,20 +1144,20 @@ enum CoreAIDecoderProbe {
                 samplingPool.removeAll()
                 lines.append("Retained sampling pool released before decoder; native cache eviction NOT GUARANTEED")
             }
-            let values = try copiedValues(latent, shape: [1,128,64])
-            var decoderInput = [Float](repeating: 0, count: 128*64)
-            for t in 0..<128 { for c in 0..<64 { decoderInput[c*128+t] = values[t*64+c] } }
+            let values = try copiedValues(latent, shape: [1,window.latentFrames,64])
+            var decoderInput = [Float](repeating: 0, count: window.latentFrames*64)
+            for t in 0..<window.latentFrames { for c in 0..<64 { decoderInput[c*window.latentFrames+t] = values[t*64+c] } }
             lastPhase = "Phase: decoder.aimodel loading/binding/inference"
             try requirePreviewMemoryBudget()
-            lines.append("Phase: loading full 5.12-second VAE decoder; sampling Swift handles released, native eviction unverified")
+            lines.append("Phase: loading full \(window.seconds)-second VAE decoder; sampling Swift handles released, native eviction unverified")
             saveProgress(lines, profile: .denoiser); await progress(lines.joined(separator: "\n"))
             let decoderStage = Contract.Stage(assetFile: "decoder.aimodel", layerIndices: [],
-                inputShapes: ["latent":[1,64,128]], outputShapes: ["audio":[1,2,245760]], outputBindings: nil)
+                inputShapes: ["latent":[1,64,window.latentFrames]], outputShapes: ["audio":[1,2,window.samples]], outputBindings: nil)
             let decoded = try await runSequentialPreviewStage(decoderStage, folder: folder,
-                inputs: ["latent":NDArray(scalars: decoderInput, shape: [1,64,128])], aot: preparedAOT, stats: &retention,
+                inputs: ["latent":NDArray(scalars: decoderInput, shape: [1,64,window.latentFrames])], aot: preparedAOT, stats: &retention,
                 phaseProgress: previewPhaseProgress(prefix: (lines + [lastPhase]).joined(separator: "\n")))
             guard let audioArray = decoded.values["audio"] else { throw ProbeError.invalidOutputTensor }
-            let audio = try copiedValues(audioArray, shape: [1,2,245760])
+            let audio = try copiedValues(audioArray, shape: [1,2,window.samples])
             if referenceMode {
                 for kind in ["reference","fp32-reference"] {
                     guard let expected = references["audio-\(kind).f32le"] else { throw ShardError.invalidManifest }
@@ -1154,15 +1174,15 @@ enum CoreAIDecoderProbe {
             if let importedPiano {
                 piano = importedPiano.planarPCM
             } else {
-                piano = try readFloats(folder: sourceFolder, name: "audio.f32le", count: 2*245760, hashes: sourceRef.artifactSha256)
+                piano = try readFloats(folder: sourceFolder, name: "audio.f32le", count: 2*window.samples, hashes: sourceRef.artifactSha256)
             }
             guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { throw ShardError.missingPreparedBundle }
             let output = documents.appendingPathComponent("bass-preview-" + UUID().uuidString)
             try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
             let stem = output.appendingPathComponent("bass.wav"), mixed = output.appendingPathComponent("piano-with-bass.wav")
-            try writeStereoFloatWAV(audio, frames: 245760, to: stem)
+            try writeStereoFloatWAV(audio, frames: window.samples, to: stem)
             let pianoClip = output.appendingPathComponent("piano.wav")
-            try writeStereoFloatWAV(piano, frames: 245760, to: pianoClip)
+            try writeStereoFloatWAV(piano, frames: window.samples, to: pianoClip)
             if let importedPiano {
                 let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
                 try encoder.encode(importedPiano.metadata).write(to: output.appendingPathComponent("input.json"), options: .atomic)
@@ -1171,14 +1191,14 @@ enum CoreAIDecoderProbe {
             let mixPeak = mix.reduce(Float(0)) { max($0,abs($1)) }
             let gain = mixPeak > 0.98 ? Float(0.98)/mixPeak : Float(1)
             if gain < 1 { mix = mix.map { $0 * gain } }
-            try writeStereoFloatWAV(mix, frames: 245760, to: mixed)
+            try writeStereoFloatWAV(mix, frames: window.samples, to: mixed)
             bassURL = stem; mixURL = mixed
             if referenceMode {
                 lines.append("Integrated bass preview numerical parity: \(allParity ? "PASS" : "NOT PASSED") (10 comparisons; fixture scope)")
             } else {
                 lines.append("Imported-recording generation: COMPLETED; numerical parity NOT EVALUATED (0 matching output-reference comparisons)")
             }
-            lines.append("WAV generated on device: YES; bass.wav and piano-with-bass.wav, 5.12 s stereo Float32/48 kHz")
+            lines.append("WAV generated on device: YES; bass.wav and piano-with-bass.wav, \(window.seconds) s stereo Float32/48 kHz")
             lines.append("WAV bass SHA-256: \(try streamingSHA256(stem))")
             lines.append("WAV listening mix SHA-256: \(try streamingSHA256(mixed))")
             lines.append("WAV input piano SHA-256: \(try streamingSHA256(pianoClip))")
@@ -1299,7 +1319,7 @@ enum CoreAIDecoderProbe {
             try checkManifest(ref.runCount, 4, "reuse.run_count")
             try checkManifest(ref.scalarType, "float32", "reuse.scalar_type")
             try checkManifest(ref.byteOrder, "little", "reuse.byte_order")
-            try checkManifest(ref.weightStorageDtype, "float16", "reuse.weight_storage_dtype")
+            try checkManifest(ref.weightStorageDtype, window.weightStorageDtype, "reuse.weight_storage_dtype")
             try checkManifest(ref.computeDtype, "float32", "reuse.compute_dtype")
             try checkManifest(ref.checkpointDigest, contract.checkpoint.digest, "reuse.checkpoint_digest")
             try checkManifest(ref.checkpointFullSha256Verified, true, "reuse.checkpoint_full_sha256_verified")

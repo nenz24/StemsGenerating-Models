@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Prepare the first 5.12 s piano-conditioned bass sampling-to-WAV pipeline.
+"""Prepare a fixed 5.12 or 10.24 s piano-conditioned bass pipeline.
 
-Uses existing real-source and full-conditioning bundles. Exports 14 shape-matched
-DiT shards, one APG/Euler update and a full 128-frame decoder; no cloud inference
+Uses duration-matched source and full-conditioning bundles. Exports 14 shape-matched
+DiT shards, one APG/Euler update and a full-window decoder; no cloud inference
 is used by the iPhone caller. Large/user-derived assets remain local and ignored.
 """
 import argparse
@@ -19,6 +19,7 @@ import sys
 import tempfile
 
 from export_coreai_decoder import ROOT,checkpoint_path,sha256
+from coreai_preview_window import SHORT, PreviewWindow
 from export_coreai_dit_block import records,verified_source,convert_storage16,precision_metrics
 from export_coreai_denoiser import load_full_upstream
 from export_coreai_source_context import verify_bundle as verify_source
@@ -39,22 +40,27 @@ SOURCE=ROOT/'prototypes/ios27-coreai/ModelCandidates/source-context'
 CONDITION=ROOT/'prototypes/ios27-coreai/ModelCandidates/bass-conditioning'
 
 
-def stage_plan():
-    front_outputs={('condition_projected' if n=='condition' else n):s for n,s in SHARED.items()}
+def stage_plan(window=SHORT):
+    h,f,n=window.hidden_tokens,window.frames,window.condition_tokens
+    inputs={'noise':[1,f,64],'condition':[1,n,2048],'context':[1,f,128],'timestep':[1]}
+    shared={'hidden':[2,h,2048],'condition':[2,n,2048],'temb':[2,6,2048],
+            'rope_cos':[1,h,128],'rope_sin':[1,h,128],'self_mask':[1,1,h,h],
+            'local_mask':[1,1,h,h],'cross_mask':[1,1,h,n]}
+    front_outputs={('condition_projected' if name=='condition' else name):shape for name,shape in shared.items()}
     front_outputs['final_temb']=[2,2048]
-    plan=[{'asset_file':'front.aimodel','layer_indices':[],'input_shapes':INPUTS,'output_shapes':front_outputs,
-           'output_bindings':{n:('condition' if n=='condition_projected' else n) for n in front_outputs}}]
+    plan=[{'asset_file':'front.aimodel','layer_indices':[],'input_shapes':inputs,'output_shapes':front_outputs,
+           'output_bindings':{name:('condition' if name=='condition_projected' else name) for name in front_outputs}}]
     for i in range(0,24,2):
         plan.append({'asset_file':f'blocks-{i:02d}-{i+1:02d}.aimodel','layer_indices':[i,i+1],
-                     'input_shapes':SHARED,'output_shapes':{'hidden_out':[2,64,2048]},'output_bindings':{'hidden_out':'hidden'}})
+                     'input_shapes':shared,'output_shapes':{'hidden_out':[2,h,2048]},'output_bindings':{'hidden_out':'hidden'}})
     plan.append({'asset_file':'tail.aimodel','layer_indices':[],
-                 'input_shapes':{'hidden':[2,64,2048],'final_temb':[2,2048]},
-                 'output_shapes':{'velocity':[2,128,64]},'output_bindings':{'velocity':'velocity'}})
+                 'input_shapes':{'hidden':[2,h,2048],'final_temb':[2,2048]},
+                 'output_shapes':{'velocity':[2,f,64]},'output_bindings':{'velocity':'velocity'}})
     return plan
 
 
 def apg_euler(velocity,latent,momentum,dt):
-    """Publisher APG semantics, FP32 projection (validated against FP64 gold)."""
+    """Publisher APG semantics, FP32 projection validated against FP64 gold."""
     import torch
     cond,uncond=velocity.chunk(2,dim=0)
     next_momentum=(cond-uncond)+(-0.75*momentum)
@@ -66,7 +72,7 @@ def apg_euler(velocity,latent,momentum,dt):
     return (latent-guided*dt.reshape(1,1,1)).contiguous(),next_momentum.contiguous(),guided.contiguous()
 
 
-def partitions(root,null,make_mask):
+def partitions(root,null,make_mask,window=SHORT):
     import torch
     class Front(torch.nn.Module):
         def __init__(self):
@@ -78,10 +84,10 @@ def partitions(root,null,make_mask):
             condition=torch.cat([condition,self.null.float().expand_as(condition)],dim=0)
             t=timestep.expand(2);a,p=self.time(t);b,q=self.time_r(torch.zeros_like(t))
             hidden=self.proj(torch.cat([context,noise],dim=-1))
-            cond=self.condition(condition);cos,sin=self.rotary(hidden,torch.arange(64).unsqueeze(0))
-            full=make_mask(64,torch.float32,hidden.device,is_causal=False)
-            local=make_mask(64,torch.float32,hidden.device,sliding_window=128,is_sliding_window=True,is_causal=False)
-            cross=make_mask(117,torch.float32,hidden.device,is_causal=False)[:,:,:64,:117]
+            cond=self.condition(condition);cos,sin=self.rotary(hidden,torch.arange(window.hidden_tokens).unsqueeze(0))
+            full=make_mask(window.hidden_tokens,torch.float32,hidden.device,is_causal=False)
+            local=make_mask(window.hidden_tokens,torch.float32,hidden.device,sliding_window=128,is_sliding_window=True,is_causal=False)
+            cross=torch.zeros((1,1,window.hidden_tokens,window.condition_tokens),dtype=torch.float32,device=hidden.device)
             return tuple(v.contiguous() for v in [hidden,cond,p+q,cos,sin,full,local,cross,a+b])
     class Pair(torch.nn.Module):
         def __init__(self,i):super().__init__();self.layers=torch.nn.ModuleList(root.layers[i:i+2])
@@ -132,21 +138,24 @@ def classify_host_references(comparisons,apg_comparisons,audio_metrics):
             'host_export_status':'strict_pass' if passed else 'bounded_diagnostic'}
 
 
-def verify_bundle(folder,source_folder=SOURCE,condition_folder=CONDITION):
+def verify_bundle(folder,source_folder=None,condition_folder=None,window=SHORT):
+    source_folder=source_folder or ROOT/'prototypes/ios27-coreai/ModelCandidates'/window.source_bundle
+    condition_folder=condition_folder or ROOT/'prototypes/ios27-coreai/ModelCandidates'/window.condition_bundle
     ref=json.loads((folder/'reference.json').read_text())
     status=classify_host_references(ref.get('host_comparisons',[]),ref.get('apg_same_input_vs_publisher',[]),ref.get('host_audio_vs_fp32',{}))
     # Existing strictly passing bundles remain reusable without any re-export.
     for key,value in status.items():
         if key not in ref and status['host_numerical_gate_passed'] and key!='host_dual_trajectory_parity_passed':continue
         if ref.get(key)!=value:raise ValueError('Inconsistent host export status; preserved')
-    if (ref.get('schema_version')!=1 or ref.get('profile')!='bass-preview-512' or ref.get('stages')!=stage_plan()
+    if (ref.get('schema_version')!=1 or ref.get('profile')!=window.preview_bundle or ref.get('stages')!=stage_plan(window)
             or ref.get('inference_steps')!=50 or ref.get('guidance_scale')!=7 or ref.get('shift')!=1
             or ref.get('method')!='euler_ode_apg' or ref.get('apg_momentum')!=-0.75
             or ref.get('apg_norm_threshold')!=2.5 or ref.get('apg_projection_dims')!=[1]
-            or ref.get('apg_projection_precision')!='float32_validated_against_original_float64'
+            or ref.get('apg_projection_precision')!=window.apg_projection_precision
+            or (window.frames==256 and (ref.get('reference_conditioning_scope')!='original_fp32_vs_storage16_conditioning' or ref.get('weight_storage_dtype')!=window.weight_storage_dtype))
             or ref.get('checkpoints')!=CHECKPOINTS or ref.get('function_name')!='main'
-            or ref.get('latent_frames')!=128 or ref.get('condition_tokens')!=117
-            or ref.get('sample_rate')!=48000 or ref.get('audio_seconds')!=5.12
+            or ref.get('latent_frames')!=window.frames or ref.get('condition_tokens')!=window.condition_tokens
+            or ref.get('sample_rate')!=48000 or ref.get('audio_seconds')!=window.seconds
             or ref.get('scalar_type')!='float32' or ref.get('byte_order')!='little'
             or ref.get('checkpoint_digest')!=records()['model.safetensors']['digest']
             or ref.get('all_checkpoints_verified') is not True
@@ -159,12 +168,12 @@ def verify_bundle(folder,source_folder=SOURCE,condition_folder=CONDITION):
             or ref.get('source_reference_sha256')!=sha256(source_folder/'reference.json')
             or ref.get('condition_reference_sha256')!=sha256(condition_folder/'reference.json')):
         raise ValueError('Unexpected bass-preview contract or changed component bundle; preserved')
-    required={'initial-noise.f32le':[1,128,64],'timesteps.f32le':[51]}
+    required={'initial-noise.f32le':[1,window.frames,64],'timesteps.f32le':[51]}
     for step in CHECKPOINTS:
         for name in ['latent']:
-            for kind in ['reference','fp32-reference']:required[f'step-{step}-{name}-{kind}.f32le']=[1,128,64]
-    for kind in ['reference','fp32-reference']:required[f'audio-{kind}.f32le']=[1,2,245760]
-    native={f'{name}/{n}' for name in [*[s['asset_file'] for s in stage_plan()],'apg-euler.aimodel','decoder.aimodel'] for n in ['main.hash','main.mlirb','metadata.json']}
+            for kind in ['reference','fp32-reference']:required[f'step-{step}-{name}-{kind}.f32le']=[1,window.frames,64]
+    for kind in ['reference','fp32-reference']:required[f'audio-{kind}.f32le']=[1,2,window.samples]
+    native={f'{name}/{n}' for name in [*[s['asset_file'] for s in stage_plan(window)],'apg-euler.aimodel','decoder.aimodel'] for n in ['main.hash','main.mlirb','metadata.json']}
     hashes=ref['artifact_sha256'];actual={str(p.relative_to(folder)) for p in folder.rglob('*') if p.is_file() and p.name!='.DS_Store' and p!=folder/'reference.json'}
     if not (set(required)|native).issubset(hashes) or set(hashes)!=actual:raise ValueError('Incomplete preview bundle')
     for name,digest in hashes.items():
@@ -182,16 +191,22 @@ def verify_bundle(folder,source_folder=SOURCE,condition_folder=CONDITION):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--out',type=Path,default=ROOT/'prototypes/ios27-coreai/ModelCandidates/bass-preview-512')
-    parser.add_argument('--source-bundle',type=Path,default=SOURCE)
-    parser.add_argument('--condition-bundle',type=Path,default=CONDITION)
+    parser.add_argument('--seconds',type=float,choices=[5.12,10.24],default=5.12)
+    parser.add_argument('--out',type=Path,default=None)
+    parser.add_argument('--source-bundle',type=Path,default=None)
+    parser.add_argument('--condition-bundle',type=Path,default=None)
     parser.add_argument('--verify-only',action='store_true')
     args=parser.parse_args()
+    window=PreviewWindow.for_seconds(args.seconds)
+    candidates=ROOT/'prototypes/ios27-coreai/ModelCandidates'
+    args.out=args.out or candidates/window.preview_bundle
+    args.source_bundle=args.source_bundle or candidates/window.source_bundle
+    args.condition_bundle=args.condition_bundle or candidates/window.condition_bundle
     if args.verify_only:
-        ref=verify_bundle(args.out,args.source_bundle,args.condition_bundle)
+        ref=verify_bundle(args.out,args.source_bundle,args.condition_bundle,window)
         print('Integrated bass preview integrity VERIFIED; host status:',ref.get('host_export_status','strict_pass'),'; no re-export');return
     if args.out.exists():raise FileExistsError(f'Output already exists: {args.out}; preserved')
-    verify_source(args.source_bundle);verify_condition(args.condition_bundle)
+    verify_source(args.source_bundle,window);verify_condition(args.condition_bundle,window)
     import numpy as np
     import torch
     from safetensors import safe_open
@@ -210,10 +225,11 @@ def main():
     root.load_state_dict(state,strict=True,assign=True);del state
     root.rotary_emb=rotary(cfg,device='cpu');root.to(device='cpu',dtype=torch.float32).requires_grad_(False)
     def tensor(folder,name,shape):return torch.from_numpy(np.fromfile(folder/name,dtype='<f4').copy()).reshape(shape)
-    context=tensor(args.source_bundle,'context_latents-reference.f32le',[1,128,128])
-    gold_cond=tensor(args.condition_bundle,'condition-fp32-reference.f32le',[1,117,2048])
-    cond=tensor(args.condition_bundle,'condition-reference.f32le',[1,117,2048])
-    noise=torch.randn((1,128,64),generator=torch.Generator(device='cpu').manual_seed(0))
+    context=tensor(args.source_bundle,'context_latents-reference.f32le',[1,window.frames,128])
+    full_condition=tensor(args.condition_bundle,'condition-fp32-reference.f32le',[1,window.condition_tokens,2048])
+    cond=tensor(args.condition_bundle,'condition-reference.f32le',[1,window.condition_tokens,2048])
+    gold_cond=full_condition
+    noise=torch.randn((1,window.frames,64),generator=torch.Generator(device='cpu').manual_seed(0))
     times=torch.linspace(1.,0.,51,dtype=torch.float32)
     def original_predict(x,t):
         conditions=torch.cat([gold_cond,null.expand_as(gold_cond)],dim=0)
@@ -226,9 +242,9 @@ def main():
             velocity=original_predict(x,times[i:i+1]);a,b=velocity.chunk(2)
             guided=apg.apg_forward(a,b,7.,momentum_buffer=momentum,dims=[1])
             x=x-guided*(times[i]-times[i+1]);gold[i+1]=(x.clone(),guided.clone())
-            if i+1 in CHECKPOINTS:print(f'Gold step {i+1}/50',flush=True)
+            if i+1 in CHECKPOINTS or (window.frames==256 and (i+1)%5==0):print(f'Gold step {i+1}/50',flush=True)
     gold_latent=x.clone()
-    convert_storage16(root);parts=partitions(root,null,make_mask);plan=stage_plan()
+    convert_storage16(root,window.weight_storage_dtype);parts=partitions(root,null,make_mask,window);plan=stage_plan(window)
     original_ids={id(p) for p in root.parameters()};partition_ids=[id(p) for part in parts for p in part.parameters()]
     if set(partition_ids)!=original_ids or len(partition_ids)!=len(original_ids):raise ValueError('Denoiser parameter coverage mismatch')
     class APG(torch.nn.Module):
@@ -253,8 +269,22 @@ def main():
             apg_comparisons.append(precision_metrics(guided,original_guided))
             expected[i+1]=(x.clone(),guided.clone())
             row={'step':i+1,'latent':precision_metrics(x,gold[i+1][0]),'guided':precision_metrics(guided,gold[i+1][1])};comparisons.append(row)
-            if i+1 in CHECKPOINTS:print('Partition step',i+1,'latent',row['latent'],'guided',row['guided'],flush=True)
-    trajectory_passed=validate_host_trajectory(comparisons,apg_comparisons)
+            if i+1 in CHECKPOINTS or (window.frames==256 and (i+1)%5==0):print('Partition step',i+1,'latent',row['latent'],'guided',row['guided'],flush=True)
+    try:
+        trajectory_passed=validate_host_trajectory(comparisons,apg_comparisons)
+    except ValueError:
+        diagnostics=ROOT/'.runtime-cache/coreai-bass-preview-diagnostics';diagnostics.mkdir(parents=True,exist_ok=True)
+        failed=Path(tempfile.mkdtemp(prefix=window.suffix+'-',dir=diagnostics))
+        payload={'profile':window.preview_bundle,'audio_seconds':window.seconds,
+                 'host_export_status':'rejected','absolute_tolerance':1e-4,'relative_tolerance':1e-3,
+                 'relative_rmse_tolerance':1e-3,'host_comparisons':comparisons,
+                 'apg_same_input_vs_publisher':apg_comparisons,
+                 'reference_conditioning_scope':'original_fp32_vs_storage16_conditioning',
+                 'weight_storage_dtype':window.weight_storage_dtype,
+                 'scope':'Host gate failed; no sampling assets exported; active app profile not changed'}
+        (failed/'comparisons.json').write_text(json.dumps(payload,indent=2)+'\n')
+        print('Host gate rejected; comparisons saved:',failed/'comparisons.json',flush=True)
+        raise
     print('Host latent strict parity:', 'PASS' if trajectory_passed else 'NOT PASSED; bounded diagnostic export only',flush=True)
     expected_latent=x.clone()
     del root,parts,original_predict,partition_predict;gc.collect()
@@ -291,8 +321,8 @@ def main():
     with torch.device('meta'):root=kind(cfg).eval()
     with safe_open(str(path),framework='pt',device='cpu') as w:state={k[len('decoder.'):]:w.get_tensor(k) for k in w.keys() if k.startswith('decoder.')}
     root.load_state_dict(state,strict=True,assign=True);del state
-    root.rotary_emb=rotary(cfg,device='cpu');root.to(device='cpu',dtype=torch.float32).requires_grad_(False);convert_storage16(root)
-    parts=partitions(root,null,make_mask);state={'noise':noise,'condition':cond,'context':context,'timestep':times[:1]}
+    root.rotary_emb=rotary(cfg,device='cpu');root.to(device='cpu',dtype=torch.float32).requires_grad_(False);convert_storage16(root,window.weight_storage_dtype)
+    parts=partitions(root,null,make_mask,window);state={'noise':noise,'condition':cond,'context':context,'timestep':times[:1]}
     def export(module,inputs,input_names,output_names,name):
         module.eval();print('Export',name,flush=True)
         ep=torch.export.export(module,inputs).run_decompositions(get_decomp_table())
@@ -305,10 +335,12 @@ def main():
             for n,v in zip(s['output_shapes'],out):state[s['output_bindings'][n]]=v
     export(update,(state['velocity'],noise,torch.zeros_like(noise),(times[0]-times[1]).reshape(1)),list(APG_INPUTS),list(APG_OUTPUTS),'apg-euler.aimodel')
     export(decoder,(expected_latent.transpose(1,2).contiguous(),),['latent'],['audio'],'decoder.aimodel')
-    ref={'schema_version':1,'profile':'bass-preview-512','function_name':'main','stages':plan,'inference_steps':50,'guidance_scale':7.,'shift':1.,
+    ref={'schema_version':1,'profile':window.preview_bundle,'function_name':'main','stages':plan,'inference_steps':50,'guidance_scale':7.,'shift':1.,
          'method':'euler_ode_apg','apg_momentum':-0.75,'apg_norm_threshold':2.5,'apg_projection_dims':[1],
-         'apg_projection_precision':'float32_validated_against_original_float64','checkpoints':CHECKPOINTS,'latent_frames':128,'condition_tokens':117,
-         'sample_rate':48000,'audio_seconds':5.12,'scalar_type':'float32','byte_order':'little','checkpoint_digest':publisher['model.safetensors']['digest'],
+         'apg_projection_precision':window.apg_projection_precision,'checkpoints':CHECKPOINTS,'latent_frames':window.frames,'condition_tokens':window.condition_tokens,
+         'sample_rate':48000,'audio_seconds':window.seconds,'scalar_type':'float32','byte_order':'little','checkpoint_digest':publisher['model.safetensors']['digest'],
+         'reference_conditioning_scope':'original_fp32_vs_storage16_conditioning',
+         'weight_storage_dtype':window.weight_storage_dtype,
          'vae_checkpoint_digest':vae['digest'],'all_checkpoints_verified':True,**host_status,'host_decoder_folding_exact':True,
          'absolute_tolerance':1e-4,'relative_tolerance':1e-3,'relative_rmse_tolerance':1e-3,
          'source_reference_sha256':sha256(args.source_bundle/'reference.json'),'condition_reference_sha256':sha256(args.condition_bundle/'reference.json'),
@@ -316,8 +348,8 @@ def main():
          'apg_source_digest':publisher['apg_guidance.py']['digest'],'seed':0,'rng_scope':'Host CPU seeded fixtures; no CUDA RNG parity or on-device RNG claim',
          'versions':{n:importlib.metadata.version(n) for n in ['torch','transformers','diffusers','coreai-torch','coreai-core']},
          'artifact_sha256':{str(p.relative_to(stage)):sha256(p) for p in stage.rglob('*') if p.is_file()},
-         'scope':'Real piano + bass preset -> 50 APG-guided Euler steps -> 5.12 s decoded waveform; host-tokenized/canonicalized fixtures; actual device generation pending'}
-    (stage/'reference.json').write_text(json.dumps(ref,indent=2)+'\n');verify_bundle(stage,args.source_bundle,args.condition_bundle)
+         'scope':f'Real piano + duration-matched bass preset -> 50 APG-guided Euler steps -> {window.seconds} s decoded waveform; actual new device profile execution pending'}
+    (stage/'reference.json').write_text(json.dumps(ref,indent=2)+'\n');verify_bundle(stage,args.source_bundle,args.condition_bundle,window)
     args.out.parent.mkdir(parents=True,exist_ok=True);shutil.move(str(stage),str(args.out))
     print('Ready:',host_status['host_export_status'],'integrated preview bundle',args.out,flush=True)
 

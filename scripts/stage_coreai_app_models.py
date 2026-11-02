@@ -11,8 +11,9 @@ import json
 from pathlib import Path, PurePosixPath
 import re
 import shutil
+from coreai_preview_window import SHORT, LONG
 
-PROFILES = ('auto', 'bass-aot', 'bass-source', 'runtime', 'all')
+PROFILES = ('auto', 'bass-aot', 'bass-source', 'bass-source-1024', 'runtime', 'all')
 STAMP = 'app-resource-manifest.json'
 PREVIEW_FIXTURES = {'initial-noise.f32le', 'timesteps.f32le',
                     'audio-reference.f32le', 'audio-fp32-reference.f32le'} | {
@@ -62,7 +63,17 @@ def plan_resources(source, profile='auto'):
         # The supplied h18p/iOS 27.0.1 backtrace crashes in the Metal/MPS
         # compiler for AOT/default. Keep CPU-only source as the default;
         # compiled AOT remains an explicit diagnostic profile on the Mac.
-        profile = 'bass-source' if ready else 'runtime'
+        selector = source / 'active-preview.json'
+        if selector.exists():
+            if selector.is_symlink():raise ValueError('Active preview selector must not be a symlink')
+            chosen=json.loads(selector.read_text())
+            if chosen not in ({'schema_version':1,'resource_profile':'bass-source','audio_seconds':5.12},
+                              {'schema_version':1,'resource_profile':'bass-source-1024','audio_seconds':10.24}):
+                raise ValueError('Invalid active preview selector; build output preserved')
+            profile=chosen['resource_profile']
+        else:
+            profile = 'bass-source' if ready else 'runtime'
+    window = LONG if profile == 'bass-source-1024' else SHORT
     planned = {}
 
     def add(name, expected=None):
@@ -97,11 +108,25 @@ def plan_resources(source, profile='auto'):
                 add(model.name)
             add('affine-native-reference.json', digest(source / 'affine-native-reference.json'))
     else:
-        bundle('source-context')
-        bundle('bass-conditioning')
-        preview = bundle('bass-preview-512', PREVIEW_FIXTURES if profile == 'bass-aot' else None)
-        for key, name in [('source_reference_sha256', 'source-context'),
-                          ('condition_reference_sha256', 'bass-conditioning')]:
+        source_ref = bundle(window.source_bundle)
+        condition_ref = bundle(window.condition_bundle)
+        preview = bundle(window.preview_bundle, PREVIEW_FIXTURES if profile == 'bass-aot' else None)
+        if window == LONG:
+            if (source_ref.get('profile') != window.source_bundle or source_ref.get('audio_seconds') != window.seconds
+                    or source_ref.get('input_shapes', {}).get('audio') != [1,2,window.samples]
+                    or condition_ref.get('profile') != window.condition_bundle
+                    or condition_ref.get('weight_storage_dtype') != window.weight_storage_dtype
+                    or condition_ref.get('text_tokens') != window.text_tokens
+                    or condition_ref.get('prompts', {}).get('audio_seconds') != window.seconds
+                    or preview.get('profile') != window.preview_bundle
+                    or preview.get('audio_seconds') != window.seconds
+                    or preview.get('reference_conditioning_scope') != 'original_fp32_vs_storage16_conditioning'
+                    or preview.get('weight_storage_dtype') != window.weight_storage_dtype
+                    or preview.get('latent_frames') != window.frames
+                    or preview.get('condition_tokens') != window.condition_tokens):
+                raise ValueError('Mixed or invalid 10.24-second resource contracts; build output preserved')
+        for key, name in [('source_reference_sha256', window.source_bundle),
+                          ('condition_reference_sha256', window.condition_bundle)]:
             if preview.get(key) != digest(source / name / 'reference.json'):
                 raise ValueError(f'Preview component identity changed: {name}')
         if profile == 'bass-aot':

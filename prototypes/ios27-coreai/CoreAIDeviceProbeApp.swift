@@ -10,6 +10,7 @@ import UniformTypeIdentifiers
 @main
 @MainActor
 struct CoreAIDeviceProbeApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     @State private var report: String
     @State private var runningModel = false
     @State private var generatedBass: URL?
@@ -32,9 +33,9 @@ struct CoreAIDeviceProbeApp: App {
             NavigationStack {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        if hasResource("bass-preview-512/reference.json") {
+                        if hasResource(window.previewBundle + "/reference.json") {
                             Text("Buat bass untuk bagian awal rekaman piano Anda.")
-                            Text("Pilih audio mono atau stereo minimal 5,12 detik. File asli disimpan; generasi memakai 5,12 detik awal.")
+                            Text("Pilih audio mono atau stereo minimal \(window.durationLabel) detik. File asli disimpan; generasi memakai \(window.durationLabel) detik awal.")
                                 .font(.footnote)
                             Button("Pilih rekaman piano") { showingAudioImporter = true }
                                 .disabled(runningModel)
@@ -179,7 +180,7 @@ struct CoreAIDeviceProbeApp: App {
                             }
                             .disabled(runningModel)
                         }
-                        if hasResource("source-context/reference.json") {
+                        if hasResource(window.sourceBundle + "/reference.json") {
                             Button("Uji audio-context piano") {
                                 runningModel = true
                                 report = "Mengubah audio piano menjadi posterior sample dan konteks lego…"
@@ -190,7 +191,7 @@ struct CoreAIDeviceProbeApp: App {
                             }
                             .disabled(runningModel)
                         }
-                        if hasResource("bass-conditioning/reference.json") {
+                        if hasResource(window.conditionBundle + "/reference.json") {
                             Button("Uji conditioning bass") {
                                 runningModel = true
                                 report = "Menghitung embedding Qwen dan conditioning instrumen bass…"
@@ -201,8 +202,8 @@ struct CoreAIDeviceProbeApp: App {
                             }
                             .disabled(runningModel)
                         }
-                        if hasResource("bass-preview-512/reference.json") {
-                            Button("Uji baseline piano 5,12 detik") { startGeneration() }
+                        if hasResource(window.previewBundle + "/reference.json") {
+                            Button("Uji baseline piano \(window.durationLabel) detik") { startGeneration() }
                             .disabled(runningModel)
                         }
                         if let generatedBass {
@@ -227,7 +228,7 @@ struct CoreAIDeviceProbeApp: App {
                                 .disabled(runningModel)
                             let pianoClip = generatedBass.deletingLastPathComponent().appendingPathComponent("piano.wav")
                             if FileManager.default.fileExists(atPath: pianoClip.path) {
-                                ShareLink(item: pianoClip) { Label("Bagikan piano 5,12 detik", systemImage: "square.and.arrow.up") }
+                                ShareLink(item: pianoClip) { Label("Bagikan WAV piano input", systemImage: "square.and.arrow.up") }
                                     .disabled(runningModel)
                             }
                             let inputMetadata = generatedBass.deletingLastPathComponent().appendingPathComponent("input.json")
@@ -252,6 +253,12 @@ struct CoreAIDeviceProbeApp: App {
                     .padding()
                 }
                 .navigationTitle("CoreAI Device Probe")
+                .onChange(of: runningModel) { _, running in
+                    UIApplication.shared.isIdleTimerDisabled = running && scenePhase == .active
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    UIApplication.shared.isIdleTimerDisabled = runningModel && phase == .active
+                }
                 .fileImporter(isPresented: $showingAudioImporter, allowedContentTypes: [.audio], allowsMultipleSelection: false) { result in
                     importRecording(result)
                 }
@@ -269,14 +276,15 @@ struct CoreAIDeviceProbeApp: App {
             audioPlayer?.stop()
             importedPiano = nil
             runningModel = true
-            report = "Menyalin rekaman dan menyiapkan 5,12 detik awal di iPhone…"
+            report = "Menyalin rekaman dan menyiapkan \(window.durationLabel) detik awal di iPhone…"
+            let selectedWindow = window
             Task {
                 do {
                     let imported = try await Task.detached(priority: .userInitiated) {
-                        try CoreAIAudioImport.importPiano(from: selectedURL)
+                        try CoreAIAudioImport.importPiano(from: selectedURL, window: selectedWindow)
                     }.value
                     importedPiano = imported
-                    report = "Rekaman siap: \(imported.metadata.name)\nBagian awal 5,12 detik, stereo 48 kHz. File asli disimpan tanpa diubah.\nDengarkan bagian piano, lalu tekan Generate bass dari rekaman."
+                    report = "Rekaman siap: \(imported.metadata.name)\nBagian awal \(window.durationLabel) detik, stereo 48 kHz. File asli disimpan tanpa diubah.\nDengarkan bagian piano, lalu tekan Generate bass dari rekaman."
                 } catch {
                     report = "Impor gagal: \(error.localizedDescription)"
                 }
@@ -294,10 +302,11 @@ struct CoreAIDeviceProbeApp: App {
         report = importedPiano == nil
             ? "Menjalankan uji baseline piano ke WAV bass pendek…"
             : "Membuat bass untuk rekaman pilihan Anda…"
+        let selectedWindow = window
         Task {
             let update: @MainActor @Sendable (String) -> Void = { text in self.report = text }
             let result = await Task.detached(priority: .userInitiated) {
-                await CoreAIDecoderProbe.generateBassPreview(importedPiano: importedPiano, progress: update)
+                await CoreAIDecoderProbe.generateBassPreview(window: selectedWindow, importedPiano: importedPiano, progress: update)
             }.value
             report = result.report
             generatedBass = result.bassURL
@@ -305,6 +314,8 @@ struct CoreAIDeviceProbeApp: App {
             runningModel = false
         }
     }
+
+    private let window = CoreAIPreviewWindow.bundled
 
     private func hasResource(_ name: String) -> Bool {
         guard let root = Bundle.main.resourceURL else { return false }

@@ -1,0 +1,172 @@
+[
+  {
+    "weight_storage_dtype": "float16",
+    "apg_projection_precision": "float32",
+    "status": "rejected_no_sampler_export_or_activation",
+    "checkpoints": [
+      {
+        "step": 1,
+        "latent": {
+          "finite": true,
+          "max_absolute_error": 8.344650268554688e-07,
+          "rmse": 9.714410131779343e-08,
+          "normalized_rmse": 9.853232735790322e-08,
+          "elementwise_fraction_over_bound": 0.0,
+          "parity_passed": true
+        },
+        "guided": {
+          "finite": true,
+          "max_absolute_error": 3.9577484130859375e-05,
+          "rmse": 4.538629012348461e-06,
+          "normalized_rmse": 3.252516773153142e-06,
+          "elementwise_fraction_over_bound": 0.0,
+          "parity_passed": true
+        }
+      },
+      {
+        "step": 10,
+        "latent": {
+          "finite": true,
+          "max_absolute_error": 0.00011849403381347656,
+          "rmse": 4.502435592692999e-06,
+          "normalized_rmse": 5.400360389932478e-06,
+          "elementwise_fraction_over_bound": 0.0,
+          "parity_passed": true
+        },
+        "guided": {
+          "finite": true,
+          "max_absolute_error": 0.0073680877685546875,
+          "rmse": 0.0002695927143076,
+          "normalized_rmse": 0.00018697218784020624,
+          "elementwise_fraction_over_bound": 0.01202392578125,
+          "parity_passed": false
+        }
+      },
+      {
+        "step": 25,
+        "latent": {
+          "finite": true,
+          "max_absolute_error": 0.0033136606216430664,
+          "rmse": 0.00018749007139514553,
+          "normalized_rmse": 0.0002647050811808783,
+          "elementwise_fraction_over_bound": 0.05914306640625,
+          "parity_passed": false
+        },
+        "guided": {
+          "finite": true,
+          "max_absolute_error": 0.04599177837371826,
+          "rmse": 0.0028088448481420206,
+          "normalized_rmse": 0.002093874886992242,
+          "elementwise_fraction_over_bound": 0.588623046875,
+          "parity_passed": false
+        }
+      },
+      {
+        "step": 50,
+        "latent": {
+          "finite": true,
+          "max_absolute_error": 0.011969149112701416,
+          "rmse": 0.0013617612274396446,
+          "normalized_rmse": 0.0013275253271538608,
+          "elementwise_fraction_over_bound": 0.5067138671875,
+          "parity_passed": false
+        },
+        "guided": {
+          "finite": true,
+          "max_absolute_error": 0.07796144485473633,
+          "rmse": 0.0063801510132088565,
+          "normalized_rmse": 0.004903365195577748,
+          "elementwise_fraction_over_bound": 0.82562255859375,
+          "parity_passed": false
+        }
+      }
+    ],
+    "normalized_rmse_limit": 0.001,
+    "full_original_reference_retained": true
+  },
+  {
+    "weight_storage_dtype": "float16",
+    "apg_projection_precision": "float64",
+    "status": "rejected_no_sampler_export_or_activation",
+    "checkpoints": [
+      {
+        "step": 1,
+        "latent": {
+          "finite": true,
+          "max_absolute_error": 8.344650268554688e-07,
+          "rmse": 9.707356476120939e-08,
+          "normalized_rmse": 9.84607828071816e-08,
+          "elementwise_fraction_over_bound": 0.0,
+          "parity_passed": true
+        },
+        "guided": {
+          "finite": true,
+          "max_absolute_error": 3.9577484130859375e-05,
+          "rmse": 4.537616212449945e-06,
+          "normalized_rmse": 3.2517909705707304e-06,
+          "elementwise_fraction_over_bound": 0.0,
+          "parity_passed": true
+        }
+      },
+      {
+        "step": 10,
+        "latent": {
+          "finite": true,
+          "max_absolute_error": 9.72747802734375e-05,
+          "rmse": 3.95999769325634e-06,
+          "normalized_rmse": 4.749743610234404e-06,
+          "elementwise_fraction_over_bound": 0.0,
+          "parity_passed": true
+        },
+        "guided": {
+          "finite": true,
+          "max_absolute_error": 0.005753040313720703,
+          "rmse": 0.0002228774231254846,
+          "normalized_rmse": 0.00015457346289563458,
+          "elementwise_fraction_over_bound": 0.01287841796875,
+          "parity_passed": false
+        }
+      },
+      {
+        "step": 25,
+        "latent": {
+          "finite": true,
+          "max_absolute_error": 0.0029556751251220703,
+          "rmse": 0.00016964700295908538,
+          "normalized_rmse": 0.0002395136092072559,
+          "elementwise_fraction_over_bound": 0.04730224609375,
+          "parity_passed": false
+        },
+        "guided": {
+          "finite": true,
+          "max_absolute_error": 0.04089927673339844,
+          "rmse": 0.002474275985772927,
+          "normalized_rmse": 0.0018444679682200636,
+          "elementwise_fraction_over_bound": 0.548583984375,
+          "parity_passed": false
+        }
+      },
+      {
+        "step": 50,
+        "latent": {
+          "finite": true,
+          "max_absolute_error": 0.011250495910644531,
+          "rmse": 0.001200577323393806,
+          "normalized_rmse": 0.0011703937312185727,
+          "elementwise_fraction_over_bound": 0.46295166015625,
+          "parity_passed": false
+        },
+        "guided": {
+          "finite": true,
+          "max_absolute_error": 0.08267784118652344,
+          "rmse": 0.005957323628799735,
+          "normalized_rmse": 0.004578407827616309,
+          "elementwise_fraction_over_bound": 0.80767822265625,
+          "parity_passed": false
+        }
+      }
+    ],
+    "normalized_rmse_limit": 0.001,
+    "full_original_reference_retained": true
+  }
+]

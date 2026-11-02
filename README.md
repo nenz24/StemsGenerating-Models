@@ -152,6 +152,11 @@ terpisah dari numerical parity/lagu panjang. [Panduan](docs/coreai-iphone-audio-
 juga selesai dan diterima pengguna: 77,62 s, sampled process maximum 455,39 MiB,
 ketiga hash WAV cocok dan mix tepat. Dua kasus ini tetap berdurasi 5,12 detik.
 
+**Profil berikutnya: 10,24 detik satu jendela.** [Panduan persiapan dan uji](docs/coreai-bass-preview-1024.md)
+memperbarui encoder, conditioning durasi dan sampler; build hanya memuat satu
+profil aktif, sementara bundle pendek disimpan di Mac. Profil baru menunggu
+build/pengukuran iPhone dan uji dengar; bukan validasi lagu panjang.
+
 
 
 [Percobaan gabungan iPhone pertama](reviews/coreai-iphone17pro-bass-preview-specialization/README.md)

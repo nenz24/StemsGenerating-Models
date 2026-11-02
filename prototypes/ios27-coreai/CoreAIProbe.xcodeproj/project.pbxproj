@@ -11,6 +11,7 @@
 		A10000000000000000000003 /* CoreAI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* CoreAI.framework */; };
 		A10000000000000000000005 /* CoreAIDecoderProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* CoreAIDecoderProbe.swift */; };
 		A10000000000000000000006 /* CoreAIAudioImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* CoreAIAudioImport.swift */; };
+		A10000000000000000000007 /* CoreAIPreviewWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* CoreAIPreviewWindow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		A20000000000000000000008 /* CoreAIDecoderProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAIDecoderProbe.swift; sourceTree = "<group>"; };
 		A20000000000000000000009 /* CoreAIProbe-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CoreAIProbe-Info.plist"; sourceTree = "<group>"; };
 		A2000000000000000000000A /* CoreAIAudioImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAIAudioImport.swift; sourceTree = "<group>"; };
+		A2000000000000000000000B /* CoreAIPreviewWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAIPreviewWindow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,6 +45,7 @@
 				A20000000000000000000002 /* CoreAIModelProbe.swift */,
 				A20000000000000000000008 /* CoreAIDecoderProbe.swift */,
 				A2000000000000000000000A /* CoreAIAudioImport.swift */,
+				A2000000000000000000000B /* CoreAIPreviewWindow.swift */,
 				A20000000000000000000004 /* README.md */,
 				A20000000000000000000006 /* ModelCandidates */,
 				A20000000000000000000007 /* Signing.xcconfig */,
@@ -124,7 +127,8 @@
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = ();
-			inputPaths = ("$(SRCROOT)/ModelCandidates", "$(SRCROOT)/../../scripts/stage_coreai_app_models.py",);
+			inputPaths = ("$(SRCROOT)/ModelCandidates", "$(SRCROOT)/../../scripts/stage_coreai_app_models.py",
+				"$(SRCROOT)/../../scripts/coreai_preview_window.py",);
 			name = "Stage active CoreAI models";
 			outputPaths = ("$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ModelCandidates",);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -142,6 +146,7 @@
 				A10000000000000000000002 /* CoreAIModelProbe.swift in Sources */,
 				A10000000000000000000005 /* CoreAIDecoderProbe.swift in Sources */,
 				A10000000000000000000006 /* CoreAIAudioImport.swift in Sources */,
+				A10000000000000000000007 /* CoreAIPreviewWindow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

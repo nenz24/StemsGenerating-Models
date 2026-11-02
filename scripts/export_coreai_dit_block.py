@@ -115,17 +115,19 @@ def precision_metrics(actual, reference):
             'parity_passed': fraction == 0 and normalized <= 1e-3}
 
 
-def convert_storage16(model):
-    """Store learned values as FP16; explicitly upcast projections for FP32 math.
+def convert_storage16(model, storage_dtype="float16"):
+    """Store learned values as FP16/BF16; explicitly upcast projections for FP32 math.
 
     Normalization weights and AdaLN tables promote naturally with FP32 activations.
     These casts do not establish runtime RAM savings: specialization may upcast
     constants. The actual native file size and device execution are separate gates.
     """
     import torch
+    if storage_dtype not in ('float16','bfloat16'):raise ValueError('Unsupported 16-bit weight storage')
+    target_dtype=torch.float16 if storage_dtype=='float16' else torch.bfloat16
     # Keep analytical buffers (e.g. full-model rotary inv_freq) at their original
     # precision. Only learned parameter storage is changed.
-    for parameter in model.parameters():parameter.data = parameter.detach().half()
+    for parameter in model.parameters():parameter.data = parameter.detach().to(target_dtype)
 
     class Float32Linear(torch.nn.Linear):
         def forward(self, x):
