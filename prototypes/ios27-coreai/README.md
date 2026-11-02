@@ -9,6 +9,13 @@ no consistent FP32 speed advantage, strict parity NOT PASSED (0/12).
 The accepted BF16 generation baseline is retained; this diagnostic does not
 activate a full sampler replacement.
 
+The next [fixed-input BF16 interleaving probe](../../docs/coreai-asset-interleaving-plan.md)
+compares single, pool-only, grouped and interleaved execution. Prepare with
+`bash scripts/prepare_coreai_interleaving_probe.sh --pairs 2`, then build the
+Release Reuse scheme and run the two-asset diagnostic. Existing long BF16 and
+precision fixtures are reused; no native model export. Device timing and Apple
+build validation remain pending.
+
 Initial target: iPhone 17 Pro, iOS 27.0, Xcode 27.0 / 27A266a. These Swift
 sources use APIs declared in the six public interfaces supplied by the user.
 The user has built and run the device probe on an iPhone with iOS 27.0.1:

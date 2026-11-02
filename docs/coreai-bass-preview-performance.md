@@ -49,6 +49,11 @@ adalah ukuran pool dan interleaving aset pada input tetap. Working set/native
 weight movement masih hipotesis, belum penyebab yang dibuktikan. Uji komponen
 ini tidak mereproduksi kondisi full generation 772 detik.
 
+[Probe interleaving BF16](coreai-asset-interleaving-plan.md) kini menyiapkan
+perbandingan input tetap: single, pool-only, grouped dan interleaved. Mulai
+dengan dua pasangan layer, 140 call per run. Build Apple dan hasil perangkat
+belum tersedia; benchmark ini tidak mengganti sampler atau toleransi.
+
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
 masih memakai mode AOT satu-scope; hasil CPU ini tidak memvalidasinya. Default

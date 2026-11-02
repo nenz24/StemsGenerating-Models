@@ -1555,6 +1555,192 @@ enum CoreAIDecoderProbe {
         return times
     }
 
+    private struct InterleavingContract: Decodable {
+        let schemaVersion: Int, pairCount: Int, callsPerAsset: Int
+        let profile: String, weightStorageDtype: String, computeDtype: String
+        let scalarType: String, byteOrder: String, checkpointDigest: String
+        let checkpointFullSha256Verified: Bool
+        let hostExact: [Bool]
+        let assets: [String], inputShapes: [String: [Int]], outputShape: [Int]
+        let absoluteTolerance: Double, relativeTolerance: Double, relativeRmseTolerance: Double
+        let artifactSha256: [String: String], sourceAssetSha256: [String: String]
+        let sourceManifestSha256: String
+    }
+
+    static func runInterleavingProbe(count: Int, reverse: Bool,
+        progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        let clock = ContinuousClock(), start = ContinuousClock().now
+        let memory = CoreAIProcessFootprintSampler()
+        var lines = ["Runtime: CoreAI BF16 interleaving diagnostic; run \(UUID().uuidString)",
+            "Started UTC: \(ISO8601DateFormatter().string(from: Date())); OS \(ProcessInfo.processInfo.operatingSystemVersionString); architecture \(AIModel.deviceArchitectureName)",
+            "Fixed synthetic inputs; CFG batch 2 / hidden 128 / condition 118; no output feedback or waveform",
+            "BF16 storage / FP32 compute; cpuOnly requested; actual accelerator placement NOT MEASURED",
+            "No hidden warmup, cache purge, retry or baseline replacement. First call not guaranteed cold cache",
+            "Finite parity failures remain NOT PASSED while scheduled timing continues; hash/shape/type/nonfinite/native/memory failure stops",
+            "Process guard 2000 MiB before load/call and after bind; not a native peak guarantee",
+            "backend-await is API wall time, not kernel time; footprint sampled process, not exact peak/total RAM",
+            "Build: \(Bundle.main.object(forInfoDictionaryKey: "CoreAIProbeBuildConfiguration") as? String ?? "unrecorded"); optimization: \(Bundle.main.object(forInfoDictionaryKey: "CoreAIProbeSwiftOptimizationLevel") as? String ?? "unrecorded")",
+            "Low-power: \(ProcessInfo.processInfo.isLowPowerModeEnabled); thermal before: \(ProcessInfo.processInfo.thermalState.rawValue); K=\(count); reversed mode order=\(reverse)"]
+        #if targetEnvironment(simulator)
+        lines.append("Simulator: not physical-device evidence")
+        #endif
+        var parity = PrecisionParityStats()
+        var totalCalls = 0
+        do {
+            guard [2,4,8,12].contains(count), let resources = Bundle.main.resourceURL else { throw ShardError.invalidManifest }
+            let folder = resources.appendingPathComponent("ModelCandidates/dit-interleaving-1024")
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let ref = try decoder.decode(InterleavingContract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
+            guard [2,4,8,12].contains(ref.pairCount), count <= ref.pairCount else { throw ShardError.invalidManifest }
+            let names = (0..<ref.pairCount).map { String(format: "blocks-%02d-%02d.aimodel", 2*$0, 2*$0+1) }
+            let shape = [2,128,2048], native = ["metadata.json","main.hash","main.mlirb"]
+            try checkManifest(ref.schemaVersion, 1, "interleaving.schema")
+            try checkManifest(ref.profile, "dit-interleaving-1024", "interleaving.profile")
+            try checkManifest(ref.callsPerAsset, 20, "interleaving.calls")
+            try checkManifest(ref.assets, names, "interleaving.assets")
+            try checkManifest(ref.inputShapes, bassPreviewStages(window: .long1024)[1].inputShapes, "interleaving.inputs")
+            try checkManifest(ref.outputShape, shape, "interleaving.output")
+            try checkManifest(ref.weightStorageDtype, "bfloat16", "interleaving.storage")
+            try checkManifest(ref.computeDtype, "float32", "interleaving.compute")
+            try checkManifest(ref.scalarType, "float32", "interleaving.scalar")
+            try checkManifest(ref.byteOrder, "little", "interleaving.byte_order")
+            try checkManifest(ref.checkpointDigest, Profile.denoiser.checkpointDigest, "interleaving.checkpoint")
+            try checkManifest(ref.checkpointFullSha256Verified, true, "interleaving.checkpoint_verified")
+            try checkManifest(ref.hostExact, Array(repeating: true, count: ref.pairCount), "interleaving.host_exact")
+            try checkManifest(ref.absoluteTolerance, 1e-4, "interleaving.abs")
+            try checkManifest(ref.relativeTolerance, 1e-3, "interleaving.rel")
+            try checkManifest(ref.relativeRmseTolerance, 1e-3, "interleaving.rmse")
+            func isHash(_ s: String) -> Bool { s.count == 64 && s.allSatisfy { "0123456789abcdef".contains($0) } }
+            guard isHash(ref.sourceManifestSha256) else { throw ShardError.invalidManifest }
+            let sourceKeys = Set(names.flatMap { a in native.map { a + "/" + $0 } })
+            var required = sourceKeys
+            for name in ref.inputShapes.keys { required.insert(name + ".f32le") }
+            for i in 0..<ref.pairCount { required.insert(String(format: "reference-%02d.f32le", i)) }
+            try checkManifest(Set(ref.artifactSha256.keys), required, "interleaving.payload")
+            try checkManifest(Set(ref.sourceAssetSha256.keys), sourceKeys, "interleaving.source_payload")
+            for name in sourceKeys {
+                try checkManifest(ref.sourceAssetSha256[name], ref.artifactSha256[name], "interleaving.source_identity")
+            }
+            guard Set(names.compactMap { ref.artifactSha256[$0 + "/main.mlirb"] }).count == ref.pairCount else { throw ShardError.invalidManifest }
+            lines.append("Verifying SHA-256 before opening any model; source manifest \(ref.sourceManifestSha256)")
+            await progress(lines.joined(separator: "\n"))
+            for name in required.sorted() {
+                guard let hash = ref.artifactSha256[name], isHash(hash) else { throw ShardError.invalidManifest }
+                try checkManifest(try streamingSHA256(folder.appendingPathComponent(name)), hash, "interleaving.hash")
+                lines.append("Artifact \(name) SHA-256 \(hash)")
+            }
+            var inputs: [String: NDArray] = [:]
+            for (name,dimensions) in ref.inputShapes {
+                inputs[name] = NDArray(scalars: try readFloats(folder: folder, name: name + ".f32le",
+                    count: dimensions.reduce(1,*), hashes: ref.artifactSha256), shape: dimensions)
+            }
+            var references: [[Float]] = []
+            for i in 0..<count {
+                references.append(try readFloats(folder: folder, name: String(format: "reference-%02d.f32le", i),
+                    count: shape.reduce(1,*), hashes: ref.artifactSha256))
+            }
+            let modes = ["single-before", "pool-only"] + (reverse ? ["interleaved","grouped"] : ["grouped","interleaved"]) + ["single-after"]
+            var means: [String: [Int: Double]] = [:]
+            for mode in modes {
+                let result = try await runInterleavingMode(mode, count: count, folder: folder, ref: ref,
+                    inputs: inputs, references: references, parity: &parity, lines: &lines, progress: progress)
+                totalCalls += result.calls
+                means[mode] = result.means
+                lines.append("Mode \(mode) Swift scope released; native eviction NOT GUARANTEED")
+            }
+            try checkManifest(totalCalls, 60 + 40*count, "interleaving.total_calls")
+            for index in 0..<count {
+                if let grouped = means["grouped"]?[index], let interleaved = means["interleaved"]?[index], grouped > 0 {
+                    lines.append("DIAGNOSTIC asset \(ref.assets[index]) interleaved/grouped repeated mean ratio \(interleaved/grouped)")
+                }
+            }
+            if let single = means["single-before"]?[0], single > 0 {
+                for mode in ["pool-only","single-after"] {
+                    if let value = means[mode]?[0] { lines.append("DIAGNOSTIC A \(mode)/single-before repeated mean ratio \(value/single)") }
+                }
+            }
+            lines.append("Interleaving timing collection: COMPLETED; strict parity \(parity.passed == parity.comparisons ? "PASS" : "NOT PASSED") \(parity.passed)/\(parity.comparisons)")
+        } catch {
+            lines.append("Interleaving timing collection: NOT COMPLETED; prior calls retained in report; baseline unchanged")
+            lines.append(contentsOf: modelErrorDetails(error))
+        }
+        let usage = memory.finish()
+        lines.append("Strict comparisons completed \(parity.comparisons); passed \(parity.passed); failed \(parity.failed)")
+        if let peak = usage.peak { lines.append("Sampled maximum process MiB (10 ms): \(Double(peak)/1048576)") }
+        lines.append("Total ms \(ms(start.duration(to: clock.now))); timings DIAGNOSTIC ONLY if any strict failure; no full-loop speedup claim")
+        saveProgress(lines, profile: .denoiser)
+        return lines.joined(separator: "\n")
+    }
+
+    private static func runInterleavingMode(_ mode: String, count: Int, folder: URL, ref: InterleavingContract,
+        inputs: [String: NDArray], references: [[Float]], parity: inout PrecisionParityStats,
+        lines: inout [String], progress: @escaping @MainActor @Sendable (String) -> Void) async throws -> (calls: Int, means: [Int: Double]) {
+        var pool: [String: RetainedStage] = [:]
+        defer { pool.removeAll() }
+        var stats = RetentionStats()
+        let clock = ContinuousClock(), start = ContinuousClock().now
+        lines.append("Mode \(mode) begins: thermal \(ProcessInfo.processInfo.thermalState.rawValue); low-power \(ProcessInfo.processInfo.isLowPowerModeEnabled)")
+        let size = mode.hasPrefix("single-") ? 1 : count
+        let stages = (0..<size).map { i in Contract.Stage(assetFile: ref.assets[i], layerIndices: [2*i,2*i+1],
+            inputShapes: ref.inputShapes, outputShapes: ["hidden_out":ref.outputShape], outputBindings: nil) }
+        for stage in stages {
+            try requirePreviewMemoryBudget()
+            let phase = "Mode \(mode): opening/binding \(stage.assetFile); no inference yet"
+            saveProgress(lines + [phase], profile: .denoiser); await progress((lines + [phase]).joined(separator: "\n"))
+            let begin = clock.now
+            let probe = try await CoreAIModelProbe(contentsOf: folder.appendingPathComponent(stage.assetFile), options: .cpuOnly)
+            stats.modelOpens += 1
+            let openMs = ms(begin.duration(to: clock.now))
+            var setup = CoreAIModelProbe.StatelessTimings()
+            let function = try probe.loadStatelessFunction(functionNamed: "main", inputs: inputs, timings: &setup)
+            stats.functionBinds += 1
+            pool[stage.assetFile] = RetainedStage(probe: probe, function: function)
+            try requirePreviewMemoryBudget()
+            lines.append("Mode \(mode) setup \(stage.assetFile): open ms \(openMs); bind ms \(setup.functionBindMs); validation ms \(setup.inputValidationMs)")
+        }
+        let order: [Int]
+        if mode == "grouped" { order = (0..<count).flatMap { Array(repeating: $0, count: 20) } }
+        else if mode == "interleaved" { order = (0..<20).flatMap { _ in Array(0..<count) } }
+        else { order = Array(repeating: 0, count: 20) }
+        var times: [Int: [Double]] = [:]
+        var firstHashes: [Int: String] = [:]
+        for (position,index) in order.enumerated() {
+            try requirePreviewMemoryBudget()
+            let phase = "Mode \(mode), K=\(count), call \(position+1)/\(order.count), \(stages[index].assetFile)"
+            saveProgress(lines + [phase], profile: .denoiser); await progress((lines + [phase]).joined(separator: "\n"))
+            let result = try await runRetainedStage(stages[index], folder: folder, inputs: inputs, pool: &pool, stats: &stats,
+                options: .cpuOnly, phaseProgress: previewPhaseProgress(prefix: (lines + [phase]).joined(separator: "\n")))
+            guard let tensor = result.values["hidden_out"] else { throw ProbeError.invalidOutputTensor }
+            let values = try copiedValues(tensor, shape: ref.outputShape)
+            let comparison = try compare(actual: values, expected: references[index], absoluteTolerance: 1e-4,
+                relativeTolerance: 1e-3, relativeRmseTolerance: 1e-3)
+            let details = try precisionPointwiseDetails(actual: values, expected: references[index])
+            let hash = values.withUnsafeBytes { SHA256.hash(data: Data($0)).map { String(format: "%02x", $0) }.joined() }
+            let stable = firstHashes[index].map { $0 == hash } ?? true
+            if firstHashes[index] == nil { firstHashes[index] = hash }
+            parity.comparisons += 1
+            if comparison.passed { parity.passed += 1 }
+            times[index, default: []].append(result.phases.backendAwaitMs)
+            let footprint = CoreAIProcessFootprintSampler.currentFootprint().map { String(Double($0)/1048576) } ?? "unavailable"
+            lines.append("\(phase): \(result.phases.report); max abs \(comparison.maxError); RMSE \(comparison.rmse); normalized RMSE \(comparison.normalizedRmse); \(comparison.passed ? "PASS" : "NOT PASSED"); output SHA-256 \(hash); matches first output in mode \(stable); thermal \(ProcessInfo.processInfo.thermalState.rawValue); footprint MiB \(footprint)")
+            lines.append(details)
+        }
+        try checkManifest(stats.modelOpens, size, "interleaving.mode_opens")
+        try checkManifest(stats.functionBinds, size, "interleaving.mode_binds")
+        // All functions were bound before inference; every call is a pool lookup hit.
+        try checkManifest(stats.cacheHits, order.count, "interleaving.mode_hits")
+        try checkManifest(stats.completedCalls, order.count, "interleaving.mode_calls")
+        var means: [Int: Double] = [:]
+        for index in times.keys.sorted() {
+            let values = times[index]!, repeated = Array(values.dropFirst()).sorted()
+            let mean = repeated.reduce(0,+)/Double(repeated.count)
+            means[index] = mean
+            lines.append("Mode \(mode) asset \(ref.assets[index]): first ms \(values[0]); calls 2-20 mean \(mean); median \(repeated[repeated.count/2]); p95 nearest rank \(repeated[Int(ceil(0.95*Double(repeated.count)))-1]); min \(repeated.first!); max \(repeated.last!)")
+        }
+        lines.append("Mode \(mode) completed: opens \(stats.modelOpens); binds \(stats.functionBinds); prebound pool hits \(stats.cacheHits); calls \(stats.completedCalls); wall ms \(ms(start.duration(to: clock.now)))")
+        return (stats.completedCalls, means)
+    }
+
     static func runPairReuse(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",

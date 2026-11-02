@@ -55,6 +55,27 @@ struct CoreAIDeviceProbeApp: App {
                         }
                         Text("Pemeriksaan dan baseline")
                             .font(.headline)
+                        if hasResource("dit-interleaving-1024/reference.json") {
+                            Text("Uji BF16 pada input tetap. Mulai dari 2 aset; ukuran lebih besar memerlukan bundle yang sesuai. Tidak menghasilkan audio.")
+                                .font(.footnote)
+                            ForEach(interleavingPoolSizes, id: \.self) { count in
+                                ForEach([false,true], id: \.self) { reverse in
+                                    Button("Uji \(count) aset BF16 — \(reverse ? "bergantian dahulu" : "berkelompok dahulu")") {
+                                        audioPlayer?.stop()
+                                        runningModel = true
+                                        report = "Memeriksa bundle BF16…"
+                                        Task {
+                                            let update: @MainActor @Sendable (String) -> Void = { text in self.report = text }
+                                            report = await Task.detached(priority: .userInitiated) {
+                                                await CoreAIDecoderProbe.runInterleavingProbe(count: count, reverse: reverse, progress: update)
+                                            }.value
+                                            runningModel = false
+                                        }
+                                    }
+                                    .disabled(runningModel)
+                                }
+                            }
+                        }
                         if hasResource("dit-precision-1024/reference.json") {
                             Text("Uji komponen singkat untuk membandingkan biaya bobot BF16 dan FP32. Tidak menghasilkan audio baru.")
                                 .font(.footnote)
@@ -337,6 +358,14 @@ struct CoreAIDeviceProbeApp: App {
     }
 
     private let window = CoreAIPreviewWindow.bundled
+
+    private var interleavingPoolSizes: [Int] {
+        guard let root = Bundle.main.resourceURL,
+              let data = try? Data(contentsOf: root.appendingPathComponent("ModelCandidates/dit-interleaving-1024/reference.json")),
+              let manifest = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let count = manifest["pair_count"] as? Int else { return [] }
+        return [2,4,8,12].filter { $0 <= count }
+    }
 
     private func hasResource(_ name: String) -> Bool {
         guard let root = Bundle.main.resourceURL else { return false }

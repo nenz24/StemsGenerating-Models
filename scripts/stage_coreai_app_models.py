@@ -13,7 +13,7 @@ import re
 import shutil
 from coreai_preview_window import SHORT, LONG
 
-PROFILES = ('auto', 'bass-aot', 'bass-source', 'bass-source-1024', 'dit-precision-1024', 'runtime', 'all')
+PROFILES = ('auto', 'bass-aot', 'bass-source', 'bass-source-1024', 'dit-precision-1024', 'dit-interleaving-1024', 'runtime', 'all')
 STAMP = 'app-resource-manifest.json'
 PREVIEW_FIXTURES = {'initial-noise.f32le', 'timesteps.f32le',
                     'audio-reference.f32le', 'audio-fp32-reference.f32le'} | {
@@ -75,7 +75,8 @@ def plan_resources(source, profile='auto'):
                     or set(chosen)-{'schema_version','resource_profile','audio_seconds','diagnostic_trajectory'}
                     or expected not in ({'schema_version':1,'resource_profile':'bass-source','audio_seconds':5.12},
                                         {'schema_version':1,'resource_profile':'bass-source-1024','audio_seconds':10.24},
-                                        {'schema_version':1,'resource_profile':'dit-precision-1024','audio_seconds':10.24})
+                                        {'schema_version':1,'resource_profile':'dit-precision-1024','audio_seconds':10.24},
+                                        {'schema_version':1,'resource_profile':'dit-interleaving-1024','audio_seconds':10.24})
                     or chosen.get('schema_version')!=1
                     or (diagnostic_trajectory and chosen.get('resource_profile')!='bass-source-1024')):
                 raise ValueError('Invalid active preview selector; build output preserved')
@@ -106,6 +107,10 @@ def plan_resources(source, profile='auto'):
                 raise ValueError(f'Directory symlink is unsupported: {path}')
             if path.is_file() and path.name != '.DS_Store' and path != source / STAMP:
                 add(path.relative_to(source).as_posix())
+    elif profile == 'dit-interleaving-1024':
+        from coreai_interleaving_contract import validate
+        validate(load_reference(source, profile))
+        bundle(profile)
     elif profile == 'dit-precision-1024':
         # Validate before adding files: this profile must never pull the full
         # generator or extra historical probes into the app.
