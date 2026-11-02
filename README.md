@@ -138,12 +138,15 @@ Perubahan runtime ini masih menunggu validasi iPhone.
 `bash scripts/prepare_coreai_bass_preview_aot.sh` untuk mengompilasi 16 aset
 preview hanya bagi `h18p`, tanpa mengulang ekspor/referensi. Loader memakai
 `.aimodelc` dengan policy `default`, sesuai pilihan compiler `none`; source/Qwen
-tetap CPU-only. Laporan iPhone terbaru baru sampai verifikasi checksum;
-pemuatan dan inference AOT belum terbukti selesai.
+tetap CPU-only. Laporan iPhone terbaru lolos verifikasi checksum dan conditioning, lalu
+[crash di compiler Metal/MPS](reviews/coreai-iphone17pro-aot-metal-crash/README.md)
+saat memasuki aset AOT pertama. Build default sekarang memilih source CPU-only;
+inference AOT tetap belum berhasil.
 [Instruksi AOT](docs/coreai-bass-preview-aot.md).
 
-**Resource app dipilih otomatis:** build hanya menyertakan pipeline bass aktif.
-Mode AOT tidak membawa salinan source sampling/decoder atau model probe lama.
+**Resource app dipilih otomatis:** build default menyertakan pipeline bass source
+CPU-only, tanpa AOT atau model probe lama. Profil AOT eksplisit tidak membawa
+salinan source sampling/decoder.
 Source/cache Mac tetap tersedia dan file build yang tidak berubah tidak disalin
 ulang. [Profil build dan ukuran](docs/coreai-app-resources.md).
 

@@ -1,5 +1,11 @@
 # Tahap 3: piano menjadi WAV bass pendek
 
+> Pembaruan perangkat: [AOT/default crash di compiler Metal/MPS](../reviews/coreai-iphone17pro-aot-metal-crash/README.md).
+> Build `auto` memakai source CPU-only; AOT tetap tersimpan di Mac dan tidak ikut
+> app default. Load/bind/backend/readback dicatat sebelum panggilan native.
+> Keberhasilan sampling lengkap setelah perubahan ini belum tervalidasi.
+
+
 Pipeline pertama sekarang diimplementasikan: **PCM piano → VAE posterior →
 Qwen/ConditionEncoder → 50 langkah sampling → VAE decoder → WAV**. Dua gate
 conditioning sebelumnya sudah PASS. Pipeline gabungan sudah lolos pembandingan

@@ -14,11 +14,13 @@ The folder includes a native Xcode project and shared `CoreAIProbe` scheme.
 
 ## Resource build
 
-Default `COREAI_MODEL_PROFILE=auto` hanya membawa pipeline bass aktif. Jika AOT
-tersedia, salinan model source sampling/decoder dan seluruh probe historis tidak
-ikut app. Model asli/cache Mac tetap tersimpan; file yang tidak berubah tidak
-perlu disalin ulang. [Pilihan profil dan ukuran](../../docs/coreai-app-resources.md).
-Profil `all` mengaktifkan kembali seluruh resource dan tombol diagnosis lama.
+Default `COREAI_MODEL_PROFILE=auto` membawa pipeline bass source dengan runtime
+`.cpuOnly`, menyusul [crash compiler Metal/MPS AOT/default](../../reviews/coreai-iphone17pro-aot-metal-crash/README.md).
+AOT dan probe historis tidak ikut app default. Model asli/cache/AOT Mac tetap
+tersimpan; file yang tidak berubah tidak perlu disalin ulang.
+[Pilihan profil dan ukuran](../../docs/coreai-app-resources.md). Profil `bass-aot`
+memilih AOT secara eksplisit untuk diagnosis, dan `all` membawa seluruh resource
+serta tombol diagnosis lama.
 
 ## Run the device probe
 

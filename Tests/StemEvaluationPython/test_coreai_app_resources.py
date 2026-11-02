@@ -67,7 +67,7 @@ class AppResourceTests(unittest.TestCase):
     def test_aot_keeps_original_preview_identity_and_every_numerical_fixture(self):
         self.pipeline(aot=True)
         original = (self.source / 'bass-preview-512/reference.json').read_bytes()
-        result = M.stage_resources(self.source, self.destination)
+        result = M.stage_resources(self.source, self.destination, 'bass-aot')
         self.assertEqual(result['selected_profile'], 'bass-aot')
         self.assertEqual((self.destination / 'bass-preview-512/reference.json').read_bytes(), original)
         self.assertFalse((self.destination / 'bass-preview-512/front.aimodel').exists())
@@ -80,6 +80,20 @@ class AppResourceTests(unittest.TestCase):
         source = M.plan_resources(self.source, 'bass-source')
         self.assertFalse(any(k.startswith('bass-preview-512-aot/') for k in source['files']))
 
+    def test_auto_uses_cpu_source_even_when_aot_is_prepared(self):
+        self.pipeline(aot=True)
+        # Reproduce an existing AOT app before upgrading to the CPU default.
+        M.stage_resources(self.source, self.destination, 'bass-aot')
+        self.assertTrue((self.destination / 'bass-preview-512-aot').exists())
+        result = M.stage_resources(self.source, self.destination)
+        self.assertEqual(result['selected_profile'], 'bass-source')
+        self.assertTrue((self.destination / 'bass-preview-512/front.aimodel/weights').is_file())
+        self.assertFalse((self.destination / 'bass-preview-512-aot').exists())
+        self.assertTrue((self.source / 'bass-preview-512-aot/front.h18p.aimodelc').is_file())
+        # An unused stale AOT manifest also must not block a CPU-only build.
+        (self.source / 'bass-preview-512-aot/reference.json').write_text('unused AOT fixture')
+        self.assertEqual(M.plan_resources(self.source)['selected_profile'], 'bass-source')
+
     def test_missing_selected_payload_and_stale_aot_fail_before_pruning(self):
         self.pipeline(aot=True)
         self.destination.mkdir(parents=True)
@@ -88,13 +102,13 @@ class AppResourceTests(unittest.TestCase):
         payload = self.source / 'bass-preview-512-aot/front.h18p.aimodelc'
         payload.unlink()
         with self.assertRaisesRegex(ValueError, 'Missing or external'):
-            M.stage_resources(self.source, self.destination)
+            M.stage_resources(self.source, self.destination, 'bass-aot')
         self.assertEqual(marker.read_text(), 'previous build')
         payload.write_bytes(b'NONEXECUTABLE fixture')
         ref = self.source / 'bass-preview-512/reference.json'
         ref.write_text(ref.read_text() + ' ')
         with self.assertRaisesRegex(ValueError, 'identity'):
-            M.stage_resources(self.source, self.destination)
+            M.stage_resources(self.source, self.destination, 'bass-aot')
         self.assertEqual(marker.read_text(), 'previous build')
 
     def test_profile_switch_prunes_only_build_products_preserving_source_and_cache(self):
@@ -103,7 +117,7 @@ class AppResourceTests(unittest.TestCase):
         cache.parent.mkdir();cache.write_text('checkpoint fixture')
         M.stage_resources(self.source, self.destination, 'all')
         self.assertTrue((self.destination / 'legacy-probe.aimodel').exists())
-        result = M.stage_resources(self.source, self.destination)
+        result = M.stage_resources(self.source, self.destination, 'bass-aot')
         self.assertGreater(result['removed_files'], 0)
         self.assertFalse((self.destination / 'legacy-probe.aimodel').exists())
         self.assertFalse((self.destination / 'bass-preview-512/front.aimodel').exists())

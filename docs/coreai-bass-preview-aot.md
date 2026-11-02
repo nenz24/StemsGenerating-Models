@@ -1,23 +1,59 @@
 # AOT bass preview untuk iPhone h18p
 
-Metal Toolchain **27B47** sudah terpasang di Mac pengguna dan `coreai-build`
-tersedia. [Output help yang diberikan](../reviews/coreai-aot-toolchain-27b47/compile-help.txt)
-mengonfirmasi opsi `--architecture` dan preferensi `gpu`, `neural-engine`,
-`none`. **Tidak ada nilai `cpu` atau `cpuOnly` pada CLI ini.**
+## Status perangkat dan jalur yang dipakai sekarang
 
-## Jalankan
+Metal Toolchain **27B47** berhasil mengompilasi seluruh 16 aset h18p di Mac
+pengguna, total 3,830 GB. [Log kompilasi](../reviews/coreai-aot-toolchain-27b47/compile-report.txt)
+terpisah dari bukti eksekusi iPhone.
 
-Dari folder repository di Mac:
+[Laporan dan backtrace iPhone terbaru](../reviews/coreai-iphone17pro-aot-metal-crash/README.md)
+lolos checksum AOT, source-context piano dan full Qwen/ConditionEncoder.
+Proses kemudian crash `EXC_BAD_ACCESS` pada `llvm-worker-0`, saat memasuki aset
+AOT pertama. Frame teratas berada di `MetalPerformanceShadersGraph`,
+`MPSGraphAICodeCompilerDelegate.getInitializedAICodeBytecodeWithPayloadPrefix:delegateId:`.
+Belum ada sampling step selesai atau bass WAV. Ini menunjukkan kegagalan
+kompilasi native Metal/MPS; belum membuktikan GPU inference atau RAM habis.
+
+Build default **`COREAI_MODEL_PROFILE=auto` sekarang memilih source + `.cpuOnly`**,
+meskipun AOT tersedia. Paket AOT tidak ikut app default dan tetap disimpan di
+Mac. Pengelolaan satu scope model/fungsi per aset dan guard footprint 2000 MiB
+tetap dipakai. Ini menghindari permintaan default yang memicu jalur compiler
+Metal pada percobaan tersebut, tetapi bukan bukti masalah memori BNNS source
+sebelumnya telah teratasi. Komponen encoder/conditioning tetap inference nyata,
+bukan embedding/audio yang diganti fixture host.
+
+Dari repository, setelah menutup Xcode:
 
 ```bash
-git pull --ff-only &&
-bash scripts/prepare_coreai_bass_preview_aot.sh &&
+git fetch origin main &&
+python3 scripts/update_coreai_project.py &&
 open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
 ```
 
-Skrip memakai 16 model `.aimodel` dalam bundle preview yang sudah dibuat.
-Tidak ada ekspor PyTorch, penghitungan ulang 50 langkah referensi, pemilihan
-rekaman baru atau unduhan checkpoint. Yang dilakukan adalah kompilasi AOT:
+Cmd+R, lalu **Generate bass 5,12 detik** sekali. Tidak perlu mengulang preparation,
+AOT atau gate komponen terpisah. Laporan harus menunjukkan:
+
+```text
+Sampling/decoder assets: source .aimodel; requested policy cpuOnly; device compilation required
+Native phase: model-open/specialization; asset: front.aimodel; cpuOnly requested: true
+```
+
+Penanda native ditulis ke saved report dan console sebelum load, bind,
+backend-await, readback dan pelepasan scope Swift. UUID dan waktu mulai
+membedakan laporan baru dari laporan tersimpan. `EXC_BAD_ACCESS` tidak dapat
+ditangkap sebagai Swift error. Jika debugger berhenti pada native crash,
+`bt 30` di console LLDB menampilkan hingga 30 frame thread yang dipilih.
+
+## Paket AOT untuk diagnosis eksplisit
+
+Profil **`bass-aot`** masih tersedia untuk diagnosis AOT. Profil ini diketahui
+crash pada percobaan pengguna di atas; keberhasilan inference belum terbukti.
+[Resource staging](coreai-app-resources.md) membawa source-context, conditioning,
+16 aset compiled, serta manifest source preview dan 12 fixture/reference
+numeriknya. Salinan 16 model source sampling/decoder dan probe historis tidak
+ikut profil AOT. Tidak ada pergantian mode runtime diam-diam bila AOT rusak.
+
+Opsi CLI berasal dari [help pengguna](../reviews/coreai-aot-toolchain-27b47/compile-help.txt):
 
 ```bash
 xcrun coreai-build compile path/to/front.aimodel \
@@ -26,78 +62,34 @@ xcrun coreai-build compile path/to/front.aimodel \
   --preferred-compute none --architecture h18p
 ```
 
-Perintah tersebut dijalankan berurutan untuk 14 shard DiT, APG update dan
-decoder. Hanya varian **h18p** yang diminta. Terminal menampilkan `AOT 1/16`
-sampai `AOT 16/16`, nama aset dan waktu setiap kompilasi. Ukuran hasil AOT
-belum diketahui; skrip menampilkannya saat selesai. Build default memilih paket AOT ini sebagai pengganti model source sampling/decoder
-di app; [resource historis tidak ikut](coreai-app-resources.md). Working copy lokal
-tetap disimpan untuk resume.
+`none` berarti tanpa preferensi, bukan CPU-only. CLI ini hanya menawarkan
+`gpu`, `neural-engine`, `none`; **tidak menyediakan opsi CPU-only**. Sesuai
+[panduan Apple](https://developer.apple.com/documentation/coreai/compiling-core-ai-models-ahead-of-time),
+loader AOT eksplisit tetap memakai `.default` agar sesuai compiler `none`.
+Memaksakan `.cpuOnly` pada paket compiled ini belum tervalidasi dan tidak dipakai
+sebagai mitigasi. Permintaan `.cpuOnly` build default memakai aset source.
+Compute unit aktual tetap belum diukur; stack kompilasi MPS tidak membuktikan
+inference di GPU selesai.
 
-Jika kompilasi terputus, jalankan ulang skrip yang sama. Hasil per aset yang
-lengkap diverifikasi checksum dan dipakai ulang jika source, compiler dan
-arsitektur sama. Percobaan parsial dipertahankan di `.runtime-cache`; tidak
-ditandai selesai. Bundle final hanya dipasang setelah seluruh 16 hasil valid.
-Bundle lama yang telah ada tidak ditimpa; source/arsitektur yang berubah ditolak.
-Jika compiler menghasilkan link ke payload lain, skrip menyalin isinya menjadi
-file mandiri sebelum checksum/packaging, sehingga paket tidak bergantung pada
-path working directory Mac.
+Untuk menyiapkan atau melanjutkan paket diagnosis pada Mac lain:
 
-Tunggu **Ready**, lalu **Stop → Cmd+R** ke iPhone dan tekan tombol yang sama:
-**Generate bass 5,12 detik**. Bagikan laporan lengkap serta WAV jika tersedia.
-Tidak perlu menjalankan gate komponen lagi. Target mode laporan:
-
-```text
-Sampling/decoder assets: AOT .aimodelc; architecture h18p; 16 compiled assets SHA-256 VERIFIED
-Sampling/decoder requested policy: default, matching compiler --preferred-compute none
+```bash
+bash scripts/prepare_coreai_bass_preview_aot.sh
 ```
 
-## Kebijakan runtime dan integritas
+Skrip memerlukan source preview yang sudah ada, tanpa ekspor PyTorch atau
+penghitungan ulang 50 langkah referensi. Enam belas kompilasi dijalankan
+berurutan untuk satu arsitektur h18p. Receipt tiap aset mengikat source,
+compiler/help/Xcode dan arsitektur. Kompilasi lengkap yang valid dipakai ulang;
+parsial dipertahankan di `.runtime-cache`. Source, hasil lama dan checkpoint
+cache tidak ditimpa. Linked payload compiler dibuat mandiri sebelum packaging.
+Paket final diterbitkan hanya setelah semua hasil valid.
 
-`none` berarti tanpa preferensi compute, bukan CPU-only. Sesuai
-[panduan Apple](https://developer.apple.com/documentation/coreai/compiling-core-ai-models-ahead-of-time),
-loader aset AOT menggunakan `SpecializationOptions.default`, agar sesuai dengan
-preferensi kompilasi `none`. **Source encoder dan Qwen tetap `cpuOnly`.** Untuk
-aset sampling/decoder sumber tanpa paket AOT, jalur lama tetap `cpuOnly`.
-Perubahan kebijakan ini dicatat di laporan. Pemakaian GPU, Neural Engine atau
-CPU aktual tetap belum diukur dan tidak boleh ditebak dari opsi tersebut.
-
-Paket final berada di `ModelCandidates/bass-preview-512-aot/` yang diabaikan Git.
-Aplikasi memeriksa arsitektur aktual, source-reference SHA-256, pemetaan tepat
-16 nama aset dan hash seluruh file compiled. Hash dibaca dalam potongan 4 MiB dengan autorelease pool per potongan
-agar objek sementara Foundation dibatasi selama pembacaan. Laporan menampilkan
-`AOT SHA-256 1/16` sampai `16/16`, nama aset dan waktu verifikasi, sebelum model
-dibuka. Semua checksum tetap diperiksa pada setiap percobaan. Bundle yang salah arsitektur,
-stale, tidak lengkap atau rusak menghentikan proses; tidak ada fallback diam-diam
-ke source compilation. Jika folder AOT tidak ada, perilaku source lama berlaku.
-Pemeriksaan checksum dan pipeline dijalankan dalam task background; pembaruan
-laporan dan kontrol pemutar tetap pada MainActor UI.
-
-Untuk kembali ke jalur source, atur build setting target `COREAI_MODEL_PROFILE`
-ke `bass-source`, lalu rebuild. Tidak perlu memindahkan model atau menghapus AOT.
-Source preview dan referensinya tetap tersedia. Jangan mengubah isi source bundle
-untuk mencoba memperbaiki kegagalan AOT.
-
-Scope model/fungsi tetap dibatasi satu aset per saat. Pemulihan cache CPU blok
-18–19 hanya berlaku pada jalur source; paket AOT memakai resource/policy baru
-dan tidak memicu penghapusan cache source tersebut. Output CoreAI aktual tetap
-menjadi input tahap berikutnya; I/O, sampling, toleransi serta label
-`bounded_diagnostic` tidak diubah. Parity AOT dinilai dari hasil perangkat.
-
-## Status
-
-Perintah berasal dari help toolchain pengguna dan dokumentasi Apple. Pengujian
-argumen, packaging, hash, penolakan paket rusak/stale, resume dan preservasi
-lolos di Linux. Native compiler tidak dijalankan atau disimulasikan pada host
-Linux; fixture unit jelas bukan model yang bisa dieksekusi. Build Apple untuk
-loader baru serta eksekusi/memori iPhone **masih menunggu**.
-
-[Laporan Mac pengguna](../reviews/coreai-aot-toolchain-27b47/compile-report.txt)
-mengonfirmasi semua 16 kompilasi selesai, `Ready`, total 3,830 GB. Laporan iPhone
-terbaru berhenti pada fase verifikasi bundle tanpa error CoreAI yang menyertai;
-belum membuktikan model AOT berhasil dimuat. Pesan PointerUI/Objective-C yang
-dilampirkan tidak cukup untuk menyimpulkan penyebab penghentian.
-
-AOT memindahkan pekerjaan kompilasi yang mahal ke Mac, tetapi masih menyisakan
-sebagian specialization pada perangkat. Ini mitigasi untuk kegagalan BNNS IR
-mmap yang diamati, bukan bukti masalah memori sudah teratasi. Laporan akan tetap
-menyebut aset, fase, resource `.aimodelc` dan error jika gagal.
+Bundle berada di `ModelCandidates/bass-preview-512-aot/`, diabaikan Git. Loader
+memeriksa arsitektur, source-reference identity, 16 nama aset dan seluruh hash.
+Hash dibaca per 4 MiB dengan autorelease pool per potongan; progres 1/16 sampai
+16/16 dicatat. Manifest source dipertahankan byte demi byte walau model source
+sampling/decoder tidak ikut app AOT. Native placement/eviction, loader baru dan
+mitigasi CPU default tetap memerlukan validasi perangkat; Linux hanya menguji
+argumen, packaging, integritas dan referensi host. Toleransi numerik serta
+status `bounded_diagnostic` tidak diubah.

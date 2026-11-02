@@ -37,3 +37,8 @@ references/tolerances/diagnostic status. No implicit CPU source fallback is
 performed if an AOT bundle exists but fails validation.
 
 See [instructions and remaining specialization limits](../../docs/coreai-bass-preview-aot.md).
+
+Subsequent [device evidence](../coreai-iphone17pro-aot-metal-crash/README.md)
+now confirms AOT hashes and integrated conditioning passed, then native
+Metal/MPS compilation crashed at the first sampling asset. Auto packaging
+therefore selects source CPU-only; AOT/default is an explicit diagnostic route.

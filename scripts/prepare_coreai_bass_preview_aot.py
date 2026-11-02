@@ -135,7 +135,7 @@ def main():
         except Exception as error:
             raise ValueError(f'Existing AOT output invalid or stale: {args.out}; preserved. Use a new --out or move the old bundle outside app resources.') from error
         print('AOT package integrity VERIFIED; existing assets retained; architecture:',ref['architecture'])
-        print('Runtime request: default (compiler preference none); no accelerator or parity claim');return
+        print('Explicit bass-aot diagnostic uses runtime default (compiler preference none); auto stays source CPU-only after the reported Metal compiler crash.');return
     if platform.system()!='Darwin' or platform.machine()!='arm64':
         parser.error('Run native compilation on an Apple Silicon Mac with installed Metal Toolchain; no Linux compiler emulation')
     if not (args.source_bundle/'reference.json').is_file():
@@ -177,7 +177,7 @@ def main():
         results[name]=path
     ref=publish_bundle(results,args.source_bundle,args.out,args.architecture,compiler)
     print(f'Ready: {args.out}; {ref["compiled_bytes"]/1e9:.3f} GB compiled; only {args.architecture}',flush=True)
-    print('Rebuild iPhone app. AOT sampling/decoder use runtime default; source/Qwen stay cpuOnly. Device validation pending.')
+    print('AOT retained on Mac. Auto app profile uses source CPU-only after the reported Metal compiler crash; bass-aot remains an explicit diagnostic. Device validation pending.')
 
 
 if __name__=='__main__':main()

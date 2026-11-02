@@ -1,0 +1,16 @@
+User-supplied LLDB output, transcribed from chat:
+(lldb) bt 30
+* thread #14, name = 'llvm-worker-0', stop reason = EXC_BAD_ACCESS (code=1, address=0x3f5)
+  * frame #0: 0x00000002587b1c2c MetalPerformanceShadersGraph`-[MPSGraphAICodeCompilerDelegate getInitializedAICodeBytecodeWithPayloadPrefix:delegateId:] + 2236
+    frame #1: 0x000000025882cbf4 MetalPerformanceShadersGraph`closure #1 in Compiler_coreAI.compile(moduleBytecode:to:with:) + 1320
+    frame #2: 0x000000025882db78 MetalPerformanceShadersGraph`protocol witness for Compiler.Delegates.BinaryGenerator.compile(moduleBytecode:to:with:) in conformance Compiler_coreAI + 56
+    frame #3: 0x00000002da6e965c CoreAICompiler`___lldb_unnamed_symbol_2bc33c9a0 + 3260
+    frame #4: 0x00000002da6e8894 CoreAICompiler`___lldb_unnamed_symbol_2bc33c740 + 340
+    frame #5: 0x00000002da7548d0 libODIECompiler.dylib`std::__1::__function::__func<mlir::ODIE::Compiler::capi::detail::set_callback(odiec_external_rewriter_t, void*, odiec_bytecode_blob_t (*)(void*, odiec_external_rewriter_payload_t))::$_0, std::__1::unique_ptr<llvm::MemoryBuffer, std::__1::default_delete<llvm::MemoryBuffer>> (mlir::ODIE::Compiler::ModuleRewriter::Payload&&)>::operator()(mlir::ODIE::Compiler::ModuleRewriter::Payload&&) + 60
+    frame #6: 0x00000002db32f488 libODIECompiler.dylib`mlir::ODIE::Compiler::Serialization::rewriteModule(mlir::ModuleOp, mlir::ODIE::Compiler::ModuleRewriter const&, std::__1::optional<std::__1::__fs::filesystem::path> const&, std::__1::__fs::filesystem::path const&, bool) + 520
+    frame #7: 0x00000002db146b4c libODIECompiler.dylib`mlir::ODIE::Compiler::Transforms::CompileForDelegates::generateCompilationTask() const::'lambda'(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, mlir::ODIE::Compiler::ModuleRewriter const&, mlir::ModuleOp)::operator()(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, mlir::ODIE::Compiler::ModuleRewriter const&, mlir::ModuleOp) const + 552
+    frame #8: 0x00000002db148794 libODIECompiler.dylib`std::__1::__deferred_assoc_state<llvm::LogicalResult, std::__1::__async_func<std::__1::function<llvm::LogicalResult ()>>>::__execute() + 56
+    frame #9: 0x00000001b5a9a904 libc++.1.dylib`std::__1::__assoc_sub_state::wait() + 56
+    frame #10: 0x00000002da794b78 libODIECompiler.dylib`llvm::StdThreadPool::processTasks(llvm::ThreadPoolTaskGroup*) + 672
+    frame #11: 0x00000002da795bbc libODIECompiler.dylib`void* llvm::thread::ThreadProxy<std::__1::tuple<llvm::StdThreadPool::grow(int)::$_0>>(void*) + 136
+    frame #12: 0x000000019e8ea038 libsystem_pthread.dylib`_pthread_start + 136

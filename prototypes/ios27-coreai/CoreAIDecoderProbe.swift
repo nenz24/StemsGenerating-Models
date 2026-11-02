@@ -797,12 +797,23 @@ enum CoreAIDecoderProbe {
         return PreviewAOTSelection(folder: folder, assets: ref.assets)
     }
 
+    // Persist immediately before each native API interval: EXC_BAD_ACCESS
+    // terminates the process and cannot be recovered by a Swift catch block.
+    private static func previewPhaseProgress(prefix: String) -> @Sendable (String) -> Void {
+        return { phase in
+            let report = prefix + "\n" + phase
+            saveProgress([report], profile: .denoiser)
+            print(phase)
+        }
+    }
+
     static func generateBassPreview(progress: @escaping @MainActor @Sendable (String) -> Void) async -> BassPreviewResult {
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
         let priorReport = savedDenoiserReport()
         var retention = RetentionStats()
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+                     "Probe run: \(UUID().uuidString); started UTC: \(ISO8601DateFormatter().string(from: Date()))",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",
                      "Test: actual piano -> VAE posterior -> full Qwen/ConditionEncoder -> 50 APG-guided Euler steps -> bass WAV",
                      "Audio: 5.12 s / 48000 Hz stereo; 128 latent frames / 117 condition tokens",
@@ -813,6 +824,7 @@ enum CoreAIDecoderProbe {
                      "Actual component outputs feed sampling; host references are comparisons only",
                      "Execution: single live Swift model/function scope per asset; detached CPU copies; native cache eviction NOT GUARANTEED",
                      "Raw-source cache repair: only blocks-18-19 after its saved BNNS graphLoadFailed; skipped for AOT; no automatic retry",
+                     "Native API phase markers are persisted before calls; observer overhead is included in total pipeline time",
                      "Footprint guard 2000 MiB before each stage and after bind; NOT an OS peak-memory guarantee"]
         #if targetEnvironment(simulator)
         lines.append("Target: Simulator; not physical-device evidence")
@@ -987,7 +999,8 @@ enum CoreAIDecoderProbe {
                         guard let array = state[name], array.shape == shape else { throw ShardError.invalidManifest }
                         inputs[name] = array
                     }
-                    let result = try await runSequentialPreviewStage(stage, folder: folder, inputs: inputs, aot: preparedAOT, stats: &retention)
+                    let result = try await runSequentialPreviewStage(stage, folder: folder, inputs: inputs, aot: preparedAOT, stats: &retention,
+                        phaseProgress: previewPhaseProgress(prefix: (lines + [phase]).joined(separator: "\n")))
                     if index == 0 {
                         lines.append("First sampling step stage \(stageIndex+1)/14 \(stage.assetFile): load ms \(result.loadMs); \(result.phases.report)")
                     }
@@ -1004,7 +1017,8 @@ enum CoreAIDecoderProbe {
                 await progress((lines + [lastPhase]).joined(separator: "\n"))
                 let result = try await runSequentialPreviewStage(apgStage, folder: folder,
                     inputs: ["velocity":velocity,"latent":latent,"momentum":momentum,
-                             "dt":NDArray(scalars: [times[index]-times[index+1]], shape: [1])], aot: preparedAOT, stats: &retention)
+                             "dt":NDArray(scalars: [times[index]-times[index+1]], shape: [1])], aot: preparedAOT, stats: &retention,
+                    phaseProgress: previewPhaseProgress(prefix: (lines + [lastPhase]).joined(separator: "\n")))
                 guard let next = result.values["latent_next"], let nextMomentum = result.values["momentum_next"],
                       result.values["guided_velocity"] != nil else { throw ProbeError.invalidOutputTensor }
                 latent = next; momentum = nextMomentum
@@ -1039,7 +1053,8 @@ enum CoreAIDecoderProbe {
             let decoderStage = Contract.Stage(assetFile: "decoder.aimodel", layerIndices: [],
                 inputShapes: ["latent":[1,64,128]], outputShapes: ["audio":[1,2,245760]], outputBindings: nil)
             let decoded = try await runSequentialPreviewStage(decoderStage, folder: folder,
-                inputs: ["latent":NDArray(scalars: decoderInput, shape: [1,64,128])], aot: preparedAOT, stats: &retention)
+                inputs: ["latent":NDArray(scalars: decoderInput, shape: [1,64,128])], aot: preparedAOT, stats: &retention,
+                phaseProgress: previewPhaseProgress(prefix: (lines + [lastPhase]).joined(separator: "\n")))
             guard let audioArray = decoded.values["audio"] else { throw ProbeError.invalidOutputTensor }
             let audio = try copiedValues(audioArray, shape: [1,2,245760])
             for kind in ["reference","fp32-reference"] {
@@ -1691,7 +1706,8 @@ enum CoreAIDecoderProbe {
     // inside this helper and is dropped on success or failure before the next
     // stage starts. This bounds our Swift ownership, not backend cache residency.
     private static func runSequentialPreviewStage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray],
-                                                   aot: PreviewAOTSelection? = nil, stats: inout RetentionStats) async throws -> StageResult {
+                                                   aot: PreviewAOTSelection? = nil, stats: inout RetentionStats,
+                                                   phaseProgress: (@Sendable (String) -> Void)? = nil) async throws -> StageResult {
         var owned: [String: RetainedStage] = [:]
         defer { owned.removeAll() }
         let resource: URL
@@ -1704,13 +1720,18 @@ enum CoreAIDecoderProbe {
             resource = folder.appendingPathComponent(stage.assetFile)
             options = .cpuOnly
         }
-        return try await runRetainedStage(stage, folder: folder, inputs: inputs, pool: &owned, stats: &stats,
-                                          modelURL: resource, options: options)
+        let result = try await runRetainedStage(stage, folder: folder, inputs: inputs, pool: &owned, stats: &stats,
+                                               modelURL: resource, options: options, phaseProgress: phaseProgress)
+        if let phaseProgress {
+            phaseProgress("Native phase: Swift stage scope release; asset: \(resource.lastPathComponent)")
+        }
+        return result
     }
 
     private static func runRetainedStage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray],
                                          pool: inout [String: RetainedStage], stats: inout RetentionStats, modelURL: URL? = nil,
-                                         options: SpecializationOptions = .cpuOnly) async throws -> StageResult {
+                                         options: SpecializationOptions = .cpuOnly,
+                                         phaseProgress: (@Sendable (String) -> Void)? = nil) async throws -> StageResult {
         let resource = modelURL ?? folder.appendingPathComponent(stage.assetFile)
         var operation = "retained-handle-selection"
         let reused = pool[stage.assetFile] != nil
@@ -1724,18 +1745,30 @@ enum CoreAIDecoderProbe {
                 entry = cached
                 stats.cacheHits += 1
                 runStart = clock.now
-                let validationStart = clock.now
                 operation = "retained-input-validation"
+                if let phaseProgress {
+                    let footprint = CoreAIProcessFootprintSampler.currentFootprint().map { String(Double($0)/1048576) } ?? "unavailable"
+                    phaseProgress("Native phase: \(operation); asset: \(resource.lastPathComponent); cpuOnly requested: \(options == .cpuOnly); footprint MiB: \(footprint)")
+                }
+                let validationStart = clock.now
                 try CoreAIModelProbe.validateStatelessInputs(function: entry.function, inputs: inputs)
                 setup.inputValidationMs = ms(validationStart.duration(to: clock.now))
             } else {
-                let loadStart = clock.now
                 operation = "model-open/specialization"
+                if let phaseProgress {
+                    let footprint = CoreAIProcessFootprintSampler.currentFootprint().map { String(Double($0)/1048576) } ?? "unavailable"
+                    phaseProgress("Native phase: \(operation); asset: \(resource.lastPathComponent); cpuOnly requested: \(options == .cpuOnly); footprint MiB: \(footprint)")
+                }
+                let loadStart = clock.now
                 let probe = try await CoreAIModelProbe(contentsOf: resource, options: options)
                 stats.modelOpens += 1
                 runStart = clock.now
                 loadMs = ms(loadStart.duration(to: runStart))
                 operation = "function-bind/input-validation"
+                if let phaseProgress {
+                    let footprint = CoreAIProcessFootprintSampler.currentFootprint().map { String(Double($0)/1048576) } ?? "unavailable"
+                    phaseProgress("Native phase: \(operation); asset: \(resource.lastPathComponent); cpuOnly requested: \(options == .cpuOnly); footprint MiB: \(footprint)")
+                }
                 let function = try probe.loadStatelessFunction(functionNamed: "main", inputs: inputs, timings: &setup)
                 stats.functionBinds += 1
                 entry = RetainedStage(probe: probe, function: function)
@@ -1744,16 +1777,28 @@ enum CoreAIDecoderProbe {
             // Recheck after bind/validation too: a pre-load guard cannot bound
             // allocations during binding or the following backend invocation.
             operation = "post-bind-memory-guard"
+            if let phaseProgress {
+                let footprint = CoreAIProcessFootprintSampler.currentFootprint().map { String(Double($0)/1048576) } ?? "unavailable"
+                phaseProgress("Native phase: \(operation); asset: \(resource.lastPathComponent); cpuOnly requested: \(options == .cpuOnly); footprint MiB: \(footprint)")
+            }
             guard let footprint = CoreAIProcessFootprintSampler.currentFootprint() else { throw ShardError.footprintUnavailable }
             guard footprint < 2000 * 1048576 else {
                 throw ShardError.memoryBudgetReachedAfterBind(asset: stage.assetFile, mib: Double(footprint)/1048576)
             }
-            let backendStart = clock.now
             operation = "backend-await"
+            if let phaseProgress {
+                let footprint = CoreAIProcessFootprintSampler.currentFootprint().map { String(Double($0)/1048576) } ?? "unavailable"
+                phaseProgress("Native phase: \(operation); asset: \(resource.lastPathComponent); cpuOnly requested: \(options == .cpuOnly); footprint MiB: \(footprint)")
+            }
+            let backendStart = clock.now
             var outputs = try await entry.function.run(inputs: inputs)
-            let copyStart = clock.now
-            let backendMs = ms(backendStart.duration(to: copyStart))
+            let backendMs = ms(backendStart.duration(to: clock.now))
             operation = "output-readback"
+            if let phaseProgress {
+                let footprint = CoreAIProcessFootprintSampler.currentFootprint().map { String(Double($0)/1048576) } ?? "unavailable"
+                phaseProgress("Native phase: \(operation); asset: \(resource.lastPathComponent); cpuOnly requested: \(options == .cpuOnly); footprint MiB: \(footprint)")
+            }
+            let copyStart = clock.now
             var detached: [String: NDArray] = [:]
             for (name, shape) in stage.outputShapes {
                 guard let value = outputs.remove(name), let tensor = value.ndArray else { throw ProbeError.invalidOutputTensor }

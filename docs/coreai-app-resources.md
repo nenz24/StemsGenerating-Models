@@ -47,10 +47,16 @@ memang diperiksa setiap build; copy file yang tidak berubah tetap dilewati.
 Build setting target **COREAI_MODEL_PROFILE** berlaku untuk Debug dan Release.
 Default `auto`; tidak perlu mengubahnya untuk menjalankan preview bass.
 
+[Backtrace perangkat](../reviews/coreai-iphone17pro-aot-metal-crash/README.md)
+menunjukkan crash compiler Metal/MPS pada aset AOT pertama. Karena itu `auto`
+sekarang memilih source CPU-only. AOT tetap tersedia di Mac untuk diagnosis
+eksplisit, dan tidak ikut app default. Ini tidak membuktikan masalah memori
+BNNS sebelumnya sudah teratasi.
+
 | Nilai | Resource yang masuk app |
 | --- | --- |
-| `auto` | Pipeline bass jika ketiga bundle source-context, conditioning dan preview tersedia. Memilih AOT bila folder bundle AOT final ada; selain itu source. Fresh clone memakai `runtime`. |
-| `bass-aot` | Source-context, Qwen/ConditionEncoder, 16 aset compiled AOT, serta manifest dan 12 fixture/reference numerik preview. Tanpa salinan 16 model source sampling/decoder. |
+| `auto` | Pipeline bass jika ketiga bundle source-context, conditioning dan preview tersedia. Memilih source dengan runtime `.cpuOnly`, meskipun AOT tersedia. Fresh clone memakai `runtime`. |
+| `bass-aot` | Diagnosis AOT eksplisit, belum stabil pada iPhone pengguna. Source-context, Qwen/ConditionEncoder, 16 aset compiled AOT, serta manifest dan 12 fixture/reference numerik preview. Tanpa salinan 16 model source sampling/decoder. |
 | `bass-source` | Source-context, Qwen/ConditionEncoder dan preview source lengkap; tanpa AOT dan probe historis. |
 | `runtime` | Tensor probe dan affine native kecil jika tersedia; tanpa model musik. |
 | `all` | Seluruh kandidat untuk diagnosis lama; ukuran besar merupakan pilihan eksplisit. |
@@ -59,7 +65,7 @@ Menu diagnosis lama hanya muncul dalam profil `all`. Tombol komponen aktif dan
 Generate tampil jika bundle terkait disertakan. Metode diagnosis tetap ada di
 source Swift, tetapi bobot modelnya tidak menambah ukuran app default.
 
-Bundle AOT yang ada tetapi tidak lengkap/stale menyebabkan build gagal sebelum
+Pada profil eksplisit `bass-aot`, bundle AOT yang tidak lengkap/stale menyebabkan build gagal sebelum
 resource lama dibuang; tidak diam-diam mengganti mode. Manifest source preview
 **dipertahankan byte demi byte**, termasuk hash asli model source yang tidak
 ikut disalin. Loader AOT memerlukan identitas manifest ini dan 12 file numerik;

@@ -59,7 +59,10 @@ def plan_resources(source, profile='auto'):
     ready = all((source / name / 'reference.json').is_file()
                 for name in ('source-context', 'bass-conditioning', 'bass-preview-512'))
     if profile == 'auto':
-        profile = ('bass-aot' if (source / 'bass-preview-512-aot').exists() else 'bass-source') if ready else 'runtime'
+        # The supplied h18p/iOS 27.0.1 backtrace crashes in the Metal/MPS
+        # compiler for AOT/default. Keep CPU-only source as the default;
+        # compiled AOT remains an explicit diagnostic profile on the Mac.
+        profile = 'bass-source' if ready else 'runtime'
     planned = {}
 
     def add(name, expected=None):
