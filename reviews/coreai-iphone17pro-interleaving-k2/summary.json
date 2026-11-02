@@ -149,5 +149,12 @@
   "strict_parity_passed": false,
   "baseline_replaced": false,
   "tolerances_changed": false,
-  "decision": "Retain BF16. Repeat K=2 with reversed mode order from nominal thermal; control drift exceeds observed interleaving penalty. No full-loop speedup or causal residency claim."
+  "decision": "Retain BF16. Repeat K=2 with reversed mode order from nominal thermal; control drift exceeds observed interleaving penalty. No full-loop speedup or causal residency claim.",
+  "mode_order": [
+    "single-before",
+    "pool-only",
+    "grouped",
+    "interleaved",
+    "single-after"
+  ]
 }

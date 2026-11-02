@@ -8,6 +8,12 @@ Run menyelesaikan 140 call; strict parity tetap NOT PASSED 40/140. Switching
 berikutnya adalah K=2 urutan terbalik dari nominal, tanpa preparation ulang.
 Baseline BF16 dan batas numerik dipertahankan.
 
+[Run urutan terbalik](../reviews/coreai-iphone17pro-interleaving-k2-reversed/README.md)
+juga selesai: switching −4,95–6,82% (lebih cepat), kontrol single-after +15,06%,
+thermal fair. Efek timing berbalik dengan urutan; penalti switching K=2 belum
+konsisten. Berikutnya kontrol ketiga grouped-first dari thermal nominal,
+menggunakan bundle/build yang sama. Tidak ada perubahan model atau toleransi.
+
 ## Persiapan dan menjalankan
 
 Gunakan checkout yang sudah memuat perubahan ini di Mac. Bundle

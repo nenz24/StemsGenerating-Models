@@ -58,6 +58,14 @@ Hasil belum mengisolasi switching atau menjelaskan pipeline penuh. Ulangi
 K=2 dengan urutan terbalik dari thermal nominal, tanpa export ulang.
 Benchmark ini tidak mengganti sampler atau toleransi.
 
+[Run K=2 urutan terbalik](../reviews/coreai-iphone17pro-interleaving-k2-reversed/README.md)
+kemudian selesai: interleaved/grouped menjadi −4,95% dan −6,82%, sementara
+kontrol single-after melambat +15,06%. Thermal tetap fair. Keuntungan timing
+berbalik mengikuti urutan mode; belum ada penalti switching K=2 yang konsisten.
+Parity tetap NOT PASSED 40/140 dan hash output per aset cocok di kedua run.
+Lengkapi kontrol ketiga grouped-first dari thermal nominal sebelum memutuskan
+pool lebih besar. Tidak perlu preparation atau ekspor ulang untuk kontrol ini.
+
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
 masih memakai mode AOT satu-scope; hasil CPU ini tidak memvalidasinya. Default

@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "run_id": "E6E1D1F5-795D-4F28-85DE-131F861853A3",
+  "started_utc": "2026-11-02T18:48:13Z",
+  "started_wib": "2026-11-03T01:48:13+07:00",
+  "report_sha256": "ef3baf2adf5a9003508d60a79684c30efa3bfb9b39292385a938688604b0cf0d",
+  "evidence": "User-supplied report; arithmetic/accounting independently recomputed; full native tensors not supplied",
+  "pool_size": 2,
+  "thermal_counts": {
+    "1": 140
+  },
+  "thermal_label": "fair (1) throughout",
+  "strict_passes": 40,
+  "strict_failures": 100,
+  "calls": 140,
+  "opens": 8,
+  "binds": 8,
+  "hits": 140,
+  "modes": {
+    "single-before": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 81.983916,
+          "repeated_mean_ms": 54.29891910526316,
+          "repeated_median_ms": 53.763292,
+          "repeated_p95_ms": 59.279833,
+          "output_copy_mean_ms": 18.60819585
+        }
+      },
+      "opens": 1,
+      "binds": 1,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 1606.905292
+    },
+    "pool-only": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 81.034292,
+          "repeated_mean_ms": 55.474002210526315,
+          "repeated_median_ms": 55.13775,
+          "repeated_p95_ms": 58.227333,
+          "output_copy_mean_ms": 18.4403771
+        }
+      },
+      "opens": 2,
+      "binds": 2,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 1666.754417
+    },
+    "grouped": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 87.648959,
+          "repeated_mean_ms": 60.58890794736842,
+          "repeated_median_ms": 60.28375,
+          "repeated_p95_ms": 62.831875,
+          "output_copy_mean_ms": 22.35495815
+        },
+        "blocks-02-03.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 86.963209,
+          "repeated_mean_ms": 61.127918736842105,
+          "repeated_median_ms": 61.456917,
+          "repeated_p95_ms": 63.344334,
+          "output_copy_mean_ms": 23.50782495
+        }
+      },
+      "opens": 2,
+      "binds": 2,
+      "hits": 40,
+      "calls": 40,
+      "wall_ms": 4102.390542
+    },
+    "interleaved": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 80.505458,
+          "repeated_mean_ms": 57.587179842105265,
+          "repeated_median_ms": 56.778917,
+          "repeated_p95_ms": 62.4485,
+          "output_copy_mean_ms": 19.7583687
+        },
+        "blocks-02-03.aimodel": {
+          "calls": 20,
+          "strict_passes": 20,
+          "first_ms": 78.585834,
+          "repeated_mean_ms": 56.95833994736842,
+          "repeated_median_ms": 56.325625,
+          "repeated_p95_ms": 61.655125,
+          "output_copy_mean_ms": 20.0774605
+        }
+      },
+      "opens": 2,
+      "binds": 2,
+      "hits": 40,
+      "calls": 40,
+      "wall_ms": 3453.186625
+    },
+    "single-after": {
+      "assets": {
+        "blocks-00-01.aimodel": {
+          "calls": 20,
+          "strict_passes": 0,
+          "first_ms": 89.261125,
+          "repeated_mean_ms": 62.47442105263158,
+          "repeated_median_ms": 60.743959,
+          "repeated_p95_ms": 72.529958,
+          "output_copy_mean_ms": 22.9025084
+        }
+      },
+      "opens": 1,
+      "binds": 1,
+      "hits": 20,
+      "calls": 20,
+      "wall_ms": 2674.469959
+    }
+  },
+  "ratios": {
+    "interleaved_over_grouped": {
+      "blocks-00-01.aimodel": 0.9504574647909043,
+      "blocks-02-03.aimodel": 0.9317892891556824
+    },
+    "pool_only_over_single_before": 1.0216410036263366,
+    "single_after_over_single_before": 1.150564727292628
+  },
+  "reported_output_sha256_by_asset": {
+    "blocks-00-01.aimodel": [
+      "d5277a1d25dc4d1f04958f91162a6c4adc6c3529c8acb16c4a4847de6f8575f1"
+    ],
+    "blocks-02-03.aimodel": [
+      "89ee0adb6b0c913178f85c0b492570ba08180a0e593c9ddab92d1bd286637053"
+    ]
+  },
+  "full_output_hashes_consistent_across_modes": true,
+  "independent_full_tensor_verification": false,
+  "sampled_process_maximum_mib": 391.6742477416992,
+  "total_ms": 13788.743917,
+  "strict_parity_passed": false,
+  "baseline_replaced": false,
+  "tolerances_changed": false,
+  "decision": "Retain BF16. Interleaved/grouped timing advantage reverses with mode order; both runs have fair thermal and substantial single-asset drift. No consistent K=2 switching penalty established. Complete the third K=2 control run from nominal before larger-pool decisions.",
+  "mode_order": [
+    "single-before",
+    "pool-only",
+    "interleaved",
+    "grouped",
+    "single-after"
+  ]
+}
