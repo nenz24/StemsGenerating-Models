@@ -24,15 +24,19 @@ bundles for full generation are retained on disk and excluded from this app
 profile. Existing complete probe bundles are verified, never overwritten.
 
 The iPhone caller runs BF16-A / FP32-B / BF16-A, four calls per pass with a
-single retained model AND function within each pass. It requires strict parity
-against the original FP32 host output on all 12 calls. There is no extra
+single retained model AND function within each pass. It checks strict parity
+against the original FP32 host output on all 12 calls. After the
+[first device pointwise failure](../coreai-iphone17pro-precision-pointwise-failure/README.md),
+finite parity failures are preserved while scheduled timing collection continues;
+overall strict PASS still requires all 12 comparisons. There is no extra
 warmup, cache deletion/retry or full-loop claim. Swift scopes release between
 passes; physical native eviction is unmeasured. It records API timing, thermal
 state, low-power mode and sampled process footprint.
 
-98 host regression tests pass, including seven new integrity/selection tests.
+Initial host preparation passed 98 regression tests, including seven new integrity/selection tests.
 These tests validate contracts, corruption rejection, staging and existing host
 gates; they do not emulate CoreAI device execution. No Apple SDK or Swift
-compiler is available in this workspace. Device build, parity, memory safety
-and speed remain pending. The accepted 10.24-second baseline is not replaced.
+compiler is available in this workspace. The first device call built and ran
+but failed strict parity; complete A/B/A parity, memory safety and timing
+comparison remain pending. The accepted 10.24-second baseline is not replaced.
 See the [run instructions](../../docs/coreai-precision-probe.md).

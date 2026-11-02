@@ -1377,10 +1377,33 @@ enum CoreAIDecoderProbe {
         let artifactSha256: [String: String]
     }
 
+    private struct PrecisionParityStats: Sendable {
+        var comparisons = 0
+        var passed = 0
+        var failed: Int { comparisons - passed }
+    }
+
+    private static func precisionPointwiseDetails(actual: [Float], expected: [Float]) throws -> String {
+        guard actual.count == expected.count, !actual.isEmpty else { throw ProbeError.invalidOutputTensor }
+        var failures = 0, worstIndex = 0
+        var worstRatio = -Double.infinity, worstError = 0.0, worstBound = 0.0
+        for index in actual.indices {
+            guard actual[index].isFinite, expected[index].isFinite else { throw ProbeError.invalidFloatData }
+            let error = abs(Double(actual[index]) - Double(expected[index]))
+            let bound = 1e-4 + 1e-3 * abs(Double(expected[index]))
+            if error > bound { failures += 1 }
+            let ratio = error / bound
+            if ratio > worstRatio { worstRatio = ratio; worstIndex = index; worstError = error; worstBound = bound }
+        }
+        let batch = worstIndex / (128 * 2048), token = (worstIndex / 2048) % 128, channel = worstIndex % 2048
+        return "Pointwise errors over original bound: \(failures)/\(actual.count) (fraction \(Double(failures)/Double(actual.count))); worst bound ratio \(worstRatio); index [\(batch),\(token),\(channel)], flat \(worstIndex); actual \(Double(actual[worstIndex])); reference \(Double(expected[worstIndex])); abs error \(worstError); bound \(worstBound) = 1e-4 + 1e-3*abs(reference)"
+    }
+
     static func runPrecisionProbe(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
         var stats = RetentionStats()
+        var parity = PrecisionParityStats()
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "Probe run: \(UUID().uuidString); started UTC: \(ISO8601DateFormatter().string(from: Date()))",
                      "CoreAI architecture: \(AIModel.deviceArchitectureName)",
@@ -1388,6 +1411,8 @@ enum CoreAIDecoderProbe {
                      "Scope: fixed synthetic inputs; actual CFG batch 2, 128 hidden / 118 condition tokens; NOT full denoiser or audio generation",
                      "Requested compute policy: cpuOnly; actual accelerator placement NOT MEASURED",
                      "All learned values identical; FP32 calculations/inputs/outputs in both variants; original FP32 host reference required",
+                     "Diagnostic timing collection: finite pointwise/RMSE parity failures are recorded and remain NOT PASSED; scheduled calls continue without changing bounds",
+                     "Shape/type/hash/nonfinite/native/memory failures still stop; this component probe generates no waveform and does not replace the sampler",
                      "Three passes, four calls each; same model AND function retained within a pass, Swift scope released between passes",
                      "No hidden warmup, cache deletion, retry or automatic baseline replacement; first call is not guaranteed cold cache",
                      "backend-await is API wall time, NOT isolated kernel time or proof of full-loop speedup",
@@ -1463,7 +1488,7 @@ enum CoreAIDecoderProbe {
                 let stage = Contract.Stage(assetFile: asset, layerIndices: [0,1], inputShapes: ref.inputShapes,
                                            outputShapes: ["hidden_out":ref.outputShape], outputBindings: nil)
                 let times = try await runPrecisionPass(stage, folder: folder, inputs: inputs, expected: expected,
-                    pass: pass+1, stats: &stats, lines: &lines, progress: progress)
+                    pass: pass+1, stats: &stats, parity: &parity, lines: &lines, progress: progress)
                 let mean = times.dropFirst().reduce(0,+) / 3
                 means.append(mean)
                 lines.append("Pass \(pass+1)/3 \(kind): first backend-await ms \(times[0]); repeated mean (calls 2-4) ms \(mean)")
@@ -1473,11 +1498,16 @@ enum CoreAIDecoderProbe {
             try checkManifest(stats.functionBinds, 3, "precision.binds")
             try checkManifest(stats.cacheHits, 9, "precision.hits")
             try checkManifest(stats.completedCalls, 12, "precision.calls")
+            try checkManifest(parity.comparisons, 12, "precision.comparisons")
+            lines.append("Precision timing collection: COMPLETED (12/12 finite component calls)")
+            lines.append("Precision component strict parity: \(parity.passed == 12 ? "PASS" : "NOT PASSED") (\(parity.passed)/12 calls pass; original pointwise and normalized-RMSE bounds unchanged)")
+            if parity.failed > 0 {
+                lines.append("Timing ratios below are DIAGNOSTIC ONLY: at least one strict comparison failed; neither variant is accepted as a sampler replacement by this result")
+            }
             if means[1] > 0 {
                 lines.append("Component BF16-A1/FP32-B repeated backend-await ratio: \(means[0]/means[1])")
                 lines.append("Component BF16-A2/FP32-B repeated backend-await ratio: \(means[2]/means[1]); NOT full-loop speedup")
             }
-            lines.append("Precision component parity: PASS (12/12 calls against original FP32 host reference)")
         } catch {
             lines.append("Precision component probe: NOT COMPLETED; baseline unchanged")
             if let failure = error as? StageExecutionFailure {
@@ -1487,6 +1517,7 @@ enum CoreAIDecoderProbe {
         }
         let usage = memory.finish()
         if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
+        lines.append("Strict parity comparisons completed: \(parity.comparisons)/12; passed \(parity.passed); NOT PASSED \(parity.failed)")
         lines.append("Completed component calls: \(stats.completedCalls)/12; opens \(stats.modelOpens); binds \(stats.functionBinds); hits \(stats.cacheHits); total probe ms \(ms(start.duration(to: clock.now)))")
         lines.append("Memory scope: sampled app process, not exact peak/total RAM. First-call cache state and thermal effects are not controlled.")
         saveProgress(lines, profile: .denoiser)
@@ -1495,6 +1526,7 @@ enum CoreAIDecoderProbe {
 
     private static func runPrecisionPass(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray],
                                          expected: [Float], pass: Int, stats: inout RetentionStats,
+                                         parity: inout PrecisionParityStats,
                                          lines: inout [String], progress: @escaping @MainActor @Sendable (String) -> Void) async throws -> [Double] {
         var owned: [String: RetainedStage] = [:]
         defer { owned.removeAll() }
@@ -1510,8 +1542,14 @@ enum CoreAIDecoderProbe {
             let actual = try copiedValues(output, shape: [2,128,2048])
             let comparison = try compare(actual: actual, expected: expected, absoluteTolerance: 1e-4,
                                          relativeTolerance: 1e-3, relativeRmseTolerance: 1e-3)
-            lines.append("Pass \(pass) call \(call): \(result.phases.report); original FP32 reference max abs error \(comparison.maxError), normalized RMSE \(comparison.normalizedRmse); \(comparison.passed ? "PASS" : "NOT PASSED"); thermal state after \(ProcessInfo.processInfo.thermalState.rawValue)")
-            guard comparison.passed else { throw ProbeError.numericalParityFailed }
+            let pointwise = try precisionPointwiseDetails(actual: actual, expected: expected)
+            parity.comparisons += 1
+            if comparison.passed { parity.passed += 1 }
+            lines.append("Pass \(pass) call \(call): \(result.phases.report); original FP32 reference max abs error \(comparison.maxError), RMSE \(comparison.rmse), normalized RMSE \(comparison.normalizedRmse); \(comparison.passed ? "PASS" : "NOT PASSED"); thermal state after \(ProcessInfo.processInfo.thermalState.rawValue)")
+            lines.append("Pass \(pass) call \(call): \(pointwise)")
+            if !comparison.passed {
+                lines.append("Pass \(pass) call \(call): strict parity remains NOT PASSED; continuing scheduled finite-only timing diagnostics, not retrying or accepting output")
+            }
             times.append(result.phases.backendAwaitMs)
         }
         return times

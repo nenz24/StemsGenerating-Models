@@ -47,11 +47,30 @@ input sintetis yang identik. Tidak ada warmup tersembunyi. Scope Swift dilepas
 sebelum pass berikutnya; ini bukan jaminan eviction cache native. Total target
 3 opens, 3 binds, 9 reuse hits, **12 panggilan komponen**. Tidak ada generasi WAV.
 
-Semua output wajib finite dan lolos referensi pasangan layer FP32 asli pada
-batas abs `1e-4`, rel `1e-3`, normalized RMSE `1e-3`. Host wajib membuktikan
+Semua output wajib finite dan diperiksa terhadap referensi pasangan layer FP32
+asli pada batas abs `1e-4`, rel `1e-3`, normalized RMSE `1e-3`. Untuk status
+numerik PASS, seluruh 12 pembandingan harus lolos. Host wajib membuktikan
 parameter identik dan error output **nol** untuk BF16 versus asli dan FP32
 yang diperluas versus BF16. Aset BF16 diperiksa hash terhadap manifest sumber;
 kedua aset/tensor diperiksa lagi di app.
+
+[Percobaan perangkat pertama](../reviews/coreai-iphone17pro-precision-pointwise-failure/README.md)
+berhenti pada panggilan BF16 pertama: normalized RMSE 2,14e-6 lolos, tetapi
+gate per-sampel gagal. Belum ada hasil FP32 atau warm-call mean. Caller kini
+**mencatat kegagalan numerik finite dan meneruskan 12 panggilan terjadwal untuk
+diagnosis waktu**. Kegagalan tetap NOT PASSED; toleransi, input, referensi dan
+aset tidak berubah. Output nonfinite, shape/type/hash yang salah, native error
+atau guard memori tetap menghentikan uji. Ini bukan retry atau izin generasi.
+
+Laporan memisahkan `Precision timing collection: COMPLETED` dari `Precision
+component strict parity: NOT PASSED/PASS`, dengan jumlah pembandingan yang
+lolos. Untuk setiap panggilan ditampilkan jumlah/fraction pelanggaran, rasio
+error/batas terburuk, indeks `[batch,token,channel]`, actual, reference, error
+dan batasnya. Rasio waktu ketika ada strict failure diberi label diagnostik
+dan tidak boleh dipakai sebagai penerimaan kandidat sampler.
+
+Update caller ini hanya memerlukan fetch/update kode lalu build ulang, tanpa
+menjalankan preparation atau mengubah fixture yang sudah ada.
 
 Laporan memisahkan panggilan pertama dan rata-rata panggilan 2–4. Termasuk
 model-open, bind, validation, backend-await, detached CPU copy, thermal state,

@@ -15,6 +15,18 @@ import stage_coreai_app_models as STAGE
 
 
 class PrecisionProbeTests(unittest.TestCase):
+    def test_small_normalized_rmse_does_not_override_pointwise_failure(self):
+        import torch
+        # The largest absolute error (0.5 at a large reference) is allowed.
+        # The smaller error at zero violates the unchanged absolute bound.
+        reference=torch.tensor([1000.,0.],dtype=torch.float32)
+        actual=torch.tensor([1000.5,0.0002],dtype=torch.float32)
+        metrics=PROBE.precision_metrics(actual,reference)
+        self.assertLess(metrics['normalized_rmse'],1e-3)
+        self.assertEqual(metrics['max_absolute_error'],0.5)
+        self.assertEqual(metrics['elementwise_fraction_over_bound'],0.5)
+        self.assertFalse(metrics['parity_passed'])
+
     def fixture(self,candidates):
         folder=candidates/PROBE.PROFILE;folder.mkdir(parents=True)
         for asset in PROBE.ASSETS.values():

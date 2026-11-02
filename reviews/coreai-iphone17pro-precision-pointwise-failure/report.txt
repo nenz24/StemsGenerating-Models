@@ -1,0 +1,26 @@
+Runtime: CoreAI
+OS: Version 27.0.1 (Build 24A446)
+Probe run: 070EE3E4-4DFF-4E8A-9F15-8A7EA352C60F; started UTC: 2026-11-02T17:05:29Z
+CoreAI architecture: h18p
+Test: long-profile layers 0+1, existing BF16 asset vs expanded FP32 constants, A/B/A
+Scope: fixed synthetic inputs; actual CFG batch 2, 128 hidden / 118 condition tokens; NOT full denoiser or audio generation
+Requested compute policy: cpuOnly; actual accelerator placement NOT MEASURED
+All learned values identical; FP32 calculations/inputs/outputs in both variants; original FP32 host reference required
+Three passes, four calls each; same model AND function retained within a pass, Swift scope released between passes
+No hidden warmup, cache deletion, retry or automatic baseline replacement; first call is not guaranteed cold cache
+backend-await is API wall time, NOT isolated kernel time or proof of full-loop speedup
+Thermal state codes: 0 nominal, 1 fair, 2 serious, 3 critical; low-power mode: false
+Process guard 2000 MiB before load and each call, rechecked after bind; NOT a native compiler peak guarantee
+Target: iOS device build
+App build configuration: Release
+Swift app optimization: -O
+Phase: verifying model binaries and fixed tensors; no model open yet
+SHA-256: VERIFIED both native assets, eight fixed inputs and original FP32 host reference; existing BF16 asset identity matched
+Pass 1 call 1: model-open ms 1.316792; function-bind ms 1.369458; input-validation ms 0.006208; backend-await ms 69.589667; output-copy ms 18.572334; run-other ms 2.7447079999999993; original FP32 reference max abs error 0.00311279296875, normalized RMSE 2.143414100761529e-06; NOT PASSED; thermal state after 0
+Precision component probe: NOT COMPLETED; baseline unchanged
+Error: CoreAIProbe.CoreAIDecoderProbe.(unknown context at $10275aee0).ProbeError.numericalParityFailed
+Error domain/code: CoreAIProbe.CoreAIDecoderProbe.(unknown context at $10275aee0).ProbeError / 5
+Error description: The operation couldn’t be completed. (CoreAIProbe.CoreAIDecoderProbe.(unknown context at $10275aee0).ProbeError error 5.)
+Sampled process maximum MiB (10 ms): 58.17401885986328
+Completed component calls: 1/12; opens 1; binds 1; hits 0; total probe ms 485.386667
+Memory scope: sampled app process, not exact peak/total RAM. First-call cache state and thermal effects are not controlled.
