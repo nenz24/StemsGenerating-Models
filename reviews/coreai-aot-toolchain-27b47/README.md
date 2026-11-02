@@ -19,8 +19,17 @@ file hashes and source-reference identity; it is published only after validation
 Six new tests check exact CLI arguments, mixed file/directory packaging,
 corruption/architecture/policy/source rejection, resume receipt integrity,
 preservation, standalone copies of linked compiler payloads and shell syntax. Fixtures are labeled non-executable; no fake
-native compiler or inference is used. Native Mac AOT compilation and the new
-Apple/device loader are **not yet validated** in this Linux workspace.
+native compiler or inference is used. Native Mac AOT compilation is not
+independently reproduced in this Linux workspace.
+
+The subsequent unmodified [user-supplied Mac compilation log](compile-report.txt)
+reports completion of all 16 assets, Ready, and 3.830 GB compiled for h18p.
+The latest user-supplied device excerpt stops at optional AOT bundle verification
+without a model error or successful load/inference report. PointerUI and
+Objective-C debugger messages do not identify a CoreAI failure. The updated
+loader reports checksum progress per asset and bounds Foundation autoreleased
+temporaries to each 4 MiB read. These new Apple/device changes remain pending
+Mac build and device validation.
 
 The loader chooses matching compiled variants and verifies their hashes before
 inference. It keeps one live Swift stage scope and preserves existing numerical

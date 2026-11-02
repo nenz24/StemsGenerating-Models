@@ -29,8 +29,9 @@ xcrun coreai-build compile path/to/front.aimodel \
 Perintah tersebut dijalankan berurutan untuk 14 shard DiT, APG update dan
 decoder. Hanya varian **h18p** yang diminta. Terminal menampilkan `AOT 1/16`
 sampai `AOT 16/16`, nama aset dan waktu setiap kompilasi. Ukuran hasil AOT
-belum diketahui; skrip menampilkannya saat selesai. Paket menambah resource
-aplikasi, dan working copy lokal juga disimpan untuk resume.
+belum diketahui; skrip menampilkannya saat selesai. Build default memilih paket AOT ini sebagai pengganti model source sampling/decoder
+di app; [resource historis tidak ikut](coreai-app-resources.md). Working copy lokal
+tetap disimpan untuk resume.
 
 Jika kompilasi terputus, jalankan ulang skrip yang sama. Hasil per aset yang
 lengkap diverifikasi checksum dan dipakai ulang jika source, compiler dan
@@ -62,16 +63,18 @@ CPU aktual tetap belum diukur dan tidak boleh ditebak dari opsi tersebut.
 
 Paket final berada di `ModelCandidates/bass-preview-512-aot/` yang diabaikan Git.
 Aplikasi memeriksa arsitektur aktual, source-reference SHA-256, pemetaan tepat
-16 nama aset dan hash seluruh file compiled. Hash dibaca dalam potongan 4 MiB
-agar tidak memuat satu aset besar sekaligus. Bundle yang salah arsitektur,
+16 nama aset dan hash seluruh file compiled. Hash dibaca dalam potongan 4 MiB dengan autorelease pool per potongan
+agar objek sementara Foundation dibatasi selama pembacaan. Laporan menampilkan
+`AOT SHA-256 1/16` sampai `16/16`, nama aset dan waktu verifikasi, sebelum model
+dibuka. Semua checksum tetap diperiksa pada setiap percobaan. Bundle yang salah arsitektur,
 stale, tidak lengkap atau rusak menghentikan proses; tidak ada fallback diam-diam
 ke source compilation. Jika folder AOT tidak ada, perilaku source lama berlaku.
 Pemeriksaan checksum dan pipeline dijalankan dalam task background; pembaruan
 laporan dan kontrol pemutar tetap pada MainActor UI.
 
-Untuk kembali ke jalur source, pindahkan seluruh folder `bass-preview-512-aot`
-keluar dari `ModelCandidates` ke lokasi cache/backup, lalu rebuild. Source
-preview dan referensinya tetap tersedia. Jangan mengubah isi source bundle
+Untuk kembali ke jalur source, atur build setting target `COREAI_MODEL_PROFILE`
+ke `bass-source`, lalu rebuild. Tidak perlu memindahkan model atau menghapus AOT.
+Source preview dan referensinya tetap tersedia. Jangan mengubah isi source bundle
 untuk mencoba memperbaiki kegagalan AOT.
 
 Scope model/fungsi tetap dibatasi satu aset per saat. Pemulihan cache CPU blok
@@ -86,7 +89,13 @@ Perintah berasal dari help toolchain pengguna dan dokumentasi Apple. Pengujian
 argumen, packaging, hash, penolakan paket rusak/stale, resume dan preservasi
 lolos di Linux. Native compiler tidak dijalankan atau disimulasikan pada host
 Linux; fixture unit jelas bukan model yang bisa dieksekusi. Build Apple untuk
-loader baru, kompilasi AOT nyata serta eksekusi/memori iPhone **masih menunggu**.
+loader baru serta eksekusi/memori iPhone **masih menunggu**.
+
+[Laporan Mac pengguna](../reviews/coreai-aot-toolchain-27b47/compile-report.txt)
+mengonfirmasi semua 16 kompilasi selesai, `Ready`, total 3,830 GB. Laporan iPhone
+terbaru berhenti pada fase verifikasi bundle tanpa error CoreAI yang menyertai;
+belum membuktikan model AOT berhasil dimuat. Pesan PointerUI/Objective-C yang
+dilampirkan tidak cukup untuk menyimpulkan penyebab penghentian.
 
 AOT memindahkan pekerjaan kompilasi yang mahal ke Mac, tetapi masih menyisakan
 sebagian specialization pada perangkat. Ini mitigasi untuk kegagalan BNNS IR

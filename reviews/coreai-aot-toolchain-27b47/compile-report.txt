@@ -1,0 +1,68 @@
+CoreAI Python environment ready. Existing model bundles are retained.
+AOT 1/16 front.aimodel -> front.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/front/attempt-50n7bjz8
+Compiling h18p: 1 of 1
+AOT 1/16 complete in 1.1 seconds
+AOT 2/16 blocks-00-01.aimodel -> blocks-00-01.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/blocks-00-01/attempt-or96gbts
+Compiling h18p: 1 of 1
+AOT 2/16 complete in 0.6 seconds
+AOT 3/16 blocks-02-03.aimodel -> blocks-02-03.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/blocks-02-03/attempt-vtqd_803
+Compiling h18p: 1 of 1
+AOT 3/16 complete in 0.6 seconds
+AOT 4/16 blocks-04-05.aimodel -> blocks-04-05.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/blocks-04-05/attempt-ahkvrrt2
+Compiling h18p: 1 of 1
+AOT 4/16 complete in 0.6 seconds
+AOT 5/16 blocks-06-07.aimodel -> blocks-06-07.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/blocks-06-07/attempt-fylkhe0s
+Compiling h18p: 1 of 1
+AOT 5/16 complete in 0.5 seconds
+AOT 6/16 blocks-08-09.aimodel -> blocks-08-09.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/blocks-08-09/attempt-hdne_1io
+Compiling h18p: 1 of 1
+AOT 6/16 complete in 0.5 seconds
+AOT 7/16 blocks-10-11.aimodel -> blocks-10-11.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/blocks-10-11/attempt-qxnrq83y
+Compiling h18p: 1 of 1
+AOT 7/16 complete in 0.6 seconds
+AOT 8/16 blocks-12-13.aimodel -> blocks-12-13.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/blocks-12-13/attempt-r6opb7jw
+Compiling h18p: 1 of 1
+AOT 8/16 complete in 0.5 seconds
+AOT 9/16 blocks-14-15.aimodel -> blocks-14-15.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/blocks-14-15/attempt-ydomyia4
+Compiling h18p: 1 of 1
+AOT 9/16 complete in 0.8 seconds
+AOT 10/16 blocks-16-17.aimodel -> blocks-16-17.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/blocks-16-17/attempt-snwpormc
+Compiling h18p: 1 of 1
+AOT 10/16 complete in 0.7 seconds
+AOT 11/16 blocks-18-19.aimodel -> blocks-18-19.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/blocks-18-19/attempt-0wey1ad2
+Compiling h18p: 1 of 1
+AOT 11/16 complete in 0.7 seconds
+AOT 12/16 blocks-20-21.aimodel -> blocks-20-21.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/blocks-20-21/attempt-kepzlsrw
+Compiling h18p: 1 of 1
+AOT 12/16 complete in 0.7 seconds
+AOT 13/16 blocks-22-23.aimodel -> blocks-22-23.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/blocks-22-23/attempt-g3d5nook
+Compiling h18p: 1 of 1
+AOT 13/16 complete in 0.6 seconds
+AOT 14/16 tail.aimodel -> tail.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/tail/attempt-o2st8i06
+Compiling h18p: 1 of 1
+AOT 14/16 complete in 0.2 seconds
+AOT 15/16 apg-euler.aimodel -> apg-euler.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/apg-euler/attempt-6jydk6xs
+Compiling h18p: 1 of 1
+AOT 15/16 complete in 0.1 seconds
+AOT 16/16 decoder.aimodel -> decoder.h18p.aimodelc; architecture h18p, compute preference none
+Work directory retained on failure: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/.runtime-cache/coreai-bass-preview-aot-work/8fa59b7772ce9fa2720d7530/decoder/attempt-ova3o9um
+Compiling h18p: 1 of 1
+AOT 16/16 complete in 1.4 seconds
+Ready: /Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/prototypes/ios27-coreai/ModelCandidates/bass-preview-512-aot; 3.830 GB compiled; only h18p
+Rebuild iPhone app. AOT sampling/decoder use runtime default; source/Qwen stay cpuOnly. Device validation pending.
+danendra@Danendras-MacBook-Pro StemsGenerating-Models % 

@@ -9,7 +9,6 @@
 		A10000000000000000000001 /* CoreAIDeviceProbeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* CoreAIDeviceProbeApp.swift */; };
 		A10000000000000000000002 /* CoreAIModelProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* CoreAIModelProbe.swift */; };
 		A10000000000000000000003 /* CoreAI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* CoreAI.framework */; };
-		A10000000000000000000004 /* ModelCandidates in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* ModelCandidates */; };
 		A10000000000000000000005 /* CoreAIDecoderProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* CoreAIDecoderProbe.swift */; };
 /* End PBXBuildFile section */
 
@@ -70,6 +69,7 @@
 				A40000000000000000000001 /* Sources */,
 				A40000000000000000000002 /* Frameworks */,
 				A40000000000000000000003 /* Resources */,
+				A40000000000000000000004 /* Stage active CoreAI models */,
 			);
 			buildRules = ();
 			dependencies = ();
@@ -108,10 +108,25 @@
 		A40000000000000000000003 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
-			files = (A10000000000000000000004 /* ModelCandidates in Resources */,);
+			files = ();
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A40000000000000000000004 /* Stage active CoreAI models */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = ();
+			inputPaths = ("$(SRCROOT)/ModelCandidates", "$(SRCROOT)/../../scripts/stage_coreai_app_models.py",);
+			name = "Stage active CoreAI models";
+			outputPaths = ("$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ModelCandidates",);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\nPYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 \"$SRCROOT/../../scripts/stage_coreai_app_models.py\" --source \"$SRCROOT/ModelCandidates\" --destination \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/ModelCandidates\" --profile \"${COREAI_MODEL_PROFILE:-auto}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A40000000000000000000001 /* Sources */ = {
@@ -164,6 +179,7 @@
 			baseConfigurationReference = A20000000000000000000007 /* Signing.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				COREAI_MODEL_PROFILE = auto;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "CoreAI Probe";
@@ -190,6 +206,7 @@
 			baseConfigurationReference = A20000000000000000000007 /* Signing.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				COREAI_MODEL_PROFILE = auto;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "CoreAI Probe";

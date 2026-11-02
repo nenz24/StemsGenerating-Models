@@ -12,6 +12,14 @@ evidence, not independent reproductions here.
 No stub CoreAI implementation is used.
 The folder includes a native Xcode project and shared `CoreAIProbe` scheme.
 
+## Resource build
+
+Default `COREAI_MODEL_PROFILE=auto` hanya membawa pipeline bass aktif. Jika AOT
+tersedia, salinan model source sampling/decoder dan seluruh probe historis tidak
+ikut app. Model asli/cache Mac tetap tersimpan; file yang tidak berubah tidak
+perlu disalin ulang. [Pilihan profil dan ukuran](../../docs/coreai-app-resources.md).
+Profil `all` mengaktifkan kembali seluruh resource dan tombol diagnosis lama.
+
 ## Run the device probe
 
 Di Terminal Mac, jalankan dari folder repository:

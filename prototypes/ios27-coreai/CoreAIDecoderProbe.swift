@@ -715,11 +715,21 @@ enum CoreAIDecoderProbe {
         let file = try FileHandle(forReadingFrom: url)
         defer { try? file.close() }
         var digest = SHA256()
-        while let chunk = try file.read(upToCount: 4*1024*1024), !chunk.isEmpty { digest.update(data: chunk) }
+        while true {
+            // Bound Foundation temporary objects to one chunk, even when a
+            // multi-gigabyte compiled payload is hashed in a detached task.
+            let hasData = try autoreleasepool { () throws -> Bool in
+                guard let chunk = try file.read(upToCount: 4*1024*1024), !chunk.isEmpty else { return false }
+                digest.update(data: chunk)
+                return true
+            }
+            if !hasData { break }
+        }
         return digest.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
-    private static func preparedBassPreviewAOT(source: URL) throws -> PreviewAOTSelection? {
+    private static func preparedBassPreviewAOT(source: URL, reportLines: [String],
+                                               progress: @escaping @MainActor @Sendable (String) -> Void) async throws -> PreviewAOTSelection? {
         let folder = source.deletingLastPathComponent().appendingPathComponent("bass-preview-512-aot")
         guard FileManager.default.fileExists(atPath: folder.path) else { return nil }
         let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -753,18 +763,28 @@ enum CoreAIDecoderProbe {
             actualFiles.insert(String(path.dropFirst(root.count)))
         }
         try checkManifest(actualFiles, Set(ref.artifactSha256.keys), "aot.covered_files")
-        for (name, expectedDigest) in ref.artifactSha256 {
-            guard ref.assets.values.contains(where: { name == $0 || name.hasPrefix($0 + "/") }) else { throw ShardError.invalidManifest }
-            let url = folder.appendingPathComponent(name).standardizedFileURL.resolvingSymlinksInPath()
-            guard url.path.hasPrefix(root) else { throw ShardError.invalidManifest }
-            try checkManifest(try streamingSHA256(url), expectedDigest, "aot.artifact_sha256: \(name)")
-        }
-        for name in ref.assets.values {
-            guard FileManager.default.fileExists(atPath: folder.appendingPathComponent(name).path),
-                  ref.artifactSha256.keys.contains(where: { $0 == name || $0.hasPrefix(name + "/") }) else {
+        guard ref.artifactSha256.keys.allSatisfy({ name in
+            ref.assets.values.contains(where: { name == $0 || name.hasPrefix($0 + "/") })
+        }) else { throw ShardError.invalidManifest }
+        let clock = ContinuousClock(); let verificationStart = clock.now
+        let orderedAssets = names.compactMap { ref.assets[$0] }
+        for (index, asset) in orderedAssets.enumerated() {
+            let payloads = ref.artifactSha256.keys.filter { $0 == asset || $0.hasPrefix(asset + "/") }.sorted()
+            guard FileManager.default.fileExists(atPath: folder.appendingPathComponent(asset).path), !payloads.isEmpty else {
                 throw ShardError.invalidManifest
             }
+            let status = "AOT SHA-256 \(index + 1)/16: \(asset); reading payloads; elapsed ms \(ms(verificationStart.duration(to: clock.now)))"
+            saveProgress(reportLines + [status], profile: .denoiser)
+            await progress((reportLines + [status]).joined(separator: "\n"))
+            for name in payloads {
+                let url = folder.appendingPathComponent(name).standardizedFileURL.resolvingSymlinksInPath()
+                guard url.path.hasPrefix(root), let expectedDigest = ref.artifactSha256[name] else { throw ShardError.invalidManifest }
+                try checkManifest(try streamingSHA256(url), expectedDigest, "aot.artifact_sha256: \(name)")
+            }
         }
+        let status = "AOT SHA-256 VERIFIED 16/16; verification ms \(ms(verificationStart.duration(to: clock.now)))"
+        saveProgress(reportLines + [status], profile: .denoiser)
+        await progress((reportLines + [status]).joined(separator: "\n"))
         return PreviewAOTSelection(folder: folder, assets: ref.assets)
     }
 
@@ -878,7 +898,7 @@ enum CoreAIDecoderProbe {
             lastPhase = "verifying optional architecture-matched AOT bundle"
             saveProgress(lines + [lastPhase], profile: .denoiser)
             await progress((lines + [lastPhase]).joined(separator: "\n"))
-            let preparedAOT = try preparedBassPreviewAOT(source: folder)
+            let preparedAOT = try await preparedBassPreviewAOT(source: folder, reportLines: lines + [lastPhase], progress: progress)
             if let preparedAOT {
                 lines.append("Sampling/decoder assets: AOT .aimodelc; architecture \(AIModel.deviceArchitectureName); 16 compiled assets SHA-256 VERIFIED")
                 lines.append("Sampling/decoder requested policy: default, matching compiler --preferred-compute none; physical accelerator NOT MEASURED")

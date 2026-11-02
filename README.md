@@ -123,8 +123,8 @@ pertama selesai, sehingga belum menghasilkan WAV. Update pelaporan menampilkan
 aset dan operasi yang gagal; pull/build ulang lalu coba tombol yang sama,
 tanpa persiapan model ulang. Console BNNS kemudian mengonfirmasi gagal alokasi
 mapping IR; aset yang gagal dan kebutuhan memorinya masih perlu diidentifikasi.
-Mitigasi AOT resmi Apple memerlukan Metal Toolchain di Mac, yang belum tersedia
-pada probe utilitas pengguna.
+Mitigasi AOT resmi Apple memerlukan Metal Toolchain di Mac; toolchain ini
+kemudian tersedia dan kompilasinya selesai sebagaimana dicatat di bawah.
 
 Laporan terbaru [menunjuk blok 18–19 saat binding fungsi](reviews/coreai-iphone17pro-bass-preview-block1819/README.md),
 setelah sepuluh aset sampling berhasil. Preview sekarang melepas model/fungsi
@@ -133,12 +133,19 @@ sebelumnya mencatat graph-load failure yang sama. Pull/build ulang untuk mencoba
 bobot, referensi dan perhitungan tetap dipakai, tanpa ekspor atau Metal Toolchain.
 Perubahan runtime ini masih menunggu validasi iPhone.
 
-**AOT siap disiapkan di Mac:** Metal Toolchain 27B47 sekarang tersedia. Jalankan
+**AOT selesai dikompilasi di Mac pengguna:** Metal Toolchain 27B47 menghasilkan
+16 varian h18p, total 3,830 GB. Untuk menyiapkan atau melanjutkan di Mac lain, jalankan
 `bash scripts/prepare_coreai_bass_preview_aot.sh` untuk mengompilasi 16 aset
 preview hanya bagi `h18p`, tanpa mengulang ekspor/referensi. Loader memakai
 `.aimodelc` dengan policy `default`, sesuai pilihan compiler `none`; source/Qwen
-tetap CPU-only. Native AOT dan hasil iPhone masih perlu dicoba.
+tetap CPU-only. Laporan iPhone terbaru baru sampai verifikasi checksum;
+pemuatan dan inference AOT belum terbukti selesai.
 [Instruksi AOT](docs/coreai-bass-preview-aot.md).
+
+**Resource app dipilih otomatis:** build hanya menyertakan pipeline bass aktif.
+Mode AOT tidak membawa salinan source sampling/decoder atau model probe lama.
+Source/cache Mac tetap tersedia dan file build yang tidak berubah tidak disalin
+ulang. [Profil build dan ukuran](docs/coreai-app-resources.md).
 
 Persiapan Mac dapat menemukan drift pointwise yang tidak terjadi pada ekspor
 Linux. [Perbaikan status diagnostik](reviews/coreai-mac-bass-preview-drift/README.md)
