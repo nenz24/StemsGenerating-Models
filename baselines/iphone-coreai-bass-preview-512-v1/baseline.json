@@ -56,7 +56,8 @@
     "ordered_execution_summary": "../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/summary.json",
     "uploaded_wav_metrics": "../../reviews/coreai-iphone17pro-bass-preview-waveforms/metrics.json",
     "per_output_generation_report": "../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.txt",
-    "per_output_generation_summary": "../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.json"
+    "per_output_generation_summary": "../../reviews/coreai-iphone17pro-bass-preview-cpu-complete/generation-report.json",
+    "subsequent_profiled_run": "../../reviews/coreai-iphone17pro-bass-preview-repeat/summary.json"
   },
   "numerical_status": {
     "comparison_scope": "Linux WAV comparison plus subsequently supplied Mac/device per-output report; reference scopes kept separate",
@@ -74,7 +75,7 @@
   },
   "preservation_scope": "Metadata, hashes and measurements in Git; original uploads and iPhone Documents retain WAVs. No audio/weights added to app or Git.",
   "remaining_validation": [
-    "Same-case Release performance measurement with build flags and aggregate phase totals",
+    "Same-case retained source CPU performance test via CoreAIProbe Reuse; explicit build plist/DEBUG fallback",
     "Cold-start/repeatability and longer clips",
     "Raw recording import and arbitrary input handling on iPhone",
     "Full-song and other instrument generation on iPhone"
@@ -86,5 +87,11 @@
     "wall_seconds_per_audio_second": 16.787844946289063,
     "sampled_app_process_maximum_mib": 417.18978118896484,
     "scope": "One supplied report; sampled process, not exact peak/total device RAM. No embedded WAV hashes/build flags."
+  },
+  "repeat_measurement": {
+    "pipeline_seconds": 755.292681042,
+    "build_configuration": "unrecorded",
+    "waveform_hashes_match_baseline": true,
+    "comparison_scope": "Observed different run, not controlled reproducible Release speedup/regression proof"
   }
 }

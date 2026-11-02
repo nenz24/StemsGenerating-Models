@@ -130,7 +130,11 @@ mencatat **85,95 s** untuk audio 5,12 s, sampled process maximum **417,19 MiB**,
 8/10 output checks PASS; kedua waveform Mac PASS tetapi dua latent akhir dan
 host `bounded_diagnostic` menjaga overall gate NOT PASSED. App bisa memulihkan
 hasil tersimpan serta membagikan laporan per-output. [Pengukuran Release](docs/coreai-bass-preview-performance.md)
-berikutnya memakai model/preset yang sama; speedup belum diukur.
+berikutnya memakai model/preset yang sama. Run kedua memakan 755,29 s dengan
+hash WAV identik; build metadata unrecorded sehingga Release belum dikonfirmasi.
+Backend-await menyerap 96,7% total. Uji berikutnya memakai scheme
+**CoreAIProbe Reuse**, dengan 15 model/fungsi sampling dipakai ulang per run;
+shape-specific timing/memory belum tervalidasi.
 
 
 [Percobaan gabungan iPhone pertama](reviews/coreai-iphone17pro-bass-preview-specialization/README.md)

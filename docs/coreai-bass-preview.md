@@ -193,3 +193,10 @@ tetap dinilai terpisah.
 Pengukuran berikutnya menggunakan [scheme CoreAIProbe Performance / Release](coreai-bass-preview-performance.md)
 untuk klip yang sama, dengan build flags, hash WAV dan ringkasan waktu API
 per aset. Data itu dipakai untuk optimasi sebelum durasi diperpanjang.
+
+[Run berikutnya](../reviews/coreai-iphone17pro-bass-preview-repeat/README.md)
+selesai dengan hash WAV identik, tetapi 755,29 s. Metadata build unrecorded,
+jadi belum membuktikan Release. Biaya dominan berada pada backend API; uji
+berikutnya memakai **CoreAIProbe Reuse**, model/fungsi sampling yang ditahan
+lintas langkah dan dilepas sebelum decoder. [Performa](coreai-bass-preview-performance.md)
+menjelaskan pilihan mode dan risiko memory scope yang lebih panjang.

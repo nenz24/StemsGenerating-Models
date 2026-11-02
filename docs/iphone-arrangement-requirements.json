@@ -855,8 +855,23 @@
     "device_mac_reference_waveform_checks_passed": 2,
     "device_final_latent_reference_checks_failed": 2,
     "performance_scope": "One supplied source CPU-request run, 5.12s output, sampled process footprint not exact peak/total RAM; build configuration/cache state unrecorded",
-    "next_measurement": "Same 5.12-second input, CoreAIProbe Performance scheme Release; preserve 50 steps/weights/precision/tolerances",
+    "next_measurement": "CoreAIProbe Reuse: Release + explicit per-generation pool for 15 source CPU sampling model/function handles, release before decoder, same 50-step case",
     "release_measurement_prepared": true,
-    "release_measurement_apple_build_verified": false
+    "release_measurement_apple_build_verified": false,
+    "latest_profiled_report": "reviews/coreai-iphone17pro-bass-preview-repeat/summary.json",
+    "latest_profiled_pipeline_latency_ms": 755292.681042,
+    "latest_profiled_sampled_peak_mib": 436.47107696533203,
+    "latest_profiled_release_confirmed": false,
+    "latest_profiled_wav_hashes_match_audition_baseline": true,
+    "build_metadata_strategy": "Explicit CoreAIProbe-Info.plist base with build-setting expansion plus compile-time DEBUG condition fallback",
+    "retained_preview_prepared": true,
+    "retained_preview_apple_build_verified": false,
+    "retained_preview_device_execution_verified": false,
+    "retained_preview_expected_counts": {
+      "sampling_model_opens": 15,
+      "sampling_function_binds": 15,
+      "sampling_reuse_hits": 735,
+      "sampling_calls": 750
+    }
   }
 }

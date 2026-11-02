@@ -815,6 +815,9 @@ enum CoreAIDecoderProbe {
         let clock = ContinuousClock(); let start = clock.now
         let memory = CoreAIProcessFootprintSampler()
         let priorReport = savedDenoiserReport()
+        let reuseSamplingStages = ProcessInfo.processInfo.environment["COREAI_PREVIEW_REUSE"] == "1"
+        var samplingPool: [String: RetainedStage] = [:]
+        defer { samplingPool.removeAll() }
         var retention = RetentionStats()
         var lines = ["Runtime: CoreAI", "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
                      "Probe run: \(UUID().uuidString); started UTC: \(ISO8601DateFormatter().string(from: Date()))",
@@ -828,7 +831,9 @@ enum CoreAIDecoderProbe {
                      "Requested compute policy: source/Qwen cpuOnly; sampling/decoder policy below; accelerator placement NOT MEASURED",
                      "Fixed host PCM/tokenization/epsilon/noise fixtures; raw recording import, arbitrary prompts and on-device RNG NOT tested",
                      "Actual component outputs feed sampling; host references are comparisons only",
-                     "Execution: single live Swift model/function scope per asset; detached CPU copies; native cache eviction NOT GUARANTEED",
+                     reuseSamplingStages
+                        ? "Execution: retain at most 15 source CPU sampling model/function handles across steps; release before decoder; native residency/eviction NOT GUARANTEED"
+                        : "Execution: single live Swift model/function scope per asset; detached CPU copies; native cache eviction NOT GUARANTEED",
                      "Raw-source cache repair: only blocks-18-19 after its saved BNNS graphLoadFailed; skipped for AOT; no automatic retry",
                      "Native API phase markers are persisted before calls; observer overhead is included in total pipeline time",
                      "Footprint guard 2000 MiB before each stage and after bind; NOT an OS peak-memory guarantee"]
@@ -837,6 +842,12 @@ enum CoreAIDecoderProbe {
         #else
         lines.append("Target: iOS device build")
         #endif
+        #if DEBUG
+        lines.append("Swift DEBUG compilation condition: ON")
+        #else
+        lines.append("Swift DEBUG compilation condition: OFF")
+        #endif
+        lines.append("Sampling handle reuse requested: \(reuseSamplingStages)")
         var lastPhase = "preview manifest/reference validation"
         var completedSteps = 0, checks = 0, allParity = true
         var bassURL: URL?, mixURL: URL?
@@ -926,6 +937,7 @@ enum CoreAIDecoderProbe {
             saveProgress(lines + [lastPhase], profile: .denoiser)
             await progress((lines + [lastPhase]).joined(separator: "\n"))
             let preparedAOT = try await preparedBassPreviewAOT(source: folder, reportLines: lines + [lastPhase], progress: progress)
+            try checkManifest(!reuseSamplingStages || preparedAOT == nil, true, "retained_preview_requires_source_cpuOnly")
             if let preparedAOT {
                 lines.append("Sampling/decoder assets: AOT .aimodelc; architecture \(AIModel.deviceArchitectureName); 16 compiled assets SHA-256 VERIFIED")
                 lines.append("Sampling/decoder requested policy: default, matching compiler --preferred-compute none; physical accelerator NOT MEASURED")
@@ -1005,7 +1017,8 @@ enum CoreAIDecoderProbe {
                         guard let array = state[name], array.shape == shape else { throw ShardError.invalidManifest }
                         inputs[name] = array
                     }
-                    let result = try await runSequentialPreviewStage(stage, folder: folder, inputs: inputs, aot: preparedAOT, stats: &retention,
+                    let result = try await runPreviewSamplingStage(stage, folder: folder, inputs: inputs, aot: preparedAOT,
+                        reuseStages: reuseSamplingStages, pool: &samplingPool, stats: &retention,
                         phaseProgress: previewPhaseProgress(prefix: (lines + [phase]).joined(separator: "\n")))
                     if index == 0 {
                         lines.append("First sampling step stage \(stageIndex+1)/14 \(stage.assetFile): load ms \(result.loadMs); \(result.phases.report)")
@@ -1021,9 +1034,10 @@ enum CoreAIDecoderProbe {
                 try requirePreviewMemoryBudget()
                 saveProgress(lines + [lastPhase], profile: .denoiser)
                 await progress((lines + [lastPhase]).joined(separator: "\n"))
-                let result = try await runSequentialPreviewStage(apgStage, folder: folder,
+                let result = try await runPreviewSamplingStage(apgStage, folder: folder,
                     inputs: ["velocity":velocity,"latent":latent,"momentum":momentum,
-                             "dt":NDArray(scalars: [times[index]-times[index+1]], shape: [1])], aot: preparedAOT, stats: &retention,
+                             "dt":NDArray(scalars: [times[index]-times[index+1]], shape: [1])], aot: preparedAOT,
+                    reuseStages: reuseSamplingStages, pool: &samplingPool, stats: &retention,
                     phaseProgress: previewPhaseProgress(prefix: (lines + [lastPhase]).joined(separator: "\n")))
                 guard let next = result.values["latent_next"], let nextMomentum = result.values["momentum_next"],
                       result.values["guided_velocity"] != nil else { throw ProbeError.invalidOutputTensor }
@@ -1044,17 +1058,27 @@ enum CoreAIDecoderProbe {
                 completedSteps += 1
                 lines.append("Sampling step \(index+1)/50 complete; ms \(ms(stepStart.duration(to: clock.now)))")
             }
-            try checkManifest(retention.modelOpens, 750, "preview.sequential_opens")
-            try checkManifest(retention.functionBinds, 750, "preview.sequential_binds")
-            try checkManifest(retention.completedCalls, 750, "preview.sequential_calls")
-            try checkManifest(retention.cacheHits, 0, "preview.sequential_hits")
-            lines.append("Sampling single-stage scope: \(retention.modelOpens) opens, \(retention.functionBinds) binds, \(retention.cacheHits) hits, \(retention.completedCalls) calls")
+            let expectedOpens = reuseSamplingStages ? 15 : 750
+            let expectedHits = reuseSamplingStages ? 735 : 0
+            try checkManifest(retention.modelOpens, expectedOpens, "preview.model_opens")
+            try checkManifest(retention.functionBinds, expectedOpens, "preview.function_binds")
+            try checkManifest(retention.completedCalls, 750, "preview.completed_calls")
+            try checkManifest(retention.cacheHits, expectedHits, "preview.reuse_hits")
+            let scope = reuseSamplingStages ? "retained-stage" : "single-stage"
+            lines.append("Sampling \(scope) scope: \(retention.modelOpens) opens, \(retention.functionBinds) binds, \(retention.cacheHits) hits, \(retention.completedCalls) calls")
+            if reuseSamplingStages {
+                lastPhase = "Phase: releasing retained sampling pool before decoder"
+                saveProgress(lines + [lastPhase], profile: .denoiser)
+                await progress((lines + [lastPhase]).joined(separator: "\n"))
+                samplingPool.removeAll()
+                lines.append("Retained sampling pool released before decoder; native cache eviction NOT GUARANTEED")
+            }
             let values = try copiedValues(latent, shape: [1,128,64])
             var decoderInput = [Float](repeating: 0, count: 128*64)
             for t in 0..<128 { for c in 0..<64 { decoderInput[c*128+t] = values[t*64+c] } }
             lastPhase = "Phase: decoder.aimodel loading/binding/inference"
             try requirePreviewMemoryBudget()
-            lines.append("Phase: loading full 5.12-second VAE decoder; previous Swift stage scope released, native eviction unverified")
+            lines.append("Phase: loading full 5.12-second VAE decoder; sampling Swift handles released, native eviction unverified")
             saveProgress(lines, profile: .denoiser); await progress(lines.joined(separator: "\n"))
             let decoderStage = Contract.Stage(assetFile: "decoder.aimodel", layerIndices: [],
                 inputShapes: ["latent":[1,64,128]], outputShapes: ["audio":[1,2,245760]], outputBindings: nil)
@@ -1094,6 +1118,7 @@ enum CoreAIDecoderProbe {
             lines.append("Musical quality is not evaluated by this probe; full-song behavior and total model/device RAM: NOT VALIDATED")
             try lines.joined(separator: "\n").write(to: output.appendingPathComponent("report.txt"), atomically: true, encoding: .utf8)
         } catch {
+            samplingPool.removeAll()
             lines.append("Integrated bass preview: NOT COMPLETED")
             lines.append("Last pipeline phase: \(lastPhase)")
             if let stageError = error as? StageExecutionFailure {
@@ -1108,7 +1133,7 @@ enum CoreAIDecoderProbe {
         }
         lines.append("Completed sampling/decoder asset API timings (\(retention.phaseTotals.count) calls): \(retention.phaseTotals.report)")
         lines.append("First observed call per asset (\(retention.firstCallPhaseTotals.count) calls, NOT guaranteed cold cache): \(retention.firstCallPhaseTotals.report)")
-        lines.append("Repeated asset calls (\(retention.repeatedCallPhaseTotals.count) calls; models still reopened): \(retention.repeatedCallPhaseTotals.report)")
+        lines.append("Repeated asset calls (\(retention.repeatedCallPhaseTotals.count) calls; sampling handle reuse requested: \(reuseSamplingStages)): \(retention.repeatedCallPhaseTotals.report)")
         for asset in retention.phaseTotalsByAsset.keys.sorted() {
             if let phases = retention.phaseTotalsByAsset[asset] {
                 lines.append("Asset timing total \(asset) (\(phases.count) calls): \(phases.report)")
@@ -1717,6 +1742,22 @@ enum CoreAIDecoderProbe {
             current = underlying
         }
         return lines
+    }
+
+    // Select explicit per-generation CPU handle reuse or the one-scope route.
+    private static func runPreviewSamplingStage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray],
+                                                aot: PreviewAOTSelection?, reuseStages: Bool,
+                                                pool: inout [String: RetainedStage], stats: inout RetentionStats,
+                                                phaseProgress: (@Sendable (String) -> Void)?) async throws -> StageResult {
+        if reuseStages {
+            // Fixed case: fourteen DiT shards and one APG asset. No decoder,
+            // recording encoder or Qwen handles enter this per-generation pool.
+            guard aot == nil, pool[stage.assetFile] != nil || pool.count < 15 else { throw ShardError.invalidManifest }
+            return try await runRetainedStage(stage, folder: folder, inputs: inputs, pool: &pool, stats: &stats,
+                                              options: .cpuOnly, phaseProgress: phaseProgress)
+        }
+        return try await runSequentialPreviewStage(stage, folder: folder, inputs: inputs, aot: aot,
+                                                   stats: &stats, phaseProgress: phaseProgress)
     }
 
     // The result owns fresh CPU NDArrays. The only model/function pair lives

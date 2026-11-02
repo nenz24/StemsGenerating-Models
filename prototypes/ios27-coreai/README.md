@@ -28,11 +28,17 @@ tersedia secara terpisah. Helper pemulihan/UI baru menunggu validasi build Apple
 
 ## Pengukuran performa berikutnya
 
-Scheme bersama **CoreAIProbe Performance** menjalankan target yang sama dalam
-**Release (`-O`)**. Scheme **CoreAIProbe** tetap Debug. Pilih scheme Performance,
-Cmd+R, lalu Generate satu kali pada klip yang sama; kirim **Bagikan laporan
-generasi**. Persiapan/ekspor/AOT tidak diulang. Build flags, WAV hashes dan total
-waktu API per aset dicatat. Ini bukan janji speedup; [batas pengukuran dan langkah](../../docs/coreai-bass-preview-performance.md).
+Run kedua membutuhkan 755,29 s, dengan hash WAV sama dan 96,7% waktu di
+backend-await. Build flags masih unrecorded. Project sekarang memakai base
+`CoreAIProbe-Info.plist` dan compile-time DEBUG fallback untuk mencatatnya.
+
+Pilih scheme **CoreAIProbe Reuse** (Release), Cmd+R, Generate satu kali, lalu
+**Bagikan laporan generasi**. Scheme mengaktifkan pool maksimal 15 sampling
+model/fungsi untuk 50 langkah; pool dilepas sebelum decoder. Model, preset,
+referensi dan toleransi tidak berubah. Guard footprint tetap 2000 MiB, tanpa
+jaminan compiler peak/native eviction. Mode ordinary **CoreAIProbe** tetap
+Debug satu-scope; **CoreAIProbe Performance** tetap Release satu-scope.
+[Instruksi dan batas pengukuran](../../docs/coreai-bass-preview-performance.md).
 
 ## Resource build
 
