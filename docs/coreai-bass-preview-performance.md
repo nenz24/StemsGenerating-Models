@@ -90,6 +90,15 @@ Sampled maksimum 202,502 MiB bukan total RAM native. Parity NOT PASSED 120/220:
 atau penjelasan full-generation. Berikutnya K=8 dengan driver yang sama:
 `--pairs 8 --expand-existing`, 380 calls; K=4 diarsipkan, BF16/batas tetap.
 
+[K=8 selesai](../reviews/coreai-iphone17pro-interleaving-k8/README.md): 380 calls,
+26 opens/binds, nominal sepanjang run. Mean berulang tetap 52–56 ms;
+switching +0,93–3,51%, drift kontrol +4,47%. Belum mereproduksi perlambatan
+besar pipeline penuh. Parity NOT PASSED 240/380: selain 00–01, pasangan baru
+14–15 gagal (6 elemen/output), konsisten di grouped/interleaved. Berikutnya
+lengkapi sweep pasangan K=12 dengan `--pairs 12 --expand-existing`: 540 calls,
+38 opens/binds. Memori proses tersampel 97,677 MiB bukan bukti residency atau
+penurunan total RAM model. Tidak ada perubahan BF16 atau toleransi.
+
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
 masih memakai mode AOT satu-scope; hasil CPU ini tidak memvalidasinya. Default

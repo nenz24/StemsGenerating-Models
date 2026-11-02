@@ -37,6 +37,13 @@ perlambatan switching besar yang teramati. Strict parity tetap NOT PASSED
 380 calls/26 opens/26 binds/380 prebound hits. K=4 diarsipkan setelah bundle
 baru diverifikasi. Instrumentasi dan batas tetap, belum ada hasil K=8.
 
+[K=8 kini selesai](../reviews/coreai-iphone17pro-interleaving-k8/README.md):
+380 calls nominal, mean per pasangan 52–56 ms, switching +0,93–3,51% dan drift
+kontrol +4,47%. Parity NOT PASSED 240/380; 14–15 juga gagal pointwise di kedua
+mode, tanpa perubahan hash output. Berikutnya K=12, 540 calls/38 opens/binds,
+memakai `--pairs 12 --expand-existing`. Sweep ini tetap bukan full-loop;
+front/tail/APG dan actual input/feedback belum diuji oleh fixture komponen.
+
 ## Persiapan dan menjalankan
 
 Gunakan checkout yang sudah memuat perubahan ini di Mac. Bundle
