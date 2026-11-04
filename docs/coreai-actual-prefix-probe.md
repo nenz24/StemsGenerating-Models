@@ -81,3 +81,10 @@ Progres singkat kini diterapkan pada sampling/decoder generasi panjang
 **Generate bass dari rekaman** untuk 50/50 pada input sama, bukan mengulangi
 prefix. Tidak perlu aktivasi/preparation ulang bila profil generasi panjang
 masih aktif. Jadwal dan baseline tetap; hasil penuh pending.
+
+[Hasil penuh berikutnya](../reviews/coreai-iphone17pro-generation-bounded-glitch-review/README.md)
+selesai 50/50 dalam 96,438 s; WAV yang diunggah cocok persis dengan hash
+baseline, PCM dan mixing diverifikasi independen. Namun pengguna melaporkan
+glitch pada bass dan mix di app, lalu menyatakan ringan dan meminta
+mengabaikannya. Investigasi dihentikan; tidak ada perubahan audio/sampler.
+Pekerjaan berikutnya menuju preview drum/gitar, dengan status numerik tetap.

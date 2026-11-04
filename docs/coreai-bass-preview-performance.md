@@ -116,6 +116,15 @@ penanda `generation-bounded-v1` dan delta API per step. Berikutnya satu run
 generasi **50/50** pada piano yang sama, tanpa preparation/export ulang; bandingkan
 laporan dan hash WAV baseline. Semua model, dtype, gate dan jumlah langkah tetap.
 
+[Full run bounded selesai; keluhan glitch ringan diabaikan atas permintaan pengguna](../reviews/coreai-iphone17pro-generation-bounded-glitch-review/README.md):
+50/50 dalam 96,438 s, mean step 3–50 1,058 s; 750 sampling + satu decoder,
+30 opens/binds/720 hits. Ketiga WAV unggahan cocok persis dengan hash baseline;
+PCM piano dan rekonstruksi mix kini diverifikasi independen. Pengguna mendengar
+glitch pada bass solo dan mix di app, lalu meminta mengabaikannya karena ringan.
+Investigasi dihentikan atas arahan pengguna; keluhan ini tidak menghambat
+preview drum/gitar berikutnya. Tidak ada DSP atau perubahan sampler untuk itu.
+Runtime lebih cepat dan kesamaan WAV tidak mengubah status numerical gate.
+
 **Source CPU memakai reuse secara default saat fresh launch tanpa override**,
 termasuk membuka app Release dari ikon iPhone. AOT yang sengaja disertakan
 masih memakai mode AOT satu-scope; hasil CPU ini tidak memvalidasinya. Default

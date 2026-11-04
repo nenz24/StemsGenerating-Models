@@ -1,0 +1,438 @@
+{
+  "schema_version": 1,
+  "run_id": "972785C4-C9AC-4662-8565-219374CA2AB6",
+  "started_utc": "2026-11-04T15:15:58Z",
+  "started_wib": "2026-11-04T22:15:58+07:00",
+  "report_sha256": "f61fee558355e56f7a9e936bd1662e9d3ee369ba57c8ef4ba28b3888a21fb130",
+  "instrumentation": "generation-bounded-v1",
+  "calls_sampling": 750,
+  "calls_decoder": 1,
+  "sampling_opens": 30,
+  "sampling_binds": 30,
+  "sampling_reuse_hits": 720,
+  "repair_attempts": 0,
+  "completed_steps": 50,
+  "output_numerical_parity": "NOT EVALUATED (0/0)",
+  "host_full_gate": "NOT PASSED; trajectory_drift_diagnostic",
+  "conditioning_checks_passed": 6,
+  "pipeline_ms": 96438.051083,
+  "prior_pipeline_ms": 772414.725167,
+  "prior_over_current_pipeline_ratio": 8.009439391327149,
+  "steps_3_to_50_mean_ms": 1058.3931302291667,
+  "step_wall_ms": [
+    14955.433708,
+    15131.631583,
+    1113.139084,
+    995.560375,
+    1032.899375,
+    1070.629625,
+    1153.179625,
+    1276.441166,
+    1216.214042,
+    1184.2103339999999,
+    1071.848625,
+    1056.042541,
+    1184.223125,
+    1048.857584,
+    1020.196208,
+    1059.768292,
+    1054.062834,
+    1042.789125,
+    1068.315541,
+    1083.276167,
+    1100.564458,
+    1042.882583,
+    1035.995292,
+    1042.4605,
+    1011.343625,
+    1032.135417,
+    1042.719292,
+    1091.074709,
+    1073.378709,
+    1042.122958,
+    1020.481542,
+    1015.818125,
+    1031.382208,
+    1012.575667,
+    1000.684416,
+    1016.300208,
+    1026.74575,
+    1012.991334,
+    1012.933125,
+    1067.906875,
+    1042.751041,
+    1023.361625,
+    1015.153333,
+    1045.746833,
+    1045.882583,
+    1042.117375,
+    1041.764,
+    1015.953125,
+    1039.937959,
+    1026.051916
+  ],
+  "step_api_deltas": [
+    {
+      "step": 1,
+      "backend_ms": 14516.022791000003,
+      "copy_ms": 240.20479200000003,
+      "thermal": 0,
+      "footprint_mib": 36.36112976074219
+    },
+    {
+      "step": 2,
+      "backend_ms": 14805.553372000002,
+      "copy_ms": 237.66370899999995,
+      "thermal": 0,
+      "footprint_mib": 67.08443450927734
+    },
+    {
+      "step": 3,
+      "backend_ms": 821.8997090000084,
+      "copy_ms": 240.33120699999978,
+      "thermal": 0,
+      "footprint_mib": 95.52195739746094
+    },
+    {
+      "step": 4,
+      "backend_ms": 686.1824979999983,
+      "copy_ms": 253.1813739999999,
+      "thermal": 0,
+      "footprint_mib": 97.44383239746094
+    },
+    {
+      "step": 5,
+      "backend_ms": 725.9577080000017,
+      "copy_ms": 255.88762399999973,
+      "thermal": 0,
+      "footprint_mib": 97.53758239746094
+    },
+    {
+      "step": 6,
+      "backend_ms": 750.8763730000028,
+      "copy_ms": 268.60804099999996,
+      "thermal": 0,
+      "footprint_mib": 97.56883239746094
+    },
+    {
+      "step": 7,
+      "backend_ms": 829.4378770000003,
+      "copy_ms": 273.5990830000005,
+      "thermal": 0,
+      "footprint_mib": 97.66258239746094
+    },
+    {
+      "step": 8,
+      "backend_ms": 953.9131269999998,
+      "copy_ms": 270.4505000000004,
+      "thermal": 0,
+      "footprint_mib": 97.53758239746094
+    },
+    {
+      "step": 9,
+      "backend_ms": 888.1798749999871,
+      "copy_ms": 276.23633199999995,
+      "thermal": 0,
+      "footprint_mib": 97.52195739746094
+    },
+    {
+      "step": 10,
+      "backend_ms": 866.947542000009,
+      "copy_ms": 268.1637489999998,
+      "thermal": 0,
+      "footprint_mib": 97.52195739746094
+    },
+    {
+      "step": 11,
+      "backend_ms": 747.7815409999967,
+      "copy_ms": 274.3762499999998,
+      "thermal": 0,
+      "footprint_mib": 97.56883239746094
+    },
+    {
+      "step": 12,
+      "backend_ms": 729.2634159999943,
+      "copy_ms": 276.95975,
+      "thermal": 0,
+      "footprint_mib": 97.52195739746094
+    },
+    {
+      "step": 13,
+      "backend_ms": 852.6920410000093,
+      "copy_ms": 281.14570899999944,
+      "thermal": 0,
+      "footprint_mib": 97.56883239746094
+    },
+    {
+      "step": 14,
+      "backend_ms": 719.9315830000123,
+      "copy_ms": 276.51254199999994,
+      "thermal": 0,
+      "footprint_mib": 97.58445739746094
+    },
+    {
+      "step": 15,
+      "backend_ms": 696.4342489999908,
+      "copy_ms": 273.0052090000004,
+      "thermal": 0,
+      "footprint_mib": 97.58445739746094
+    },
+    {
+      "step": 16,
+      "backend_ms": 732.0243330000012,
+      "copy_ms": 275.72958399999925,
+      "thermal": 0,
+      "footprint_mib": 97.58445739746094
+    },
+    {
+      "step": 17,
+      "backend_ms": 718.2855430000054,
+      "copy_ms": 284.580336,
+      "thermal": 0,
+      "footprint_mib": 97.58445739746094
+    },
+    {
+      "step": 18,
+      "backend_ms": 712.0434159999859,
+      "copy_ms": 276.93550100000084,
+      "thermal": 0,
+      "footprint_mib": 97.64695739746094
+    },
+    {
+      "step": 19,
+      "backend_ms": 732.6666689999911,
+      "copy_ms": 284.6207920000006,
+      "thermal": 0,
+      "footprint_mib": 97.58445739746094
+    },
+    {
+      "step": 20,
+      "backend_ms": 751.9764129999967,
+      "copy_ms": 279.7230409999993,
+      "thermal": 0,
+      "footprint_mib": 97.58445739746094
+    },
+    {
+      "step": 21,
+      "backend_ms": 765.8664589999971,
+      "copy_ms": 281.88762700000007,
+      "thermal": 0,
+      "footprint_mib": 97.60008239746094
+    },
+    {
+      "step": 22,
+      "backend_ms": 709.0716670000111,
+      "copy_ms": 280.5017910000015,
+      "thermal": 0,
+      "footprint_mib": 97.66258239746094
+    },
+    {
+      "step": 23,
+      "backend_ms": 703.2425000000076,
+      "copy_ms": 281.5793760000006,
+      "thermal": 0,
+      "footprint_mib": 97.60008239746094
+    },
+    {
+      "step": 24,
+      "backend_ms": 705.8009560000064,
+      "copy_ms": 284.17162799999915,
+      "thermal": 0,
+      "footprint_mib": 97.67820739746094
+    },
+    {
+      "step": 25,
+      "backend_ms": 676.6251269999993,
+      "copy_ms": 276.7971229999994,
+      "thermal": 0,
+      "footprint_mib": 97.60008239746094
+    },
+    {
+      "step": 26,
+      "backend_ms": 689.8948749999981,
+      "copy_ms": 286.1725830000005,
+      "thermal": 0,
+      "footprint_mib": 97.66258239746094
+    },
+    {
+      "step": 27,
+      "backend_ms": 703.7712900000115,
+      "copy_ms": 284.9599159999998,
+      "thermal": 0,
+      "footprint_mib": 97.72508239746094
+    },
+    {
+      "step": 28,
+      "backend_ms": 757.1951239999908,
+      "copy_ms": 280.41304299999956,
+      "thermal": 0,
+      "footprint_mib": 97.66258239746094
+    },
+    {
+      "step": 29,
+      "backend_ms": 743.47450199999,
+      "copy_ms": 275.8195390000019,
+      "thermal": 0,
+      "footprint_mib": 97.72508239746094
+    },
+    {
+      "step": 30,
+      "backend_ms": 704.3443330000082,
+      "copy_ms": 285.41574799999944,
+      "thermal": 0,
+      "footprint_mib": 97.66258239746094
+    },
+    {
+      "step": 31,
+      "backend_ms": 682.6237509999919,
+      "copy_ms": 282.63154099999883,
+      "thermal": 0,
+      "footprint_mib": 97.70945739746094
+    },
+    {
+      "step": 32,
+      "backend_ms": 675.0857080000133,
+      "copy_ms": 282.3492909999968,
+      "thermal": 0,
+      "footprint_mib": 97.70945739746094
+    },
+    {
+      "step": 33,
+      "backend_ms": 686.4668750000055,
+      "copy_ms": 288.8434990000005,
+      "thermal": 0,
+      "footprint_mib": 97.70945739746094
+    },
+    {
+      "step": 34,
+      "backend_ms": 673.7470440000034,
+      "copy_ms": 285.2641670000012,
+      "thermal": 0,
+      "footprint_mib": 97.69383239746094
+    },
+    {
+      "step": 35,
+      "backend_ms": 668.1341270000121,
+      "copy_ms": 279.1438750000016,
+      "thermal": 0,
+      "footprint_mib": 97.75633239746094
+    },
+    {
+      "step": 36,
+      "backend_ms": 675.8878340000083,
+      "copy_ms": 285.9554150000022,
+      "thermal": 0,
+      "footprint_mib": 97.77195739746094
+    },
+    {
+      "step": 37,
+      "backend_ms": 685.8575000000274,
+      "copy_ms": 287.197916000001,
+      "thermal": 0,
+      "footprint_mib": 97.77195739746094
+    },
+    {
+      "step": 38,
+      "backend_ms": 676.9309169999979,
+      "copy_ms": 284.0237920000018,
+      "thermal": 0,
+      "footprint_mib": 97.83445739746094
+    },
+    {
+      "step": 39,
+      "backend_ms": 678.6062929999971,
+      "copy_ms": 281.96458299999904,
+      "thermal": 0,
+      "footprint_mib": 97.81883239746094
+    },
+    {
+      "step": 40,
+      "backend_ms": 721.2533340000009,
+      "copy_ms": 292.7870419999981,
+      "thermal": 0,
+      "footprint_mib": 97.85008239746094
+    },
+    {
+      "step": 41,
+      "backend_ms": 704.5355439999985,
+      "copy_ms": 285.8420409999999,
+      "thermal": 0,
+      "footprint_mib": 97.75633239746094
+    },
+    {
+      "step": 42,
+      "backend_ms": 684.679667999997,
+      "copy_ms": 283.694207999999,
+      "thermal": 0,
+      "footprint_mib": 97.81883239746094
+    },
+    {
+      "step": 43,
+      "backend_ms": 683.0912929999831,
+      "copy_ms": 280.6241260000006,
+      "thermal": 0,
+      "footprint_mib": 97.81883239746094
+    },
+    {
+      "step": 44,
+      "backend_ms": 698.2140820000059,
+      "copy_ms": 294.037918,
+      "thermal": 0,
+      "footprint_mib": 97.83445739746094
+    },
+    {
+      "step": 45,
+      "backend_ms": 702.4335019999926,
+      "copy_ms": 290.31570900000406,
+      "thermal": 0,
+      "footprint_mib": 97.75633239746094
+    },
+    {
+      "step": 46,
+      "backend_ms": 695.7860440000077,
+      "copy_ms": 291.12387599999965,
+      "thermal": 0,
+      "footprint_mib": 97.80320739746094
+    },
+    {
+      "step": 47,
+      "backend_ms": 699.2110399999874,
+      "copy_ms": 289.4333750000005,
+      "thermal": 0,
+      "footprint_mib": 97.74070739746094
+    },
+    {
+      "step": 48,
+      "backend_ms": 681.9579999999987,
+      "copy_ms": 281.57149799999934,
+      "thermal": 0,
+      "footprint_mib": 97.74070739746094
+    },
+    {
+      "step": 49,
+      "backend_ms": 697.2298339999907,
+      "copy_ms": 288.3252080000002,
+      "thermal": 0,
+      "footprint_mib": 97.80320739746094
+    },
+    {
+      "step": 50,
+      "backend_ms": 692.828333999998,
+      "copy_ms": 280.37337500000103,
+      "thermal": 0,
+      "footprint_mib": 97.74070739746094
+    }
+  ],
+  "sampled_process_maximum_mib": 791.7839202880859,
+  "all_uploaded_wavs_match_report_and_prior_baseline": true,
+  "imported_pcm_independently_verified": true,
+  "mix_bit_exact_reconstruction_verified": true,
+  "musical_status": "User reports minor glitches, then explicitly asks to ignore them and continue. Investigation waived by user; no claim of artifact-free audio.",
+  "glitch_cause": "UNRESOLVED; further investigation waived by user. Raw bass >0 dBFS is a hypothesis, not a confirmed cause.",
+  "sampler_audio_regression_evidence": "Uploaded WAVs are byte-identical to baseline hashes; no changed generated samples in this run. Further glitch investigation waived by user.",
+  "audio_originals_modified": false,
+  "baseline_replaced": false,
+  "tolerances_changed": false,
+  "user_playback_feedback": "Glitches heard in bass and mix inside the app; user subsequently says they are minor and asks to ignore them.",
+  "next_action": "Continue toward drum/guitar previews while retaining identical BF16 bass baseline; no DSP/sampler change for the waived complaint."
+}
