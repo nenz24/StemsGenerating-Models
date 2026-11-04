@@ -39,7 +39,13 @@ Pilih **CoreAIProbe Reuse**, Release, target iPhone. Cmd+R. Pastikan app menyebu
 **Preset aktif: drum** dan 10,24 detik. Pilih piano yang sama, dengarkan input,
 lalu tekan **Generate drum dari rekaman**. Bagikan laporan dan WAV piano/drum/mix.
 Periksa groove, timing, instrumen bocor, fills dan headroom lewat uji dengar.
-Belum ada hasil perangkat atau anggaran latency untuk preset baru.
+Latency penuh dan kualitas preset baru belum diterima; lihat hasil run pertama
+berikut.
+
+**Hasil drum pertama kini tersedia:** conditioning 6/6 PASS, tetapi bind
+`blocks-16-17` gagal dan retry specialization juga gagal; 0/50, tanpa WAV.
+Ikuti [pemeriksaan aset pada proses baru](coreai-native-preflight.md), bukan
+preparation ulang atau retry generasi berulang. Belum ada musical approval drum.
 
 `--diagnostic-trajectory` adalah permintaan eksplisit eksperimen yang sama
 mekanismenya dengan bass panjang: empat identical-input full-denoiser dan 50

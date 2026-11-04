@@ -1613,6 +1613,129 @@ enum CoreAIDecoderProbe {
         return times
     }
 
+    static func runNativeAssetPreflight(window: CoreAIPreviewWindow,
+        progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        let clock = ContinuousClock(), start = ContinuousClock().now
+        let memory = CoreAIProcessFootprintSampler()
+        let prior = savedDenoiserReport()
+        let runID = UUID().uuidString
+        var lines = ["Runtime: CoreAI native-asset preflight; run \(runID)",
+            "Started UTC: \(ISO8601DateFormatter().string(from: Date())); OS: \(ProcessInfo.processInfo.operatingSystemVersionString); architecture: \(AIModel.deviceArchitectureName)",
+            "Selected instrument: \(window.stemID); preset SHA-256 \(window.presetSHA256)",
+            "Instrumentation revision: native-preflight-v1; EXPLICIT synthetic warmup/diagnostic, NOT generation",
+            "No encoder/Qwen/conditioning; each of 16 sampling/decoder assets runs ONCE on independent synthetic inputs; no inter-asset feedback, no WAV",
+            "Synthetic recipe: Float32 zeros, except timestep/rope_cos=1 and dt=0.02; no RNG. No claim these are real piano activations",
+            "cpuOnly requested; actual placement unmeasured. One Swift scope per asset; native eviction/cache persistence NOT GUARANTEED",
+            "Timings are API wall intervals, not kernel time; first-call cache state uncontrolled",
+            "No cache deletion, retry, repair or sampler replacement. Production still 50 steps and keeps its original ONE targeted bind-repair budget",
+            "Shape/type/hash/nonfinite/native/memory error stops immediately. Finite outputs are NOT numerical parity; no host comparisons",
+            "Fresh process requested by UI workflow; freshness/absence of native residency not independently verified",
+            "Thermal before \(ProcessInfo.processInfo.thermalState.rawValue); low-power \(ProcessInfo.processInfo.isLowPowerModeEnabled); 2000 MiB process guard is NOT a native compiler peak guarantee",
+            "Build: \(Bundle.main.object(forInfoDictionaryKey: "CoreAIProbeBuildConfiguration") as? String ?? "unrecorded"); optimization: \(Bundle.main.object(forInfoDictionaryKey: "CoreAIProbeSwiftOptimizationLevel") as? String ?? "unrecorded")"]
+        var stats = RetentionStats()
+        var attemptedAssets = 0
+        var reportURL: URL?
+        var lastPhase = "manifest validation"
+        do {
+            guard window.isLong, let resources = Bundle.main.resourceURL,
+                  let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { throw ShardError.invalidManifest }
+            let output = documents.appendingPathComponent("native-preflight-" + runID)
+            try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+            reportURL = output.appendingPathComponent("report.txt")
+            if let prior { try prior.write(to: output.appendingPathComponent("previous-report.txt"), atomically: true, encoding: .utf8) }
+            let folder = resources.appendingPathComponent("ModelCandidates/" + window.previewBundle)
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let ref = try decoder.decode(BassPreviewContract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
+            let expected = bassPreviewStages(window: window)
+            try checkManifest(ref.schemaVersion, 1, "preflight.schema")
+            try checkManifest(ref.profile, window.previewBundle, "preflight.profile")
+            try checkManifest(ref.functionName, "main", "preflight.function")
+            try checkManifest(ref.scalarType, "float32", "preflight.scalar")
+            try checkManifest(ref.byteOrder, "little", "preflight.byte_order")
+            try checkManifest(ref.latentFrames, window.latentFrames, "preflight.frames")
+            try checkManifest(ref.conditionTokens, window.conditionTokens, "preflight.tokens")
+            try checkManifest(ref.inferenceSteps, 50, "preflight.production_steps")
+            try checkManifest(ref.guidanceScale, 7, "preflight.guidance")
+            try checkManifest(ref.absoluteTolerance, 1e-4, "preflight.abs")
+            try checkManifest(ref.relativeTolerance, 1e-3, "preflight.rel")
+            try checkManifest(ref.relativeRmseTolerance, 1e-3, "preflight.nrmse")
+            try checkManifest(ref.vaeCheckpointDigest, "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0", "preflight.vae")
+            try checkManifest(ref.checkpointDigest, Profile.denoiser.checkpointDigest, "preflight.checkpoint")
+            try checkManifest(ref.allCheckpointsVerified, true, "preflight.verified_checkpoint")
+            try checkManifest(ref.weightStorageDtype, Optional("bfloat16"), "preflight.storage")
+            try checkManifest(ref.stages.count, expected.count, "preflight.stages")
+            for (actual,stage) in zip(ref.stages,expected) {
+                try checkManifest(actual.assetFile, stage.assetFile, "preflight.asset")
+                try checkManifest(actual.layerIndices, stage.layerIndices, "preflight.layers")
+                try checkManifest(actual.inputShapes, stage.inputShapes, "preflight.inputs")
+                try checkManifest(actual.outputShapes, stage.outputShapes, "preflight.outputs")
+                try checkManifest(actual.outputBindings, stage.outputBindings, "preflight.bindings")
+            }
+            var stages = expected
+            stages.append(Contract.Stage(assetFile: "apg-euler.aimodel", layerIndices: [],
+                inputShapes: ["velocity":[2,window.latentFrames,64],"latent":[1,window.latentFrames,64],"momentum":[1,window.latentFrames,64],"dt":[1]],
+                outputShapes: ["latent_next":[1,window.latentFrames,64],"momentum_next":[1,window.latentFrames,64],"guided_velocity":[1,window.latentFrames,64]], outputBindings: nil))
+            stages.append(Contract.Stage(assetFile: "decoder.aimodel", layerIndices: [],
+                inputShapes: ["latent":[1,64,window.latentFrames]], outputShapes: ["audio":[1,2,window.samples]], outputBindings: nil))
+            // Capture the old report BEFORE replacing live progress. Only an
+            // allowlisted asset from the same instrument may affect order.
+            if let prior, prior.contains("Selected instrument: \(window.stemID);") {
+                let marker = "Failing asset: "
+                if let line = prior.components(separatedBy: "\n").first(where: { $0.hasPrefix(marker) }),
+                   let index = stages.firstIndex(where: { $0.assetFile == String(line.dropFirst(marker.count)) }) {
+                    let target = stages.remove(at: index); stages.insert(target, at: 0)
+                    lines.append("Prior matching failure asset FIRST: \(target.assetFile); no other model opens before this asset")
+                }
+            }
+            lines.append("Planned order: " + stages.map { $0.assetFile }.joined(separator: ", "))
+            for (index,stage) in stages.enumerated() {
+                lastPhase = "Preflight \(index+1)/16 SHA-256: \(stage.assetFile)"
+                await progress(lastPhase)
+                for file in ["metadata.json","main.hash","main.mlirb"] {
+                    let name = stage.assetFile + "/" + file
+                    guard let hash = ref.artifactSha256[name], hash.count == 64,
+                          hash.allSatisfy({ "0123456789abcdef".contains($0) }) else { throw ShardError.invalidManifest }
+                    try checkManifest(try streamingSHA256(folder.appendingPathComponent(name)), hash, "preflight.native_hash")
+                    lines.append("SHA-256 verified \(name): \(hash)")
+                }
+                try requirePreviewMemoryBudget()
+                lastPhase = "Preflight \(index+1)/16: \(stage.assetFile)"
+                saveProgress(lines + [lastPhase], profile: .denoiser)
+                if let reportURL { try (lines + [lastPhase]).joined(separator: "\n").write(to: reportURL, atomically: true, encoding: .utf8) }
+                await progress(lastPhase)
+                var inputs: [String: NDArray] = [:]
+                for (name,shape) in stage.inputShapes {
+                    let value: Float = name == "timestep" || name == "rope_cos" ? 1 : (name == "dt" ? 0.02 : 0)
+                    inputs[name] = NDArray(scalars: [Float](repeating: value, count: shape.reduce(1,*)), shape: shape)
+                }
+                attemptedAssets += 1
+                let result = try await runSequentialPreviewStage(stage, folder: folder, inputs: inputs, stats: &stats,
+                    phaseProgress: interleavingPhaseProgress(prefix: "Preflight run \(runID)\n" + lastPhase, fileName: "last-native-preflight-phase.txt"))
+                lines.append("\(lastPhase) finite outputs verified: \(result.phases.report); thermal \(ProcessInfo.processInfo.thermalState.rawValue)")
+                if let reportURL { try lines.joined(separator: "\n").write(to: reportURL, atomically: true, encoding: .utf8) }
+            }
+            try checkManifest(stats.modelOpens, 16, "preflight.opens")
+            try checkManifest(stats.functionBinds, 16, "preflight.binds")
+            try checkManifest(stats.completedCalls, 16, "preflight.calls")
+            try checkManifest(stats.cacheHits, 0, "preflight.hits")
+            lines.append("Native preflight: COMPLETED (16/16 synthetic calls); cache readiness for later generation NOT PROVEN")
+        } catch {
+            lines.append("Native preflight: NOT COMPLETED; STOP, no automatic retry; last phase: \(lastPhase)")
+            if let failure = error as? StageExecutionFailure {
+                lines.append("Failing asset: \(failure.asset)")
+                lines.append("Failing operation: \(failure.operation)")
+                lines.append(contentsOf: failure.details)
+            } else { lines.append(contentsOf: modelErrorDetails(error)) }
+        }
+        let usage = memory.finish()
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10 ms): \(Double(peak)/1048576)") }
+        lines.append("Preflight asset attempts \(attemptedAssets)/16; opens \(stats.modelOpens); binds \(stats.functionBinds); completed calls \(stats.completedCalls)/16; hits \(stats.cacheHits); total ms \(ms(start.duration(to: clock.now)))")
+        lines.append("Numerical parity NOT EVALUATED; no WAV or musical acceptance; no generation steps replayed, no cache deletion requested")
+        if let reportURL { try? lines.joined(separator: "\n").write(to: reportURL, atomically: true, encoding: .utf8) }
+        saveProgress(lines, profile: .denoiser)
+        return lines.joined(separator: "\n")
+    }
+
     private struct InterleavingContract: Decodable {
         let schemaVersion: Int, pairCount: Int, callsPerAsset: Int
         let profile: String, weightStorageDtype: String, computeDtype: String

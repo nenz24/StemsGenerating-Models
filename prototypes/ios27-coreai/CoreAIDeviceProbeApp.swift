@@ -13,6 +13,8 @@ struct CoreAIDeviceProbeApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var report: String
     @State private var runningModel = false
+    @State private var workStartedInProcess = false
+    @State private var preflightAttempted = false
     @State private var generatedBass: URL?
     @State private var generatedMix: URL?
     @State private var audioPlayer: AVAudioPlayer?
@@ -48,6 +50,16 @@ struct CoreAIDeviceProbeApp: App {
                                 Text("Preview diagnostik. Hasilnya perlu diperiksa melalui laporan dan uji dengar.")
                                     .font(.footnote)
                             }
+                            if window.isLong {
+                                Text("Pemeriksaan terpisah: 16 panggilan sintetis tanpa piano/WAV. Jalankan pada proses app baru, sebelum impor rekaman.")
+                                    .font(.footnote)
+                                Button("Periksa aset sebelum generasi") { startNativePreflight() }
+                                    .disabled(runningModel || workStartedInProcess || preflightAttempted)
+                                if preflightAttempted {
+                                    Text("Simpan laporan pemeriksaan. Hentikan app dari Xcode lalu buka lagi dari ikon sebelum Generate; bila gagal, jangan lanjutkan.")
+                                        .font(.footnote)
+                                }
+                            }
                             Text("Pilih audio mono atau stereo minimal \(window.durationLabel) detik. File asli disimpan; generasi memakai \(window.durationLabel) detik awal.")
                                 .font(.footnote)
                             Button("Pilih rekaman piano") { showingAudioImporter = true }
@@ -58,12 +70,12 @@ struct CoreAIDeviceProbeApp: App {
                                 Button("Dengarkan bagian piano") { playPreview(importedPiano.previewURL) }
                                     .disabled(runningModel)
                                 Button("Generate \(window.instrumentLabel) dari rekaman") { startGeneration(importedPiano: importedPiano) }
-                                    .disabled(runningModel)
+                                    .disabled(runningModel || preflightAttempted)
                                 if window.isLong {
                                     Text("Diagnosis singkat memakai input dan feedback aktual. Hanya tiga langkah pertama, tanpa WAV baru.")
                                         .font(.footnote)
                                     Button("Uji 3 langkah aktual (tanpa WAV)") { startSamplingDiagnostic(importedPiano) }
-                                        .disabled(runningModel)
+                                        .disabled(runningModel || preflightAttempted)
                                 }
                             }
                             Divider()
@@ -313,6 +325,7 @@ struct CoreAIDeviceProbeApp: App {
                 }
                 .navigationTitle("CoreAI Device Probe")
                 .onChange(of: runningModel) { _, running in
+                    if running { workStartedInProcess = true }
                     UIApplication.shared.isIdleTimerDisabled = running && scenePhase == .active
                 }
                 .onChange(of: scenePhase) { _, phase in
@@ -352,8 +365,25 @@ struct CoreAIDeviceProbeApp: App {
         }
     }
 
+    private func startNativePreflight() {
+        guard !runningModel, !workStartedInProcess, !preflightAttempted else { return }
+        preflightAttempted = true
+        workStartedInProcess = true
+        audioPlayer?.stop()
+        runningModel = true
+        report = "Memeriksa aset terpisah; tidak menghasilkan WAV…"
+        let selectedWindow = window
+        Task {
+            let update: @MainActor @Sendable (String) -> Void = { text in self.report = text }
+            report = await Task.detached(priority: .userInitiated) {
+                await CoreAIDecoderProbe.runNativeAssetPreflight(window: selectedWindow, progress: update)
+            }.value
+            runningModel = false
+        }
+    }
+
     private func startSamplingDiagnostic(_ piano: CoreAIImportedPiano) {
-        guard !runningModel, window.isLong else { return }
+        guard !runningModel, !preflightAttempted, window.isLong else { return }
         audioPlayer?.stop()
         runningModel = true
         report = "Menyiapkan diagnosis tiga langkah aktual; audio lama tetap disimpan…"
@@ -370,7 +400,7 @@ struct CoreAIDeviceProbeApp: App {
     }
 
     private func startGeneration(importedPiano: CoreAIImportedPiano? = nil) {
-        guard !runningModel else { return }
+        guard !runningModel, !preflightAttempted else { return }
         audioPlayer?.stop()
         generatedBass = nil; generatedMix = nil
         restoredPreview = false

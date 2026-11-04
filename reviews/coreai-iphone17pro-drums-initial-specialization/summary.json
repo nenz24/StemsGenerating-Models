@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "run_id": "5E09A91D-F4A2-4CB9-8B38-BD530B9ACBCD",
+  "started_utc": "2026-11-04T16:02:12Z",
+  "started_wib": "2026-11-04T23:02:12+07:00",
+  "report_sha256": "ba37b3b633d3ea88f897993834bb8197b2d4fce172956db538d8cb1393efb6e0",
+  "instrument": "drums",
+  "text_tokens": 111,
+  "condition_tokens": 123,
+  "conditioning_checks_passed": 6,
+  "host_provenance": "bounded_diagnostic",
+  "imported_output_numerical_parity": "NOT EVALUATED (0/0)",
+  "completed_steps": 0,
+  "completed_sampling_calls": 9,
+  "model_opens": 10,
+  "function_binds": 9,
+  "reuse_hits": 0,
+  "failure_asset": "blocks-16-17.aimodel",
+  "initial_failure": {
+    "operation": "initial function bind before inference",
+    "domain": "BNNSCoreAIDelegate.BNNSDelegate.BNNSError",
+    "code": 1,
+    "error": "graphLoadFailed"
+  },
+  "targeted_repair_attempts": 1,
+  "targeted_repair_completed_stage_executions": 0,
+  "retry_failure": {
+    "operation": "model-open/specialization",
+    "domain": "CoreAIDelegates.AIModelError",
+    "code": 1,
+    "error": "failedToSpecialize",
+    "underlying_reason_reported": false
+  },
+  "wav_generated": false,
+  "same_reported_input_as_bass": true,
+  "total_ms": 12927.643,
+  "sampled_process_maximum_mib": 762.8312301635742,
+  "phase_totals_completed_calls": {
+    "model_open_ms": 7143.659001,
+    "bind_ms": 38.780581999999995,
+    "validation_ms": 0.073874,
+    "backend_ms": 616.4930840000001,
+    "copy_ms": 172.59508399999999,
+    "other_ms": 29.16916899999998
+  },
+  "completed_assets": [
+    "front.aimodel",
+    "blocks-00-01.aimodel",
+    "blocks-02-03.aimodel",
+    "blocks-04-05.aimodel",
+    "blocks-06-07.aimodel",
+    "blocks-08-09.aimodel",
+    "blocks-10-11.aimodel",
+    "blocks-12-13.aimodel",
+    "blocks-14-15.aimodel"
+  ],
+  "cause": "Unestablished: report does not prove memory exhaustion, corrupt cache, disk exhaustion or graph defect. Sampled peak is not native compiler peak.",
+  "decision": "No added repair/retry/purge. Explicit fresh-process native preflight, failed asset first, then remaining sampler/decoder assets once with synthetic inputs; no encoder/Qwen or new WAV. Generation algorithm/gates unchanged.",
+  "baseline_replaced": false,
+  "tolerances_changed": false
+}
