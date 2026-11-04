@@ -58,7 +58,7 @@ def stage_plan(text_tokens,lyric_tokens):
     return plan
 
 
-def format_prompts(audio_seconds=5.12):
+def format_prompts(audio_seconds=5.12, instrument='bass'):
     """Execute pinned formatting methods/constants, retaining empty baseline lyrics."""
     constants_path,_=verified_handler_source('constants.py')
     constants={}
@@ -72,14 +72,17 @@ def format_prompts(audio_seconds=5.12):
         if len(cls.body)!=len(methods):raise ValueError('Pinned formatter missing')
         exec(compile(ast.Module(body=[cls],type_ignores=[]),str(path),'exec',flags=__future__.annotations.compiler_flag),ns)
     prompt=ns['PromptMixin']();meta=ns['MetadataMixin']()
-    preset=json.loads((ROOT/'configs/electric-bass.json').read_text())
-    instruction=prompt._format_instruction('Generate the bass track based on the audio context:')
+    window=PreviewWindow.for_seconds(audio_seconds,instrument)
+    preset_path=ROOT/'configs'/window.preset_file
+    if sha256(preset_path)!=window.preset_sha256:raise ValueError('Pinned instrument preset changed; no preparation')
+    preset=json.loads(preset_path.read_text())
+    instruction=prompt._format_instruction(window.instruction)
     metadata=meta._dict_to_meta_string(meta._build_metadata_dict(None,'','',audio_seconds))
     caption_prompt=constants['SFT_GEN_PROMPT'].format(instruction,preset['caption'],metadata)
     lyrics_prompt=prompt._format_lyrics('','unknown')
     return {'instruction':instruction,'caption':preset['caption'],'metadata':metadata,
             'text_prompt':caption_prompt,'lyric_prompt':lyrics_prompt,'lyrics':'','vocal_language':'unknown',
-            'preset_sha256':sha256(ROOT/'configs/electric-bass.json'),'audio_seconds':audio_seconds}
+            'preset_sha256':sha256(preset_path),'audio_seconds':audio_seconds}
 
 
 def load_condition_encoder(paths):
@@ -117,7 +120,7 @@ def verify_bundle(folder,window=SHORT):
             or ref.get('reference_audio_mode')!='publisher_silence_750' or ref.get('tokenization_on_device') is not False
             or ref.get('host_partition_vs_original_fp32',{}).get('parity_passed') is not True
             or ref.get('host_storage16_vs_original_fp32',{}).get('parity_passed') is not True
-            or ref.get('prompts')!=format_prompts(window.seconds)):
+            or ref.get('prompts')!=format_prompts(window.seconds,window.instrument)):
         raise ValueError('Unexpected bass-conditioning contract; preserve bundle')
     shapes={**plan[0]['input_shapes'],'reference_audio':[1,750,64]}
     required={f'{n}.f32le':s for n,s in shapes.items()}
@@ -142,13 +145,19 @@ def verify_bundle(folder,window=SHORT):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--seconds',type=float,choices=[5.12,10.24],default=5.12)
+    parser.add_argument('--instrument',choices=['bass','drums','guitar-strum','guitar-pick'],default='bass')
     parser.add_argument('--reuse-native-from',type=Path)
     parser.add_argument('--out',type=Path,default=None)
     parser.add_argument('--verify-only',action='store_true')
     args=parser.parse_args()
-    window=PreviewWindow.for_seconds(args.seconds)
+    window=PreviewWindow.for_seconds(args.seconds,args.instrument)
     args.out=args.out or ROOT/'prototypes/ios27-coreai/ModelCandidates'/window.condition_bundle
-    reusable=verify_bundle(args.reuse_native_from) if args.reuse_native_from else None
+    reusable=None
+    if args.reuse_native_from:
+        previous=json.loads((args.reuse_native_from/'reference.json').read_text())
+        old_window=PreviewWindow.for_bundle(previous.get('profile'),'condition_bundle')
+        if old_window is None:raise ValueError('Unknown native-reuse conditioning profile')
+        reusable=verify_bundle(args.reuse_native_from,old_window)
     if args.verify_only:
         verify_bundle(args.out,window);print('Bass-conditioning bundle VERIFIED; no re-export');return
     if args.out.exists():raise FileExistsError(f'Output already exists: {args.out}; preserved')
@@ -170,7 +179,7 @@ def main():
         if sha256(tok_destination)!=tokenizer_record['digest']:raise ValueError('Existing tokenizer mismatch; preserved')
     else:shutil.copyfile(tok_path,tok_destination)
     tokenizer=AutoTokenizer.from_pretrained(source_dir/'Qwen3-Embedding-0.6B',local_files_only=True)
-    prompts=format_prompts(window.seconds)
+    prompts=format_prompts(window.seconds,window.instrument)
     text=tokenizer(prompts['text_prompt'],padding='longest',truncation=True,max_length=256,return_tensors='pt')
     lyric=tokenizer(prompts['lyric_prompt'],padding='longest',truncation=True,max_length=2048,return_tensors='pt')
     if not text.attention_mask.all() or not lyric.attention_mask.all():raise ValueError('Single-example all-valid specialization only')
@@ -276,6 +285,7 @@ def main():
         gold[n].detach().numpy().astype('<f4').tofile(stage/f'{n}-fp32-reference.f32le')
         storage[n].detach().numpy().astype('<f4').tofile(stage/f'{n}-reference.f32le')
     state=dict(initial)
+    reused_native=[]
     for i,(module,s) in enumerate(zip(modules,plan),1):
         print(f'Export {i}/{len(plan)}: {s["asset_file"]}',flush=True)
         args_tuple=tuple(state[n] for n in s['input_shapes'])
@@ -287,6 +297,7 @@ def main():
             # enter this branch. Reuse only exact shape/binding contracts from
             # the verified original checkpoint; copy preserves the old bundle.
             shutil.copytree(args.reuse_native_from/s['asset_file'],stage/s['asset_file'])
+            reused_native.append(s['asset_file'])
         else:
             exported=torch.export.export(module,args_tuple).run_decompositions(get_decomp_table())
             program=TorchConverter().add_exported_program(exported,input_names=list(s['input_shapes']),output_names=list(s['output_shapes'])).to_coreai()
@@ -305,7 +316,9 @@ def main():
          'host_storage16_vs_original_fp32':{'parity_passed':True,'outputs':storage_metrics},'artifact_sha256':hashes,
          'native_asset_bytes':sum(p.stat().st_size for p in stage.rglob('*') if p.is_file() and '.aimodel/' in str(p)),
          'versions':{n:importlib.metadata.version(n) for n in ['torch','transformers','coreai-torch','coreai-core']},
-         'scope':'All neural text/lyric/timbre conditioning on device; fixed host-tokenized bass prompt; no source-context, denoiser, CFG or audio output'}
+         'scope':f'All neural text/lyric/timbre conditioning on device; fixed host-tokenized {window.instrument} prompt; no source-context, denoiser, CFG or audio output'}
+    if reusable:
+        ref['native_reuse']={'source_profile':reusable['profile'],'source_reference_sha256':sha256(args.reuse_native_from/'reference.json'),'assets':reused_native}
     (stage/'reference.json').write_text(json.dumps(ref,indent=2)+'\n');verify_bundle(stage,window)
     args.out.parent.mkdir(parents=True,exist_ok=True);shutil.move(str(stage),str(args.out))
     print(f'Ready: {args.out}; {ref["native_asset_bytes"]/1e9:.3f} GB native assets. Rebuild app.',flush=True)

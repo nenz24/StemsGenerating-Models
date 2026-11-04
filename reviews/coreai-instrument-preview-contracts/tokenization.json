@@ -1,0 +1,51 @@
+{
+  "scope": "Actual pinned publisher formatter and tokenizer; not native host export or device inference",
+  "transformers": "4.57.3",
+  "tokenizer_sha256": "def76fb086971c7867b829c23a26261e38d9d74e02139253b38aeb9df8b4b50a",
+  "profiles": {
+    "bass": {
+      "preset_file": "electric-bass.json",
+      "preset_sha256": "4bacacb4f9fb1a9e66c98958869e2756878e6420910b2af065bea6522cb6ef63",
+      "instruction": "Generate the bass track based on the audio context:",
+      "text_tokens": 106,
+      "lyric_tokens": 11,
+      "condition_tokens": 118,
+      "text_ids_sha256": "6af35e6c6da972f451fcd8999afdcb1bc67cf4885efd1c62a79a51e33586e274",
+      "text_prompt": "# Instruction\nGenerate the bass track based on the audio context:\n\n# Caption\nIsolated fingerstyle electric bass guitar accompaniment. A dry, natural plucked tone with clearly articulated attacks, short note releases and audible upper harmonics. A simple musical bassline in a normal bass-guitar register following the piano's harmony, timing and dynamics.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n<|endoftext|>\n",
+      "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n<|endoftext|>"
+    },
+    "drums": {
+      "preset_file": "acoustic-drums.json",
+      "preset_sha256": "bcfd73641fddbda1fb0975febfe28cccb3a3121ec48cec1d877933e64a6d70ca",
+      "instruction": "Generate the drums track based on the audio context:",
+      "text_tokens": 111,
+      "lyric_tokens": 11,
+      "condition_tokens": 123,
+      "text_ids_sha256": "3830ebe7015f7367bd041b772147cab22ee31967814baf21f00d61346e748ccd",
+      "text_prompt": "# Instruction\nGenerate the drums track based on the audio context:\n\n# Caption\nIsolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n<|endoftext|>\n",
+      "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n<|endoftext|>"
+    },
+    "guitar-strum": {
+      "preset_file": "clean-electric-guitar-strum-layer.json",
+      "preset_sha256": "885c989481abca270fcea2baa77cd843c73efcde4ad3e2f6d42ad9eeee05d104",
+      "instruction": "Generate the guitar track based on the audio context:",
+      "text_tokens": 106,
+      "lyric_tokens": 11,
+      "condition_tokens": 118,
+      "text_ids_sha256": "13c6c9aa005c05c5d5c24c8991ec1b371c92d37434f818917a915fdde8dd85cf",
+      "text_prompt": "# Instruction\nGenerate the guitar track based on the audio context:\n\n# Caption\nIsolated clean electric rhythm guitar accompaniment in the warm, clear, undistorted tone of the reference. Natural gentle chord strumming with expressive dynamics and space for another guitar. Follow the piano chords, timing and phrasing. Guitar accompaniment only.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n<|endoftext|>\n",
+      "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n<|endoftext|>"
+    },
+    "guitar-pick": {
+      "preset_file": "clean-electric-guitar-pick-layer.json",
+      "preset_sha256": "7aaff6ec3d7fb3a8c439d4b6d9e2baca3edc65835e3b59e64891d9b6694303bb",
+      "instruction": "Generate the guitar track based on the audio context:",
+      "text_tokens": 111,
+      "lyric_tokens": 11,
+      "condition_tokens": 123,
+      "text_ids_sha256": "03c649f448a2120d12c98d85072fa2b71b8610fb4368267f29614e4b79f665b3",
+      "text_prompt": "# Instruction\nGenerate the guitar track based on the audio context:\n\n# Caption\nIsolated clean electric guitar accompaniment in the warm, clear, undistorted tone of the reference. Sparse naturally picked chord notes and gentle melodic fills with expressive pauses, leaving room for a rhythm guitar. Follow the piano chords, timing and phrasing. Guitar accompaniment only.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n<|endoftext|>\n",
+      "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n<|endoftext|>"
+    }
+  }
+}

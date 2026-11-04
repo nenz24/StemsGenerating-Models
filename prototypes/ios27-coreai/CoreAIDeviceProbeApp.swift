@@ -21,8 +21,13 @@ struct CoreAIDeviceProbeApp: App {
     @State private var importedPiano: CoreAIImportedPiano?
 
     init() {
-        let saved = CoreAIDecoderProbe.latestSavedBassPreview()
-        _report = State(initialValue: CoreAIDecoderProbe.savedDenoiserReport() ?? saved?.report ?? "Belum dijalankan.")
+        let active = CoreAIPreviewWindow.bundled
+        let saved = CoreAIDecoderProbe.latestSavedBassPreview(window: active)
+        let prior = CoreAIDecoderProbe.savedDenoiserReport()
+        let matchingPrior: String? = prior.flatMap { text in
+            text.contains("Selected instrument: \(active.stemID);") || (active.stemID == "bass" && !text.contains("Selected instrument:")) ? text : nil
+        }
+        _report = State(initialValue: matchingPrior ?? saved?.report ?? "Preset \(active.instrumentLabel): belum dijalankan.")
         _generatedBass = State(initialValue: saved?.bassURL)
         _generatedMix = State(initialValue: saved?.mixURL)
         _restoredPreview = State(initialValue: saved != nil)
@@ -34,7 +39,11 @@ struct CoreAIDeviceProbeApp: App {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         if hasResource(window.previewBundle + "/reference.json") {
-                            Text("Buat bass untuk bagian awal rekaman piano Anda.")
+                            Text("Buat \(window.instrumentLabel) untuk bagian awal rekaman piano Anda.")
+                            if window.stemID.hasPrefix("guitar-") {
+                                Text("Preview peran gitar; referensi warna suara Colab belum disertakan.")
+                                    .font(.footnote)
+                            }
                             if CoreAIPreviewWindow.trajectoryDiagnosticEnabled {
                                 Text("Preview diagnostik. Hasilnya perlu diperiksa melalui laporan dan uji dengar.")
                                     .font(.footnote)
@@ -48,9 +57,9 @@ struct CoreAIDeviceProbeApp: App {
                                     .font(.callout)
                                 Button("Dengarkan bagian piano") { playPreview(importedPiano.previewURL) }
                                     .disabled(runningModel)
-                                Button("Generate bass dari rekaman") { startGeneration(importedPiano: importedPiano) }
+                                Button("Generate \(window.instrumentLabel) dari rekaman") { startGeneration(importedPiano: importedPiano) }
                                     .disabled(runningModel)
-                                if window == .long1024 {
+                                if window.isLong {
                                     Text("Diagnosis singkat memakai input dan feedback aktual. Hanya tiga langkah pertama, tanpa WAV baru.")
                                         .font(.footnote)
                                     Button("Uji 3 langkah aktual (tanpa WAV)") { startSamplingDiagnostic(importedPiano) }
@@ -59,6 +68,8 @@ struct CoreAIDeviceProbeApp: App {
                             }
                             Divider()
                         }
+                        Text("Preset aktif: \(window.instrumentLabel)")
+                            .font(.headline)
                         Text("Pemeriksaan dan baseline")
                             .font(.headline)
                         if hasResource("dit-interleaving-1024/reference.json") {
@@ -240,9 +251,9 @@ struct CoreAIDeviceProbeApp: App {
                             .disabled(runningModel)
                         }
                         if hasResource(window.conditionBundle + "/reference.json") {
-                            Button("Uji conditioning bass") {
+                            Button("Uji conditioning \(window.instrumentLabel)") {
                                 runningModel = true
-                                report = "Menghitung embedding Qwen dan conditioning instrumen bass…"
+                                report = "Menghitung embedding Qwen dan conditioning instrumen \(window.instrumentLabel)…"
                                 Task {
                                     report = await CoreAIDecoderProbe.runBassConditioning { text in self.report = text }
                                     runningModel = false
@@ -270,9 +281,9 @@ struct CoreAIDeviceProbeApp: App {
                             .disabled(runningModel)
                             ShareLink(item: generationReport) { Label("Bagikan laporan generasi", systemImage: "square.and.arrow.up") }
                                 .disabled(runningModel)
-                            Button("Dengarkan bass") { playPreview(generatedBass) }
+                            Button("Dengarkan \(window.instrumentLabel)") { playPreview(generatedBass) }
                                 .disabled(runningModel)
-                            ShareLink(item: generatedBass) { Label("Bagikan WAV bass", systemImage: "square.and.arrow.up") }
+                            ShareLink(item: generatedBass) { Label("Bagikan WAV \(window.instrumentLabel)", systemImage: "square.and.arrow.up") }
                                 .disabled(runningModel)
                             let pianoClip = generatedBass.deletingLastPathComponent().appendingPathComponent("piano.wav")
                             if FileManager.default.fileExists(atPath: pianoClip.path) {
@@ -288,7 +299,7 @@ struct CoreAIDeviceProbeApp: App {
                         if let generatedMix {
                             Button("Dengarkan bersama piano") { playPreview(generatedMix) }
                                 .disabled(runningModel)
-                            ShareLink(item: generatedMix) { Label("Bagikan WAV piano + bass", systemImage: "square.and.arrow.up") }
+                            ShareLink(item: generatedMix) { Label("Bagikan WAV piano + \(window.instrumentLabel)", systemImage: "square.and.arrow.up") }
                                 .disabled(runningModel)
                         }
                         Text(report)
@@ -332,7 +343,7 @@ struct CoreAIDeviceProbeApp: App {
                         try CoreAIAudioImport.importPiano(from: selectedURL, window: selectedWindow)
                     }.value
                     importedPiano = imported
-                    report = "Rekaman siap: \(imported.metadata.name)\nBagian awal \(window.durationLabel) detik, stereo 48 kHz. File asli disimpan tanpa diubah.\nDengarkan bagian piano, lalu tekan Generate bass dari rekaman."
+                    report = "Rekaman siap: \(imported.metadata.name)\nBagian awal \(window.durationLabel) detik, stereo 48 kHz. File asli disimpan tanpa diubah.\nDengarkan bagian piano, lalu tekan Generate \(window.instrumentLabel) dari rekaman."
                 } catch {
                     report = "Impor gagal: \(error.localizedDescription)"
                 }
@@ -342,7 +353,7 @@ struct CoreAIDeviceProbeApp: App {
     }
 
     private func startSamplingDiagnostic(_ piano: CoreAIImportedPiano) {
-        guard !runningModel, window == .long1024 else { return }
+        guard !runningModel, window.isLong else { return }
         audioPlayer?.stop()
         runningModel = true
         report = "Menyiapkan diagnosis tiga langkah aktual; audio lama tetap disimpan…"
@@ -365,8 +376,8 @@ struct CoreAIDeviceProbeApp: App {
         restoredPreview = false
         runningModel = true
         report = importedPiano == nil
-            ? "Menjalankan uji baseline piano ke WAV bass pendek…"
-            : "Membuat bass untuk rekaman pilihan Anda…"
+            ? "Menjalankan uji baseline piano ke WAV \(window.instrumentLabel) pendek…"
+            : "Membuat \(window.instrumentLabel) untuk rekaman pilihan Anda…"
         let selectedWindow = window
         Task {
             let update: @MainActor @Sendable (String) -> Void = { text in self.report = text }

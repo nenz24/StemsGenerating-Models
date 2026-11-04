@@ -45,3 +45,9 @@ DerivedData/
 /prototypes/ios27-coreai/ModelCandidates/active-preview.json
 /prototypes/ios27-coreai/ModelCandidates/dit-precision-1024/
 /prototypes/ios27-coreai/ModelCandidates/dit-interleaving-1024/
+/prototypes/ios27-coreai/ModelCandidates/drums-conditioning-1024/
+/prototypes/ios27-coreai/ModelCandidates/drums-preview-1024/
+/prototypes/ios27-coreai/ModelCandidates/guitar-strum-conditioning-1024/
+/prototypes/ios27-coreai/ModelCandidates/guitar-strum-preview-1024/
+/prototypes/ios27-coreai/ModelCandidates/guitar-pick-conditioning-1024/
+/prototypes/ios27-coreai/ModelCandidates/guitar-pick-preview-1024/

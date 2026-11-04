@@ -14,6 +14,8 @@ import shutil
 from coreai_preview_window import SHORT, LONG
 
 PROFILES = ('auto', 'bass-aot', 'bass-source', 'bass-source-1024', 'dit-precision-1024', 'dit-interleaving-1024', 'runtime', 'all')
+INSTRUMENT_PROFILES = tuple(i+'-source-1024' for i in ('drums','guitar-strum','guitar-pick'))
+PROFILES += INSTRUMENT_PROFILES
 STAMP = 'app-resource-manifest.json'
 PREVIEW_FIXTURES = {'initial-noise.f32le', 'timesteps.f32le',
                     'audio-reference.f32le', 'audio-fp32-reference.f32le'} | {
@@ -76,14 +78,18 @@ def plan_resources(source, profile='auto'):
                     or expected not in ({'schema_version':1,'resource_profile':'bass-source','audio_seconds':5.12},
                                         {'schema_version':1,'resource_profile':'bass-source-1024','audio_seconds':10.24},
                                         {'schema_version':1,'resource_profile':'dit-precision-1024','audio_seconds':10.24},
-                                        {'schema_version':1,'resource_profile':'dit-interleaving-1024','audio_seconds':10.24})
+                                        {'schema_version':1,'resource_profile':'dit-interleaving-1024','audio_seconds':10.24},
+                                        *({'schema_version':1,'resource_profile':p,'audio_seconds':10.24} for p in INSTRUMENT_PROFILES))
                     or chosen.get('schema_version')!=1
-                    or (diagnostic_trajectory and chosen.get('resource_profile')!='bass-source-1024')):
+                    or (diagnostic_trajectory and chosen.get('resource_profile') not in ('bass-source-1024',*INSTRUMENT_PROFILES))):
                 raise ValueError('Invalid active preview selector; build output preserved')
             profile=chosen['resource_profile']
         else:
             profile = 'bass-source' if ready else 'runtime'
     window = LONG if profile == 'bass-source-1024' else SHORT
+    if profile in INSTRUMENT_PROFILES:
+        from coreai_preview_window import PreviewWindow
+        window = PreviewWindow.for_seconds(10.24,profile.removesuffix('-source-1024'))
     planned = {}
 
     def add(name, expected=None):
@@ -142,11 +148,15 @@ def plan_resources(source, profile='auto'):
         source_ref = bundle(window.source_bundle)
         condition_ref = bundle(window.condition_bundle)
         preview = bundle(window.preview_bundle, PREVIEW_FIXTURES if profile == 'bass-aot' else None)
+        if profile in INSTRUMENT_PROFILES:
+            if (condition_ref.get('prompts',{}).get('preset_sha256')!=window.preset_sha256
+                    or condition_ref.get('prompts',{}).get('instruction')!=window.instruction):
+                raise ValueError('Instrument preset identity changed; build output preserved')
         if preview.get('host_trajectory_diagnostic_requested',False) and not diagnostic_trajectory:
             raise ValueError('Diagnostic trajectory bundle requires explicit active selector permission')
         if diagnostic_trajectory and preview.get('host_trajectory_diagnostic_requested') is not True:
             raise ValueError('Diagnostic selector requires a component-validated diagnostic bundle')
-        if window == LONG:
+        if window.frames == 256:
             if (source_ref.get('profile') != window.source_bundle or source_ref.get('audio_seconds') != window.seconds
                     or source_ref.get('input_shapes', {}).get('audio') != [1,2,window.samples]
                     or condition_ref.get('profile') != window.condition_bundle

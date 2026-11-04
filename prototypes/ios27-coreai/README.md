@@ -34,6 +34,12 @@ production sampling/decoder progress is now bounded too (`generation-bounded-v1`
 with per-step API deltas. Next validate one normal 50-step generation and WAV
 hashes using the same piano and existing bundles; no full-loop gain is yet claimed.
 
+[Instrument previews](../../docs/coreai-instrument-previews.md) now provide pinned
+drum, guitar-strum and guitar-pick long profiles. Start with
+`bash scripts/prepare_coreai_instrument_preview.sh --instrument drums --diagnostic-trajectory`.
+The preparation reuses only verified, identical native contracts and retains the
+bass bundles. Build one profile at a time; new-device validation is pending.
+
 Initial target: iPhone 17 Pro, iOS 27.0, Xcode 27.0 / 27A266a. These Swift
 sources use APIs declared in the six public interfaces supplied by the user.
 The user has built and run the device probe on an iPhone with iOS 27.0.1:

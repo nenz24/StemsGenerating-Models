@@ -265,16 +265,28 @@ def verify_bundle(folder,source_folder=None,condition_folder=None,window=SHORT,a
     return ref
 
 
+def native_reuse_compatible(previous, old_window, window, name):
+    """Only verified bundles may reach this shape/precision decision."""
+    if old_window.frames!=window.frames or previous.get('weight_storage_dtype')!=window.weight_storage_dtype:
+        return False
+    if name in ('apg-euler.aimodel','decoder.aimodel'): return True
+    current=next((s for s in stage_plan(window) if s['asset_file']==name),None)
+    old=next((s for s in previous['stages'] if s['asset_file']==name),None)
+    return current is not None and current==old
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--seconds',type=float,choices=[5.12,10.24],default=5.12)
+    parser.add_argument('--instrument',choices=['bass','drums','guitar-strum','guitar-pick'],default='bass')
+    parser.add_argument('--reuse-native-from',type=Path,help='Verified native bundle; reuse only identical stage contracts and precision')
     parser.add_argument('--out',type=Path,default=None)
     parser.add_argument('--source-bundle',type=Path,default=None)
     parser.add_argument('--condition-bundle',type=Path,default=None)
     parser.add_argument('--verify-only',action='store_true')
     parser.add_argument('--diagnostic-trajectory',action='store_true',help='Explicit 10.24 s component-gated experiment; failed free-trajectory comparisons remain failed')
     args=parser.parse_args()
-    window=PreviewWindow.for_seconds(args.seconds)
+    window=PreviewWindow.for_seconds(args.seconds,args.instrument)
     if args.diagnostic_trajectory and window.frames!=256:parser.error('--diagnostic-trajectory is restricted to 10.24 seconds')
     candidates=ROOT/'prototypes/ios27-coreai/ModelCandidates'
     args.out=args.out or candidates/window.preview_bundle
@@ -285,6 +297,15 @@ def main():
         print('Integrated bass preview integrity VERIFIED; host status:',ref.get('host_export_status','strict_pass'),'; no re-export');return
     if args.out.exists():raise FileExistsError(f'Output already exists: {args.out}; preserved')
     verify_source(args.source_bundle,window);verify_condition(args.condition_bundle,window)
+    reusable=None
+    if args.reuse_native_from:
+        previous=json.loads((args.reuse_native_from/'reference.json').read_text())
+        old_window=PreviewWindow.for_bundle(previous.get('profile'),'preview_bundle')
+        if old_window is None:raise ValueError('Unknown native-reuse preview profile')
+        reusable=verify_bundle(args.reuse_native_from,args.reuse_native_from.parent/old_window.source_bundle,
+            args.reuse_native_from.parent/old_window.condition_bundle,old_window,old_window.frames==256)
+        if reusable.get('weight_storage_dtype')!=window.weight_storage_dtype:
+            raise ValueError('Native reuse precision mismatch')
     import numpy as np
     import torch
     from safetensors import safe_open
@@ -313,7 +334,7 @@ def main():
         conditions=torch.cat([gold_cond,null.expand_as(gold_cond)],dim=0)
         return root(hidden_states=torch.cat([x,x]),timestep=t.expand(2),timestep_r=t.expand(2),attention_mask=None,
             encoder_hidden_states=conditions,encoder_attention_mask=None,context_latents=torch.cat([context,context]),use_cache=False)[0]
-    print('Full FP32 gold: real piano, actual bass condition, 50 APG-guided Euler steps.',flush=True)
+    print(f'Full FP32 gold: real piano, actual {window.instrument} condition, 50 APG-guided Euler steps.',flush=True)
     gold={};x=noise.clone();momentum=apg.MomentumBuffer()
     with torch.no_grad():
         for i in range(50):
@@ -419,8 +440,18 @@ def main():
     root.load_state_dict(state,strict=True,assign=True);del state
     root.rotary_emb=rotary(cfg,device='cpu');root.to(device='cpu',dtype=torch.float32).requires_grad_(False);convert_storage16(root,window.weight_storage_dtype)
     parts=partitions(root,null,make_mask,window);state={'noise':noise,'condition':cond,'context':context,'timestep':times[:1]}
+    reused_native=[]
     def export(module,inputs,input_names,output_names,name):
         module.eval();print('Export',name,flush=True)
+        # Denoiser/decoder learned values and helper constants have the same
+        # pinned checkpoint and sampler contract; only runtime inputs differ.
+        # Reuse shapes/bindings exactly, never relabel a differently-shaped asset.
+        if reusable:
+            if native_reuse_compatible(reusable,old_window,window,name):
+                print('Reuse verified native asset',name,flush=True)
+                shutil.copytree(args.reuse_native_from/name,stage/name)
+                reused_native.append(name)
+                return
         ep=torch.export.export(module,inputs).run_decompositions(get_decomp_table())
         program=TorchConverter().add_exported_program(ep,input_names=input_names,output_names=output_names).to_coreai()
         program.save_asset(stage/name);del program,ep;gc.collect()
@@ -445,7 +476,9 @@ def main():
          'apg_source_digest':publisher['apg_guidance.py']['digest'],'seed':0,'rng_scope':'Host CPU seeded fixtures; no CUDA RNG parity or on-device RNG claim',
          'versions':{n:importlib.metadata.version(n) for n in ['torch','transformers','diffusers','coreai-torch','coreai-core']},
          'artifact_sha256':{str(p.relative_to(stage)):sha256(p) for p in stage.rglob('*') if p.is_file()},
-         'scope':f'Real piano + duration-matched bass preset -> 50 APG-guided Euler steps -> {window.seconds} s decoded waveform; actual new device profile execution pending'}
+         'scope':f'Real piano + duration-matched {window.instrument} preset -> 50 APG-guided Euler steps -> {window.seconds} s decoded waveform; actual new device profile execution pending'}
+    if reusable:
+        ref['native_reuse']={'source_profile':reusable['profile'],'source_reference_sha256':sha256(args.reuse_native_from/'reference.json'),'assets':reused_native}
     (stage/'reference.json').write_text(json.dumps(ref,indent=2)+'\n');verify_bundle(stage,args.source_bundle,args.condition_bundle,window,args.diagnostic_trajectory)
     args.out.parent.mkdir(parents=True,exist_ok=True);shutil.move(str(stage),str(args.out))
     print('Ready:',host_status['host_export_status'],'integrated preview bundle',args.out,flush=True)
