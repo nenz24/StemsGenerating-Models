@@ -1,0 +1,18 @@
+{
+  "source_listening_report_sha256": "2024cb382427abe4e11b3d61ad48ee10d10711afa19f04740c371672649ffcdb",
+  "source_listening_execution": "COMPLETED; one CPU FP32 decoder, no encoder/DiT",
+  "source_pcm_and_latent_identity": "MATCHES uploaded previous source bundle",
+  "source_listening_feedback": "User reports both local files clean and containing only piano",
+  "interpretation": "Expected piano-only reconstruction; source-side/codec listening check passed for this input, not a proof that VAE can never generate artifacts for any latent",
+  "source_gain_both": 1.0,
+  "prior_access_confusion_resolved": true,
+  "drum_quality": "Still unresolved/glitchy; accepted groove retained",
+  "next_experiment": "One independent HOST FP32 APG norm-cap candidate only; original cap2.5 control preserved",
+  "reference": "Approved 30s excerpt has750 latent frames; candidate at256 frames matches its per-frame momentum RMS cap using2.5*sqrt(256/750)",
+  "candidate_cap": 1.4605934866804429,
+  "candidate_full_model_execution_here": false,
+  "reason": "Base/Qwen checkpoints and complete prepared bundles remain on user Mac; only pinned APG math smoke performed here",
+  "production_BF16_and_original_APG_cap_changed": false,
+  "numeric_acceptance_tolerances_changed": false,
+  "candidate_quality": "NOT TESTED"
+}

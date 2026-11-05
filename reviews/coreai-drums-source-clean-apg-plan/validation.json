@@ -1,0 +1,19 @@
+{
+  "host_tests": {
+    "run": 159,
+    "passed": 157,
+    "skipped": 2,
+    "skip_reason": "Optional native/export tools"
+  },
+  "new_APG_tests": 5,
+  "real_pinned_APG_math_smoke": "PASS on synthetic velocity fields; no neural model execution",
+  "baseline_adapter_at_cap_2_5": "BIT EXACT to original APG",
+  "candidate_per_frame_bound": "Matches 30s reference bound; no listening verdict implied",
+  "production_app_configs_exporters_unchanged": true,
+  "diagnostic_lyric_executor_default_APG_and_labels": "Retained; optional APG/label hooks used only by new experiment",
+  "candidate_condition_requirement": "Byte-identical FP32 control; fails closed on any difference",
+  "JSON_docs_whitespace_syntax": "PASS",
+  "real_candidate_generation": "NOT RUN here: base/Qwen checkpoints absent",
+  "native_build_export_execution": "NOT RUN; not changed",
+  "candidate_adopted": false
+}

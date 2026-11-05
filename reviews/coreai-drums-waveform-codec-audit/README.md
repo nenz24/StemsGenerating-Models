@@ -1,5 +1,10 @@
 # Uploaded drum waveforms verified; codec replay and tiling agree
 
+**Local listening completed:** the user now reports both piano source and VAE
+reconstruction clean, piano only. [Report and next isolated host experiment](../coreai-drums-source-clean-apg-plan/README.md)
+resolve the earlier cloud-access confusion. Keep VAE; do not repeat source
+listening. The initial pending/access state below is historical.
+
 The user uploaded the completed Mac experiment's eight-file ZIP. All eight
 member identities, source reference SHA, source PCM/latent hashes, and supplied
 candidate/control artifact hashes match their reports. The raw candidate audio

@@ -15,11 +15,11 @@
     0.9850687029824395
   ],
   "source_roundtrip_snr_db": 13.429857388328728,
-  "source_roundtrip_listening_feedback": "UNTESTED: user clarified that cloud file links were inaccessible and neither clip had been heard; earlier affirmative answer is withdrawn as evidence",
+  "source_roundtrip_listening_feedback": "CONFIRMED on local Mac WAVs: user reports both source and reconstruction clean, piano only",
   "source_code_audit": "Accepted runtime source file hashes differ from publisher but relevant neural methods and APG match; Base auto-DCW false; no source-only fix established",
   "full_pipeline_parity_claimed": false,
   "musical_fix_claimed": false,
   "BF16_baseline_replaced": false,
   "tolerances_changed": false,
-  "next": "Create the identical source/reconstruction pair locally on Mac with listen_coreai_source_roundtrip.py (one cached-latent decode, no encoder or DiT), then classify listening feedback. No observed source-codec glitch is established yet."
+  "next": "Preserve VAE; investigate common drum generation. One isolated host APG norm-cap candidate anchored to approved30s per-frame bound; no native/production changes or tolerance relaxation."
 }

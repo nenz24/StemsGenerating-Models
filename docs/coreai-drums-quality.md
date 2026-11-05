@@ -16,7 +16,57 @@ Jadi clipping drum solo belum menjelaskan glitch mix. Sebanyak 87,54% energi
 drum berada di 20–150 Hz. Ini pengukuran spektrum, bukan bukti audibilitas,
 kesalahan instrumen atau penyebab glitch. Belum ada diagnosis penyebab pasti.
 
-## Hasil ZIP terbaru: codec diperiksa tanpa generasi ulang
+## Hasil terbaru: kedua piano bersih; satu kandidat APG di Mac
+
+Pengguna sudah mendengarkan dua WAV lokal dan melaporkan **keduanya bersih,
+hanya suara piano**. Itu memang hasil yang diharapkan dari rekonstruksi sumber.
+[Laporan](../reviews/coreai-drums-source-clean-apg-plan/README.md) cocok dengan
+input sebelumnya: satu decode, gain 1, tanpa encoder/DiT. VAE dipertahankan;
+glitch drum masih ditelusuri pada conditioning/generasi bersama.
+
+Uji berikutnya hanya mengubah **batas norm APG pada kandidat host**, dengan
+piano, conditioning/lyrics, noise, durasi, 50 langkah, guidance 7 dan decoder
+tetap. APG membatasi norm sepanjang waktu; untuk klip lebih pendek, batas RMS
+per frame menjadi lebih besar pada cap 2,5 yang sama. Satu nilai kandidat
+diturunkan dari referensi 30 detik yang diterima: `2,5*sqrt(256/750) ≈ 1,46059`.
+Ini hipotesis terarah, belum bukti perbaikan dan bukan reproduksi konteks 30 detik.
+
+**Baseline BF16 dan cap asli 2,5 tetap. Toleransi numerik abs/rel/RMSE tetap.**
+Candidate cap adalah parameter generasi terpisah, bukan pelonggaran gate.
+Conditioning kandidat harus identik byte dengan kontrol, dan replay kontrol
+tetap harus lolos batas asli. Tidak ada limiter/EQ atau perubahan gain mix.
+
+Dari folder repo Mac yang sama:
+
+```bash
+git fetch origin main &&
+python3 scripts/update_coreai_project.py &&
+.runtime-cache/coreai-decoder-venv/bin/python \
+  scripts/compare_coreai_drum_apg.py \
+  --diagnostic-trajectory --execute \
+  --out .runtime-cache/drums-apg-norm-v1 &&
+open .runtime-cache/drums-apg-norm-v1
+```
+
+Ini menghitung **satu kandidat 50 langkah di CPU Mac**, dengan checkpoint/cache
+yang sudah ada; bukan uji VAE satu decode lagi. Tidak ada download bobot baru,
+export model, build app, atau aktivasi kandidat di iPhone. Output harus baru.
+Tanpa `--execute` hanya plan dibuat; pakai nama folder baru untuk eksekusi setelah
+plan. Bila gate/checkpoint gagal, simpan report/error dan berhenti.
+
+Setelah selesai, dengarkan pada volume/output yang sama:
+
+1. `01-control-original-apg-headroom.wav`
+2. `02-candidate-scaled-apg-headroom.wav`
+
+Keduanya berisi drum, dengan satu gain attenuasi bersama. Nilai apakah glitch
+berkurang **dan** groove tetap sesuai, bukan hanya apakah lebih pelan.
+Bagikan `report.json` dan hasil dengar. Report mencatat clipping dan RMS update
+guidance selama kandidat; angka itu bukan sertifikat kualitas. Jika tidak
+membantu, jangan ulang atau mencari cap lain otomatis. Kandidat belum diadopsi;
+native parity/uji dengar iPhone tetap diperlukan bila hasil host berguna.
+
+## Riwayat audit ZIP dan pengiriman pembanding piano (selesai)
 
 [Audit waveform dan codec](../reviews/coreai-drums-waveform-codec-audit/README.md)
 memverifikasi seluruh delapan file ZIP. Hash rekaman MP3 yang dicatat source
@@ -31,9 +81,10 @@ Perbedaan hash source model Colab/publisher ditelusuri: metode neural aktif dan
 APG sama, dimensi conditioning sama, DCW otomatis nonaktif pada Base. Belum ada
 penyebab tunggal atau perbaikan musikal yang terbukti.
 
-**Klarifikasi akses:** pengguna belum mendengarkan kedua cuplikan karena tautan
-file cloud tidak dapat diunduh. Jawaban afirmatif sebelumnya tidak boleh
-dianggap bukti glitch pada rekonstruksi. Hasil dengar codec masih **BELUM ADA**.
+**Klarifikasi akses awal:** kedua cuplikan cloud belum didengar karena tautannya
+tidak dapat diunduh. Jawaban afirmatif saat itu ditarik sebagai bukti. Perintah
+lokal berikut kemudian berhasil dan kedua piano sudah dilaporkan bersih.
+Disimpan untuk reproduksi, bukan permintaan mengulang uji.
 
 Buat dua WAV langsung di Mac agar dapat dibuka dari Finder. Dari folder repo:
 

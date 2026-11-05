@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "completed_listening_copies",
+  "mode": "One CPU FP32 VAE decode of saved source latent; no encoder/DiT/native export",
+  "source_reference_sha256": "93e9639c5e1d7bc31cc19f162435f77ea650f94fe377c3708922525d2dd258da",
+  "source_pcm_sha256": "836c4509c9eb54c39cf294effd979c5a1991e18f686b0c0b1223c0776d356018",
+  "source_latent_sha256": "c85c5dabd48c3d154a20cae5830b56e09e426796ffb31263f050079977a059a3",
+  "checkpoint_sha256": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+  "sample_rate": 48000,
+  "channels": 2,
+  "frames": 491520,
+  "audio_seconds": 10.24,
+  "source_and_reconstruction_use_common_attenuation": true,
+  "original_files_modified": false,
+  "encoder_calls": 0,
+  "sampling_steps": 0,
+  "decoder_calls": 1,
+  "native_exports": 0,
+  "listening_assessment": "NOT EVALUATED",
+  "torch_version": "2.8.0",
+  "raw_sample_peaks": {
+    "piano_source": 0.6691904067993164,
+    "piano_reconstruction": 0.7022705674171448
+  },
+  "common_linear_gain": 1.0,
+  "artifact_sha256": {
+    "01-piano-source.wav": "72da105f2bcefb4424d940bdce1c39139c90f4c68aaf30f0388e49396581d00a",
+    "02-piano-reconstruction.wav": "12f82fbb00b3f5eff350de97565de4eef34eecc7b217fda1a778ac35e15a6419"
+  }
+}

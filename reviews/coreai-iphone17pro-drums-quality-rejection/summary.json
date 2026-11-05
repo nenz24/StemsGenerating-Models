@@ -15,7 +15,8 @@
     "mix_headroom_comparison_result": "NOT REPORTED",
     "host_reference_listening_result": "User reports glitches in BOTH original FP32 and partition-host headroom WAVs on Mac",
     "lyric_only_comparison_result": "Mac candidate completed 50 steps with four exact-zero control replays; user reports glitches in BOTH empty-lyric control and [Instrumental] candidate",
-    "decision": "Tag-only candidate not adopted. Current host ZIP identities and six real VAE decodes verified; classify source reconstruction listening next. BF16 baseline and accepted groove preserved."
+    "decision": "Tag-only candidate not adopted. Current host ZIP identities and six real VAE decodes verified; classify source reconstruction listening next. BF16 baseline and accepted groove preserved.",
+    "source_roundtrip_result": "Both local Mac source/reconstruction WAVs clean, piano only; one decoder, common gain1"
   },
   "conditioning_checks_passed": 6,
   "completed_steps": 50,
@@ -52,5 +53,5 @@
   "baseline_replaced": false,
   "tolerances_changed": false,
   "cause": "Unestablished. Drum glitches persist with headroom and in BOTH host original FP32 and partition references. The lyric-only [Instrumental] candidate also remains glitchy despite exact control replay. Tag-only change has not resolved the complaint; current Mac waveform/source evidence is needed before another hypothesis.",
-  "next": "Source reconstruction listening check from already-computed codec evidence; candidate replay and tiled/full decoder comparisons pass original bounds. No new 50-step generation, gain/prompt/duration/native change requested. See coreai-drums-waveform-codec-audit."
+  "next": "One separate HOST APG norm-cap candidate; keep source/condition/noise/duration50-step/guidance/checkpoints/decoder and BF16 production baseline unchanged. Numeric bounds unchanged. See coreai-drums-source-clean-apg-plan."
 }

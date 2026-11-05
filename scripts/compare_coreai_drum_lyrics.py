@@ -95,7 +95,9 @@ def candidate_trajectory(predict, noise, times, apg, progress):
     return latent
 
 
-def execute(candidates, out, refs, report, progress, explicit):
+def execute(candidates, out, refs, report, progress, explicit, *, candidate_apg_factory=None,
+            require_unchanged_condition=False, control_label='control-empty-lyrics',
+            candidate_label='candidate-instrumental'):
     import numpy as np
     import torch
     from safetensors import safe_open
@@ -180,6 +182,11 @@ def execute(candidates, out, refs, report, progress, explicit):
             or list(candidate_mask.shape) != [1, candidate_tokens]
             or not candidate_mask.all() or not torch.isfinite(candidate).all()):
         raise ValueError('Invalid candidate conditioning shape/values/mask')
+    if require_unchanged_condition:
+        require_parity('candidate_unchanged_condition', candidate, control, report)
+        report['candidate_condition_identical_to_control'] = torch.equal(candidate, control)
+        if not report['candidate_condition_identical_to_control']:
+            raise ValueError('APG-only comparison requires byte-identical FP32 conditioning')
     candidate = candidate.clone().contiguous()
     candidate.numpy().astype('<f4').tofile(out / 'candidate-condition.f32le')
     del encoder, embedding, text, reference_audio, replay, replay_mask, candidate_mask
@@ -212,7 +219,10 @@ def execute(candidates, out, refs, report, progress, explicit):
         replay = guided_step(predictor(control), noise, times[:1], times[1:2], apg, apg.MomentumBuffer())
         require_parity('gold_step_1', replay,
                        tensor(preview_folder, 'step-1-latent-fp32-reference.f32le', [1, WINDOW.frames, 64]), report)
-        latent = candidate_trajectory(predictor(candidate), noise, times, apg,
+        candidate_apg = candidate_apg_factory(apg) if candidate_apg_factory else apg
+        if candidate_apg_factory:
+            report['candidate_apg_diagnostics'] = candidate_apg.diagnostics
+        latent = candidate_trajectory(predictor(candidate), noise, times, candidate_apg,
                                       lambda step: progress(f'candidate step {step}/50'))
     latent.numpy().astype('<f4').tofile(out / 'candidate-latent.f32le')
     del model, replay
@@ -241,7 +251,7 @@ def execute(candidates, out, refs, report, progress, explicit):
     new_audio = audio.reshape(-1).tolist()
     peaks = {'control': max(abs(v) for v in control_audio), 'candidate': max(abs(v) for v in new_audio)}
     gain = headroom_gain(max(peaks.values()))
-    for name, values in [('control-empty-lyrics', control_audio), ('candidate-instrumental', new_audio)]:
+    for name, values in [(control_label, control_audio), (candidate_label, new_audio)]:
         write_float_wav(out / f'{name}-raw.wav', values, WINDOW.samples)
         write_float_wav(out / f'{name}-headroom.wav', values, WINDOW.samples, gain)
     report['common_listening_gain'] = gain
