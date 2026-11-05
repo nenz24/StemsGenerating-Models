@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "experiment": "drums-host-instrumental-lyrics-only",
+  "status": "completed_quality_experiment",
+  "changed_input": "lyric text: empty -> [Instrumental]",
+  "control_prompts": {
+    "instruction": "Generate the drums track based on the audio context:",
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.",
+    "metadata": "- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n",
+    "text_prompt": "# Instruction\nGenerate the drums track based on the audio context:\n\n# Caption\nIsolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n<|endoftext|>\n",
+    "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n<|endoftext|>",
+    "lyrics": "",
+    "vocal_language": "unknown",
+    "preset_sha256": "bcfd73641fddbda1fb0975febfe28cccb3a3121ec48cec1d877933e64a6d70ca",
+    "audio_seconds": 10.24
+  },
+  "candidate_prompts": {
+    "instruction": "Generate the drums track based on the audio context:",
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.",
+    "metadata": "- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n",
+    "text_prompt": "# Instruction\nGenerate the drums track based on the audio context:\n\n# Caption\nIsolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n<|endoftext|>\n",
+    "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n[Instrumental]<|endoftext|>",
+    "lyrics": "[Instrumental]",
+    "vocal_language": "unknown",
+    "preset_sha256": "bcfd73641fddbda1fb0975febfe28cccb3a3121ec48cec1d877933e64a6d70ca",
+    "audio_seconds": 10.24
+  },
+  "source_pcm_sha256": "836c4509c9eb54c39cf294effd979c5a1991e18f686b0c0b1223c0776d356018",
+  "component_reference_sha256": {
+    "source": "93e9639c5e1d7bc31cc19f162435f77ea650f94fe377c3708922525d2dd258da",
+    "condition": "c5e11b989432a8367b2e57973b53491b5919f9f7bf5cd70a74bd4a6bb21cc546",
+    "preview": "3901435d7818855f3d06a83b04b1774a55ce6cf52d0dab135091f9362e13367e"
+  },
+  "control_host_export_status": "bounded_diagnostic",
+  "unchanged": [
+    "piano PCM/context",
+    "publisher silence timbre",
+    "caption/instruction/metadata",
+    "initial noise/schedule",
+    "10.24 seconds",
+    "50 APG Euler steps",
+    "guidance 7",
+    "checkpoint values"
+  ],
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "scope": "Original FP32 HOST quality experiment only; no BF16/native export or on-device parity claim",
+  "baseline_modified": false,
+  "native_exports": 0,
+  "musical_acceptance": "NOT EVALUATED",
+  "versions": {
+    "torch": "2.8.0",
+    "transformers": "4.57.3",
+    "diffusers": "0.37.0",
+    "tokenizers": "0.22.2"
+  },
+  "phase": "replay cached control decoder and decode candidate",
+  "token_geometry": {
+    "text": 111,
+    "control_lyric": 11,
+    "candidate_lyric": 15,
+    "candidate_condition": 127
+  },
+  "control_replay_checks": {
+    "condition_fp32": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "condition_mask": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "gold_step_1": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "gold_decoder": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    }
+  },
+  "common_listening_gain": 0.37002804741144624,
+  "raw_sample_peaks": {
+    "control": 1.3228400945663452,
+    "candidate": 1.9132219552993774
+  },
+  "candidate_steps_completed": 50,
+  "execution_counts": {
+    "conditioning_replays": 1,
+    "candidate_conditioning": 1,
+    "control_dit_first_step": 1,
+    "candidate_dit_steps": 50,
+    "control_decodes": 1,
+    "candidate_decodes": 1
+  },
+  "candidate_audio_sha256": "507a8bc9b19d44f24e04fdcb48828f53a4528aac37444bc614b1ffb5708f9b5a",
+  "artifact_sha256": {
+    "candidate-instrumental-headroom.wav": "f1d7d500117d7caab5066e12df88a14c07f9acd202e84b38fccf32de8b5adb76",
+    "candidate-audio.f32le": "507a8bc9b19d44f24e04fdcb48828f53a4528aac37444bc614b1ffb5708f9b5a",
+    "candidate-condition.f32le": "61775cb0bd41f35dcc363c623c5bacffde3dd3ed4789e37ceefda19c41d70049",
+    "control-empty-lyrics-raw.wav": "7862e8220c3a41f1fd4b306aea94404d6d7e6ec3932cce5fda7b2464d47fb4cf",
+    "candidate-latent.f32le": "780ca057d8a87222bc234dcd9b92253e5fc5ab0476f3a1f2f860ac5d2ecf52a6",
+    "candidate-instrumental-raw.wav": "2001a8cf2b95e1fbec063013040514b486fd43d3faf6a7214e6c74789251aa0a",
+    "control-empty-lyrics-headroom.wav": "72b699f95e793646c6d39671381e5445e378bddaca118eeb9e85726154edaaa6"
+  }
+}

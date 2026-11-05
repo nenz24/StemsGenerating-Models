@@ -33,6 +33,12 @@ candidate. Do not repeat headroom/host export or run another native generation
 as the next diagnostic. Existing raw report and numerical waveform audit remain
 unchanged; subsequent listening feedback is recorded separately in the summary.
 
+The [lyric-only Mac candidate](../coreai-drums-instrumental-lyrics-result/README.md)
+has now completed with four exact-zero control replay checks, but both audio
+variants are reported glitchy. Do not adopt the tag-only change. Current Mac
+source PCM differs from this device import; obtain that run's source metadata,
+waveforms and saved latents before another model hypothesis is tested.
+
 ## Report and waveform checks
 
 [Summary](summary.json) and [audio audit](audio-audit.json) retain exact hashes
@@ -76,10 +82,10 @@ available, but first listen to existing original FP32 and partition-host WAVs.
 
 ## Concrete next comparison
 
-[Current instructions](../../docs/coreai-drums-quality.md) now test only the
-Colab `[Instrumental]` tag in one separate host FP32 candidate, with original
-control replay gates. No production/native change is made. The earlier
-comparison tools below remain available for reproduction.
+[Current instructions](../../docs/coreai-drums-quality.md) collect existing
+current Mac waveforms/source metadata/latents, without inference. The lyric-only
+candidate did not resolve the complaint. No production/native change is made.
+The earlier comparison tools below remain available for reproduction.
 
 The previous instructions use existing output and host
 references. The opt-in app buttons create attenuated temporary playback copies

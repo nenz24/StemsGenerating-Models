@@ -14,7 +14,8 @@
     "headroom_comparison_result": "Drum glitches UNCHANGED per user listening check with the headroom button; attenuation did not resolve the complaint",
     "mix_headroom_comparison_result": "NOT REPORTED",
     "host_reference_listening_result": "User reports glitches in BOTH original FP32 and partition-host headroom WAVs on Mac",
-    "decision": "Preserve BF16 baseline and accepted groove; investigate common host conditioning. One separate FP32 lyric-only candidate using Colab's [Instrumental] tag; no native/app changes"
+    "lyric_only_comparison_result": "Mac candidate completed 50 steps with four exact-zero control replays; user reports glitches in BOTH empty-lyric control and [Instrumental] candidate",
+    "decision": "Tag-only candidate not adopted. Preserve BF16 baseline and accepted groove; collect completed Mac experiment's waveform/source metadata/latents before selecting another model experiment"
   },
   "conditioning_checks_passed": 6,
   "completed_steps": 50,
@@ -50,6 +51,6 @@
   "preflight_or_warmup_success_cause": "NOT ESTABLISHED",
   "baseline_replaced": false,
   "tolerances_changed": false,
-  "cause": "Unestablished. Drum glitches persist with headroom and in BOTH host original FP32 and partition references. Complaint is reproduced outside iPhone and without BF16 partitioning. Confirmed lyric input mismatch vs accepted Colab is a testable hypothesis, not a proven cause.",
-  "next": "One isolated host original-FP32 lyric-only candidate: empty -> [Instrumental], unchanged prepared context/noise/schedule/10.24s/50 steps/guidance/checkpoints, with strict control replay gates. Keep BF16 baseline and iPhone resources unchanged. See coreai-drums-colab-conditioning-audit."
+  "cause": "Unestablished. Drum glitches persist with headroom and in BOTH host original FP32 and partition references. The lyric-only [Instrumental] candidate also remains glitchy despite exact control replay. Tag-only change has not resolved the complaint; current Mac waveform/source evidence is needed before another hypothesis.",
+  "next": "Collect current Mac experiment report, control/candidate headroom WAVs, candidate raw audio/latent and exact source PCM/reference/latent. New Mac PCM hash differs from this earlier device input; verify provenance before waveform comparisons. No further inference, prompt/gain/duration change or native export at this stage. See coreai-drums-instrumental-lyrics-result."
 }

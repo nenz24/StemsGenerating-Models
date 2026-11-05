@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "report_sha256": "88ff410d61867e17d73ef15c3a613a4e580957208f151e98f7214a409bc3b4d6",
+  "experiment": "drums-host-instrumental-lyrics-only",
+  "status": "completed_quality_experiment",
+  "candidate_steps_completed": 50,
+  "control_replay_checks_passed": 4,
+  "control_replay_errors_all_zero": true,
+  "full_trajectory_parity_claimed": false,
+  "host_control_provenance": "bounded_diagnostic",
+  "user_listening_feedback": "Both control-empty-lyrics-headroom.wav and candidate-instrumental-headroom.wav contain glitches",
+  "tag_only_fix_outcome": "Unsuccessful for this controlled host input; candidate not adopted",
+  "candidate_groove_acceptance": "Not reported separately; do not infer from earlier iPhone groove acceptance",
+  "source_pcm_sha256": "836c4509c9eb54c39cf294effd979c5a1991e18f686b0c0b1223c0776d356018",
+  "previous_imported_device_pcm_sha256": "c79163af4854a446ad2af982c95950bac3a3c445b692f1e650f8b5bd1ad57278",
+  "repository_prepared_source_snapshot_pcm_sha256": "9517cc6938df8b56a7bafe57d2484f00a0661b17356395ac1a0b5e23810bb945",
+  "same_pcm_as_earlier_device": false,
+  "pcm_difference_interpretation": "Different PCM hashes block exact cross-run waveform comparison; resampling/preparation may differ. Does not prove a different recording or a preparation error. Current source reference identity/original-recording metadata still needed.",
+  "component_reference_sha256": {
+    "source": "93e9639c5e1d7bc31cc19f162435f77ea650f94fe377c3708922525d2dd258da",
+    "condition": "c5e11b989432a8367b2e57973b53491b5919f9f7bf5cd70a74bd4a6bb21cc546",
+    "preview": "3901435d7818855f3d06a83b04b1774a55ce6cf52d0dab135091f9362e13367e"
+  },
+  "common_listening_gain": 0.37002804741144624,
+  "raw_sample_peaks": {
+    "control": 1.3228400945663452,
+    "candidate": 1.9132219552993774
+  },
+  "versions": {
+    "torch": "2.8.0",
+    "transformers": "4.57.3",
+    "diffusers": "0.37.0",
+    "tokenizers": "0.22.2"
+  },
+  "native_exports": 0,
+  "baseline_modified": false,
+  "tolerances_changed": false,
+  "next": "Collect existing current Mac control/candidate waveform, source PCM/reference metadata and saved candidate/source latents before selecting another model experiment. No new generation or native re-export.",
+  "audio_artifact_hash_verification": "Not possible from report alone; waveform/latent bytes have not been uploaded",
+  "unique_glitch_cause": "NOT ESTABLISHED"
+}

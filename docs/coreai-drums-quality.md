@@ -16,7 +16,49 @@ Jadi clipping drum solo belum menjelaskan glitch mix. Sebanyak 87,54% energi
 drum berada di 20–150 Hz. Ini pengukuran spektrum, bukan bukti audibilitas,
 kesalahan instrumen atau penyebab glitch. Belum ada diagnosis penyebab pasti.
 
-## Hasil terbaru dan satu uji conditioning di Mac
+## Hasil terbaru: uji tag selesai, kedua waveform tetap glitch
+
+[Laporan uji Mac](../reviews/coreai-drums-instrumental-lyrics-result/README.md)
+selesai 50/50. Empat replay kontrol (conditioning, mask, langkah pertama dan
+decoder) PASS dengan seluruh error 0. Pengguna mendengar glitch pada kontrol
+lirik kosong **dan** kandidat `[Instrumental]`. Perubahan tag saja belum
+menyelesaikan masalah; kandidat tidak diadopsi. Full trajectory parity baru
+tidak dibuktikan dan provenance kontrol tetap `bounded_diagnostic`.
+
+PCM uji ini berhash `836c4509…6356018`, berbeda dari PCM import iPhone sebelumnya
+`c79163af…d57278` dan snapshot host yang dicatat di repo `9517cc69…10bb945`.
+Ini bisa berasal dari perbedaan decode/preparation; bukan bukti salah rekaman.
+Namun waveform dari run berbeda tidak boleh dipakai sebagai exact comparison.
+
+Langkah aktif adalah mengumpulkan audio dan metadata **dari uji Mac yang sudah
+selesai** sebelum memilih perubahan model berikutnya. `report.json` berisi
+angka/hash, bukan waveform. Tidak perlu Generate, build app, ekspor model,
+perubahan gain/prompt atau eksperimen durasi baru untuk langkah ini.
+
+Dari folder repo di Mac, kemas delapan file yang sudah tersedia:
+
+```bash
+test ! -e .runtime-cache/drums-audio-review-v1.zip &&
+zip -j .runtime-cache/drums-audio-review-v1.zip \
+  .runtime-cache/drums-instrumental-lyrics-v1/{report.json,control-empty-lyrics-headroom.wav,candidate-instrumental-headroom.wav,candidate-latent.f32le,candidate-audio.f32le} \
+  prototypes/ios27-coreai/ModelCandidates/source-context-1024/{reference.json,audio.f32le,source_latents-reference.f32le}
+```
+
+Unggah `.runtime-cache/drums-audio-review-v1.zip`. Command hanya membaca hasil
+lama dan membuat arsip baru; tidak memuat model atau menyertakan checkpoint.
+Nama output yang sudah ada ditolak agar arsip sebelumnya tetap tersimpan.
+Jika folder uji diberi nama berbeda, sesuaikan hanya path folder hasil.
+Source bundle harus tetap yang dipakai uji tersebut. Saat meninjau arsip,
+periksa hash reference/source PCM dan seluruh waveform/latent terhadap laporan
+sebelum menghubungkan hasilnya. Jika tidak cocok, berhenti untuk mencocokkan
+provenance, bukan menganggap perbedaan itu glitch model.
+
+Piano PCM diperlukan untuk menilai input yang benar; dua WAV memakai attenuasi
+bersama; latent tersimpan memungkinkan pemeriksaan codec kemudian tanpa
+mengulang 50 langkah DiT. Belum ada penyebab tunggal atau perbaikan musikal
+yang terbukti. Baseline BF16, groove yang diterima dan toleransi dipertahankan.
+
+## Riwayat: satu uji conditioning di Mac
 
 Pengguna mendengar glitch pada **kedua referensi host**: original FP32 dan
 partition-host. Keluhan ini direproduksi di luar iPhone dan pada jalur tanpa
@@ -29,13 +71,14 @@ menemukan satu perbedaan input yang nyata: Colab yang diterima memakai
 dipin meneruskan isi itu ke encoder. Caption dan instruction drum sama.
 Ini hipotesis yang dapat diuji, bukan penyebab glitch yang sudah terbukti.
 
-Eksperimen berikut hanya mengganti isi lirik pada **host original FP32**.
+Eksperimen yang sudah selesai ini hanya mengganti isi lirik pada **host original FP32**.
 Kontrol memakai waveform FP32 tersimpan; satu kandidat dihitung 50 langkah.
 Piano/context, noise, schedule, timbre silence, caption, guidance, checkpoint,
 durasi 10,24 detik dan toleransi tetap. Baseline BF16 dan app tidak diubah.
 Kandidat belum tentu mempertahankan groove; nilai groove serta glitch saat
 mendengarkan, dan jangan mengganti baseline sebelum hasilnya diterima.
 
+Command berikut disimpan untuk reproduksi, bukan permintaan mengulang uji.
 Tutup Xcode. Dari checkout Mac yang sama:
 
 ```bash
@@ -81,8 +124,8 @@ untuk memilih uji berikutnya berdasarkan bukti.
 glitch **tetap sama**. Attenuasi ini belum menyelesaikan masalah; tidak perlu
 mengulang uji headroom drum. Hasil headroom mix belum dilaporkan. Temuan ini
 tidak membuktikan semua jalur playback bebas masalah atau membuktikan BF16
-sebagai penyebab. Langkah aktif berikutnya adalah dua referensi host di bawah,
-dengan preset dan batas numerik tetap.
+sebagai penyebab. Saat itu langkah berikutnya adalah dua referensi host di bawah,
+yang kini juga sudah dilaporkan masih glitch.
 
 Instruksi berikut dipertahankan sebagai catatan cara menjalankan pembanding:
 

@@ -1,5 +1,11 @@
 # Glitches reproduced in both host references; isolate lyric conditioning
 
+**Subsequent result:** the [Mac lyric comparison](../coreai-drums-instrumental-lyrics-result/README.md)
+completed 50 steps with four exact-zero control replays. User hears glitches
+in both control and candidate. The tag-only change has not resolved the
+complaint and is not adopted. Collect current waveform/source evidence next;
+do not repeat the comparison or promote it to the BF16 iPhone baseline.
+
 The user hears glitches in **both** `drums-original-fp32-headroom.wav` and
 `drums-partition-host-headroom.wav`, following an unchanged-glitch drum headroom
 check on iPhone. Groove fits the piano; glitches mask the drum sound. Musical
@@ -69,9 +75,11 @@ because its artifacts improve.
 
 [Mac command and listening instructions](../../docs/coreai-drums-quality.md)
 require one new host CPU candidate; they do not rebuild the app. This workspace
-does not contain the Mac prepared tensors or pinned model weights, so **real
-candidate execution and quality remain NOT TESTED**. Tokenization and archived
-settings were audited here; no audio was fabricated or claimed repaired.
+does not contain the Mac prepared tensors or pinned model weights, so no real
+candidate inference was performed here. The subsequently uploaded Mac report
+records actual completion; listening feedback remains glitchy as linked above.
+Tokenization and archived settings were audited here; no audio was fabricated
+or claimed repaired.
 
 Seven new host tests cover literal-only prompt changes, gate/admission failure,
 read-only plan and selector preservation, retained failure reports, strict replay
