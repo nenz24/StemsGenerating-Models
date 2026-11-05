@@ -44,9 +44,34 @@ relative RMS error 0.213063, SNR 13.430 dB. This is lossy sampled-posterior
 reconstruction, not an expected exact reconstruction or an acceptance test.
 Both piano listening copies use the same gain 1.0 (peaks already below −3 dBFS).
 Lossless Float32 WAVs were retained locally; two 128 kbps MP3 copies were sent
-in chat only for convenient listening. **Piano reconstruction listening feedback
-is pending**; statistics alone do not certify that it is free of glitches.
+in chat only for convenient listening. **Access clarification:** the user could
+not download/open those cloud files and had not listened to either clip. The
+earlier affirmative reply is not evidence of an audible codec defect. **Piano
+reconstruction listening is UNTESTED**; statistics alone do not certify that it
+is free of glitches.
 Do not run another 50-step generation while this source-side distinction is open.
+
+### Local Mac delivery
+
+[`listen_coreai_source_roundtrip.py`](../../scripts/listen_coreai_source_roundtrip.py)
+creates the two WAVs directly on the user's Mac using the existing prepared
+source bundle and local pinned VAE. It verifies source integrity, performs one
+CPU FP32 decoder call on the saved source latent, writes original/reconstruction
+copies with common attenuation to a new folder, and checks input/reference
+hashes again. No encoder/DiT, download fallback, native export, app/resource
+activation, original-file replacement or interpretation of listening feedback.
+Missing weights/gate failures retain the report and stop. Output inside the
+source/ModelCandidates or an existing destination is rejected before work.
+
+[Mac command](../../docs/coreai-drums-quality.md) opens the local output in
+Finder; cloud file download is not needed. [Delivery validation](delivery-validation.json):
+four guard/failure-preservation tests pass; one **additional real decoder call**
+produces both WAV files byte-for-byte identical to the pair computed earlier.
+Only source admission was mocked in that execution smoke because native payload
+was not uploaded; provided source PCM/latent/reference hashes were independently
+verified. Decoder/checkpoint were real. The production CLI retains full source
+admission. The original six-call audit above is unchanged. Apple/Mac execution
+of the new CLI is pending; no listening verdict or musical fix is claimed.
 
 ## Effective Colab source audit
 

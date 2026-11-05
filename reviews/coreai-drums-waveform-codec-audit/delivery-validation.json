@@ -1,0 +1,14 @@
+{
+  "host_guard_tests": 4,
+  "host_guard_tests_passed": 4,
+  "python_syntax_and_cli_help": "PASS",
+  "real_decoder_delivery_smoke": "PASS: one real pinned-VAE CPU FP32 decode; both WAV bytes identical to previous cloud source/reconstruction outputs",
+  "source_admission_scope_in_real_smoke": "Full native payload was not uploaded; verify_source boundary mocked only after independently verifying provided source PCM/latent/reference hashes. Decoder and checkpoint were real. Production CLI keeps full source-bundle verification.",
+  "additional_decoder_calls": 1,
+  "encoder_calls": 0,
+  "sampling_steps": 0,
+  "native_exports": 0,
+  "audio_delivery": "Cloud links inaccessible to user; create local Mac WAVs instead",
+  "actual_listening_result": "UNKNOWN; neither earlier clip heard",
+  "baseline_and_tolerances_modified": false
+}

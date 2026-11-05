@@ -31,12 +31,33 @@ Perbedaan hash source model Colab/publisher ditelusuri: metode neural aktif dan
 APG sama, dimensi conditioning sama, DCW otomatis nonaktif pada Base. Belum ada
 penyebab tunggal atau perbaikan musikal yang terbukti.
 
-Langkah aktif adalah mendengarkan **rekonstruksi piano sumber** yang sudah
-dihitung dan dikirim bersama piano asli di chat. Apakah glitch yang sama muncul
-saat hanya melalui codec? Dua salinan memakai gain sama. Waveform Float32
-lossless dan laporan disimpan; MP3 di chat hanya pembanding dengar. Nilai
-korelasi/SNR rekonstruksi lossy bukan sertifikat bahwa piano bebas artefak.
-Tidak perlu mengulang 50 langkah atau menjalankan command di Mac untuk tahap ini.
+**Klarifikasi akses:** pengguna belum mendengarkan kedua cuplikan karena tautan
+file cloud tidak dapat diunduh. Jawaban afirmatif sebelumnya tidak boleh
+dianggap bukti glitch pada rekonstruksi. Hasil dengar codec masih **BELUM ADA**.
+
+Buat dua WAV langsung di Mac agar dapat dibuka dari Finder. Dari folder repo:
+
+```bash
+git fetch origin main &&
+python3 scripts/update_coreai_project.py &&
+.runtime-cache/coreai-decoder-venv/bin/python \
+  scripts/listen_coreai_source_roundtrip.py \
+  --out .runtime-cache/coreai-source-listening-v1 &&
+open .runtime-cache/coreai-source-listening-v1
+```
+
+Script memakai source bundle 10,24 detik yang sudah ada dan checkpoint VAE
+lokal yang diverifikasi. Ini **satu decode VAE FP32**, tanpa encoder atau
+50 langkah DiT, unduhan bobot, native export, build app atau perubahan selector.
+Output harus folder baru di luar ModelCandidates. Bila checkpoint/gate gagal,
+berhenti dan simpan error/report; jangan melonggarkan batas.
+
+Setelah **Ready**, putar `01-piano-source.wav`, lalu
+`02-piano-reconstruction.wav` pada volume/output yang sama. Laporkan apakah
+sumber bersih dan apakah glitch muncul setelah rekonstruksi. Keduanya memakai
+satu gain attenuasi bersama, tanpa EQ/limiter. File asal tidak ditimpa dan
+diperiksa hash sebelum/sesudah. Nilai korelasi/SNR rekonstruksi lossy bukan
+sertifikat kualitas musikal atau expected exact parity dengan piano asli.
 
 ## Riwayat hasil tag dan pengumpulan ZIP (sudah selesai)
 

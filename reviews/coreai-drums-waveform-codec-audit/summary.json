@@ -15,11 +15,11 @@
     0.9850687029824395
   ],
   "source_roundtrip_snr_db": 13.429857388328728,
-  "source_roundtrip_listening_feedback": "PENDING: paired source and reconstruction previews sent in chat",
+  "source_roundtrip_listening_feedback": "UNTESTED: user clarified that cloud file links were inaccessible and neither clip had been heard; earlier affirmative answer is withdrawn as evidence",
   "source_code_audit": "Accepted runtime source file hashes differ from publisher but relevant neural methods and APG match; Base auto-DCW false; no source-only fix established",
   "full_pipeline_parity_claimed": false,
   "musical_fix_claimed": false,
   "BF16_baseline_replaced": false,
   "tolerances_changed": false,
-  "next": "Classify source roundtrip by listening before selecting another common generation/input/context experiment. Do not repeat native or 50-step generation from these measurements alone."
+  "next": "Create the identical source/reconstruction pair locally on Mac with listen_coreai_source_roundtrip.py (one cached-latent decode, no encoder or DiT), then classify listening feedback. No observed source-codec glitch is established yet."
 }
