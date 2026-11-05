@@ -42,6 +42,31 @@ struct CoreAIImportedPiano: Sendable {
 enum CoreAIAudioImport {
     static let sampleRate = 48000.0
 
+    struct HeadroomPreview: Sendable {
+        let url: URL
+        let gain: Float
+        let sourcePeak: Float
+        let sourceSHA256: String
+    }
+
+    // Playback comparison only. Do not replace the raw generation or its mix.
+    static func headroomPreview(from url: URL, window: CoreAIPreviewWindow) throws -> HeadroomPreview {
+        guard url.isFileURL else { throw ImportError.invalidFile }
+        let before = try CoreAIDecoderProbe.streamingSHA256(url)
+        let file = try AVAudioFile(forReading: url, commonFormat: .pcmFormatFloat32, interleaved: false)
+        guard file.processingFormat.sampleRate == sampleRate, file.processingFormat.channelCount == 2,
+              file.length == Int64(window.samples) else { throw ImportError.invalidFormat }
+        let pcm = try decodeWindow(file: file, window: window)
+        guard pcm.allSatisfy({ $0.isFinite }) else { throw ImportError.invalidPCM }
+        let peak = pcm.reduce(Float(0)) { max($0,abs($1)) }
+        let target = Float(pow(10.0,-3.0/20.0))
+        let gain = peak > 0 ? min(Float(1),target/peak) : Float(1)
+        let destination = FileManager.default.temporaryDirectory.appendingPathComponent("playback-headroom-" + UUID().uuidString + ".wav")
+        try CoreAIDecoderProbe.writeStereoFloatWAV(pcm.map { $0*gain }, frames: window.samples, to: destination)
+        guard try CoreAIDecoderProbe.streamingSHA256(url) == before else { throw ImportError.invalidPCM }
+        return HeadroomPreview(url: destination, gain: gain, sourcePeak: peak, sourceSHA256: before)
+    }
+
     enum ImportError: LocalizedError {
         case invalidFile, unsupportedChannels, invalidFormat, invalidPCM, conversionFailed
         case tooShort(Double)

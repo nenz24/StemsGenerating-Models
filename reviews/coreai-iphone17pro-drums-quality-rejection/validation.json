@@ -1,0 +1,26 @@
+{
+  "host_test_count": 143,
+  "passed": 141,
+  "skipped_optional_export_dependencies": 2,
+  "new_listening_tests": 6,
+  "python_compile": "PASS",
+  "whitespace": "PASS",
+  "production_decoder_sampler_source_unchanged": true,
+  "source_import_unchanged_after_excluding_new_playback_helper": true,
+  "uploaded_WAV_headroom_helper_smoke": [
+    {
+      "source_sha256": "850620863ec6dfb6d25e41b2d604f8d9ad44374b555105cc354b351e73a1df66",
+      "linear_gain": 0.5215879746057582,
+      "output_peak": 0.7079457640647888,
+      "original_unchanged": true
+    },
+    {
+      "source_sha256": "eac99c88e23c9f4bb93ecc04556d4854aea0a5d5e91f5f9703fe76c399dcd443",
+      "linear_gain": 0.7223936434750741,
+      "output_peak": 0.7079457640647888,
+      "original_unchanged": true
+    }
+  ],
+  "apple_build_playback": "NOT RUN: Apple SDK unavailable on Linux",
+  "actual_Mac_prepared_host_export": "NOT RUN: native bundles retained on user Mac"
+}

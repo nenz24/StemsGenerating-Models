@@ -1,0 +1,93 @@
+{
+  "drums": {
+    "sha256": "850620863ec6dfb6d25e41b2d604f8d9ad44374b555105cc354b351e73a1df66",
+    "matches_report": true,
+    "rate": 48000,
+    "frames": 491520,
+    "channels": 2,
+    "duration_seconds": 10.24,
+    "dtype": "float32",
+    "all_finite": true,
+    "peak": 1.3572893142700195,
+    "peak_dbfs": 2.653448599455449,
+    "samples_over_unity": 5962,
+    "frames_over_unity": 3152,
+    "rms": 0.19588585431265207,
+    "largest_adjacent_delta": 0.6703812330961227,
+    "largest_adjacent_delta_time_seconds": 4.721875,
+    "largest_adjacent_delta_channel": 0,
+    "estimated_true_peak_8x": 1.3581926558171848,
+    "estimated_true_peak_dbfs_8x": 2.6592275553535383,
+    "whole_clip_spectral_energy_fraction": {
+      "0-20_hz": 0.006114833617847293,
+      "20-150_hz": 0.8753958053615428,
+      "150-1000_hz": 0.07924976629511085,
+      "1000-5000_hz": 0.014361615706466649,
+      "5000-24000_hz": 0.024877979019032406
+    }
+  },
+  "piano": {
+    "sha256": "cc19086fe37b2c0dd27a85a8111daf70e2841ebe215ef8e9b8b722d5ccffecdc",
+    "matches_report": true,
+    "rate": 48000,
+    "frames": 491520,
+    "channels": 2,
+    "duration_seconds": 10.24,
+    "dtype": "float32",
+    "all_finite": true,
+    "peak": 0.6698035001754761,
+    "peak_dbfs": -3.481051746167197,
+    "samples_over_unity": 0,
+    "frames_over_unity": 0,
+    "rms": 0.0832062550631432,
+    "largest_adjacent_delta": 0.12688955664634705,
+    "largest_adjacent_delta_time_seconds": 3.57325,
+    "largest_adjacent_delta_channel": 1,
+    "estimated_true_peak_8x": 0.6702988927833634,
+    "estimated_true_peak_dbfs_8x": -3.474629959685454,
+    "whole_clip_spectral_energy_fraction": {
+      "0-20_hz": 1.8527839473019179e-06,
+      "20-150_hz": 0.0018596221208747345,
+      "150-1000_hz": 0.422582715942306,
+      "1000-5000_hz": 0.5755135875027465,
+      "5000-24000_hz": 4.22216501254571e-05
+    }
+  },
+  "mix": {
+    "sha256": "eac99c88e23c9f4bb93ecc04556d4854aea0a5d5e91f5f9703fe76c399dcd443",
+    "matches_report": true,
+    "rate": 48000,
+    "frames": 491520,
+    "channels": 2,
+    "duration_seconds": 10.24,
+    "dtype": "float32",
+    "all_finite": true,
+    "peak": 0.9800000190734863,
+    "peak_dbfs": -0.17547831709888284,
+    "samples_over_unity": 0,
+    "frames_over_unity": 0,
+    "rms": 0.12083318313069262,
+    "largest_adjacent_delta": 0.35019826889038086,
+    "largest_adjacent_delta_time_seconds": 10.025666666666666,
+    "largest_adjacent_delta_channel": 0,
+    "estimated_true_peak_8x": 0.9822411216527465,
+    "estimated_true_peak_dbfs_8x": -0.15563776057299455,
+    "whole_clip_spectral_energy_fraction": {
+      "0-20_hz": 0.004486477195154386,
+      "20-150_hz": 0.643196881172181,
+      "150-1000_hz": 0.1708580881398507,
+      "1000-5000_hz": 0.16320821621283202,
+      "5000-24000_hz": 0.018250337279982053
+    }
+  },
+  "mix_reconstruction": {
+    "piano_gain": 0.78,
+    "drums_gain": 0.55,
+    "common_gain": 0.9601622223854065,
+    "max_error": 0.0,
+    "bit_exact_float_samples": true,
+    "piano_planar_pcm_sha256": "c79163af4854a446ad2af982c95950bac3a3c445b692f1e650f8b5bd1ad57278",
+    "matches_imported_pcm_report": true
+  },
+  "scope": "Numerical audit only, no listening judgment or glitch detector. 8x true peak is a filter-dependent estimate. Whole-clip spectral proportions do not identify instruments or prove perceptual loudness."
+}

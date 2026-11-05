@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "run_id": "3A1FD8B9-86EF-4DBA-8625-3980E130BB49",
+  "started_utc": "2026-11-04T16:32:34Z",
+  "started_wib": "2026-11-04T23:32:34+07:00",
+  "report_sha256": "d81f1a7e4323dedc2cef888f1b7f7347178e642a08f01e88881c9b0d0351e326",
+  "instrument": "drums",
+  "execution": "COMPLETED",
+  "musical_acceptance": "REJECTED by user: glitches throughout and drums insufficiently audible",
+  "conditioning_checks_passed": 6,
+  "completed_steps": 50,
+  "model_opens": 30,
+  "function_binds": 30,
+  "reuse_hits": 720,
+  "sampling_calls": 750,
+  "decoder_calls": 1,
+  "repair_attempts": 0,
+  "host_provenance": "bounded_diagnostic",
+  "imported_output_numerical_parity": "NOT EVALUATED (0/0)",
+  "total_pipeline_ms": 85824.275959,
+  "sampled_process_maximum_mib": 809.6120452880859,
+  "step_ms": {
+    "first": 12492.511834,
+    "repeated_median": 1006.753458
+  },
+  "thermal_values_after_steps": [
+    0
+  ],
+  "phase_totals_completed_calls": {
+    "model_open_ms": 53.629833000000005,
+    "bind_ms": 22.602501000000004,
+    "validation_ms": 4.513897999999993,
+    "backend_ms": 57454.62725799996,
+    "copy_ms": 13760.431156999995,
+    "other_ms": 1964.335925000002
+  },
+  "prepared_host_pcm_sha256": "9517cc6938df8b56a7bafe57d2484f00a0661b17356395ac1a0b5e23810bb945",
+  "imported_pcm_sha256": "c79163af4854a446ad2af982c95950bac3a3c445b692f1e650f8b5bd1ad57278",
+  "same_pcm_as_prepared_host": false,
+  "native_preflight_report_supplied": false,
+  "preflight_or_warmup_success_cause": "NOT ESTABLISHED",
+  "baseline_replaced": false,
+  "tolerances_changed": false,
+  "cause": "Unestablished. Raw >1 can distort playback, but mixed sample/estimated true peaks below unity mean it cannot explain all user-reported problems. Host/matched-device comparison still needed.",
+  "next": "Attenuate-only playback A/B and already-prepared host original FP32 vs partition references; no model rerun, re-export, preset or production gain change."
+}

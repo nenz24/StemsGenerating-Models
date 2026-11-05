@@ -1,5 +1,11 @@
 # Pemeriksaan aset native pada proses baru
 
+**Perkembangan:** [run drum berikutnya](../reviews/coreai-iphone17pro-drums-quality-rejection/README.md)
+selesai 50/50 dan menghasilkan WAV, tetapi kualitas ditolak. Untuk keluhan
+glitch/level saat ini ikuti [evaluasi kualitas](coreai-drums-quality.md), tanpa
+preflight/generasi ulang. Tidak ada laporan preflight yang disertakan untuk
+run selesai tersebut; hubungan sebab-akibat dengan warmup belum terbukti.
+
 [Run drum pertama](../reviews/coreai-iphone17pro-drums-initial-specialization/README.md)
 gagal saat bind `blocks-16-17`, lalu gagal specialization pada retry yang sudah
 dibatasi satu kali. Conditioning enam checks PASS; 0/50 langkah dan tanpa WAV.

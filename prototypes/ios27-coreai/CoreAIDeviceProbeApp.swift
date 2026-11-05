@@ -295,6 +295,8 @@ struct CoreAIDeviceProbeApp: App {
                                 .disabled(runningModel)
                             Button("Dengarkan \(window.instrumentLabel)") { playPreview(generatedBass) }
                                 .disabled(runningModel)
+                            Button("Bandingkan \(window.instrumentLabel) dengan headroom") { playWithHeadroom(generatedBass) }
+                                .disabled(runningModel)
                             ShareLink(item: generatedBass) { Label("Bagikan WAV \(window.instrumentLabel)", systemImage: "square.and.arrow.up") }
                                 .disabled(runningModel)
                             let pianoClip = generatedBass.deletingLastPathComponent().appendingPathComponent("piano.wav")
@@ -311,6 +313,10 @@ struct CoreAIDeviceProbeApp: App {
                         if let generatedMix {
                             Button("Dengarkan bersama piano") { playPreview(generatedMix) }
                                 .disabled(runningModel)
+                            Button("Bandingkan mix dengan headroom") { playWithHeadroom(generatedMix) }
+                                .disabled(runningModel)
+                            Text("Pembanding headroom hanya menurunkan level salinan playback bila perlu. WAV asli dan mix tersimpan tetap.")
+                                .font(.footnote)
                             ShareLink(item: generatedMix) { Label("Bagikan WAV piano + \(window.instrumentLabel)", systemImage: "square.and.arrow.up") }
                                 .disabled(runningModel)
                         }
@@ -441,6 +447,23 @@ struct CoreAIDeviceProbeApp: App {
               let data = try? Data(contentsOf: root.appendingPathComponent("ModelCandidates/app-resource-manifest.json")),
               let manifest = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return false }
         return manifest["selected_profile"] as? String == "all"
+    }
+
+    private func playWithHeadroom(_ url: URL) {
+        guard !runningModel else { return }
+        audioPlayer?.stop()
+        runningModel = true
+        let selectedWindow = window
+        Task {
+            do {
+                let preview = try await Task.detached(priority: .userInitiated) {
+                    try CoreAIAudioImport.headroomPreview(from: url, window: selectedWindow)
+                }.value
+                playPreview(preview.url)
+                report += "\nPlayback headroom ONLY: source peak \(preview.sourcePeak); linear gain \(preview.gain); source SHA-256 \(preview.sourceSHA256). Target sample peak at most -3 dBFS; no limiter/EQ/model change or original-file modification."
+            } catch { report += "\nPembanding headroom gagal: \(error)" }
+            runningModel = false
+        }
     }
 
     private func playPreview(_ url: URL) {

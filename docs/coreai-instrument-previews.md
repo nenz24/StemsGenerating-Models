@@ -39,13 +39,15 @@ Pilih **CoreAIProbe Reuse**, Release, target iPhone. Cmd+R. Pastikan app menyebu
 **Preset aktif: drum** dan 10,24 detik. Pilih piano yang sama, dengarkan input,
 lalu tekan **Generate drum dari rekaman**. Bagikan laporan dan WAV piano/drum/mix.
 Periksa groove, timing, instrumen bocor, fills dan headroom lewat uji dengar.
-Latency penuh dan kualitas preset baru belum diterima; lihat hasil run pertama
-berikut.
+Kualitas preset baru belum diterima; lihat hasil perangkat terbaru berikut.
 
-**Hasil drum pertama kini tersedia:** conditioning 6/6 PASS, tetapi bind
-`blocks-16-17` gagal dan retry specialization juga gagal; 0/50, tanpa WAV.
-Ikuti [pemeriksaan aset pada proses baru](coreai-native-preflight.md), bukan
-preparation ulang atau retry generasi berulang. Belum ada musical approval drum.
+**Hasil drum terbaru:** 50/50 selesai dalam 85,824 detik, conditioning 6/6 PASS,
+WAV tersedia, tetapi pengguna menolak kualitas: glitch di seluruh hasil dan
+drum kurang terdengar. Ikuti [perbandingan kualitas/playback](coreai-drums-quality.md)
+memakai WAV dan referensi host yang sudah ada. Tidak perlu preparation,
+preflight atau generasi ulang untuk pemeriksaan awal ini. Run pertama sebelumnya
+gagal bind `blocks-16-17` (0/50); [preflight](coreai-native-preflight.md) tetap
+tersedia untuk kegagalan native. Penyebab keberhasilan run terbaru belum diketahui.
 
 `--diagnostic-trajectory` adalah permintaan eksplisit eksperimen yang sama
 mekanismenya dengan bass panjang: empat identical-input full-denoiser dan 50
@@ -92,7 +94,9 @@ Build tidak menyalin seluruh bank instrumen. Semua bundle di Mac, original
 piano, bass/WAV lama dan cache tetap disimpan. Hasil baru memakai direktori UUID
 dan nama stem berbeda; app memulihkan hasil instrumen aktif saja. Mix piano
 tetap 0,78 dan stem 0,55, dengan gain bersama bila peak >0,98; WAV mentah tidak
-dinormalisasi. Tidak ada limiter/filter untuk glitch ringan yang sudah diabaikan.
+dinormalisasi. Pembanding playback headroom opsional hanya membuat salinan
+sementara; tidak mengubah WAV/gain mix tersimpan. Glitch bass ringan sebelumnya
+diabaikan atas permintaan pengguna; glitch drum terbaru belum diterima.
 
 Untuk mengaktifkan ulang bundle instrumen yang sudah lengkap tanpa export:
 
