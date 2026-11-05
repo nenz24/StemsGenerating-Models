@@ -1,0 +1,96 @@
+{
+  "scope": "Static pinned-source active-path audit, not full pipeline numerical parity across CUDA/Mac/iPhone",
+  "accepted_runtime_sources_sha256_verified": {
+    "apg_guidance.py": {
+      "approved_runtime": "33985a589f3af4f3daff071b71cae68da1bf971070da7c27223acbea9f5f2ae7",
+      "publisher": "0c0ce9755952c99307ecad2fac67863d43258e34541cd37ce2f2221f59e76b15"
+    },
+    "configuration_acestep_v15.py": {
+      "approved_runtime": "5f15aa79fe793bba3c00b6992dd193a269954950603d5031ecd7703b0fa69da1",
+      "publisher": "b89870c5c7a7ce060eb0bcdbb5ffc86b0b1a324ca325a26be552ea1b42496dc5"
+    },
+    "modeling_acestep_v15_base.py": {
+      "approved_runtime": "f3edaa0f86ce174c0c6703a8d80442673783ba96515a0fa84126a9b605b0919d",
+      "publisher": "d5f67ca269f8b854a86e203b843534ab62728193e45277115f667b00ab5aa2b6"
+    }
+  },
+  "weights_match_accepted_Colab_inventory": {
+    "vae/diffusion_pytorch_model.safetensors": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+    "Qwen3-Embedding-0.6B/model.safetensors": "0437e45c94563b09e13cb7a64478fc406947a93cb34a7e05870fc8dcd48e23fd",
+    "acestep-v15-base/model.safetensors": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b"
+  },
+  "active_core_methods": {
+    "AceStepAttention": {
+      "all_methods_AST_identical": true,
+      "methods": [
+        "__init__",
+        "forward"
+      ]
+    },
+    "AceStepDiTLayer": {
+      "all_methods_AST_identical": true,
+      "methods": [
+        "__init__",
+        "forward"
+      ]
+    },
+    "TimestepEmbedding": {
+      "all_methods_AST_identical": true,
+      "methods": [
+        "__init__",
+        "forward",
+        "timestep_embedding"
+      ]
+    },
+    "AceStepLyricEncoder": {
+      "all_methods_AST_identical": true,
+      "methods": [
+        "__init__",
+        "forward"
+      ]
+    },
+    "AceStepTimbreEncoder": {
+      "all_methods_AST_identical": true,
+      "methods": [
+        "__init__",
+        "forward",
+        "unpack_timbre_embeddings"
+      ]
+    },
+    "AceStepConditionEncoder": {
+      "all_methods_AST_identical": true,
+      "methods": [
+        "__init__",
+        "forward"
+      ]
+    },
+    "AceStepDiTModel": {
+      "forward_AST_identical": true,
+      "constructor_difference": "condition projection derives encoder_hidden_size or hidden_size; both evaluate to 2048 for pinned base config"
+    },
+    "MomentumBuffer": {
+      "AST_identical": true
+    },
+    "project": {
+      "AST_identical": true
+    },
+    "apg_forward": {
+      "AST_identical": true
+    }
+  },
+  "DCW": {
+    "archived_requested_value": null,
+    "pinned_base_model_default": false,
+    "resolver": "GenerateMusicMixin._resolve_dcw_enabled returns bool(self.is_turbo_model()); Base is not Turbo",
+    "missing_DCW_fix_supported": false
+  },
+  "remaining_unmatched_factors": [
+    "Duration 10.24 vs 30/90 seconds",
+    "Source preparation gain/resampling",
+    "CPU vs CUDA RNG/posterior noise",
+    "Attention backends and library/compute platform versions",
+    "Full-song timbre reference absent in preview"
+  ],
+  "unique_glitch_cause": "NOT ESTABLISHED",
+  "weight_comparison_scope": "Archived Colab reported hashes versus current pinned asset manifest. Only VAE weight bytes were loaded and independently verified here; Qwen/base weight files were not downloaded or executed."
+}

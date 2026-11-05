@@ -3,8 +3,9 @@
 **Subsequent result:** the [Mac lyric comparison](../coreai-drums-instrumental-lyrics-result/README.md)
 completed 50 steps with four exact-zero control replays. User hears glitches
 in both control and candidate. The tag-only change has not resolved the
-complaint and is not adopted. Collect current waveform/source evidence next;
-do not repeat the comparison or promote it to the BF16 iPhone baseline.
+complaint and is not adopted. [Current waveform/codec evidence](../coreai-drums-waveform-codec-audit/README.md)
+is now verified with six real decoder calls; source reconstruction listening is
+pending. Do not repeat the comparison or promote it to the BF16 iPhone baseline.
 
 The user hears glitches in **both** `drums-original-fp32-headroom.wav` and
 `drums-partition-host-headroom.wav`, following an unchanged-glitch drum headroom

@@ -1,0 +1,25 @@
+{
+  "status": "waveform evidence verified; six real CPU FP32 VAE decoder calls completed",
+  "sampling_steps": 0,
+  "encoder_calls": 0,
+  "decoder_calls": 6,
+  "native_exports": 0,
+  "bundle_integrity": "8/8 members verified",
+  "original_recording_identity": "MATCHES device and accepted Colab original MP3",
+  "candidate_replay_strict_parity": true,
+  "candidate_replay_normalized_rmse": 2.5244466637204247e-06,
+  "tiled_vs_full_strict_parity": true,
+  "tiled_vs_full_normalized_rmse": 5.873404388816871e-07,
+  "source_roundtrip_channel_correlations": [
+    0.955727928969361,
+    0.9850687029824395
+  ],
+  "source_roundtrip_snr_db": 13.429857388328728,
+  "source_roundtrip_listening_feedback": "PENDING: paired source and reconstruction previews sent in chat",
+  "source_code_audit": "Accepted runtime source file hashes differ from publisher but relevant neural methods and APG match; Base auto-DCW false; no source-only fix established",
+  "full_pipeline_parity_claimed": false,
+  "musical_fix_claimed": false,
+  "BF16_baseline_replaced": false,
+  "tolerances_changed": false,
+  "next": "Classify source roundtrip by listening before selecting another common generation/input/context experiment. Do not repeat native or 50-step generation from these measurements alone."
+}

@@ -16,7 +16,29 @@ Jadi clipping drum solo belum menjelaskan glitch mix. Sebanyak 87,54% energi
 drum berada di 20–150 Hz. Ini pengukuran spektrum, bukan bukti audibilitas,
 kesalahan instrumen atau penyebab glitch. Belum ada diagnosis penyebab pasti.
 
-## Hasil terbaru: uji tag selesai, kedua waveform tetap glitch
+## Hasil ZIP terbaru: codec diperiksa tanpa generasi ulang
+
+[Audit waveform dan codec](../reviews/coreai-drums-waveform-codec-audit/README.md)
+memverifikasi seluruh delapan file ZIP. Hash rekaman MP3 yang dicatat source
+reference cocok dengan laporan iPhone/Colab; PCM uji saat ini juga cocok persis
+dengan manifest. Perbedaan PCM antarrun tidak membuktikan salah rekaman.
+
+Di environment ini dilakukan enam decoding VAE FP32 dari latent yang sudah
+tersimpan, tanpa encoder atau DiT. Replay kandidat cocok dengan audio Mac pada
+batas asli (normalized RMSE `2,52e-6`); decode bertahap vs penuh juga lolos
+(`5,87e-7`). Mengganti ukuran decode belum didukung sebagai perbaikan glitch.
+Perbedaan hash source model Colab/publisher ditelusuri: metode neural aktif dan
+APG sama, dimensi conditioning sama, DCW otomatis nonaktif pada Base. Belum ada
+penyebab tunggal atau perbaikan musikal yang terbukti.
+
+Langkah aktif adalah mendengarkan **rekonstruksi piano sumber** yang sudah
+dihitung dan dikirim bersama piano asli di chat. Apakah glitch yang sama muncul
+saat hanya melalui codec? Dua salinan memakai gain sama. Waveform Float32
+lossless dan laporan disimpan; MP3 di chat hanya pembanding dengar. Nilai
+korelasi/SNR rekonstruksi lossy bukan sertifikat bahwa piano bebas artefak.
+Tidak perlu mengulang 50 langkah atau menjalankan command di Mac untuk tahap ini.
+
+## Riwayat hasil tag dan pengumpulan ZIP (sudah selesai)
 
 [Laporan uji Mac](../reviews/coreai-drums-instrumental-lyrics-result/README.md)
 selesai 50/50. Empat replay kontrol (conditioning, mask, langkah pertama dan
@@ -30,8 +52,9 @@ PCM uji ini berhash `836c4509…6356018`, berbeda dari PCM import iPhone sebelum
 Ini bisa berasal dari perbedaan decode/preparation; bukan bukti salah rekaman.
 Namun waveform dari run berbeda tidak boleh dipakai sebagai exact comparison.
 
-Langkah aktif adalah mengumpulkan audio dan metadata **dari uji Mac yang sudah
-selesai** sebelum memilih perubahan model berikutnya. `report.json` berisi
+Audio dan metadata **dari uji Mac yang sudah selesai** kini sudah diterima dan
+diverifikasi. Instruksi berikut disimpan untuk reproduksi, bukan permintaan
+mengulang pengumpulan. `report.json` berisi
 angka/hash, bukan waveform. Tidak perlu Generate, build app, ekspor model,
 perubahan gain/prompt atau eksperimen durasi baru untuk langkah ini.
 
@@ -55,7 +78,8 @@ provenance, bukan menganggap perbedaan itu glitch model.
 
 Piano PCM diperlukan untuk menilai input yang benar; dua WAV memakai attenuasi
 bersama; latent tersimpan memungkinkan pemeriksaan codec kemudian tanpa
-mengulang 50 langkah DiT. Belum ada penyebab tunggal atau perbaikan musikal
+mengulang 50 langkah DiT; pemeriksaan codec tersebut kini sudah dilakukan.
+Belum ada penyebab tunggal atau perbaikan musikal
 yang terbukti. Baseline BF16, groove yang diterima dan toleransi dipertahankan.
 
 ## Riwayat: satu uji conditioning di Mac

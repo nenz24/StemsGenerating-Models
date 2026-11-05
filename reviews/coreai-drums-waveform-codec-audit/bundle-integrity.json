@@ -1,0 +1,28 @@
+{
+  "archive_sha256": "4d466b4d2feace39bee99d9610aac6f0e2363ff71b3afe96714b625a43ab8af1",
+  "archive_bytes": 14576595,
+  "expected_members": 8,
+  "actual_sha256": {
+    "audio.f32le": "836c4509c9eb54c39cf294effd979c5a1991e18f686b0c0b1223c0776d356018",
+    "candidate-latent.f32le": "780ca057d8a87222bc234dcd9b92253e5fc5ab0476f3a1f2f860ac5d2ecf52a6",
+    "candidate-audio.f32le": "507a8bc9b19d44f24e04fdcb48828f53a4528aac37444bc614b1ffb5708f9b5a",
+    "report.json": "88ff410d61867e17d73ef15c3a613a4e580957208f151e98f7214a409bc3b4d6",
+    "reference.json": "93e9639c5e1d7bc31cc19f162435f77ea650f94fe377c3708922525d2dd258da",
+    "source_latents-reference.f32le": "c85c5dabd48c3d154a20cae5830b56e09e426796ffb31263f050079977a059a3",
+    "candidate-instrumental-headroom.wav": "f1d7d500117d7caab5066e12df88a14c07f9acd202e84b38fccf32de8b5adb76",
+    "control-empty-lyrics-headroom.wav": "72b699f95e793646c6d39671381e5445e378bddaca118eeb9e85726154edaaa6"
+  },
+  "all_reported_artifact_hashes_match": true,
+  "source_manifest_identity_matches_report": true,
+  "source_pcm_and_latent_match_manifest": true,
+  "source_recording": {
+    "name": "piano.mp3",
+    "sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+    "start_seconds": 0.0,
+    "canonicalization": "Host ffmpeg -> 48 kHz stereo Float32, planar tensor, no peak normalization; same PCM sent to device"
+  },
+  "same_original_recording_as_device_and_approved_Colab": true,
+  "candidate_headroom_samples_exact_from_raw": true,
+  "scope": "Verified byte identities and sample transform, not a listening verdict",
+  "original_recording_identity_scope": "Source reference reports the same original MP3 SHA as prior device/Colab reports. Full original MP3 bytes are not in this bundle and were not rehashed here; supplied PCM bytes are independently verified."
+}

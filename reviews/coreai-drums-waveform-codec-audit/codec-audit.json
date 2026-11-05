@@ -1,0 +1,60 @@
+{
+  "checkpoint_sha256": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+  "torch": "2.8.0+cpu",
+  "mode": "CPU FP32; decoder only; no encoder or DiT inference; no native code",
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "sampling_steps": 0,
+  "source_reconstruction": {
+    "seconds": 16.25408434701967,
+    "peak": 0.7022702097892761,
+    "rms": 0.08326750993728638,
+    "sha256": "52f963b48060761fe871c0c93141056c15df899ff303474113bdca4c8abc3708"
+  },
+  "candidate_replay": {
+    "seconds": 14.19877237197943,
+    "peak": 1.913222074508667,
+    "rms": 0.2040826380252838,
+    "sha256": "7cb4bb12148f1a29972f7b587fed26611ef5fada3debd98d8f2f8e5d84c42fd9"
+  },
+  "candidate_replay_vs_uploaded": {
+    "finite": true,
+    "max_absolute_error": 2.135336399078369e-05,
+    "rmse": 5.15196081815013e-07,
+    "normalized_rmse": 2.5244466637204247e-06,
+    "elementwise_fraction_over_bound": 0.0,
+    "parity_passed": true
+  },
+  "source_roundtrip": {
+    "channel_correlations": [
+      0.955727928969361,
+      0.9850687029824395
+    ],
+    "relative_rms_error": 0.21306255495179408,
+    "snr_db": 13.429857388328728,
+    "scope": "Lossy sampled-posterior reconstruction; these are measurements, not a listening verdict"
+  },
+  "candidate_tiled": {
+    "seconds": 24.38617750199046,
+    "call_window_frames": [
+      96,
+      128,
+      128,
+      96
+    ],
+    "chunk_frames": 128,
+    "overlap": 32,
+    "scope": "Existing repository CPU overlap-discard diagnostic, not claimed to reproduce the exact accepted CUDA auto-tile policy",
+    "versus_full_replay": {
+      "finite": true,
+      "max_absolute_error": 4.202127456665039e-06,
+      "rmse": 1.1986598938834127e-07,
+      "normalized_rmse": 5.873404388816871e-07,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    }
+  },
+  "source_common_listening_gain": 1.0,
+  "candidate_common_listening_gain": 0.3700279551884409
+}

@@ -32,6 +32,13 @@ reported separately. No unique glitch cause is established.
 
 ## Current input evidence is still needed
 
+**Update:** [the eight-file ZIP has arrived](../coreai-drums-waveform-codec-audit/README.md).
+All member/source identities are verified. Source reference reports the same
+original MP3 SHA as prior device/Colab reports. Six actual VAE decoder calls
+reproduce candidate audio and find negligible full-vs-windowed differences;
+piano reconstruction listening is pending. The gaps described below are the
+state before that upload, not a request to collect the ZIP again.
+
 Current source PCM `836c4509…6356018` differs from the earlier iPhone import
 `c79163af…d57278` and the repo host snapshot `9517cc69…10bb945`. This can reflect
 decode/preparation differences; it does not prove another recording or a bad

@@ -82,9 +82,11 @@ available, but first listen to existing original FP32 and partition-host WAVs.
 
 ## Concrete next comparison
 
-[Current instructions](../../docs/coreai-drums-quality.md) collect existing
-current Mac waveforms/source metadata/latents, without inference. The lyric-only
-candidate did not resolve the complaint. No production/native change is made.
+[Current instructions](../../docs/coreai-drums-quality.md) classify a source
+piano reconstruction already computed here. The host ZIP has arrived and
+[codec replay/tiling was checked](../coreai-drums-waveform-codec-audit/README.md)
+with six real decoder calls, no DiT steps. The lyric-only candidate did not
+resolve the complaint. No production/native change is made.
 The earlier comparison tools below remain available for reproduction.
 
 The previous instructions use existing output and host

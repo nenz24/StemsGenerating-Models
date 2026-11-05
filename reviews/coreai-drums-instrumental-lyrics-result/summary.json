@@ -35,7 +35,9 @@
   "native_exports": 0,
   "baseline_modified": false,
   "tolerances_changed": false,
-  "next": "Collect existing current Mac control/candidate waveform, source PCM/reference metadata and saved candidate/source latents before selecting another model experiment. No new generation or native re-export.",
-  "audio_artifact_hash_verification": "Not possible from report alone; waveform/latent bytes have not been uploaded",
-  "unique_glitch_cause": "NOT ESTABLISHED"
+  "next": "Listen to source piano reconstruction already computed and sent in chat before selecting another generation/input/context experiment. No new generation/export requested.",
+  "audio_artifact_hash_verification": "Completed: all eight uploaded ZIP members, source identity/PCM/latent and candidate/control hashes verified",
+  "unique_glitch_cause": "NOT ESTABLISHED",
+  "current_source_reference_recording_identity": "Reported original MP3 SHA matches prior device and accepted Colab reports; PCM bytes independently verified",
+  "codec_replay_result": "Six real CPU FP32 decoder calls; candidate replay and full-vs-windowed comparisons PASS original tolerances; no DiT steps"
 }

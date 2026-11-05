@@ -1,0 +1,111 @@
+{
+  "control": {
+    "peak": 1.3228401183578395,
+    "rms": 0.15609625928828633,
+    "dc_by_channel": [
+      0.0010927891705674506,
+      0.0012469319173398562
+    ],
+    "stereo_correlation": 0.9168450728099733,
+    "side_to_mid_energy_ratio": 0.04341419963598932,
+    "largest_adjacent_delta": 1.2498394264899353,
+    "largest_delta_seconds": 1.2122083333333333,
+    "spectral_energy_fraction_welch": {
+      "0-20": 0.0054207048170116625,
+      "20-80": 0.23133186369630238,
+      "80-150": 0.3706846269053696,
+      "150-500": 0.25999699750504296,
+      "500-2000": 0.036249263527284095,
+      "2000-8000": 0.06034990550128974,
+      "8000-24000": 0.03596663710789714
+    }
+  },
+  "candidate": {
+    "peak": 1.9132219552993774,
+    "rms": 0.20408277553217877,
+    "dc_by_channel": [
+      0.0017466735963062039,
+      0.0014096218086908766
+    ],
+    "stereo_correlation": 0.9103918922650845,
+    "side_to_mid_energy_ratio": 0.04694494779883484,
+    "largest_adjacent_delta": 1.524396545253694,
+    "largest_delta_seconds": 3.568,
+    "spectral_energy_fraction_welch": {
+      "0-20": 0.0015917287811170024,
+      "20-80": 0.2917490071547785,
+      "80-150": 0.41701494724551946,
+      "150-500": 0.14226437503371728,
+      "500-2000": 0.03773209661109423,
+      "2000-8000": 0.06577950391189352,
+      "8000-24000": 0.04386833849937592
+    }
+  },
+  "piano": {
+    "peak": 0.6691904067993164,
+    "rms": 0.08317627049147305,
+    "dc_by_channel": [
+      -1.3060125715755133e-05,
+      -1.2552795970185094e-05
+    ],
+    "stereo_correlation": 0.32196398098839824,
+    "side_to_mid_energy_ratio": 0.5573533954790741,
+    "largest_adjacent_delta": 0.12738950550556183,
+    "largest_delta_seconds": 3.58525,
+    "spectral_energy_fraction_welch": {
+      "0-20": 4.653770983662296e-06,
+      "20-80": 0.00036759419677246774,
+      "80-150": 0.0015016385461532385,
+      "150-500": 0.11490787396553492,
+      "500-2000": 0.8806347325367259,
+      "2000-8000": 0.0025830561916900976,
+      "8000-24000": 4.5079213949415193e-07
+    }
+  },
+  "approved_colab": {
+    "peak": 0.9628251920139881,
+    "rms": 0.08386705709734112,
+    "dc_by_channel": [
+      0.00063219459489686,
+      0.001100432290955119
+    ],
+    "stereo_correlation": 0.860280680740399,
+    "side_to_mid_energy_ratio": 0.07548191286434311,
+    "largest_adjacent_delta": 0.6917842477427576,
+    "largest_delta_seconds": 1.1905625,
+    "spectral_energy_fraction_welch": {
+      "0-20": 0.0010574017088880016,
+      "20-80": 0.18713610510432616,
+      "80-150": 0.39127253280811114,
+      "150-500": 0.3136183954834211,
+      "500-2000": 0.06967572831818403,
+      "2000-8000": 0.028637464895173017,
+      "8000-24000": 0.008602371676483297
+    }
+  },
+  "candidate-latent.f32le": {
+    "shape": [
+      256,
+      64
+    ],
+    "finite": true,
+    "min": -5.2885589599609375,
+    "max": 5.2640180587768555,
+    "mean": -0.005270120112182752,
+    "std": 1.1346209210113432,
+    "frame_step_rms": 1.4220800849720334
+  },
+  "source_latents-reference.f32le": {
+    "shape": [
+      256,
+      64
+    ],
+    "finite": true,
+    "min": -6.714268684387207,
+    "max": 3.83933424949646,
+    "mean": -0.06539989783880173,
+    "std": 0.9721394376469502,
+    "frame_step_rms": 0.9437547325606254
+  },
+  "_scope": "Descriptive waveform measurements, not glitch detection or musical-quality scores. Control is recovered from its attenuated Float32 WAV using the reported shared gain; candidate uses uploaded raw Float32. Welch PSD: 48kHz, nperseg8192, default Hann, summed stereo power. Approved Colab is the first10.24s of a separate accepted30s PCM16/32kHz run resampled to48kHz; different context/input preparation/RNG, not exact output parity."
+}
