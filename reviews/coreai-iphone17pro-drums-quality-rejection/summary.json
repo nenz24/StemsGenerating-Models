@@ -6,7 +6,14 @@
   "report_sha256": "d81f1a7e4323dedc2cef888f1b7f7347178e642a08f01e88881c9b0d0351e326",
   "instrument": "drums",
   "execution": "COMPLETED",
-  "musical_acceptance": "REJECTED by user: glitches throughout and drums insufficiently audible",
+  "musical_acceptance": "Groove accepted by user; overall audio quality NOT ACCEPTED because glitches mask the drum sound",
+  "user_feedback_clarification": {
+    "groove": "Fits the piano, per user listening feedback",
+    "remaining_problem": "Many glitches mask the drum sound",
+    "audibility_interpretation": "User attributes poor audibility to glitch masking; this does not establish insufficient stem gain",
+    "headroom_comparison_result": "NOT YET REPORTED",
+    "decision": "Preserve preset/groove and generation parameters; investigate artifacts before gain, prompt or arrangement changes"
+  },
   "conditioning_checks_passed": 6,
   "completed_steps": 50,
   "model_opens": 30,

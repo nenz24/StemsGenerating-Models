@@ -1,4 +1,4 @@
-# Drum generation completes; user rejects musical quality
+# Drum groove fits; glitches still block audio acceptance
 
 User-supplied [report](report.txt), run `3A1FD8B9-86EF-4DBA-8625-3980E130BB49`,
 started **4 November 2026, 23:32:34 WIB**. Release/-O, DEBUG OFF, iOS 27.0.1
@@ -7,9 +7,14 @@ started **4 November 2026, 23:32:34 WIB**. Release/-O, DEBUG OFF, iOS 27.0.1
 Execution completes **50/50** and writes three stereo Float32/48 kHz, 10.24 s
 WAVs. This supersedes the previous initial-bind failure as the latest observed
 execution result. No preflight report was supplied, so completion cannot be
-attributed to preflight, warmup or a proven cache repair. **Musical quality is
-REJECTED**: user reports glitches throughout and insufficiently audible drums.
-The earlier bass-only waiver does not cover this report.
+attributed to preflight, warmup or a proven cache repair. Initial feedback
+reported glitches throughout and insufficiently audible drums. The user then
+clarified: **the drum groove fits, but many glitches mask the drum sound**.
+Groove is accepted; overall audio quality remains **NOT ACCEPTED** because of
+artifacts. Preserve the current preset/groove and generation parameters during
+diagnosis. Masking by glitches is not evidence that the stem needs a gain boost.
+No timbre, fill or full-song acceptance is inferred from groove feedback alone.
+The earlier bass-only waiver does not cover these glitches.
 
 ## Report and waveform checks
 

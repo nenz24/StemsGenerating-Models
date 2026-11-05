@@ -42,8 +42,9 @@ Periksa groove, timing, instrumen bocor, fills dan headroom lewat uji dengar.
 Kualitas preset baru belum diterima; lihat hasil perangkat terbaru berikut.
 
 **Hasil drum terbaru:** 50/50 selesai dalam 85,824 detik, conditioning 6/6 PASS,
-WAV tersedia, tetapi pengguna menolak kualitas: glitch di seluruh hasil dan
-drum kurang terdengar. Ikuti [perbandingan kualitas/playback](coreai-drums-quality.md)
+WAV tersedia. Pengguna mengonfirmasi groove sudah sesuai, tetapi banyak glitch
+menutupi suara drum; kualitas audio belum diterima. Pertahankan preset/groove
+selama diagnosis. Ikuti [perbandingan kualitas/playback](coreai-drums-quality.md)
 memakai WAV dan referensi host yang sudah ada. Tidak perlu preparation,
 preflight atau generasi ulang untuk pemeriksaan awal ini. Run pertama sebelumnya
 gagal bind `blocks-16-17` (0/50); [preflight](coreai-native-preflight.md) tetap

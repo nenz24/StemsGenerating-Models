@@ -1,7 +1,11 @@
 # Evaluasi glitch dan drum yang kurang terdengar
 
-Run `3A1FD8B9` selesai 50/50, tetapi **kualitas drum ditolak**: pengguna
-mendengar glitch di seluruh hasil dan drum kurang terdengar. Keputusan lama
+Run `3A1FD8B9` selesai 50/50. Klarifikasi pengguna: **groove drum sudah sesuai**,
+tetapi banyak glitch menutupi suara drum. Penerimaan groove terpisah dari
+**kualitas audio yang belum diterima**. Keluhan kurang terdengar merujuk pada
+suara yang tertutup glitch, bukan bukti bahwa gain stem perlu dinaikkan.
+Pertahankan preset, groove dan parameter generasi selama diagnosis artefak.
+Keputusan lama
 untuk mengabaikan glitch bass ringan tidak berlaku untuk drum. Target lagu
 penuh bass/drum/gitar tetap; drum perlu diterima sebelum melanjutkan tahap itu.
 
@@ -83,4 +87,5 @@ ulang lebih dahulu sebelum mendengar referensi yang sudah tersedia.
 Baseline BF16, checkpoint, original piano, noise/schedule, 50 APG Euler,
 guidance 7, toleransi abs `1e-4`, rel `1e-3`, normalized RMSE `1e-3`, serta gain
 mix piano `0,78` / stem `0,55` dipertahankan. Belum ada pembuktian perbaikan
-glitch atau musical acceptance drum dari perubahan diagnostik ini.
+glitch atau penerimaan kualitas audio drum dari perubahan diagnostik ini;
+groove sudah dinilai sesuai oleh pengguna.
