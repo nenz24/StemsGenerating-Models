@@ -24,6 +24,15 @@ Do not repeat drum headroom or increase gain as a presumed fix. Next compare
 already-prepared original FP32 and partition-host references on the Mac,
 without model inference/re-export, preserving the accepted groove and gates.
 
+That host comparison is now reported: **both original FP32 and partition-host
+headroom WAVs still contain glitches**. This reproduces the complaint outside
+the iPhone and without BF16 partitioning; it does not isolate a unique cause.
+[The Colab conditioning audit](../coreai-drums-colab-conditioning-audit/README.md)
+finds a literal lyric-input mismatch and prepares one host-only controlled
+candidate. Do not repeat headroom/host export or run another native generation
+as the next diagnostic. Existing raw report and numerical waveform audit remain
+unchanged; subsequent listening feedback is recorded separately in the summary.
+
 ## Report and waveform checks
 
 [Summary](summary.json) and [audio audit](audio-audit.json) retain exact hashes
@@ -67,7 +76,12 @@ available, but first listen to existing original FP32 and partition-host WAVs.
 
 ## Concrete next comparison
 
-[Instructions](../../docs/coreai-drums-quality.md) use existing output and host
+[Current instructions](../../docs/coreai-drums-quality.md) now test only the
+Colab `[Instrumental]` tag in one separate host FP32 candidate, with original
+control replay gates. No production/native change is made. The earlier
+comparison tools below remain available for reproduction.
+
+The previous instructions use existing output and host
 references. The opt-in app buttons create attenuated temporary playback copies
 with a −3 dBFS sample-peak target; originals are hashed before/after. The host
 export command uses full existing integrity gates, writes raw and common-gain

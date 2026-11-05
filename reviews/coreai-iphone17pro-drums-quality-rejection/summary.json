@@ -13,7 +13,8 @@
     "audibility_interpretation": "User attributes poor audibility to glitch masking; this does not establish insufficient stem gain",
     "headroom_comparison_result": "Drum glitches UNCHANGED per user listening check with the headroom button; attenuation did not resolve the complaint",
     "mix_headroom_comparison_result": "NOT REPORTED",
-    "decision": "Preserve preset/groove and generation parameters; next listen to existing original FP32 and partition-host references on Mac, without inference/re-export"
+    "host_reference_listening_result": "User reports glitches in BOTH original FP32 and partition-host headroom WAVs on Mac",
+    "decision": "Preserve BF16 baseline and accepted groove; investigate common host conditioning. One separate FP32 lyric-only candidate using Colab's [Instrumental] tag; no native/app changes"
   },
   "conditioning_checks_passed": 6,
   "completed_steps": 50,
@@ -49,6 +50,6 @@
   "preflight_or_warmup_success_cause": "NOT ESTABLISHED",
   "baseline_replaced": false,
   "tolerances_changed": false,
-  "cause": "Unestablished. User reports drum glitches unchanged with headroom attenuation. This does not rule out all playback issues or prove a BF16/native cause. Host/matched-device comparison still needed.",
-  "next": "Listen to already-prepared host original FP32 vs partition references with common attenuation. No further drum-headroom retry, model rerun, re-export, preset or production gain change at this stage."
+  "cause": "Unestablished. Drum glitches persist with headroom and in BOTH host original FP32 and partition references. Complaint is reproduced outside iPhone and without BF16 partitioning. Confirmed lyric input mismatch vs accepted Colab is a testable hypothesis, not a proven cause.",
+  "next": "One isolated host original-FP32 lyric-only candidate: empty -> [Instrumental], unchanged prepared context/noise/schedule/10.24s/50 steps/guidance/checkpoints, with strict control replay gates. Keep BF16 baseline and iPhone resources unchanged. See coreai-drums-colab-conditioning-audit."
 }

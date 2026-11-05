@@ -16,7 +16,66 @@ Jadi clipping drum solo belum menjelaskan glitch mix. Sebanyak 87,54% energi
 drum berada di 20–150 Hz. Ini pengukuran spektrum, bukan bukti audibilitas,
 kesalahan instrumen atau penyebab glitch. Belum ada diagnosis penyebab pasti.
 
-## Bandingkan playback hasil yang sudah ada
+## Hasil terbaru dan satu uji conditioning di Mac
+
+Pengguna mendengar glitch pada **kedua referensi host**: original FP32 dan
+partition-host. Keluhan ini direproduksi di luar iPhone dan pada jalur tanpa
+partisi BF16; belum ada dasar untuk menyalahkan BF16 atau runtime native saja.
+Tidak perlu mengulang Generate iPhone atau menaikkan gain sebagai tindak lanjut.
+
+[Audit Colab](../reviews/coreai-drums-colab-conditioning-audit/README.md)
+menemukan satu perbedaan input yang nyata: Colab yang diterima memakai
+`lyrics="[Instrumental]"`, preview memakai lirik kosong. Handler LEGO yang
+dipin meneruskan isi itu ke encoder. Caption dan instruction drum sama.
+Ini hipotesis yang dapat diuji, bukan penyebab glitch yang sudah terbukti.
+
+Eksperimen berikut hanya mengganti isi lirik pada **host original FP32**.
+Kontrol memakai waveform FP32 tersimpan; satu kandidat dihitung 50 langkah.
+Piano/context, noise, schedule, timbre silence, caption, guidance, checkpoint,
+durasi 10,24 detik dan toleransi tetap. Baseline BF16 dan app tidak diubah.
+Kandidat belum tentu mempertahankan groove; nilai groove serta glitch saat
+mendengarkan, dan jangan mengganti baseline sebelum hasilnya diterima.
+
+Tutup Xcode. Dari checkout Mac yang sama:
+
+```bash
+git fetch origin main &&
+python3 scripts/update_coreai_project.py &&
+.runtime-cache/coreai-decoder-venv/bin/python \
+  scripts/compare_coreai_drum_lyrics.py \
+  --diagnostic-trajectory --execute \
+  --out .runtime-cache/drums-instrumental-lyrics-v1 &&
+open .runtime-cache/drums-instrumental-lyrics-v1
+```
+
+Ini satu inferensi kandidat di CPU Mac dan memerlukan waktu/RAM; bukan sekadar
+mengekspor WAV lama. Checkpoint yang sudah tersedia diverifikasi, tanpa unduhan
+bobot baru. Source/config publisher kecil yang dipin dipakai dari cache atau
+diverifikasi saat diambil. Tidak ada native re-export, build app, aktivasi
+selector, penghapusan cache atau pencarian seed/durasi otomatis. Output harus
+baru dan berada di luar ModelCandidates. Tanpa `--execute` hanya plan dibuat;
+gunakan folder baru untuk eksekusi sesudah membuat plan.
+
+Sebelum hasil dibandingkan, script harus mereproduksi conditioning kontrol,
+langkah FP32 pertama, dan decoder dari latent kontrol pada batas asli. Bila
+gate atau checkpoint gagal, script berhenti dan mempertahankan `report.json`;
+jangan melonggarkan batas. Empat check kontrol ini bukan full trajectory parity
+baru; provenance diagnostik kontrol dan kegagalan lama tetap dicatat.
+
+Dengarkan pada volume/output yang sama:
+
+1. `control-empty-lyrics-headroom.wav`
+2. `candidate-instrumental-headroom.wav`
+
+Keduanya memakai satu gain attenuasi bersama, tanpa EQ/limiter. Bagikan
+`report.json` dan hasil dengar: glitch berkurang atau tetap, serta groove tetap
+cocok atau berubah. Kandidat dan latent/conditioning disimpan terpisah. Script
+tidak memberi label musical PASS dan tidak mengekspor kandidat menjadi model
+iPhone. Kalau kandidat tetap buruk, jangan mengulangnya atau langsung mengubah
+durasi: perbedaan input gain, konteks dan referensi kit dicatat dalam audit
+untuk memilih uji berikutnya berdasarkan bukti.
+
+## Riwayat pembanding playback
 
 **Hasil uji pengguna:** setelah menekan **Bandingkan drum dengan headroom**,
 glitch **tetap sama**. Attenuasi ini belum menyelesaikan masalah; tidak perlu
@@ -49,9 +108,10 @@ tersimpan. Bila distorsi berkurang, playback berperan; bila tetap, kualitas
 waveform/model masih perlu ditelusuri. Dua hal tersebut juga dapat bersamaan.
 Jangan menaikkan volume untuk menyamakan loudness selama pemeriksaan headroom.
 
-## Dengarkan dua referensi host tanpa menjalankan model
+## Riwayat ekspor dua referensi host tanpa menjalankan model
 
-Ini langkah berikutnya setelah headroom drum dilaporkan tidak membantu.
+Langkah ini sudah dilakukan: kedua referensi dilaporkan masih glitch.
+Instruksi ekspor berikut disimpan untuk reproduksi, bukan permintaan mengulang.
 Tidak perlu build iPhone baru atau Generate lagi untuk mengekspor/mendengarkan
 referensi yang sudah tersedia. Dari checkout Mac yang sama, gunakan command
 di bawah; pilih nama `--out` baru bila output sebelumnya sudah ada.

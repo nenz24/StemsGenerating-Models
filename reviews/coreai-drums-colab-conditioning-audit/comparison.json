@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "new_user_feedback": "Glitches are audible in both original FP32 and partition-host headroom listening WAVs on Mac",
+  "inference": "Artifact complaint is reproduced outside the iPhone and without the BF16 partition path; neither a unique cause nor native parity is established",
+  "control_instrument": "drums",
+  "same_original_recording_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "caption_and_instruction_match_approved_30s": true,
+  "confirmed_lyric_difference": {
+    "approved_colab": "[Instrumental]",
+    "current_preview": "",
+    "instrumental_flag_in_approved_params": true,
+    "pinned_LEGO_inference_forwards_params_lyrics": true,
+    "pinned_formatter_preserves_literal_lyric_content": true
+  },
+  "other_differences_not_changed_by_experiment": {
+    "duration_seconds": {
+      "preview": 10.24,
+      "approved_excerpt": 30,
+      "approved_full_song_context_cap": 90
+    },
+    "source_preparation": {
+      "preview": "48kHz Float32 without amplitude normalization",
+      "colab": "32kHz prepared WAV at fixed source gain 0.7, resampled by handler"
+    },
+    "RNG": "Preview saved CPU initial noise seed 0 and source epsilon seed 31; no CUDA RNG byte parity claim",
+    "reference_audio": {
+      "preview": "publisher silence latent",
+      "approved_30s": null,
+      "approved_full_song_reference_sha256": "275afb8a23a7fbcc1c06a8e72baa47a77149a2d6cb0f3a82214ebfe2e07b9c53"
+    }
+  },
+  "ruled_out_caption_branch": "Pinned base config has no is_lego_sft flag; do not add SFT-only Global/Local/Mask Control wrapper",
+  "selected_experiment": "One lyric-only HOST original-FP32 candidate at 10.24s; reuse saved control waveform and exact prepared context/noise/schedule. Replay original conditioning, first gold Euler step and decoder under original strict bounds before accepting comparison execution. No native export/activation.",
+  "musical_acceptance": "Current groove accepted; audio artifacts unresolved. Candidate quality/groove NOT TESTED",
+  "actual_model_execution_here": false,
+  "reason": "Mac prepared tensor/native bundles and pinned model weights are not available in this workspace",
+  "baseline_bf16_replaced": false,
+  "tolerances_changed": false,
+  "sources": {
+    "approved_archive_sha256": "496c4802bebb1585cee0af429cf8b453f266337ec7b53204ea221b6b203052c8",
+    "approved_result_member": "generation/000_A_drums_seed0/result.json",
+    "handler_revision": "ca1e85fe9430179831e6bc6be790c332190a3866",
+    "publisher_revision": "e432212fec32b8965a14ffa57ae653438d6abd14"
+  }
+}

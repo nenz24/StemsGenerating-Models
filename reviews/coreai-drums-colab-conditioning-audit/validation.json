@@ -1,0 +1,19 @@
+{
+  "coreai_host_tests": {
+    "total": 150,
+    "passed": 148,
+    "skipped": 2,
+    "skip_reason": "Optional native/export dependencies unavailable"
+  },
+  "new_lyric_tests": 7,
+  "final_focused_rerun": "7 PASS after adding shape guards",
+  "python_syntax": "PASS",
+  "whitespace": "PASS",
+  "relative_document_links": "PASS",
+  "actual_pinned_tokenization": "111/11/123 -> 111/15/127",
+  "approved_Colab_archive_hash_and_params": "VERIFIED",
+  "production_Apple_source_configs_and_exporters_unchanged": true,
+  "real_neural_candidate_execution": "NOT RUN: Mac prepared tensors and model weights absent here",
+  "Apple_build": "Not required by this host-only change; no Apple SDK available here",
+  "musical_fix_claimed": false
+}

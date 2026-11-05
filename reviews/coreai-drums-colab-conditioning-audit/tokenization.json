@@ -1,0 +1,50 @@
+{
+  "tokenizer_sha256_verified": "def76fb086971c7867b829c23a26261e38d9d74e02139253b38aeb9df8b4b50a",
+  "scope": "Actual pinned tokenizer, no padding to force original shapes; not neural/native execution",
+  "variants": {
+    "control": {
+      "lyrics": "",
+      "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n<|endoftext|>",
+      "text_tokens": 111,
+      "lyric_tokens": 11,
+      "condition_tokens": 123,
+      "lyric_ids": [
+        2,
+        54964,
+        198,
+        16088,
+        271,
+        2,
+        15953,
+        2216,
+        198,
+        151643,
+        151643
+      ]
+    },
+    "candidate": {
+      "lyrics": "[Instrumental]",
+      "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n[Instrumental]<|endoftext|>",
+      "text_tokens": 111,
+      "lyric_tokens": 15,
+      "condition_tokens": 127,
+      "lyric_ids": [
+        2,
+        54964,
+        198,
+        16088,
+        271,
+        2,
+        15953,
+        2216,
+        198,
+        58,
+        56324,
+        278,
+        60,
+        151643,
+        151643
+      ]
+    }
+  }
+}
