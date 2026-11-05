@@ -5,8 +5,7 @@ tetapi banyak glitch menutupi suara drum. Penerimaan groove terpisah dari
 **kualitas audio yang belum diterima**. Keluhan kurang terdengar merujuk pada
 suara yang tertutup glitch, bukan bukti bahwa gain stem perlu dinaikkan.
 Pertahankan preset, groove dan parameter generasi selama diagnosis artefak.
-Keputusan lama
-untuk mengabaikan glitch bass ringan tidak berlaku untuk drum. Target lagu
+Keputusan lama untuk mengabaikan glitch bass ringan tidak berlaku untuk drum. Target lagu
 penuh bass/drum/gitar tetap; drum perlu diterima sebelum melanjutkan tahap itu.
 
 [Audit laporan dan WAV](../reviews/coreai-iphone17pro-drums-quality-rejection/README.md)
@@ -18,6 +17,15 @@ drum berada di 20–150 Hz. Ini pengukuran spektrum, bukan bukti audibilitas,
 kesalahan instrumen atau penyebab glitch. Belum ada diagnosis penyebab pasti.
 
 ## Bandingkan playback hasil yang sudah ada
+
+**Hasil uji pengguna:** setelah menekan **Bandingkan drum dengan headroom**,
+glitch **tetap sama**. Attenuasi ini belum menyelesaikan masalah; tidak perlu
+mengulang uji headroom drum. Hasil headroom mix belum dilaporkan. Temuan ini
+tidak membuktikan semua jalur playback bebas masalah atau membuktikan BF16
+sebagai penyebab. Langkah aktif berikutnya adalah dua referensi host di bawah,
+dengan preset dan batas numerik tetap.
+
+Instruksi berikut dipertahankan sebagai catatan cara menjalankan pembanding:
 
 Tidak perlu preparation, export model, preflight atau generasi ulang. Tutup
 Xcode; dari checkout Mac yang sama:
@@ -42,6 +50,11 @@ waveform/model masih perlu ditelusuri. Dua hal tersebut juga dapat bersamaan.
 Jangan menaikkan volume untuk menyamakan loudness selama pemeriksaan headroom.
 
 ## Dengarkan dua referensi host tanpa menjalankan model
+
+Ini langkah berikutnya setelah headroom drum dilaporkan tidak membantu.
+Tidak perlu build iPhone baru atau Generate lagi untuk mengekspor/mendengarkan
+referensi yang sudah tersedia. Dari checkout Mac yang sama, gunakan command
+di bawah; pilih nama `--out` baru bila output sebelumnya sudah ada.
 
 Bundle drum di Mac sudah menyimpan dua waveform dari persiapan sebelumnya:
 original FP32 dan partition-host BF16-storage/FP32-compute. Ekspor keduanya ke

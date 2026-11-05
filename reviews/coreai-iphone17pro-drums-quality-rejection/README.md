@@ -16,6 +16,14 @@ diagnosis. Masking by glitches is not evidence that the stem needs a gain boost.
 No timbre, fill or full-song acceptance is inferred from groove feedback alone.
 The earlier bass-only waiver does not cover these glitches.
 
+Subsequent user listening check: **drum glitches stay the same with the
+headroom playback button**. The attenuation comparison has not resolved the
+problem. Mix-headroom listening has not been reported. This does not prove all
+playback paths are fault-free or identify BF16/native generation as the cause.
+Do not repeat drum headroom or increase gain as a presumed fix. Next compare
+already-prepared original FP32 and partition-host references on the Mac,
+without model inference/re-export, preserving the accepted groove and gates.
+
 ## Report and waveform checks
 
 [Summary](summary.json) and [audio audit](audio-audit.json) retain exact hashes
@@ -60,7 +68,7 @@ available, but first listen to existing original FP32 and partition-host WAVs.
 ## Concrete next comparison
 
 [Instructions](../../docs/coreai-drums-quality.md) use existing output and host
-references. New opt-in app buttons create attenuated temporary playback copies
+references. The opt-in app buttons create attenuated temporary playback copies
 with a −3 dBFS sample-peak target; originals are hashed before/after. The host
 export command uses full existing integrity gates, writes raw and common-gain
 headroom copies to a new folder, and performs zero model calls/native exports.

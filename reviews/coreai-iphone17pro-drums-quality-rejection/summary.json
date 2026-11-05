@@ -11,8 +11,9 @@
     "groove": "Fits the piano, per user listening feedback",
     "remaining_problem": "Many glitches mask the drum sound",
     "audibility_interpretation": "User attributes poor audibility to glitch masking; this does not establish insufficient stem gain",
-    "headroom_comparison_result": "NOT YET REPORTED",
-    "decision": "Preserve preset/groove and generation parameters; investigate artifacts before gain, prompt or arrangement changes"
+    "headroom_comparison_result": "Drum glitches UNCHANGED per user listening check with the headroom button; attenuation did not resolve the complaint",
+    "mix_headroom_comparison_result": "NOT REPORTED",
+    "decision": "Preserve preset/groove and generation parameters; next listen to existing original FP32 and partition-host references on Mac, without inference/re-export"
   },
   "conditioning_checks_passed": 6,
   "completed_steps": 50,
@@ -48,6 +49,6 @@
   "preflight_or_warmup_success_cause": "NOT ESTABLISHED",
   "baseline_replaced": false,
   "tolerances_changed": false,
-  "cause": "Unestablished. Raw >1 can distort playback, but mixed sample/estimated true peaks below unity mean it cannot explain all user-reported problems. Host/matched-device comparison still needed.",
-  "next": "Attenuate-only playback A/B and already-prepared host original FP32 vs partition references; no model rerun, re-export, preset or production gain change."
+  "cause": "Unestablished. User reports drum glitches unchanged with headroom attenuation. This does not rule out all playback issues or prove a BF16/native cause. Host/matched-device comparison still needed.",
+  "next": "Listen to already-prepared host original FP32 vs partition references with common attenuation. No further drum-headroom retry, model rerun, re-export, preset or production gain change at this stage."
 }
