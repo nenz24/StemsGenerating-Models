@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "host_regression": {
+    "run": 169,
+    "passed": 167,
+    "skipped": 2,
+    "command": "python -m unittest discover -s Tests/StemEvaluationPython -p test_coreai*.py",
+    "new_focused_tests": 6
+  },
+  "actual_cloud_model_calls": {
+    "VAE_encoder": 2,
+    "VAE_decoder": 0,
+    "DiT_steps": 0,
+    "source_golden_replay_performed": false,
+    "reason": "Mac saved epsilon/mean/std arrays are unavailable. CPU fresh seed31 epsilon hash differs; smoke uses same CPU fixture for both branches and makes no matched parity claim."
+  },
+  "Mac_candidate_execution": "NOT RUN HERE; prepared command reuses actual saved bundle tensors with original gates",
+  "musical_acceptance": "NOT EVALUATED",
+  "BF16_production_native_assets_changed": false,
+  "numerical_tolerances_changed": false,
+  "committed_audio_checkpoint_tensors": false,
+  "checks": {
+    "Python_syntax": "PASS",
+    "JSON_parse": "PASS",
+    "relative_document_links": "PASS",
+    "explicit_code_scope": "Diagnostic helper/executor only; no production sampler or native geometry edits"
+  }
+}

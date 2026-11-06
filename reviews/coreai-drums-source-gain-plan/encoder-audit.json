@@ -1,0 +1,35 @@
+{
+  "checkpoint_sha256": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+  "source_PCM_mask_and_uploaded_gold_context_hashes_verified": true,
+  "epsilon_fixture_sha256": "b2b3a04cc431334fc4bc687fee0e388d7e7e49effc1f857569155f11270b8d1c",
+  "Mac_saved_epsilon_sha256": "98f0be58fff9b0dbc7ba995b129f83fefe3911d6d77658e9d5334df71a40d2e2",
+  "epsilon_bytes_match_Mac": false,
+  "torch": "2.8.0+cpu",
+  "mode": "CPU FP32 VAE encoder smoke only; source-gain0.7 candidate; no DiT/native",
+  "encoder_calls": 2,
+  "decoder_calls": 0,
+  "sampling_steps": 0,
+  "source_gain": 0.7,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "scope": "Actual uploaded PCM with fresh CPU seed31 epsilon reused for both branches. CPU epsilon hash differs from Mac; original epsilon/mean/std arrays absent. This is NOT matched source replay/parity. Mac script requires exact saved epsilon and four existing gold arrays before generation. No full candidate50-step generation or musical acceptance here.",
+  "descriptive_vs_uploaded_Mac_latent_not_a_matched_parity_gate": {
+    "finite": true,
+    "max_absolute_error": 0.0001373887062072754,
+    "rmse": 9.78855220403453e-06,
+    "normalized_rmse": 1.0046374142637595e-05,
+    "elementwise_fraction_over_bound": 0.0,
+    "parity_passed": true
+  },
+  "control_seconds": 14.120082084999012,
+  "candidate": {
+    "seconds": 13.837181452996447,
+    "audio_peak": 0.46843329071998596,
+    "latent_peak": 6.714258193969727,
+    "latent_RMS": 0.9770556688308716,
+    "source_context_changed": true,
+    "full_mask_identical": true,
+    "context_sha256": "9e761c7d42e4cb69b5c1477c865c03fc47ffceb5cab359b396f0f46f19d574ee"
+  }
+}

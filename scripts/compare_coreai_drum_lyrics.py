@@ -95,9 +95,20 @@ def candidate_trajectory(predict, noise, times, apg, progress):
     return latent
 
 
+def conditioned_predictor(model, condition, null, context):
+    """Bind a particular source context, keeping control/candidate independent."""
+    import torch
+    conditions = torch.cat([condition, null.expand_as(condition)])
+    def predict(latent, time):
+        return model(hidden_states=torch.cat([latent, latent]), timestep=time.expand(2),
+                     timestep_r=time.expand(2), attention_mask=None, encoder_hidden_states=conditions,
+                     encoder_attention_mask=None, context_latents=torch.cat([context, context]), use_cache=False)[0]
+    return predict
+
+
 def execute(candidates, out, refs, report, progress, explicit, *, candidate_apg_factory=None,
             require_unchanged_condition=False, control_label='control-empty-lyrics',
-            candidate_label='candidate-instrumental'):
+            candidate_label='candidate-instrumental', candidate_context=None):
     import numpy as np
     import torch
     from safetensors import safe_open
@@ -204,25 +215,23 @@ def execute(candidates, out, refs, report, progress, explicit, *, candidate_apg_
     model.rotary_emb = rotary(cfg, device='cpu')
     model.to(device='cpu', dtype=torch.float32).eval().requires_grad_(False)
     context = tensor(candidates / WINDOW.source_bundle, 'context_latents-reference.f32le', [1, WINDOW.frames, 128])
+    if candidate_context is not None:
+        if (candidate_context.shape != context.shape or candidate_context.dtype != torch.float32
+                or candidate_context.device.type != 'cpu' or not torch.isfinite(candidate_context).all()):
+            raise ValueError('Invalid candidate source context')
+        candidate_context = candidate_context.detach().clone().contiguous()
     noise = tensor(preview_folder, 'initial-noise.f32le', [1, WINDOW.frames, 64])
     times = tensor(preview_folder, 'timesteps.f32le', [51])
 
-    def predictor(cond):
-        conditions = torch.cat([cond, null.expand_as(cond)])
-        def predict(latent, time):
-            return model(hidden_states=torch.cat([latent, latent]), timestep=time.expand(2),
-                         timestep_r=time.expand(2), attention_mask=None, encoder_hidden_states=conditions,
-                         encoder_attention_mask=None, context_latents=torch.cat([context, context]), use_cache=False)[0]
-        return predict
-
     with torch.no_grad():
-        replay = guided_step(predictor(control), noise, times[:1], times[1:2], apg, apg.MomentumBuffer())
+        replay = guided_step(conditioned_predictor(model, control, null, context), noise, times[:1], times[1:2], apg, apg.MomentumBuffer())
         require_parity('gold_step_1', replay,
                        tensor(preview_folder, 'step-1-latent-fp32-reference.f32le', [1, WINDOW.frames, 64]), report)
         candidate_apg = candidate_apg_factory(apg) if candidate_apg_factory else apg
         if candidate_apg_factory:
             report['candidate_apg_diagnostics'] = candidate_apg.diagnostics
-        latent = candidate_trajectory(predictor(candidate), noise, times, candidate_apg,
+        active_context = context if candidate_context is None else candidate_context
+        latent = candidate_trajectory(conditioned_predictor(model, candidate, null, active_context), noise, times, candidate_apg,
                                       lambda step: progress(f'candidate step {step}/50'))
     latent.numpy().astype('<f4').tofile(out / 'candidate-latent.f32le')
     del model, replay

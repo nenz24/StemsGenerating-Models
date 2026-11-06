@@ -42,7 +42,55 @@ generasi](../reviews/coreai-drums-percussion-roundtrip-clean/generation-referenc
 mengunci input, durasi/metadata, conditioning, RNG nyata dan parameter Colab.
 Ini belum dieksekusi sebagai generasi baru atau uji isolasi durasi saja.
 Jangan memperpanjang chunk app atau mengadopsi cap kandidat berdasarkan uji
-codec ini. Tidak ada perintah generasi/build iPhone baru untuk pengguna saat ini.
+codec ini. Uji berikutnya di host mengisolasi gain source sebelum reproduksi
+acuan 30 detik yang mengubah beberapa bagian sekaligus.
+
+## Langkah aktif: satu kandidat dengan gain source Colab
+
+[Uji gain source](../reviews/coreai-drums-source-gain-plan/README.md) hanya
+mengalikan PCM piano tersimpan dengan `0,7` **sebelum VAE encoder**, mengikuti
+nilai gain tetap Colab. PCM/crop/resampler yang tersimpan dipertahankan; ini
+bukan persiapan 32 kHz PCM16 atau reproduksi durasi 30 detik Colab. Seluruh
+conditioning teks/lyric/timbre tetap, termasuk lirik kosong kontrol. Durasi
+10,24 detik, epsilon source tersimpan, mask, noise/schedule diffusion, 50 langkah,
+guidance 7 dan cap asli 2,5 tetap. Kandidat APG cap 1,46059 tidak dipakai dalam
+uji ini agar perubahan input dapat dinilai sendiri. Baseline BF16 dan toleransi
+tidak berubah; gain ini tidak mengubah volume playback atau gain mix.
+
+Tutup Xcode, buka Terminal di folder repo Mac, lalu jalankan:
+
+```bash
+git fetch origin main &&
+python3 scripts/update_coreai_project.py &&
+.runtime-cache/coreai-decoder-venv/bin/python \
+  scripts/compare_coreai_drum_source_gain.py \
+  --diagnostic-trajectory --execute \
+  --out .runtime-cache/drums-source-gain-v1 &&
+open .runtime-cache/drums-source-gain-v1
+```
+
+Ini menghitung **satu kandidat baru 50 langkah pada CPU Mac**. Dua panggilan
+source encoder (replay kontrol dan kandidat) mendahuluinya. Model/cache yang
+sudah ada dipakai dengan verifikasi hash; tidak ada unduhan checkpoint, export
+native, build app atau aktivasi profil. Folder output harus baru. Tanpa
+`--execute`, script hanya menulis plan; gunakan folder baru setelah membuat plan.
+
+Setelah selesai, putar pada volume/output sama:
+
+1. `01-control-source-gain1-headroom.wav`
+2. `02-candidate-source-gain07-headroom.wav`
+
+Keduanya berisi drum dengan satu attenuasi bersama. Kirim `report.json` dan
+laporkan apakah glitch pada kandidat berkurang/hilang serta groove tetap cocok.
+Ini kandidat yang benar-benar dihitung dari input berbeda, terpisah dari uji
+VAE perkusi bersih yang sudah selesai. Tidak perlu menekan Generate di iPhone.
+
+Empat gate source posterior mean/std/latent/context, conditioning/mask identik,
+langkah pertama kontrol dan decoder harus lolos batas asli. Bila gagal, script
+berhenti dan mempertahankan report; jangan melonggarkan gate atau mengulang
+eksperimen yang sama. Provenance kontrol tetap `bounded_diagnostic`; keberhasilan
+replay bukan full trajectory/native PASS. Kandidat belum diadopsi sebelum hasil
+dengar dan pemeriksaan numerik berikutnya.
 
 ## Riwayat APG: drum lebih jelas, glitch saat pergantian pukulan
 
