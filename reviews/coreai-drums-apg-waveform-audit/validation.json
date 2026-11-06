@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "host_regression": {
+    "command": "python -m unittest discover -s Tests/StemEvaluationPython -p test_coreai*.py",
+    "run": 163,
+    "passed": 161,
+    "skipped": 2,
+    "new_guard_tests_passed": 4,
+    "scope": "Control/admission regressions, not musical/native acceptance"
+  },
+  "actual_model_execution": {
+    "apg_uploaded_candidate_replay": {
+      "encoder_calls": 0,
+      "decoder_calls": 1,
+      "diffusion_steps": 0,
+      "original_gates_passed": true
+    },
+    "approved_drum_roundtrip": {
+      "encoder_calls": 1,
+      "decoder_calls": 1,
+      "diffusion_steps": 0,
+      "listening": "NOT EVALUATED"
+    }
+  },
+  "checks": {
+    "python_syntax": "PASS",
+    "JSON_parse": "PASS",
+    "relative_document_links": "PASS",
+    "uploaded_ZIP_and_artifact_hashes": "PASS",
+    "candidate_headroom_raw_gain_bit_exact": "PASS"
+  },
+  "no_Apple_SDK_or_device_execution": true,
+  "BF16_or_native_assets_or_production_sampler_changed": false,
+  "tolerances_changed": false,
+  "audio_checkpoint_or_input_ZIP_committed": false,
+  "limitations": [
+    "No root cause or musical fix established",
+    "Lossy roundtrip metrics are not acceptance",
+    "Generated original latent replay is not new full pipeline/native parity",
+    "Mac resampling/library versions can differ; compare local pair and report, not exact cloud WAV hash"
+  ]
+}

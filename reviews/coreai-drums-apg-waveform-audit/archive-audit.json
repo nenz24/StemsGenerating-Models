@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "a3c4f94974d8e6b9d339083061d6dd1c9676e9c84473c818e2fb8fd683b5132b",
+  "archive_bytes": 11019834,
+  "report_matches_previously_uploaded_bytes": true,
+  "members": {
+    "report.json": {
+      "bytes": 19464,
+      "sha256": "dc0a49d82d838a87ef8dc7cbcd2ffe8194659c28b44612f32cc3879f48e77676"
+    },
+    "01-control-original-apg-headroom.wav": {
+      "bytes": 3932218,
+      "sha256": "4ab48fe5d389e6a6cbc64ee5f16a28df8d35e9f4da71753c7f5c6bc8ecab066f",
+      "sample_rate": 48000,
+      "frames": 491520,
+      "channels": 2,
+      "sample_peak": 0.5718205571174622,
+      "finite": true,
+      "repeated_adjacent_stereo_frames": 0,
+      "zero_stereo_frames": 0
+    },
+    "02-candidate-scaled-apg-headroom.wav": {
+      "bytes": 3932218,
+      "sha256": "8a1aa91aaf19994eb47cafc871893fd836a27b397d594338e19e4ff33c68f538",
+      "sample_rate": 48000,
+      "frames": 491520,
+      "channels": 2,
+      "sample_peak": 0.7079457640647888,
+      "finite": true,
+      "repeated_adjacent_stereo_frames": 0,
+      "zero_stereo_frames": 0
+    },
+    "candidate-audio.f32le": {
+      "bytes": 3932160,
+      "sha256": "cefc11f329e4f6163241f475bb86a32f5bf2b6d95db055e84f2331690085a2d0"
+    },
+    "candidate-latent.f32le": {
+      "bytes": 65536,
+      "sha256": "521980cfd1282134e475a0bf71c519bd43434e71e39e5f54a7eb638f822640af"
+    }
+  },
+  "common_linear_gain": 0.4322673320927551,
+  "candidate_headroom_exact_raw_times_gain": true,
+  "source_component_references_unchanged": true,
+  "scope": "Integrity and descriptive waveform checks, not musical acceptance or glitch cause proof",
+  "production_bf16_changed": false,
+  "numeric_tolerances_changed": false
+}

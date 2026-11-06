@@ -7,6 +7,12 @@ This is partial improvement, **not finished drum acceptance**. New candidate
 groove was not separately reconfirmed; retain the earlier accepted groove as a
 requirement. No candidate is promoted to the BF16 app baseline.
 
+**Subsequent waveform audit:** the requested ZIP is now received. All five
+members verify; headroom gain is bit-exact and candidate latent replay passes
+the original limits. See the [actual waveform/codec evidence and active
+percussion control](../coreai-drums-apg-waveform-audit/README.md). Collection
+requests and pending-byte statements below describe the earlier report-only stage.
+
 [Summary](summary.json) records report SHA-256 and validated accounting.
 The run completes 50/50; candidate cap is `2.5*sqrt(256/750)=1.46059349`, control
 cap 2.5. Source PCM and three component-reference identities match the previous

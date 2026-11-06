@@ -30,8 +30,53 @@ Run ini satu waveform 10,24 detik, tanpa stitching. Jangan menganggap kata
 berindeks iterasi diffusion, bukan detik audio; angka itu tidak dapat melokasikan
 glitch serangan drum. Tidak perlu Generate ulang atau menurunkan cap lagi dulu.
 
-Kumpulkan waveform **kandidat APG yang baru**, tanpa menyertakan source lama lagi
-karena identitasnya sudah cocok. Dari folder repo Mac:
+ZIP kandidat APG sudah diterima dan [diaudit](../reviews/coreai-drums-apg-waveform-audit/README.md).
+Kelima file cocok; kandidat WAV adalah transform gain dari audio mentah secara
+bit-exact. Replay latent kandidat pada VAE FP32 juga PASS pada batas asli
+(normalized RMSE `1,75e-6`). Tidak ditemukan frame stereo nol/identik berturutan,
+tetapi ini bukan detektor semua jenis glitch atau sertifikat kualitas.
+Serangan tajam sekitar 3,568 detik muncul pada kontrol dan kandidat; statistik
+transien tidak cukup untuk menyebutnya salah atau menghapus pukulan.
+
+### Langkah aktif: pembanding VAE dengan drum yang sudah diterima
+
+Piano bersih belum membuktikan kualitas rekonstruksi **perkusi**. Satu kontrol
+baru memakai drum Colab 30 detik yang sudah diterima: resample WAV arsip
+32 kHz PCM16 ke 48 kHz, ambil 10,24 detik pertama, lalu satu encoder dan satu
+decoder VAE FP32. Tidak ada DiT/50 langkah, unduhan checkpoint, export native
+atau perubahan preset. Ini rekonstruksi lossy dari WAV ekspor, bukan replay
+latent Colab asli atau reproduksi full pipeline Colab.
+
+Script ini sudah benar-benar dijalankan di CPU cloud. Dua WAV harus dibuat
+langsung di Mac agar dapat diakses dari Finder; tautan audio cloud sebelumnya
+tidak dapat diunduh pengguna. Tutup Xcode, lalu dari repo Mac:
+
+```bash
+git fetch origin main &&
+python3 scripts/update_coreai_project.py &&
+.runtime-cache/coreai-decoder-venv/bin/python \
+  scripts/listen_coreai_drum_roundtrip.py \
+  --out .runtime-cache/coreai-drums-codec-listening-v1 &&
+open .runtime-cache/coreai-drums-codec-listening-v1
+```
+
+Dengarkan **`01-approved-drums.wav`**, lalu **`02-approved-drums-vae.wav`**,
+pada volume/output yang sama. Keduanya berisi drum saja, dengan satu gain
+attenuasi bersama. Laporkan apakah glitch transisi yang sama sudah terdengar
+pada 01, baru muncul pada 02, atau keduanya bersih, serta bagikan `report.json`.
+Jangan menilai dari angka korelasi/SNR saja. Jika 01 bersih dan 02 glitch,
+fokus berikutnya codec perkusi; jika keduanya bersih, fokus tetap latent generasi.
+Ini arah investigasi, bukan kesimpulan penyebab otomatis. Sumber arsip bukan
+drum mentah sebelum VAE Colab dan roundtrip menambahkan kompresi lossy lagi.
+
+Checkpoint dan arsip diperiksa SHA-256; folder output harus baru dan di luar
+baseline/ModelCandidates. Gagal verifikasi berhenti dan mempertahankan report.
+Baseline BF16, cap produksi 2,5, parameter generasi serta toleransi tetap.
+Kandidat APG belum diadopsi atau dinyatakan selesai diperbaiki.
+
+### Riwayat pengumpulan kandidat APG (sudah selesai)
+
+Command berikut hanya disimpan sebagai catatan; ZIP sudah diterima:
 
 ```bash
 test ! -e .runtime-cache/drums-apg-review-v1.zip &&
@@ -40,13 +85,13 @@ zip -j .runtime-cache/drums-apg-review-v1.zip \
 open -R .runtime-cache/drums-apg-review-v1.zip
 ```
 
-Unggah `.runtime-cache/drums-apg-review-v1.zip`. Ini hanya membaca lima hasil
+Ini hanya membaca lima hasil
 yang sudah ada dan membuat arsip baru; tidak memuat model atau menyertakan
 checkpoint. Output lama tidak ditimpa. Jika folder hasil uji bernama berbeda,
 sesuaikan hanya path folder itu.
 
-Setelah hash dan transform gain diperiksa, bandingkan serangan drum kandidat dan
-kontrol di sepanjang klip. Drum memang memiliki serangan tajam/broadband;
+Hash dan transform gain sudah diperiksa, serta serangan drum kandidat dan
+kontrol sudah dibandingkan di sepanjang klip. Drum memang memiliki serangan tajam/broadband;
 statistik spike saja tidak boleh dipakai untuk menghapus pukulan. Belum ada
 dasar untuk de-clicker, EQ, limiter, fade, cap lain atau eksperimen model baru.
 

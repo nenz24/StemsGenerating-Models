@@ -1,0 +1,22 @@
+{
+  "checkpoint_sha256": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+  "torch": "2.8.0+cpu",
+  "mode": "CPU FP32; decoder only; no encoder or DiT inference; no native code",
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "sampling_steps": 0,
+  "decoder_calls": 1,
+  "encoder_calls": 0,
+  "seconds": 13.481292841999675,
+  "uploaded_latent_sha256": "521980cfd1282134e475a0bf71c519bd43434e71e39e5f54a7eb638f822640af",
+  "uploaded_audio_sha256": "cefc11f329e4f6163241f475bb86a32f5bf2b6d95db055e84f2331690085a2d0",
+  "replay_vs_uploaded": {
+    "finite": true,
+    "max_absolute_error": 1.1801719665527344e-05,
+    "rmse": 3.853131189784138e-07,
+    "normalized_rmse": 1.7456366929036736e-06,
+    "elementwise_fraction_over_bound": 0.0,
+    "parity_passed": true
+  }
+}
