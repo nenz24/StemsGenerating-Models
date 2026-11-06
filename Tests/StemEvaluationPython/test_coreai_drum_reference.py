@@ -5,6 +5,8 @@ import sys
 import tempfile
 import types
 import unittest
+import wave
+import hashlib
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -125,6 +127,44 @@ class DrumReferenceTests(unittest.TestCase):
         self.assertTrue(torch.equal(calls[1]['context_latents'], context.expand(2, -1, -1)))
         M.cached_predictor(model, packed, null, context)(noise, time)
         self.assertIsNot(calls[0]['past_key_values'], calls[2]['past_key_values'])
+
+    def prepared_fixture(self, folder):
+        path = folder / 'unaccepted-PCM.wav'
+        pcm = bytes(960000 * 2 * 2)
+        with wave.open(str(path), 'wb') as stream:
+            stream.setparams((2, 2, 32000, 0, 'NONE', 'not compressed'))
+            stream.writeframes(pcm)
+        return path, pcm
+
+    def test_prepared_PCM_mismatch_retains_actual_digest_without_resampling(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); source, pcm = self.prepared_fixture(root); before = source.read_bytes()
+            out = root / 'out'; out.mkdir(); diagnostic = {}
+            with patch.object(M, 'resample') as resample:
+                with self.assertRaisesRegex(ValueError, 'see source-preparation.json'):
+                    M.prepare_source(out, prepared_source=source, diagnostics=diagnostic)
+                resample.assert_not_called()
+            self.assertFalse(diagnostic['accepted_PCM_exact'])
+            self.assertEqual(diagnostic['expected_source32_PCM_sha256'], M.SOURCE_PCM_SHA)
+            self.assertEqual(diagnostic['actual_source32_PCM_sha256'], hashlib.sha256(pcm).hexdigest())
+            self.assertEqual(json.loads((out / 'source-preparation.json').read_text()), diagnostic)
+            self.assertEqual(source.read_bytes(), before)
+            self.assertFalse((out / 'source48.f32le').exists())
+
+    def test_failed_execution_embeds_source_diagnostic_and_never_encodes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); source, _ = self.prepared_fixture(root); out = root / 'run'
+            # Checkpoints are explicitly nonexecutable fixtures; no model load
+            # is mocked as successful. This exercises rejection before inference.
+            with patch.object(M, 'local_checkpoint', return_value=Path('nonexecutable-fixture')), patch.object(M, 'encode_source') as encoder:
+                with self.assertRaisesRegex(ValueError, 'PCM differs'):
+                    M.generate(out, prepared_source=source, execute_requested=True)
+                encoder.assert_not_called()
+            r = json.loads((out / 'report.json').read_text())
+            self.assertEqual(r['status'], 'failed')
+            self.assertEqual((r['source_encoder_calls'], r['decoder_calls'], r['steps_completed']), (0, 0, 0))
+            self.assertFalse(r['source_preparation_diagnostic']['accepted_PCM_exact'])
+            self.assertEqual(r['source_preparation_diagnostic']['expected_source32_PCM_sha256'], M.SOURCE_PCM_SHA)
 
 
 if __name__ == '__main__':

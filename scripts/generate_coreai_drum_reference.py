@@ -15,6 +15,7 @@ import io
 import json
 import math
 from pathlib import Path
+import platform
 import subprocess
 import sys
 import wave
@@ -53,13 +54,34 @@ def resample(pcm):
     return _apply_sinc_resample_kernel(audio, 32000, 48000, math.gcd(32000, 48000), kernel, width).clamp(-1., 1.).unsqueeze(0).contiguous()
 
 
-def prepare_source(out, source=None, prepared_source=None):
+def check_source_pcm(raw, out, input_mode, diagnostics=None):
+    """Record the observed input before a strict checksum failure; never admit it."""
+    pcm = pcm16(raw)
+    actual = hashlib.sha256(pcm).hexdigest()
+    try:
+        version = subprocess.run(['ffmpeg', '-version'], capture_output=True, text=True, timeout=10, check=True).stdout.splitlines()[0]
+    except (OSError, subprocess.SubprocessError, IndexError):
+        version = 'unavailable'
+    observed = {'input_mode': input_mode, 'source32_WAV_sha256': hashlib.sha256(raw).hexdigest(),
+                'expected_source32_PCM_sha256': SOURCE_PCM_SHA, 'actual_source32_PCM_sha256': actual,
+                'accepted_PCM_exact': actual == SOURCE_PCM_SHA, 'sample_rate': 32000,
+                'channels': 2, 'sample_width_bytes': 2, 'frames': 960000,
+                'ffmpeg_version': version, 'platform_system': platform.system(), 'platform_machine': platform.machine(),
+                'scope': 'Input checksum diagnostic only; no numerical comparison without original PCM arrays, no permission to bypass gate'}
+    with (out / 'source-preparation.json').open('x') as stream:
+        json.dump(observed, stream, indent=2); stream.write('\n')
+    if diagnostics is not None:
+        diagnostics.update(observed)
+    if actual != SOURCE_PCM_SHA:
+        raise ValueError('Prepared PCM differs from accepted baseline; see source-preparation.json; no inference or reference replacement')
+    return pcm
+
+
+def prepare_source(out, source=None, prepared_source=None, diagnostics=None):
     target = out / 'source32.wav'
     if prepared_source is not None:
         raw = Path(prepared_source).read_bytes()
-        pcm = pcm16(raw)
-        if hashlib.sha256(pcm).hexdigest() != SOURCE_PCM_SHA:
-            raise ValueError('Prepared source PCM differs from accepted baseline; no inference')
+        pcm = check_source_pcm(raw, out, 'existing_prepared_WAV_no_second_gain', diagnostics)
         with target.open('xb') as stream:
             stream.write(raw)
     else:
@@ -68,9 +90,7 @@ def prepare_source(out, source=None, prepared_source=None):
         sys.path.insert(0, str(ROOT / 'tools/stem_eval'))
         from audio import canonicalize
         canonicalize(Path(source), target, duration=30, gain=.7, max_duration=30)
-        pcm = pcm16(target.read_bytes())
-        if hashlib.sha256(pcm).hexdigest() != SOURCE_PCM_SHA:
-            raise ValueError('Prepared PCM differs from accepted baseline; keep report, do not replace reference')
+        pcm = check_source_pcm(target.read_bytes(), out, 'original_MP3_fixed_gain0.7', diagnostics)
         if sha256(source) != SOURCE_MP3_SHA:
             raise ValueError('Original source changed during preparation')
     audio = resample(pcm)
@@ -255,7 +275,9 @@ def execute(out, source, prepared_source, report, progress, explicit):
         weights[label] = local_checkpoint(record, explicit.get(label))
     report['checkpoint_sha256'] = {k: r['digest'] for k, r in entries.items()}
     progress('prepare exact accepted30s PCM; apply source gain0.7 once')
-    audio, metadata = prepare_source(out, source, prepared_source); report['source_preparation'] = metadata
+    report['source_preparation_diagnostic'] = {}
+    audio, metadata = prepare_source(out, source, prepared_source, report['source_preparation_diagnostic'])
+    report['source_preparation'] = metadata
     context = encode_source(audio, weights['vae'], out, progress); report['source_encoder_calls'] = 1
     publisher_cache = ROOT / '.runtime-cache/coreai-generator-source-publisher'
     publisher_cache.mkdir(parents=True, exist_ok=True)

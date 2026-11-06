@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "evidence": "User pasted Terminal log; failed-run report and PCM not yet uploaded",
+  "terminal_sha256": "6adc632bb9aad92a93553f7c408accef38d9e718dc5f982acefa19fe459b75ed",
+  "terminal_bytes": 5050,
+  "Mac_checkout_commit_from_log": "ff54b24d5383fe384b8379d6d90eeffeb9db7247",
+  "first_git_fetch": "GitHub443 timeout; second attempt succeeded and updater fast-forwarded",
+  "failing_phase": "prepare exact accepted30s PCM; apply source gain0.7 once",
+  "error": "Prepared PCM differs from accepted baseline; keep report, do not replace reference",
+  "inferred_from_script_and_log": {
+    "original_MP3_hash_gate_passed": true,
+    "all_four_existing_checkpoint_verifications_completed": true,
+    "PCM_format_gate_passed": true,
+    "source_encoder_calls": 0,
+    "Qwen_calls": 0,
+    "DiT_steps": 0,
+    "decoder_calls": 0
+  },
+  "expected_source_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+  "Mac_actual_PCM_sha256": "UNKNOWN; old script did not record it before raising",
+  "delta_measurements": "NOT EVALUATED; Mac PCM bytes unavailable",
+  "root_cause": "UNRESOLVED. Platform/decoder/quantization difference is a hypothesis, not established or automatically acceptable",
+  "next_required_files": [
+    ".runtime-cache/drums-reference30-v1/report.json",
+    ".runtime-cache/drums-reference30-v1/source32.wav"
+  ],
+  "decision": "Preserve failed folder. Package existing files only; no regeneration/re-export/cache deletion, no source-reference replacement or acceptance override. Compare actual PCM against frozen reference using original numerical bounds before deciding recovery.",
+  "source_admission_changed": false,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_RMSE_tolerance": 0.001,
+  "BF16_baseline_or_models_changed": false
+}

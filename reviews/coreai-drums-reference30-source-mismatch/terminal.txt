@@ -1,0 +1,74 @@
+danendra@Danendras-MacBook-Pro StemsGenerating-Models % git fetch origin main &&
+python3 scripts/update_coreai_project.py &&
+.runtime-cache/coreai-decoder-venv/bin/python \
+  scripts/generate_coreai_drum_reference.py --execute \
+  --out .runtime-cache/drums-reference30-v1 &&
+open .runtime-cache/drums-reference30-v1
+fatal: unable to access 'https://github.com/nenz24/StemsGenerating-Models.git/': Failed to connect to github.com port 443 after 75049 ms: Couldn't connect to server
+danendra@Danendras-MacBook-Pro StemsGenerating-Models % git fetch origin main &&
+python3 scripts/update_coreai_project.py &&
+.runtime-cache/coreai-decoder-venv/bin/python \
+  scripts/generate_coreai_drum_reference.py --execute \
+  --out .runtime-cache/drums-reference30-v1 &&
+open .runtime-cache/drums-reference30-v1
+remote: Enumerating objects: 34, done.
+remote: Counting objects: 100% (34/34), done.
+remote: Compressing objects: 100% (25/25), done.
+remote: Total 25 (delta 7), reused 0 (delta 0), pack-reused 0 (from 0)
+Unpacking objects: 100% (25/25), 29.75 KiB | 150.00 KiB/s, done.
+From https://github.com/nenz24/StemsGenerating-Models
+ * branch            main       -> FETCH_HEAD
+   3ca8ca7..ff54b24  main       -> origin/main
+Backup: /Users/danendra/Documents/ADA26/C6/Stems-Generating/stems-coreai-project-backup-gtnz9g7g
+No explicit project Team; existing local signing retained.
+Updating 3ca8ca7..ff54b24
+Fast-forward
+ .../test_coreai_drum_reference.py                  | 131 +++++++
+ docs/coreai-drums-quality.md                       |  70 +++-
+ reviews/coreai-drums-reference30-plan/README.md    | 100 ++++++
+ .../cache-mechanism-audit.json                     |  25 ++
+ .../coreai-drums-reference30-plan/cache_audit.py   |  24 ++
+ .../frontend-audit.json                            |  29 ++
+ .../frontend_audit.py                              |  15 +
+ .../input-operator-audit.json                      | 165 +++++++++
+ .../coreai-drums-reference30-plan/validation.json  |  35 ++
+ reviews/coreai-drums-source-gain-plan/README.md    |   6 +
+ reviews/coreai-drums-source-gain-result/README.md  |  38 ++
+ .../coreai-drums-source-gain-result/report.json    | 183 ++++++++++
+ .../coreai-drums-source-gain-result/summary.json   |  33 ++
+ scripts/coreai_reference_resample.py               | 170 +++++++++
+ scripts/generate_coreai_drum_reference.py          | 383 +++++++++++++++++++++
+ 15 files changed, 1402 insertions(+), 5 deletions(-)
+ create mode 100644 Tests/StemEvaluationPython/test_coreai_drum_reference.py
+ create mode 100644 reviews/coreai-drums-reference30-plan/README.md
+ create mode 100644 reviews/coreai-drums-reference30-plan/cache-mechanism-audit.json
+ create mode 100644 reviews/coreai-drums-reference30-plan/cache_audit.py
+ create mode 100644 reviews/coreai-drums-reference30-plan/frontend-audit.json
+ create mode 100644 reviews/coreai-drums-reference30-plan/frontend_audit.py
+ create mode 100644 reviews/coreai-drums-reference30-plan/input-operator-audit.json
+ create mode 100644 reviews/coreai-drums-reference30-plan/validation.json
+ create mode 100644 reviews/coreai-drums-source-gain-result/README.md
+ create mode 100644 reviews/coreai-drums-source-gain-result/report.json
+ create mode 100644 reviews/coreai-drums-source-gain-result/summary.json
+ create mode 100644 scripts/coreai_reference_resample.py
+ create mode 100644 scripts/generate_coreai_drum_reference.py
+Updated. Other project edits remain in the backup; models/cache/stashes untouched.
+verify existing pinned base checkpoint
+verify existing pinned silence checkpoint
+verify existing pinned qwen checkpoint
+verify existing pinned vae checkpoint
+prepare exact accepted30s PCM; apply source gain0.7 once
+Traceback (most recent call last):
+  File "/Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/scripts/generate_coreai_drum_reference.py", line 383, in <module>
+    main()
+  File "/Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/scripts/generate_coreai_drum_reference.py", line 378, in main
+    generate(args.out, args.source, args.prepared_source, args.execute,
+  File "/Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/scripts/generate_coreai_drum_reference.py", line 347, in generate
+    execute(out, source, prepared_source, report, progress, explicit or {})
+  File "/Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/scripts/generate_coreai_drum_reference.py", line 258, in execute
+    audio, metadata = prepare_source(out, source, prepared_source); report['source_preparation'] = metadata
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/danendra/Documents/ADA26/C6/Stems-Generating/StemsGenerating-Models/scripts/generate_coreai_drum_reference.py", line 73, in prepare_source
+    raise ValueError('Prepared PCM differs from accepted baseline; keep report, do not replace reference')
+ValueError: Prepared PCM differs from accepted baseline; keep report, do not replace reference
+danendra@Danendras-MacBook-Pro StemsGenerating-Models % 

@@ -16,7 +16,40 @@ Jadi clipping drum solo belum menjelaskan glitch mix. Sebanyak 87,54% energi
 drum berada di 20–150 Hz. Ini pengukuran spektrum, bukan bukti audibilitas,
 kesalahan instrumen atau penyebab glitch. Belum ada diagnosis penyebab pasti.
 
-## Hasil terbaru: gain source0,7 belum menghilangkan glitch
+## Hasil terbaru: acuan30s berhenti pada pemeriksaan input
+
+[Log Mac](../reviews/coreai-drums-reference30-source-mismatch/README.md)
+menunjukkan update `ff54b24` berhasil setelah satu timeout GitHub. Empat
+checkpoint lokal selesai diverifikasi. Rekaman MP3 lolos hash sumber, tetapi
+**PCM32kHz hasil persiapan berbeda dari acuan**. Ini bukan selisih header WAV
+saja: gate membandingkan hash byte PCM. Proses berhenti sebelum source encoder,
+Qwen, DiT atau decoder. Belum ada hasil drum30 detik untuk didengarkan.
+
+Versi/platform decoder atau pembulatan masih hipotesis. Log belum memberikan
+hash PCM aktual atau besar selisih sampel. Gate dipertahankan; jangan mengganti
+hash acuan atau melonggarkan batas. Pelaporan sekarang mencatat digest aktual,
+digest acuan, format, versi FFmpeg dan platform sebelum berhenti. Tidak perlu
+mengulang generasi untuk mengumpulkan kasus yang sudah ada.
+
+### Langkah aktif: kirim hasil persiapan yang sudah tersimpan
+
+Dari folder repo Mac, buat ZIP baru berisi dua file dari percobaan gagal:
+
+```bash
+test ! -e .runtime-cache/drums-source-prep-review-v1.zip &&
+zip -j .runtime-cache/drums-source-prep-review-v1.zip \
+  .runtime-cache/drums-reference30-v1/{report.json,source32.wav} &&
+open -R .runtime-cache/drums-source-prep-review-v1.zip
+```
+
+Unggah `drums-source-prep-review-v1.zip`. Ini hanya membaca hasil lama dan
+membuat arsip baru, tanpa model, unduhan checkpoint, inference atau perubahan
+audio asal. Pertahankan folder hasil gagal. PCM akan dibandingkan terhadap
+acuan tetap dengan batas asli abs `1e-4`, rel `1e-3`, normalizedRMSE `1e-3`;
+belum ada keputusan apakah selisih dapat diterima atau cara melanjutkannya.
+Tidak perlu update/build app atau menekan Generate iPhone saat ini.
+
+## Riwayat: gain source0,7 belum menghilangkan glitch
 
 [Laporan uji gain source](../reviews/coreai-drums-source-gain-result/README.md)
 selesai 50/50 dengan sembilan pemeriksaan kontrol error nol. Input gain0,7
@@ -26,7 +59,10 @@ Pengguna menyatakan **"glicthnya ada lagi dipergantian pukulan"**. Tidak ada
 penerimaan kualitas baru untuk kandidat generasi ini. Gain source saja belum
 menyelesaikan masalah; jangan mengulang uji atau mencari gain/cap lain.
 
-### Langkah aktif: satu acuan host30 detik dengan capture
+### Acuan host30 detik (tertahan pada input; jangan ulang dulu)
+
+Command berikut adalah catatan uji yang sudah dicoba. Langkah aktif sekarang
+adalah pengumpulan PCM di atas; menjalankannya lagi tidak menyelesaikan mismatch.
 
 [Alat acuan30 detik](../reviews/coreai-drums-reference30-plan/README.md)
 memakai persiapan dan setting Colab yang sudah diterima: piano yang sama,

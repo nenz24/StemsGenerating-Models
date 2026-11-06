@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "host_regression": {
+    "run": 179,
+    "passed": 177,
+    "skipped": 2,
+    "reference_tests_passed": 10,
+    "new_tests": 2,
+    "command": "python -m unittest discover -s Tests/StemEvaluationPython -p test_coreai*.py"
+  },
+  "actual_positive_input_check": {
+    "performed": true,
+    "exact_source_gate": "PASS",
+    "source48bytes_unchanged": "PASS",
+    "encoder_or_DiT_calls": 0
+  },
+  "Mac_PCM_difference_metrics": "NOT EVALUATED; actual PCM not yet uploaded",
+  "source_admission_or_reference_hash_or_numerical_limits_changed": false,
+  "BF16_native_assets_weights_cache_changed": false,
+  "Apple_build_or_device_execution": false,
+  "checks": {
+    "syntax_JSON_relative_links": "PASS",
+    "user_Terminal_bytes_preserved": "PASS",
+    "diagnostic_failure_before_inference": "PASS",
+    "existing_inputs_preserved": "PASS"
+  },
+  "scope": "Error-reporting only. Not a fix/admission of the unmeasured Mac PCM mismatch; raw source/report collection required."
+}

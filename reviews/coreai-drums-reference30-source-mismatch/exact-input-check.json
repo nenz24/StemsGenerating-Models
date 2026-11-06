@@ -1,0 +1,32 @@
+{
+  "strict_exact_gate_passed_for_original_reference": true,
+  "new_source48_bytes_match_previous_verified_encoder_input": true,
+  "source_diagnostic": {
+    "input_mode": "existing_prepared_WAV_no_second_gain",
+    "source32_WAV_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+    "expected_source32_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "actual_source32_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "accepted_PCM_exact": true,
+    "sample_rate": 32000,
+    "channels": 2,
+    "sample_width_bytes": 2,
+    "frames": 960000,
+    "ffmpeg_version": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+    "platform_system": "Linux",
+    "platform_machine": "x86_64",
+    "scope": "Input checksum diagnostic only; no numerical comparison without original PCM arrays, no permission to bypass gate"
+  },
+  "source_preparation": {
+    "source32_WAV_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+    "source32_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "accepted_PCM_exact": true,
+    "source48_planar_sha256": "9d62d4eccd36188a4170a08ee6a22fcc66b5ad8af3b0753dc6b021a7f507f4a8",
+    "source_gain_already_applied": 0.7,
+    "additional_gain": 1.0,
+    "resampling": "Pinned TorchAudio2.10 transforms.Resample defaults; CPU torch implementation; clamp[-1,1] as handler",
+    "resampler_source_sha256": "84781e763405e636585c5cdd7303680c9d43d96e3ff32b05ac301ce6c66ea6e0"
+  },
+  "new_encoder_or_DiT_calls": 0,
+  "Mac_PCM_compared": false,
+  "reason": "Not uploaded; only original exact reference path was rechecked here"
+}

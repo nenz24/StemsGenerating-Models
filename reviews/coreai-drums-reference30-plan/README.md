@@ -1,5 +1,12 @@
 # One captured host30s reference after failed source-gain isolation
 
+**Subsequent Mac execution:** the [Terminal log](../coreai-drums-reference30-source-mismatch/README.md)
+shows that source MP3/checkpoint gates passed but prepared PCM did not match the
+frozen reference hash. The run stopped before encoder/Qwen/DiT/decoder. Do not
+rerun it or infer a new listening result. The active request is to package the
+existing failed report/source32WAV for sample comparison. Error reporting now
+retains actual/expected digests and decoder/platform context; admission is unchanged.
+
 The [source-gain-only result](../coreai-drums-source-gain-result/README.md)
 completed50steps with nine exact-zero control replays; hit-transition glitches
 remain. Together with the failed lyric-only test and partial APG result, this
