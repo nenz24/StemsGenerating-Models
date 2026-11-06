@@ -1,5 +1,11 @@
 # One source-gain-only generation candidate after clean codec controls
 
+**Subsequent result:** the [Mac report](../coreai-drums-source-gain-result/README.md)
+completes50/50 with nine zero-error control checks, but the user still hears
+hit-transition glitches. This gain-only experiment has not fixed the complaint;
+do not repeat it, sweep gains or adopt the candidate. The [captured30s host
+reference](../coreai-drums-reference30-plan/README.md) is now the active task.
+
 The latest user asks what to do next. Piano and existing approved-percussion
 roundtrip controls have been heard clean. Existing generated drums remain
 unaccepted: scaled APG made them clearer but still had hit-transition glitches.

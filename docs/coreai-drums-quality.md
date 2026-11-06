@@ -16,7 +16,65 @@ Jadi clipping drum solo belum menjelaskan glitch mix. Sebanyak 87,54% energi
 drum berada di 20–150 Hz. Ini pengukuran spektrum, bukan bukti audibilitas,
 kesalahan instrumen atau penyebab glitch. Belum ada diagnosis penyebab pasti.
 
-## Hasil terbaru: uji VAE perkusi terdengar bersih
+## Hasil terbaru: gain source0,7 belum menghilangkan glitch
+
+[Laporan uji gain source](../reviews/coreai-drums-source-gain-result/README.md)
+selesai 50/50 dengan sembilan pemeriksaan kontrol error nol. Input gain0,7
+benar-benar digunakan; hash PCM kandidat yang dicatat juga cocok dengan hasil
+perkalian PCM sumber terverifikasi. Conditioning identik dengan kontrol.
+Pengguna menyatakan **"glicthnya ada lagi dipergantian pukulan"**. Tidak ada
+penerimaan kualitas baru untuk kandidat generasi ini. Gain source saja belum
+menyelesaikan masalah; jangan mengulang uji atau mencari gain/cap lain.
+
+### Langkah aktif: satu acuan host30 detik dengan capture
+
+[Alat acuan30 detik](../reviews/coreai-drums-reference30-plan/README.md)
+memakai persiapan dan setting Colab yang sudah diterima: piano yang sama,
+source32kHz PCM16 pada gain0,7, resampling handler ke48kHz, durasi/metadata30s,
+`[Instrumental]`, tanpa kit reference, APG cap2,5/guidance7/50langkah. Ini
+pemeriksaan jalur acuan, **bukan uji durasi saja**: beberapa perbedaan dari
+preview10,24s dicocokkan sekaligus. CPU/CUDA RNG dan versi runtime tetap berbeda;
+tidak ada klaim bit-exact atau numerical PASS dari hasil dengar.
+
+Tutup Xcode. Dari folder repo di Terminal Mac:
+
+```bash
+git fetch origin main &&
+python3 scripts/update_coreai_project.py &&
+.runtime-cache/coreai-decoder-venv/bin/python \
+  scripts/generate_coreai_drum_reference.py --execute \
+  --out .runtime-cache/drums-reference30-v1 &&
+open .runtime-cache/drums-reference30-v1
+```
+
+Saat pemilih file terbuka, pilih **`piano.mp3` asli** yang dipakai pada baseline
+Colab, bukan output drum atau mix. Hash rekaman dan PCM acuan diverifikasi.
+Bila file canonical30s yang tepat sudah tersedia, opsi `--prepared-source`
+dapat dipakai sebagai pengganti `--source`; gain tidak diterapkan dua kali.
+Tidak perlu mengunduh tautan audio cloud, memasang torchaudio atau mengulang
+persiapan model. Bobot yang sudah ada diverifikasi lokal; tidak ada unduhan
+checkpoint atau fallback native/accelerator.
+
+Ini satu generasi **30 detik/50langkah pada CPU Mac**, lebih besar dari uji
+10,24s sebelumnya. Tunggu sampai selesai. Output harus folder baru di luar
+baseline/ModelCandidates. Source posterior/epsilon/mask, token/conditioning,
+noise/schedule, dan conditional/unconditional/guided/momentum/latent pada
+langkah1/5/10/25/50 disimpan untuk audit. Tidak ada reset ke gold, sweep, stitch,
+EQ atau limiter. Model/cache/baseline BF16 dan batas abs/rel/RMSE tetap.
+
+Setelah **Ready**, putar pada volume/output sama:
+
+1. `01-colab-reference-headroom.wav` — drum Colab yang diterima.
+2. `02-host-reference-headroom.wav` — hasil host baru30 detik.
+3. `03-host-piano-drums-headroom.wav` — mix acuan0,5piano+0,5drum untuk menilai groove.
+
+Kirim `report.json` dan nilai glitch serta groove kandidat02/03. WAV01/02 memakai
+satu attenuasi bersama. Mix acuan ini tidak mengganti gain mix produksi iPhone.
+Jika verifikasi atau inference gagal, report/error dipertahankan; jangan
+mengganti referensi atau melonggarkan batas. Belum perlu Generate/build iPhone.
+Kandidat30s tidak otomatis diterima atau diaktifkan menjadi model native.
+
+## Hasil kontrol: uji VAE perkusi terdengar bersih
 
 Pengguna mengirim [laporan roundtrip drum Colab](../reviews/coreai-drums-percussion-roundtrip-clean/README.md)
 dan menyatakan **"sudah lebih baik dan glitch tidak terdengar"**. Identitas
@@ -45,7 +103,9 @@ Jangan memperpanjang chunk app atau mengadopsi cap kandidat berdasarkan uji
 codec ini. Uji berikutnya di host mengisolasi gain source sebelum reproduksi
 acuan 30 detik yang mengubah beberapa bagian sekaligus.
 
-## Langkah aktif: satu kandidat dengan gain source Colab
+## Riwayat gain source (selesai, glitch masih terdengar)
+
+Uji ini sudah selesai. Command berikut disimpan untuk reproduksi; jangan diulang.
 
 [Uji gain source](../reviews/coreai-drums-source-gain-plan/README.md) hanya
 mengalikan PCM piano tersimpan dengan `0,7` **sebelum VAE encoder**, mengikuti
@@ -75,13 +135,13 @@ sudah ada dipakai dengan verifikasi hash; tidak ada unduhan checkpoint, export
 native, build app atau aktivasi profil. Folder output harus baru. Tanpa
 `--execute`, script hanya menulis plan; gunakan folder baru setelah membuat plan.
 
-Setelah selesai, putar pada volume/output sama:
+Pasangan WAV yang diuji pada volume/output sama:
 
 1. `01-control-source-gain1-headroom.wav`
 2. `02-candidate-source-gain07-headroom.wav`
 
-Keduanya berisi drum dengan satu attenuasi bersama. Kirim `report.json` dan
-laporkan apakah glitch pada kandidat berkurang/hilang serta groove tetap cocok.
+Keduanya berisi drum dengan satu attenuasi bersama. Pengguna sudah mengirim
+report dan melaporkan glitch saat pergantian pukulan masih ada.
 Ini kandidat yang benar-benar dihitung dari input berbeda, terpisah dari uji
 VAE perkusi bersih yang sudah selesai. Tidak perlu menekan Generate di iPhone.
 

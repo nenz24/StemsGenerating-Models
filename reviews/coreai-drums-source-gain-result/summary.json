@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "report_sha256": "e89378349cabbc326571a352bbba99e19796bdf9949cd62eec347536c3d8c8cb",
+  "report_bytes": 8357,
+  "user_feedback_verbatim": "glicthnya ada lagi dipergantian pukulan",
+  "assessment": "Source-gain-only candidate did not resolve hit-transition artifact complaint; no adoption",
+  "per_file_listening_verdict_not_separately_specified": true,
+  "steps_completed": 50,
+  "control_checks": {
+    "count": 9,
+    "all_passed": true,
+    "all_reported_errors_exactly_zero": true
+  },
+  "source_gain": 0.7,
+  "source_encoder_calls": {
+    "control": 1,
+    "candidate": 1
+  },
+  "source_pcm_peaks": {
+    "control": 0.6691904067993164,
+    "candidate": 0.46843329071998596
+  },
+  "conditioning_byte_identical_reported": true,
+  "source_and_component_identities_match_previous": true,
+  "control_raw_WAV_hash_matches_previous_report": true,
+  "output_artifact_bytes_uploaded": false,
+  "full_trajectory_or_native_parity_established": false,
+  "bounded_diagnostic_provenance_preserved": true,
+  "BF16_or_tolerances_changed": false,
+  "decision": "Do not repeat or sweep source gain/APG cap. Keep baseline and clean codec-control result. Prepare one fixed accepted30s reference reproduction with captured actual inputs/conditioning/noise/trajectory; this is not a duration-only causal test.",
+  "reported_candidate_source_PCM_hash_reproduced_from_verified_control_PCM": true,
+  "candidate_source_PCM_expected_sha256": "316ee2f742653fd2a41a783fdb18a0b5d078ba837d8f3d84e407da0cd10d9e75"
+}

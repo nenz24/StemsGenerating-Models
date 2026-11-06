@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "host_regression": {
+    "run": 177,
+    "passed": 175,
+    "skipped": 2,
+    "new_tests": 8,
+    "command": "python -m unittest discover -s Tests/StemEvaluationPython -p test_coreai*.py"
+  },
+  "actual_cloud_execution": {
+    "source_encoder_calls": 1,
+    "Qwen_calls": 0,
+    "DiT_steps": 0,
+    "decoder_calls": 0,
+    "source_preparation_and750frame_encoder": "PASS",
+    "resampler_functions_AST_vs_TorchAudio210": "IDENTICAL",
+    "actual_source_wrapper_vs_original_Resample": "BIT EXACT",
+    "tokenizer_checksum_and_actual30s_prompts": "PASS111text15lyric127packed",
+    "tiny_synthetic_pinned_attention_cache_calls": 4,
+    "tiny_attention_scope": "Random8dim synthetic weights only; original learned DiT steps remain0"
+  },
+  "full30s_generation_here": "NOT RUN; complete base/Qwen weights available on user Mac only",
+  "numeric_parity": "NOT EVALUATED; original CUDA intermediate tensors unavailable",
+  "musical_quality": "NOT EVALUATED for new reference",
+  "BF16_native_baseline_or_numeric_tolerances_changed": false,
+  "audio_tensors_weights_committed": false,
+  "Apple_build_or_device_execution": false,
+  "checks": {
+    "Python_syntax": "PASS",
+    "JSON_parse": "PASS",
+    "relative_doc_links": "PASS",
+    "source_gain_report_preserved_byte_for_byte": "PASS",
+    "explicit_commit_scope": "New host diagnostic/helper/tests/docs/metadata only"
+  }
+}

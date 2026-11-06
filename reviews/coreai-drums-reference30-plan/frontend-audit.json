@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "source_preparation": {
+    "source32_WAV_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+    "source32_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "accepted_PCM_exact": true,
+    "source48_planar_sha256": "9d62d4eccd36188a4170a08ee6a22fcc66b5ad8af3b0753dc6b021a7f507f4a8",
+    "source_gain_already_applied": 0.7,
+    "additional_gain": 1.0,
+    "resampling": "Pinned TorchAudio2.10 transforms.Resample defaults; CPU torch implementation; clamp[-1,1] as handler",
+    "resampler_source_sha256": "84781e763405e636585c5cdd7303680c9d43d96e3ff32b05ac301ce6c66ea6e0"
+  },
+  "source_original_accepted_WAV_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+  "source_encoder_calls": 1,
+  "decoder_calls": 0,
+  "DiT_steps": 0,
+  "Qwen_calls": 0,
+  "context_shape": [
+    1,
+    750,
+    128
+  ],
+  "finite": true,
+  "full_mask_identical": true,
+  "seconds": 44.63828535100038,
+  "checkpoint_sha256": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+  "scope": "Actual CPU FP32 frontend encoding only. Fresh CPU epsilon31 saved; no claim of original CUDA posterior/RNG identity, complete reference generation, numerical parity or musical quality.",
+  "resampled_input_recheck_matches_actual_encoder_input_bytes": true
+}

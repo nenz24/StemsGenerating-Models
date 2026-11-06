@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "status": "completed_quality_experiment",
+  "experiment": "drums-host-source-gain-only",
+  "changed_input": "piano Float32 PCM multiplied by fixed0.7 before source VAE; nothing else",
+  "candidate_source_gain": 0.7,
+  "control_source_gain": 1.0,
+  "control_prompts": {
+    "instruction": "Generate the drums track based on the audio context:",
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.",
+    "metadata": "- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n",
+    "text_prompt": "# Instruction\nGenerate the drums track based on the audio context:\n\n# Caption\nIsolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n<|endoftext|>\n",
+    "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n<|endoftext|>",
+    "lyrics": "",
+    "vocal_language": "unknown",
+    "preset_sha256": "bcfd73641fddbda1fb0975febfe28cccb3a3121ec48cec1d877933e64a6d70ca",
+    "audio_seconds": 10.24
+  },
+  "candidate_prompts": {
+    "instruction": "Generate the drums track based on the audio context:",
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.",
+    "metadata": "- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n",
+    "text_prompt": "# Instruction\nGenerate the drums track based on the audio context:\n\n# Caption\nIsolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n<|endoftext|>\n",
+    "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n<|endoftext|>",
+    "lyrics": "",
+    "vocal_language": "unknown",
+    "preset_sha256": "bcfd73641fddbda1fb0975febfe28cccb3a3121ec48cec1d877933e64a6d70ca",
+    "audio_seconds": 10.24
+  },
+  "source_pcm_sha256": "836c4509c9eb54c39cf294effd979c5a1991e18f686b0c0b1223c0776d356018",
+  "component_reference_sha256": {
+    "source": "93e9639c5e1d7bc31cc19f162435f77ea650f94fe377c3708922525d2dd258da",
+    "condition": "c5e11b989432a8367b2e57973b53491b5919f9f7bf5cd70a74bd4a6bb21cc546",
+    "preview": "3901435d7818855f3d06a83b04b1774a55ce6cf52d0dab135091f9362e13367e"
+  },
+  "control_host_export_status": "bounded_diagnostic",
+  "unchanged": [
+    "saved PCM recording/crop/resampler",
+    "saved source epsilon and lego mask",
+    "all text/lyric/timbre conditioning",
+    "duration10.24s",
+    "initial noise/schedule",
+    "50steps guidance7 originalAPG cap2.5/momentum/projection",
+    "checkpoint values",
+    "VAE decoder"
+  ],
+  "scope": "One original-FP32 HOST source-gain-only candidate; not full Colab32kHz/30s reproduction, native parity or an adopted fix",
+  "reference": "tools/stem_eval/audio.py canonicalize fixed gain0.7 used by accepted Colab preparation",
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "native_exports": 0,
+  "baseline_modified": false,
+  "musical_acceptance": "NOT EVALUATED",
+  "phase": "replay cached control decoder and decode candidate",
+  "source_encoder_calls": {
+    "control": 1,
+    "candidate": 1
+  },
+  "control_replay_checks": {
+    "source_posterior_mean": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "source_posterior_std": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "source_source_latents": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "source_context_latents": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "condition_fp32": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "condition_mask": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "candidate_unchanged_condition": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "gold_step_1": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "gold_decoder": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    }
+  },
+  "source_checkpoint_sha256": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+  "source_pcm_peaks": {
+    "control": 0.6691904067993164,
+    "candidate": 0.46843329071998596
+  },
+  "source_epsilon_sha256": "98f0be58fff9b0dbc7ba995b129f83fefe3911d6d77658e9d5334df71a40d2e2",
+  "source_mask_unchanged": true,
+  "versions": {
+    "torch": "2.8.0",
+    "transformers": "4.57.3",
+    "diffusers": "0.37.0",
+    "tokenizers": "0.22.2"
+  },
+  "token_geometry": {
+    "text": 111,
+    "control_lyric": 11,
+    "candidate_lyric": 11,
+    "candidate_condition": 123
+  },
+  "candidate_condition_identical_to_control": true,
+  "common_listening_gain": 0.5197290358625425,
+  "raw_sample_peaks": {
+    "control": 1.3228400945663452,
+    "candidate": 1.3621439933776855
+  },
+  "candidate_steps_completed": 50,
+  "execution_counts": {
+    "conditioning_replays": 1,
+    "candidate_conditioning": 1,
+    "control_dit_first_step": 1,
+    "candidate_dit_steps": 50,
+    "control_decodes": 1,
+    "candidate_decodes": 1
+  },
+  "candidate_audio_sha256": "ee20db8ea7fb393aca1b3580011911b32dae3e68ad474422273211ee555cfe08",
+  "artifact_sha256": {
+    "01-control-source-gain1-raw.wav": "7862e8220c3a41f1fd4b306aea94404d6d7e6ec3932cce5fda7b2464d47fb4cf",
+    "candidate-source-latent.f32le": "9b099fa85af727b34a8d3cbb529cd373cc599692175ea4d8d887e28f619a74f3",
+    "candidate-audio.f32le": "ee20db8ea7fb393aca1b3580011911b32dae3e68ad474422273211ee555cfe08",
+    "candidate-condition.f32le": "eb282480839bdf990b7754a834ff6d7e7cb0967e4c02b9b262f1b4af1f30fc64",
+    "candidate-latent.f32le": "e335b6d1a4d9aee69c533ed1b400a2c029a2e9f0e09ef1056a5c2fd0ce33fb26",
+    "02-candidate-source-gain07-raw.wav": "5343b408dea8a0234ab5966e5d0c9d7556dfc58fd7a8e2699adfc3d67756db44",
+    "01-control-source-gain1-headroom.wav": "60cf1c447040274259596b3bef048c817abfc174f26ccfa157dd28c9b5483186",
+    "candidate-context.f32le": "460843f6fa2a1eb19ff7b3a287b39b7f9891ab516eda5c244ff877db07b3b8b7",
+    "02-candidate-source-gain07-headroom.wav": "2263c6b76b6f5219f5ae9e81bffbfd5dab6938305c327b52beea377e3e4d9de8",
+    "candidate-source-std.f32le": "b9b75a90d5d1dc5bcc8cc741666f62538f127d2fe8de43a0ce9568bb2b143b66",
+    "candidate-source-mean.f32le": "d94b4586db62f7e62482fbbecd2cac6feb2fe76e93e9526f13a8e86d6e7b2064",
+    "candidate-source-audio.f32le": "316ee2f742653fd2a41a783fdb18a0b5d078ba837d8f3d84e407da0cd10d9e75"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "scope": "Pinned publisher attention class with tiny synthetic random8dim weights; cache API/mechanism only, not learned full DiT or music validation",
+  "calls": 4,
+  "matched_query_pair_metrics": [
+    {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    }
+  ],
+  "self_attention_cache_sequence_length": 0,
+  "cross_attention_cached_length": 7,
+  "cross_layer_updated": true
+}
