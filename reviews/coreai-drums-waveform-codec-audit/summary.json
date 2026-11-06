@@ -21,5 +21,5 @@
   "musical_fix_claimed": false,
   "BF16_baseline_replaced": false,
   "tolerances_changed": false,
-  "next": "Preserve VAE; investigate common drum generation. One isolated host APG norm-cap candidate anchored to approved30s per-frame bound; no native/production changes or tolerance relaxation."
+  "next": "APG candidate completed and sounds clearer, but hit-transition glitches persist. Collect existing new candidate/control waveform and candidate latent/raw audio; do not rerun source codec or 50-step generation."
 }

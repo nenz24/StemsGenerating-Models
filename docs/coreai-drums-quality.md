@@ -16,7 +16,41 @@ Jadi clipping drum solo belum menjelaskan glitch mix. Sebanyak 87,54% energi
 drum berada di 20–150 Hz. Ini pengukuran spektrum, bukan bukti audibilitas,
 kesalahan instrumen atau penyebab glitch. Belum ada diagnosis penyebab pasti.
 
-## Hasil terbaru: kedua piano bersih; satu kandidat APG di Mac
+## Hasil terbaru: drum lebih jelas, glitch tersisa saat pergantian pukulan
+
+[Run kandidat APG](../reviews/coreai-drums-scaled-apg-partial-result/README.md)
+selesai 50/50 dengan lima pemeriksaan kontrol error 0 dan conditioning identik.
+Clipping kandidat aktif pada 48/50 iterasi. Pengguna mendengar drum lebih jelas,
+tetapi glitch muncul saat pergantian pukulan sepanjang audio. Kandidat disimpan
+sebagai kemajuan parsial; kualitas drum belum diterima penuh. Baseline BF16,
+cap produksi 2,5 dan toleransi abs/rel/RMSE dipertahankan.
+
+Run ini satu waveform 10,24 detik, tanpa stitching. Jangan menganggap kata
+"transisi" sebagai sambungan chunk atau menerapkan crossfade. Telemetri APG
+berindeks iterasi diffusion, bukan detik audio; angka itu tidak dapat melokasikan
+glitch serangan drum. Tidak perlu Generate ulang atau menurunkan cap lagi dulu.
+
+Kumpulkan waveform **kandidat APG yang baru**, tanpa menyertakan source lama lagi
+karena identitasnya sudah cocok. Dari folder repo Mac:
+
+```bash
+test ! -e .runtime-cache/drums-apg-review-v1.zip &&
+zip -j .runtime-cache/drums-apg-review-v1.zip \
+  .runtime-cache/drums-apg-norm-v1/{report.json,01-control-original-apg-headroom.wav,02-candidate-scaled-apg-headroom.wav,candidate-audio.f32le,candidate-latent.f32le} &&
+open -R .runtime-cache/drums-apg-review-v1.zip
+```
+
+Unggah `.runtime-cache/drums-apg-review-v1.zip`. Ini hanya membaca lima hasil
+yang sudah ada dan membuat arsip baru; tidak memuat model atau menyertakan
+checkpoint. Output lama tidak ditimpa. Jika folder hasil uji bernama berbeda,
+sesuaikan hanya path folder itu.
+
+Setelah hash dan transform gain diperiksa, bandingkan serangan drum kandidat dan
+kontrol di sepanjang klip. Drum memang memiliki serangan tajam/broadband;
+statistik spike saja tidak boleh dipakai untuk menghapus pukulan. Belum ada
+dasar untuk de-clicker, EQ, limiter, fade, cap lain atau eksperimen model baru.
+
+## Riwayat: kedua piano bersih dan uji APG (sudah selesai)
 
 Pengguna sudah mendengarkan dua WAV lokal dan melaporkan **keduanya bersih,
 hanya suara piano**. Itu memang hasil yang diharapkan dari rekonstruksi sumber.
@@ -36,7 +70,8 @@ Candidate cap adalah parameter generasi terpisah, bukan pelonggaran gate.
 Conditioning kandidat harus identik byte dengan kontrol, dan replay kontrol
 tetap harus lolos batas asli. Tidak ada limiter/EQ atau perubahan gain mix.
 
-Dari folder repo Mac yang sama:
+Command berikut disimpan untuk reproduksi; uji APG ini sudah selesai dan tidak
+perlu diulang. Dari folder repo Mac yang sama:
 
 ```bash
 git fetch origin main &&

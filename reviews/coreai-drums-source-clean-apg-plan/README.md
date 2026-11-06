@@ -1,5 +1,11 @@
 # Local source reconstruction is clean; test one APG norm-cap hypothesis
 
+**Subsequent result:** [the APG candidate completed](../coreai-drums-scaled-apg-partial-result/README.md).
+User reports clearer drums but hit-transition glitches throughout. Five control
+checks are exact-zero, clipping active48/50. Keep this partial candidate; obtain
+its existing waveform/latent next, without another generation or cap sweep.
+The preparation/testing state below is historical, not a request to rerun it.
+
 The user supplied the [local source-listening report](source-listening-report.json)
 and confirmed **both files are clean and contain piano only**. Piano-only output
 is expected: this test reconstructs the source, not accompaniment. One decoder,

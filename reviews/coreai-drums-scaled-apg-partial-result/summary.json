@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "report_sha256": "dc0a49d82d838a87ef8dc7cbcd2ffe8194659c28b44612f32cc3879f48e77676",
+  "execution": "COMPLETED 50/50",
+  "source_and_components_match_previous_host_run": true,
+  "conditioning_byte_identical_to_control_reported": true,
+  "control_replay_checks": 5,
+  "control_replay_errors_all_zero": true,
+  "host_control_provenance": "bounded_diagnostic",
+  "candidate_cap": 1.4605934866804429,
+  "baseline_cap": 2.5,
+  "candidate_clipping_active_steps": 48,
+  "candidate_clip_fraction_min_median_max": [
+    0.0,
+    0.8515625,
+    1.0
+  ],
+  "guidance_update_per_channel_rms_max": 0.547722578048706,
+  "theoretical_bound": 0.5477225575051661,
+  "telemetry_scope": "Diffusion-iteration telemetry over the entire clip, NOT physical audio timestamps. Baseline-cap fractions after step1 are counterfactual on candidate states, not a full original-control replay.",
+  "listener_feedback": "Drums more clearly audible; glitches persist at changes between drum hits throughout the audio",
+  "musical_acceptance": "PARTIAL improvement only; not accepted as finished drum audio",
+  "candidate_groove_acceptance": "Not separately reconfirmed; earlier original groove accepted",
+  "audio_structure": "Single10.24s generated waveform, one full-window candidate decoder; no audio chunk stitching",
+  "native_adoption": false,
+  "numeric_tolerances_changed": false,
+  "BF16_production_baseline_changed": false,
+  "raw_sample_peaks": {
+    "control": 1.3228400945663452,
+    "candidate": 1.6377499103546143
+  },
+  "common_listening_gain": 0.4322673320927551,
+  "actual_audio_bytes_for_this_candidate": "NOT YET UPLOADED; hashes in report cannot locate hit-transition artifacts",
+  "next": "Retain candidate; collect existing candidate/control waveform and saved candidate latent/raw audio for attack-local analysis, no new sampling/export/filter or cap sweep"
+}

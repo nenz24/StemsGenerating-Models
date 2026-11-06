@@ -82,12 +82,14 @@ available, but first listen to existing original FP32 and partition-host WAVs.
 
 ## Concrete next comparison
 
-[Current instructions](../../docs/coreai-drums-quality.md) test one separate host
-APG norm-cap candidate. Source piano and VAE reconstruction have now been heard
+[Current instructions](../../docs/coreai-drums-quality.md) collect the completed
+APG candidate's existing waveform/latent. Its drums are reported clearer but
+hit-transition glitches remain throughout; no further model change is selected.
+Source piano and VAE reconstruction have now been heard
 locally and reported clean. The host ZIP has arrived and
 [codec replay/tiling was checked](../coreai-drums-waveform-codec-audit/README.md)
 with six real decoder calls, no DiT steps. The lyric-only candidate did not
-resolve the complaint. The proposed APG candidate is not adopted, numerical
+resolve the complaint. The partial APG candidate is not adopted, numerical
 acceptance bounds and original production cap remain unchanged.
 The earlier comparison tools below remain available for reproduction.
 

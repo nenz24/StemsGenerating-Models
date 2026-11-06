@@ -1,0 +1,495 @@
+{
+  "schema_version": 1,
+  "experiment": "drums-host-apg-per-frame-bound",
+  "status": "completed_quality_experiment",
+  "changed_parameter": "APG norm_threshold ONLY; numeric acceptance tolerances unchanged",
+  "baseline_apg_norm_threshold": 2.5,
+  "candidate_apg_norm_threshold": 1.4605934866804429,
+  "latent_frames": 256,
+  "reference_latent_frames": 750,
+  "reference_baseline_sha256": "21d6ab645742a1353467cc0e3926e8dfc451a11b12601e7d657ba94a6459d3de",
+  "baseline_per_channel_momentum_rms_cap": 0.15625,
+  "reference_per_channel_momentum_rms_cap": 0.09128709291752768,
+  "candidate_per_channel_momentum_rms_cap": 0.09128709291752768,
+  "control_prompts": {
+    "instruction": "Generate the drums track based on the audio context:",
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.",
+    "metadata": "- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n",
+    "text_prompt": "# Instruction\nGenerate the drums track based on the audio context:\n\n# Caption\nIsolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n<|endoftext|>\n",
+    "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n<|endoftext|>",
+    "lyrics": "",
+    "vocal_language": "unknown",
+    "preset_sha256": "bcfd73641fddbda1fb0975febfe28cccb3a3121ec48cec1d877933e64a6d70ca",
+    "audio_seconds": 10.24
+  },
+  "candidate_prompts": {
+    "instruction": "Generate the drums track based on the audio context:",
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.",
+    "metadata": "- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n",
+    "text_prompt": "# Instruction\nGenerate the drums track based on the audio context:\n\n# Caption\nIsolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 10 seconds\n<|endoftext|>\n",
+    "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n<|endoftext|>",
+    "lyrics": "",
+    "vocal_language": "unknown",
+    "preset_sha256": "bcfd73641fddbda1fb0975febfe28cccb3a3121ec48cec1d877933e64a6d70ca",
+    "audio_seconds": 10.24
+  },
+  "source_pcm_sha256": "836c4509c9eb54c39cf294effd979c5a1991e18f686b0c0b1223c0776d356018",
+  "component_reference_sha256": {
+    "source": "93e9639c5e1d7bc31cc19f162435f77ea650f94fe377c3708922525d2dd258da",
+    "condition": "c5e11b989432a8367b2e57973b53491b5919f9f7bf5cd70a74bd4a6bb21cc546",
+    "preview": "3901435d7818855f3d06a83b04b1774a55ce6cf52d0dab135091f9362e13367e"
+  },
+  "control_host_export_status": "bounded_diagnostic",
+  "unchanged": [
+    "piano PCM/context",
+    "FP32 conditioning including current lyric text",
+    "initial noise/schedule",
+    "10.24 seconds",
+    "50 APG Euler steps",
+    "guidance 7",
+    "APG momentum/projection dims/FP64 original projection",
+    "checkpoint values",
+    "VAE decoder"
+  ],
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "scope": "One HOST original-FP32 quality experiment; not native/production parity or a 30-second context reproduction",
+  "native_exports": 0,
+  "baseline_modified": false,
+  "musical_acceptance": "NOT EVALUATED",
+  "versions": {
+    "torch": "2.8.0",
+    "transformers": "4.57.3",
+    "diffusers": "0.37.0",
+    "tokenizers": "0.22.2"
+  },
+  "phase": "replay cached control decoder and decode candidate",
+  "token_geometry": {
+    "text": 111,
+    "control_lyric": 11,
+    "candidate_lyric": 11,
+    "candidate_condition": 123
+  },
+  "control_replay_checks": {
+    "condition_fp32": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "condition_mask": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "candidate_unchanged_condition": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "gold_step_1": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "gold_decoder": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    }
+  },
+  "candidate_condition_identical_to_control": true,
+  "candidate_apg_diagnostics": [
+    {
+      "step": 1,
+      "momentum_norm_max": 10.279754638671875,
+      "candidate_clip_fraction": 0.703125,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.3125,
+      "guidance_update_per_channel_rms_max": 0.5477217435836792
+    },
+    {
+      "step": 2,
+      "momentum_norm_max": 4.361876010894775,
+      "candidate_clip_fraction": 0.359375,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.140625,
+      "guidance_update_per_channel_rms_max": 0.5477216243743896
+    },
+    {
+      "step": 3,
+      "momentum_norm_max": 8.260944366455078,
+      "candidate_clip_fraction": 0.65625,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.34375,
+      "guidance_update_per_channel_rms_max": 0.5477171540260315
+    },
+    {
+      "step": 4,
+      "momentum_norm_max": 4.939591407775879,
+      "candidate_clip_fraction": 0.359375,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.171875,
+      "guidance_update_per_channel_rms_max": 0.547623336315155
+    },
+    {
+      "step": 5,
+      "momentum_norm_max": 4.860245704650879,
+      "candidate_clip_fraction": 0.515625,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.15625,
+      "guidance_update_per_channel_rms_max": 0.5475971102714539
+    },
+    {
+      "step": 6,
+      "momentum_norm_max": 4.5746588706970215,
+      "candidate_clip_fraction": 0.453125,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.125,
+      "guidance_update_per_channel_rms_max": 0.5476415157318115
+    },
+    {
+      "step": 7,
+      "momentum_norm_max": 3.3699395656585693,
+      "candidate_clip_fraction": 0.734375,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.109375,
+      "guidance_update_per_channel_rms_max": 0.5476881265640259
+    },
+    {
+      "step": 8,
+      "momentum_norm_max": 3.389895439147949,
+      "candidate_clip_fraction": 0.609375,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.09375,
+      "guidance_update_per_channel_rms_max": 0.547722578048706
+    },
+    {
+      "step": 9,
+      "momentum_norm_max": 3.2777435779571533,
+      "candidate_clip_fraction": 0.859375,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.140625,
+      "guidance_update_per_channel_rms_max": 0.547709584236145
+    },
+    {
+      "step": 10,
+      "momentum_norm_max": 3.019843816757202,
+      "candidate_clip_fraction": 0.96875,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.125,
+      "guidance_update_per_channel_rms_max": 0.5477184653282166
+    },
+    {
+      "step": 11,
+      "momentum_norm_max": 4.061097621917725,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.484375,
+      "guidance_update_per_channel_rms_max": 0.5476961731910706
+    },
+    {
+      "step": 12,
+      "momentum_norm_max": 3.608712911605835,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.46875,
+      "guidance_update_per_channel_rms_max": 0.5477223992347717
+    },
+    {
+      "step": 13,
+      "momentum_norm_max": 4.675724983215332,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.71875,
+      "guidance_update_per_channel_rms_max": 0.5476783514022827
+    },
+    {
+      "step": 14,
+      "momentum_norm_max": 4.267886638641357,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.921875,
+      "guidance_update_per_channel_rms_max": 0.5477225184440613
+    },
+    {
+      "step": 15,
+      "momentum_norm_max": 5.207604885101318,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.984375,
+      "guidance_update_per_channel_rms_max": 0.547073483467102
+    },
+    {
+      "step": 16,
+      "momentum_norm_max": 4.607998371124268,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.984375,
+      "guidance_update_per_channel_rms_max": 0.5477189421653748
+    },
+    {
+      "step": 17,
+      "momentum_norm_max": 6.463926792144775,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 1.0,
+      "guidance_update_per_channel_rms_max": 0.5382403135299683
+    },
+    {
+      "step": 18,
+      "momentum_norm_max": 5.863303184509277,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 1.0,
+      "guidance_update_per_channel_rms_max": 0.5438850522041321
+    },
+    {
+      "step": 19,
+      "momentum_norm_max": 6.313691139221191,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 1.0,
+      "guidance_update_per_channel_rms_max": 0.5349494218826294
+    },
+    {
+      "step": 20,
+      "momentum_norm_max": 5.654354572296143,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 1.0,
+      "guidance_update_per_channel_rms_max": 0.5356566905975342
+    },
+    {
+      "step": 21,
+      "momentum_norm_max": 5.920854568481445,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 1.0,
+      "guidance_update_per_channel_rms_max": 0.5289927124977112
+    },
+    {
+      "step": 22,
+      "momentum_norm_max": 4.8150153160095215,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 1.0,
+      "guidance_update_per_channel_rms_max": 0.5339733362197876
+    },
+    {
+      "step": 23,
+      "momentum_norm_max": 4.721317291259766,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 1.0,
+      "guidance_update_per_channel_rms_max": 0.5309728384017944
+    },
+    {
+      "step": 24,
+      "momentum_norm_max": 3.961376667022705,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.9375,
+      "guidance_update_per_channel_rms_max": 0.5382509827613831
+    },
+    {
+      "step": 25,
+      "momentum_norm_max": 4.0352277755737305,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.9375,
+      "guidance_update_per_channel_rms_max": 0.5357967019081116
+    },
+    {
+      "step": 26,
+      "momentum_norm_max": 3.5940868854522705,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.84375,
+      "guidance_update_per_channel_rms_max": 0.5399397611618042
+    },
+    {
+      "step": 27,
+      "momentum_norm_max": 3.620650053024292,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.78125,
+      "guidance_update_per_channel_rms_max": 0.5381103754043579
+    },
+    {
+      "step": 28,
+      "momentum_norm_max": 3.3356637954711914,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.453125,
+      "guidance_update_per_channel_rms_max": 0.5372006893157959
+    },
+    {
+      "step": 29,
+      "momentum_norm_max": 3.2016730308532715,
+      "candidate_clip_fraction": 1.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.25,
+      "guidance_update_per_channel_rms_max": 0.5343425869941711
+    },
+    {
+      "step": 30,
+      "momentum_norm_max": 2.9354848861694336,
+      "candidate_clip_fraction": 0.953125,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.109375,
+      "guidance_update_per_channel_rms_max": 0.5274891257286072
+    },
+    {
+      "step": 31,
+      "momentum_norm_max": 2.740107774734497,
+      "candidate_clip_fraction": 0.953125,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.03125,
+      "guidance_update_per_channel_rms_max": 0.522637665271759
+    },
+    {
+      "step": 32,
+      "momentum_norm_max": 2.4994587898254395,
+      "candidate_clip_fraction": 0.859375,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5290484428405762
+    },
+    {
+      "step": 33,
+      "momentum_norm_max": 2.296828508377075,
+      "candidate_clip_fraction": 0.84375,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5346257090568542
+    },
+    {
+      "step": 34,
+      "momentum_norm_max": 2.183607578277588,
+      "candidate_clip_fraction": 0.796875,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5388054251670837
+    },
+    {
+      "step": 35,
+      "momentum_norm_max": 2.0974924564361572,
+      "candidate_clip_fraction": 0.8125,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5404537916183472
+    },
+    {
+      "step": 36,
+      "momentum_norm_max": 2.009164571762085,
+      "candidate_clip_fraction": 0.625,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5414875149726868
+    },
+    {
+      "step": 37,
+      "momentum_norm_max": 1.938612461090088,
+      "candidate_clip_fraction": 0.578125,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5430178046226501
+    },
+    {
+      "step": 38,
+      "momentum_norm_max": 1.8522474765777588,
+      "candidate_clip_fraction": 0.375,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5429183840751648
+    },
+    {
+      "step": 39,
+      "momentum_norm_max": 1.8174097537994385,
+      "candidate_clip_fraction": 0.296875,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.538597583770752
+    },
+    {
+      "step": 40,
+      "momentum_norm_max": 1.7321529388427734,
+      "candidate_clip_fraction": 0.125,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5416144132614136
+    },
+    {
+      "step": 41,
+      "momentum_norm_max": 1.6680622100830078,
+      "candidate_clip_fraction": 0.109375,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5432525873184204
+    },
+    {
+      "step": 42,
+      "momentum_norm_max": 1.5255863666534424,
+      "candidate_clip_fraction": 0.03125,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5452057123184204
+    },
+    {
+      "step": 43,
+      "momentum_norm_max": 1.498747706413269,
+      "candidate_clip_fraction": 0.015625,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5464805960655212
+    },
+    {
+      "step": 44,
+      "momentum_norm_max": 1.4556924104690552,
+      "candidate_clip_fraction": 0.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5453986525535583
+    },
+    {
+      "step": 45,
+      "momentum_norm_max": 1.4520562887191772,
+      "candidate_clip_fraction": 0.0,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5443601608276367
+    },
+    {
+      "step": 46,
+      "momentum_norm_max": 1.5815186500549316,
+      "candidate_clip_fraction": 0.0625,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5476624965667725
+    },
+    {
+      "step": 47,
+      "momentum_norm_max": 1.6098060607910156,
+      "candidate_clip_fraction": 0.078125,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5461744070053101
+    },
+    {
+      "step": 48,
+      "momentum_norm_max": 1.5559260845184326,
+      "candidate_clip_fraction": 0.03125,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5273575186729431
+    },
+    {
+      "step": 49,
+      "momentum_norm_max": 2.406115770339966,
+      "candidate_clip_fraction": 0.296875,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.0,
+      "guidance_update_per_channel_rms_max": 0.5476943850517273
+    },
+    {
+      "step": 50,
+      "momentum_norm_max": 4.385537624359131,
+      "candidate_clip_fraction": 0.890625,
+      "baseline_cap_fraction_for_same_candidate_momentum": 0.265625,
+      "guidance_update_per_channel_rms_max": 0.5477117300033569
+    }
+  ],
+  "common_listening_gain": 0.4322673320927551,
+  "raw_sample_peaks": {
+    "control": 1.3228400945663452,
+    "candidate": 1.6377499103546143
+  },
+  "candidate_steps_completed": 50,
+  "execution_counts": {
+    "conditioning_replays": 1,
+    "candidate_conditioning": 1,
+    "control_dit_first_step": 1,
+    "candidate_dit_steps": 50,
+    "control_decodes": 1,
+    "candidate_decodes": 1
+  },
+  "candidate_audio_sha256": "cefc11f329e4f6163241f475bb86a32f5bf2b6d95db055e84f2331690085a2d0",
+  "candidate_clipping_active_steps": 48,
+  "diagnostic_note": "Baseline-cap fractions after step 1 are counterfactual on CANDIDATE momentum; they are not a replay of all 50 control states. No listening verdict inferred.",
+  "artifact_sha256": {
+    "candidate-audio.f32le": "cefc11f329e4f6163241f475bb86a32f5bf2b6d95db055e84f2331690085a2d0",
+    "candidate-condition.f32le": "eb282480839bdf990b7754a834ff6d7e7cb0967e4c02b9b262f1b4af1f30fc64",
+    "02-candidate-scaled-apg-raw.wav": "2da21c007877fa8006be12196ba5686326a59078eb5f22fa6d97bd3a1368d784",
+    "candidate-latent.f32le": "521980cfd1282134e475a0bf71c519bd43434e71e39e5f54a7eb638f822640af",
+    "02-candidate-scaled-apg-headroom.wav": "8a1aa91aaf19994eb47cafc871893fd836a27b397d594338e19e4ff33c68f538",
+    "01-control-original-apg-raw.wav": "7862e8220c3a41f1fd4b306aea94404d6d7e6ec3932cce5fda7b2464d47fb4cf",
+    "01-control-original-apg-headroom.wav": "4ab48fe5d389e6a6cbc64ee5f16a28df8d35e9f4da71753c7f5c6bc8ecab066f"
+  }
+}
