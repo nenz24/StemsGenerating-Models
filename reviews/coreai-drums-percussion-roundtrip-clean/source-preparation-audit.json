@@ -1,0 +1,25 @@
+{
+  "source_sha256": "ccd94ea37159f69c272623efb319a62984564f1799d3744d096b7add49246189",
+  "canonical_wav_sha256": "2b6ecdcea2240f327151869de3f592ec9978f0024752e4f1a2c0f7e9fc7c61cb",
+  "approved_model_input_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+  "approved_model_input_exact": false,
+  "duration_seconds": 30,
+  "fixed_source_gain": 0.7,
+  "sample_rate": 32000,
+  "format": "stereo PCM16 WAV",
+  "inference_calls": 0,
+  "baseline_modified": false,
+  "scope": "Input preparation only; no conditioning, source encoder, DiT or native generation",
+  "recovered_verified_approved_input": {
+    "path": "/workspace/scratch/guitar_layers_preview30_review/piano_input/source.wav",
+    "wav_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+    "pcm_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "matches_approved_WAV_hash": true
+  },
+  "fresh_preparation_vs_recovered": {
+    "pcm_exact": true,
+    "max_pcm16_difference": 0,
+    "different_interleaved_samples": 0,
+    "scope": "Fresh WAV hash differs; use recovered exact approved input for matched-reference work; do not replace baseline hash"
+  }
+}

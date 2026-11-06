@@ -1,5 +1,12 @@
 # APG candidate waveform verification and percussion codec control
 
+**Subsequent Mac listening result:** the user reports "sudah lebih baik dan
+glitch tidak terdengar" on the percussion roundtrip test. [Archived report and
+bounded interpretation](../coreai-drums-percussion-roundtrip-clean/README.md)
+close that listening request. No repeat is needed. This clean control does not
+accept a new generated APG/iPhone candidate; pending-listening statements below
+describe the earlier cloud-only stage.
+
 The user uploaded `drums-apg-review-v1.zip` after reporting clearer drums with
 remaining glitches at changes between hits throughout the clip. The five-member
 archive is verified in [archive-audit.json](archive-audit.json): report bytes match

@@ -16,7 +16,35 @@ Jadi clipping drum solo belum menjelaskan glitch mix. Sebanyak 87,54% energi
 drum berada di 20–150 Hz. Ini pengukuran spektrum, bukan bukti audibilitas,
 kesalahan instrumen atau penyebab glitch. Belum ada diagnosis penyebab pasti.
 
-## Hasil terbaru: drum lebih jelas, glitch tersisa saat pergantian pukulan
+## Hasil terbaru: uji VAE perkusi terdengar bersih
+
+Pengguna mengirim [laporan roundtrip drum Colab](../reviews/coreai-drums-percussion-roundtrip-clean/README.md)
+dan menyatakan **"sudah lebih baik dan glitch tidak terdengar"**. Identitas
+eksperimen, arsip/drum sumber dan checkpoint cocok: satu encoder, satu decoder,
+tanpa langkah generasi. Hasil ini berlaku pada pembanding perkusi terakhir;
+pengguna tidak merinci penilaian 01/02 secara terpisah. Field otomatis
+`listening_assessment: NOT EVALUATED` di report asli dipertahankan, sedangkan
+feedback manusia dicatat terpisah. WAV Mac tidak diunggah pada pesan ini;
+hash output adalah catatan report, belum dihitung ulang dari file tersebut.
+
+Uji dengar codec perkusi selesai dan **tidak perlu diulang**. VAE FP32, baseline
+BF16, cap produksi 2,5 dan toleransi tetap. Fokus berikutnya adalah conditioning
+dan lintasan generasi terhadap acuan Colab. Rekonstruksi drum Colab yang bersih
+belum menjadi hasil dengar baru untuk kandidat APG atau penerimaan drum iPhone.
+Perilaku VAE pada latent lain juga belum dikesampingkan sepenuhnya.
+
+[Input acuan 30 detik ditemukan](../reviews/coreai-drums-percussion-roundtrip-clean/source-preparation-audit.json)
+dengan hash WAV persis sama dengan baseline yang diterima. Canonicalization
+ulang saat ini menghasilkan PCM16 identik dengan input acuan, walaupun hash
+WAV berbeda pada byte di luar PCM. Gunakan arsip input yang identik untuk
+pemeriksaan acuan; jangan mengganti hash baseline. [Rencana pemeriksaan
+generasi](../reviews/coreai-drums-percussion-roundtrip-clean/generation-reference-plan.json)
+mengunci input, durasi/metadata, conditioning, RNG nyata dan parameter Colab.
+Ini belum dieksekusi sebagai generasi baru atau uji isolasi durasi saja.
+Jangan memperpanjang chunk app atau mengadopsi cap kandidat berdasarkan uji
+codec ini. Tidak ada perintah generasi/build iPhone baru untuk pengguna saat ini.
+
+## Riwayat APG: drum lebih jelas, glitch saat pergantian pukulan
 
 [Run kandidat APG](../reviews/coreai-drums-scaled-apg-partial-result/README.md)
 selesai 50/50 dengan lima pemeriksaan kontrol error 0 dan conditioning identik.
@@ -38,7 +66,7 @@ tetapi ini bukan detektor semua jenis glitch atau sertifikat kualitas.
 Serangan tajam sekitar 3,568 detik muncul pada kontrol dan kandidat; statistik
 transien tidak cukup untuk menyebutnya salah atau menghapus pukulan.
 
-### Langkah aktif: pembanding VAE dengan drum yang sudah diterima
+### Riwayat pembanding VAE perkusi (sudah selesai, terdengar bersih)
 
 Piano bersih belum membuktikan kualitas rekonstruksi **perkusi**. Satu kontrol
 baru memakai drum Colab 30 detik yang sudah diterima: resample WAV arsip
@@ -47,9 +75,10 @@ decoder VAE FP32. Tidak ada DiT/50 langkah, unduhan checkpoint, export native
 atau perubahan preset. Ini rekonstruksi lossy dari WAV ekspor, bukan replay
 latent Colab asli atau reproduksi full pipeline Colab.
 
-Script ini sudah benar-benar dijalankan di CPU cloud. Dua WAV harus dibuat
-langsung di Mac agar dapat diakses dari Finder; tautan audio cloud sebelumnya
-tidak dapat diunduh pengguna. Tutup Xcode, lalu dari repo Mac:
+Script ini sudah benar-benar dijalankan di CPU cloud dan kemudian di Mac.
+Pengguna sudah mendengar hasil lokal tanpa glitch. Command berikut disimpan
+untuk reproduksi, bukan permintaan mengulang. Dua WAV dibuat langsung di Mac
+karena tautan audio cloud sebelumnya tidak dapat diunduh pengguna:
 
 ```bash
 git fetch origin main &&
@@ -60,13 +89,11 @@ python3 scripts/update_coreai_project.py &&
 open .runtime-cache/coreai-drums-codec-listening-v1
 ```
 
-Dengarkan **`01-approved-drums.wav`**, lalu **`02-approved-drums-vae.wav`**,
-pada volume/output yang sama. Keduanya berisi drum saja, dengan satu gain
-attenuasi bersama. Laporkan apakah glitch transisi yang sama sudah terdengar
-pada 01, baru muncul pada 02, atau keduanya bersih, serta bagikan `report.json`.
-Jangan menilai dari angka korelasi/SNR saja. Jika 01 bersih dan 02 glitch,
-fokus berikutnya codec perkusi; jika keduanya bersih, fokus tetap latent generasi.
-Ini arah investigasi, bukan kesimpulan penyebab otomatis. Sumber arsip bukan
+Pasangan **`01-approved-drums.wav`** dan **`02-approved-drums-vae.wav`** berisi
+drum saja, dengan satu gain attenuasi bersama. Hasil dengar terbaru tidak
+melaporkan glitch pada uji ini; fokus investigasi kini generasi/conditioning.
+Kesimpulan ini memakai feedback, bukan angka korelasi/SNR saja, dan belum
+menentukan penyebab tunggal glitch generasi. Sumber arsip bukan
 drum mentah sebelum VAE Colab dan roundtrip menambahkan kompresi lossy lagi.
 
 Checkpoint dan arsip diperiksa SHA-256; folder output harus baru dan di luar

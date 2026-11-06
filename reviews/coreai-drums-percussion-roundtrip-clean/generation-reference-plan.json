@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "status": "reference_reproduction_plan_only_no_new_model_execution",
+  "purpose": "Investigate generation/conditioning using exact approved30s input after clean piano and percussion codec controls",
+  "approved_input": {
+    "wav_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+    "pcm_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "exact_archived_WAV_available_here": true,
+    "source_path": "/workspace/scratch/guitar_layers_preview30_review/piano_input/source.wav"
+  },
+  "fixed_reference_settings": {
+    "duration_seconds": 30,
+    "latent_frames": 750,
+    "source_gain_already_applied": 0.7,
+    "apply_second_source_gain": false,
+    "lyrics": "[Instrumental]",
+    "reference_audio": null,
+    "steps": 50,
+    "guidance_scale": 7,
+    "shift": 1,
+    "method": "Euler/APG",
+    "APG_norm_threshold": 2.5,
+    "APG_momentum": -0.75,
+    "APG_projection_dimensions": [
+      1
+    ],
+    "caption_instruction": "Unchanged accepted acoustic-drums preset"
+  },
+  "required_evidence": [
+    "Verified exact source/WAV and raw resampled PCM identities; no replacement of reference",
+    "Text/lyric token IDs, duration metadata, packed condition/mask, reference-audio and source-context tensors",
+    "Actual source posterior mean/std/epsilon and diffusion noise/schedule; do not infer CUDA and CPU RNG identity from same seed",
+    "Conditional/unconditional velocities, momentum and latent checkpoints along independent live50-step trajectory",
+    "Raw final latent/audio and headroom pair; listening quality/groove separately from numerical parity"
+  ],
+  "limits": [
+    "This is a matched-reference reproduction, not an isolated duration-only ablation: current10.24s preview differs in source preparation, duration metadata, lyrics and RNG",
+    "Original approved CUDA intermediate tensors are not archived; exact trajectory parity cannot be claimed without actual matching captured tensors",
+    "No duration/seed/cap sweep or BF16/native activation",
+    "No new generation has run from this plan"
+  ],
+  "inference_calls_this_followup": 0,
+  "BF16_baseline_unchanged": true,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "normalized_RMSE_tolerance": 0.001
+}

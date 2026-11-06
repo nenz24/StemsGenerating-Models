@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "status": "completed_listening_copies",
+  "experiment": "approved-percussion-fp32-vae-roundtrip",
+  "scope": "Lossy codec control on first 10.24s of approved 30s Colab PCM16/32kHz export; not original latent replay or CUDA parity",
+  "archive_sha256": "70400534aac9e2ac14db1d7fc2bdaec31585cec9285e8fe5b60222fd202b8433",
+  "approved_wav_sha256": "29d409250f6104936b7fea215f5b1798c37f52bc8b91b3668003567952476fce",
+  "prepared_pcm_sha256": "48f95ac49cd7f305d26022eccfc6888370c0a9bc61e3e1f748c8fbaf3bce3ca1",
+  "checkpoint_sha256": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+  "sample_rate": 48000,
+  "audio_seconds": 10.24,
+  "latent_frames": 256,
+  "posterior": "sample; explicit CPU generator seed 31; not the original Colab latent",
+  "source_preparation": "ffmpeg full 30s PCM16 stereo 32kHz export -> stereo Float32 48kHz, then first 10.24s; no normalization",
+  "encoder_calls": 1,
+  "decoder_calls": 1,
+  "sampling_steps": 0,
+  "native_exports": 0,
+  "baseline_modified": false,
+  "listening_assessment": "NOT EVALUATED",
+  "torch_version": "2.8.0",
+  "ffmpeg_version": "ffmpeg version 9.0.2 Copyright (c) 2000-2026 the FFmpeg developers",
+  "lossy_roundtrip_metrics_not_acceptance": {
+    "relative_rms_error": 0.22649802426033788,
+    "channel_correlations": [
+      0.9828671791582927,
+      0.982536661213395
+    ]
+  },
+  "raw_sample_peaks": {
+    "approved": 0.9638423323631287,
+    "reconstruction": 0.985706090927124
+  },
+  "common_linear_gain": 0.7182118391074022,
+  "artifact_sha256": {
+    "01-approved-drums.wav": "91189d30b325766488ebaefbcddc498bfa458a79ff28a1edd700ae2a9352d9b2",
+    "reencoded-latent.f32le": "98492b5aea3763f3be3010746b56f954fefbd44e455964b09e40fca5cd23db2f",
+    "02-approved-drums-vae.wav": "04c4f2bd2596748eb3d0e9849b361070c7c68dbc45272ac62b0bdc107e777e95"
+  }
+}

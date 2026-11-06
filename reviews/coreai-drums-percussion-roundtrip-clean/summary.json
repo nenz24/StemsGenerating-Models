@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "report_sha256": "e6ef3f62438b4a94c6b17b0cce715b3aa6e83e54152484502a55787a8d442612",
+  "report_bytes": 1854,
+  "review_date_timezone": "Asia/Jakarta",
+  "review_date": "2026-11-06",
+  "user_feedback_verbatim": "sudah lebih baik dan glitch tidak terdengar",
+  "feedback_scope": "Latest approved-percussion VAE roundtrip pair; per-file listening verdict not separately specified",
+  "source_report_listening_assessment_preserved": "NOT EVALUATED",
+  "human_feedback_supersedes_unfilled_report_listening_field_for_this_test": true,
+  "percussion_control_result": "No audible glitch reported for latest local listening test",
+  "generated_APG_candidate_new_listening_result": false,
+  "production_drums_accepted": false,
+  "VAE_or_BF16_or_APG_baseline_or_tolerances_changed": false,
+  "validation": {
+    "report_experiment_and_completed_status": "PASS",
+    "archive_member_checkpoint_identity_vs_cloud": "PASS",
+    "one_encoder_one_decoder_zero_diffusion_zero_native": "PASS",
+    "shared_attenuation_formula": "PASS",
+    "artifact_digest_syntax": "PASS",
+    "uploaded_report_byte_preservation": "PASS",
+    "uploaded_waveform_hashes_independently_checked": false
+  },
+  "limitations": [
+    "Uploaded report only; WAV and latent artifact hashes are reported, not independently recomputed",
+    "Subjective clean result applies to this existing Colab percussion reconstruction control, not a new generated iPhone/APG drum",
+    "Does not rule out latent-dependent VAE behavior, all playback paths, or all source material",
+    "Mac/cloud prepared PCM and output hashes differ; different ffmpeg versions are recorded; no exact cross-platform parity claim"
+  ],
+  "decision": "Retain pinned FP32 VAE and production BF16; investigate source/conditioning/live diffusion trajectory against approved Colab reference. Do not repeat codec listening or adopt scaled APG based on this report."
+}
