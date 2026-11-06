@@ -1,0 +1,31 @@
+{
+  "float32_then_nearest_pcm16": {
+    "sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "matches_gold": true,
+    "matches_Mac": false
+  },
+  "float32_then_floor_pcm16": {
+    "sha256": "5c64beae56c1ddd93fd10f751bda92287f295e95cc77e789cf2a9535d59f3109",
+    "matches_gold": false,
+    "matches_Mac": false
+  },
+  "Mac_PCM_vs_floor_of_Linux_float32": {
+    "differing_interleaved_samples": 7090,
+    "max_difference": 1,
+    "delta_counts": {
+      "-1": 961,
+      "0": 1912910,
+      "1": 6129
+    }
+  },
+  "Mac_PCM_vs_nearest_of_Linux_float32": {
+    "differing_interleaved_samples": 939512,
+    "max_difference": 1,
+    "delta_counts": {
+      "-1": 939505,
+      "0": 980488,
+      "1": 7
+    }
+  },
+  "scope": "Actual input conversion investigation, not a generation-parameter sweep. Results support explicit nearest quantization to reproduce frozen Linux/Colab source; exact Mac Float32 path has not yet been executed. The precise platform-specific source of rounding differences is not established."
+}

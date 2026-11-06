@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "ZIP_sha256": "a46b0114db1c2840f4fe8c3b1f74c4acf9185e7c7f59599d2e54d18bdb6ba034",
+  "ZIP_bytes": 3399892,
+  "members": {
+    "report.json": {
+      "bytes": 3147,
+      "sha256": "a5b5c1ac50a118668a9eadd77519cd8c3adad750c35377d0910a7fc36e131246"
+    },
+    "source32.wav": {
+      "bytes": 3840078,
+      "sha256": "06c258af20bb7abe4619ccbe40ac2ea5fae075f57c47b6c5d50e1249d673c4fe"
+    }
+  },
+  "failed_report_counts_verified": {
+    "source_encoder_calls": 0,
+    "decoder_calls": 0,
+    "steps_completed": 0
+  },
+  "WAV_format": {
+    "sample_rate": 32000,
+    "channels": 2,
+    "sample_width_bytes": 2,
+    "frames": 960000
+  },
+  "audio_or_float_or_checkpoints_committed": false
+}

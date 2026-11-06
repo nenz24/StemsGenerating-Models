@@ -7,6 +7,7 @@ import types
 import unittest
 import wave
 import hashlib
+import zipfile
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -165,6 +166,37 @@ class DrumReferenceTests(unittest.TestCase):
             self.assertEqual((r['source_encoder_calls'], r['decoder_calls'], r['steps_completed']), (0, 0, 0))
             self.assertFalse(r['source_preparation_diagnostic']['accepted_PCM_exact'])
             self.assertEqual(r['source_preparation_diagnostic']['expected_source32_PCM_sha256'], M.SOURCE_PCM_SHA)
+
+    def test_explicit_PCM16_rounding_is_nearest_even_including_negative_ties(self):
+        import numpy as np
+        values = np.zeros(1920000, dtype='<f4')
+        units = [-40000., -32768., -32767.5, -2.5, -1.5, -.5, 0., .5, 1.5, 2.5, 32766.5, 32767.5, 40000.]
+        values[:len(units)] = np.array(units, dtype=np.float32) / 32768
+        result = np.frombuffer(M.nearest_pcm16(values.tobytes()), dtype='<i2')
+        self.assertEqual(result[:len(units)].tolist(), [-32768, -32768, -32768, -2, -2, 0, 0, 0, 2, 2, 32766, 32767, 32767])
+        self.assertEqual(result.size, 1920000)
+        values[0] = float('nan')
+        with self.assertRaisesRegex(ValueError, 'finite'): M.nearest_pcm16(values.tobytes())
+        with self.assertRaisesRegex(ValueError, 'finite'): M.nearest_pcm16(b'bad')
+
+    def test_failed_preparation_package_excludes_weights_preserves_and_never_overwrites(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            report = {'status': 'failed', 'phase': 'prepare source', 'steps_completed': 0, 'source_encoder_calls': 0, 'decoder_calls': 0}
+            (out / 'report.json').write_text(json.dumps(report))
+            for name in ['source32-float.f32le', 'source32.wav', 'weights.safetensors']:
+                (out / name).write_bytes(b'nonexecutable diagnostic fixture')
+            archive = M.package_source_failure(out)
+            with zipfile.ZipFile(archive) as bundle:
+                self.assertEqual(set(bundle.namelist()), {'report.json', 'source32-float.f32le', 'source32.wav'})
+            before = archive.read_bytes()
+            self.assertIsNone(M.package_source_failure(out))
+            self.assertEqual(archive.read_bytes(), before)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp); report['source_encoder_calls'] = 1
+            (out / 'report.json').write_text(json.dumps(report)); (out / 'source32-float.f32le').write_bytes(b'fixture')
+            self.assertIsNone(M.package_source_failure(out))
+            self.assertFalse((out / 'source-preparation-review.zip').exists())
 
 
 if __name__ == '__main__':

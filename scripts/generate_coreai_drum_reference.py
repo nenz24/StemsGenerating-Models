@@ -54,6 +54,37 @@ def resample(pcm):
     return _apply_sinc_resample_kernel(audio, 32000, 48000, math.gcd(32000, 48000), kernel, width).clamp(-1., 1.).unsqueeze(0).contiguous()
 
 
+def nearest_pcm16(decoded_float32):
+    """Specify PCM rounding explicitly instead of delegating it to FFmpeg/ISA."""
+    import numpy as np
+    if len(decoded_float32) != 1920000 * 4:
+        raise ValueError('Expected finite30s stereo32kHz Float32 decoder output')
+    values = np.frombuffer(decoded_float32, dtype='<f4')
+    if values.size != 1920000 or not np.isfinite(values).all():
+        raise ValueError('Expected finite30s stereo32kHz Float32 decoder output')
+    # Float32 -> float64 is exact. Scaling by2**15 is exact; np.rint specifies
+    # nearest-even, including negative half-steps. Clipping precedes int16 cast.
+    return np.rint(values.astype(np.float64) * 32768).clip(-32768, 32767).astype('<i2').tobytes()
+
+
+def canonical_source32(source, target):
+    decoded = subprocess.run(['ffmpeg', '-nostdin', '-v', 'error', '-i', str(source),
+                              '-ss', '0', '-t', '30', '-af', 'volume=0.7', '-ar', '32000', '-ac', '2',
+                              '-f', 'f32le', 'pipe:1'], check=True, capture_output=True).stdout
+    with (target.parent / 'source32-float.f32le').open('xb') as stream:
+        stream.write(decoded)
+    quantized = nearest_pcm16(decoded)
+    # Standard WAV header differs from archived FFmpeg metadata. Admission is
+    # against unchanged PCM bytes, not the container header.
+    with target.open('xb') as stream:
+        with wave.open(stream, 'wb') as audio:
+            audio.setparams((2, 2, 32000, 0, 'NONE', 'not compressed'))
+            audio.writeframes(quantized)
+    return {'source32_float_sha256': hashlib.sha256(decoded).hexdigest(),
+            'source32_quantization': 'Explicit nearest-even PCM16: np.rint(Float64(Float32)*32768), clip[-32768,32767]',
+            'source_gain_before_quantization': .7}
+
+
 def check_source_pcm(raw, out, input_mode, diagnostics=None):
     """Record the observed input before a strict checksum failure; never admit it."""
     pcm = pcm16(raw)
@@ -62,7 +93,7 @@ def check_source_pcm(raw, out, input_mode, diagnostics=None):
         version = subprocess.run(['ffmpeg', '-version'], capture_output=True, text=True, timeout=10, check=True).stdout.splitlines()[0]
     except (OSError, subprocess.SubprocessError, IndexError):
         version = 'unavailable'
-    observed = {'input_mode': input_mode, 'source32_WAV_sha256': hashlib.sha256(raw).hexdigest(),
+    observed = {**(diagnostics or {}), 'input_mode': input_mode, 'source32_WAV_sha256': hashlib.sha256(raw).hexdigest(),
                 'expected_source32_PCM_sha256': SOURCE_PCM_SHA, 'actual_source32_PCM_sha256': actual,
                 'accepted_PCM_exact': actual == SOURCE_PCM_SHA, 'sample_rate': 32000,
                 'channels': 2, 'sample_width_bytes': 2, 'frames': 960000,
@@ -78,6 +109,7 @@ def check_source_pcm(raw, out, input_mode, diagnostics=None):
 
 
 def prepare_source(out, source=None, prepared_source=None, diagnostics=None):
+    diagnostics = {} if diagnostics is None else diagnostics
     target = out / 'source32.wav'
     if prepared_source is not None:
         raw = Path(prepared_source).read_bytes()
@@ -87,10 +119,8 @@ def prepare_source(out, source=None, prepared_source=None, diagnostics=None):
     else:
         if source is None or sha256(source) != SOURCE_MP3_SHA:
             raise ValueError('Select original accepted piano.mp3; source hash mismatch/missing')
-        sys.path.insert(0, str(ROOT / 'tools/stem_eval'))
-        from audio import canonicalize
-        canonicalize(Path(source), target, duration=30, gain=.7, max_duration=30)
-        pcm = check_source_pcm(target.read_bytes(), out, 'original_MP3_fixed_gain0.7', diagnostics)
+        diagnostics.update(canonical_source32(Path(source), target))
+        pcm = check_source_pcm(target.read_bytes(), out, 'original_MP3_float32_explicit_nearest_PCM16', diagnostics)
         if sha256(source) != SOURCE_MP3_SHA:
             raise ValueError('Original source changed during preparation')
     audio = resample(pcm)
@@ -274,7 +304,7 @@ def execute(out, source, prepared_source, report, progress, explicit):
         progress('verify existing pinned ' + label + ' checkpoint')
         weights[label] = local_checkpoint(record, explicit.get(label))
     report['checkpoint_sha256'] = {k: r['digest'] for k, r in entries.items()}
-    progress('prepare exact accepted30s PCM; apply source gain0.7 once')
+    progress('prepare30s Float32 source and explicit nearest-even PCM16; require exact reference')
     report['source_preparation_diagnostic'] = {}
     audio, metadata = prepare_source(out, source, prepared_source, report['source_preparation_diagnostic'])
     report['source_preparation'] = metadata
@@ -380,6 +410,28 @@ def generate(out, source=None, prepared_source=None, execute_requested=False, ex
     return report
 
 
+def package_source_failure(out):
+    """Package only preparation artifacts from this failed run, without retrying."""
+    out = Path(out)
+    report_path = out / 'report.json'
+    if not report_path.is_file():
+        return None
+    report = json.loads(report_path.read_text())
+    if (report.get('status') != 'failed' or not report.get('phase', '').startswith('prepare')
+            or any(report.get(key) != 0 for key in ['steps_completed', 'source_encoder_calls', 'decoder_calls'])
+            or not (out / 'source32-float.f32le').is_file()):
+        return None
+    archive = out / 'source-preparation-review.zip'
+    if archive.exists():
+        return None
+    with zipfile.ZipFile(archive, 'x', compression=zipfile.ZIP_DEFLATED) as bundle:
+        for name in ['report.json', 'source-preparation.json', 'source32.wav', 'source32-float.f32le']:
+            path = out / name
+            if path.is_file() and not path.is_symlink():
+                bundle.write(path, name)
+    return archive
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
@@ -397,8 +449,21 @@ def main():
             parser.error('--source or --prepared-source required outside macOS')
         args.source = Path(subprocess.check_output(['osascript', '-e',
             'POSIX path of (choose file with prompt "Pilih piano.mp3 asli untuk acuan drum30 detik")'], text=True).strip())
-    generate(args.out, args.source, args.prepared_source, args.execute,
-             {name: getattr(args, f'{name}_checkpoint') for name in ['base', 'qwen', 'vae', 'silence']})
+    preexisting = args.out.exists()
+    try:
+        generate(args.out, args.source, args.prepared_source, args.execute,
+                 {name: getattr(args, f'{name}_checkpoint') for name in ['base', 'qwen', 'vae', 'silence']})
+    except Exception:
+        if not preexisting:
+            try:
+                archive = package_source_failure(args.out)
+                if archive:
+                    print('Preparation diagnostic ZIP:', archive, flush=True)
+                    if sys.platform == 'darwin':
+                        subprocess.run(['open', '-R', str(archive)], check=False)
+            except (OSError, ValueError):
+                pass  # Preserve the original preparation error if packaging fails.
+        raise
 
 
 if __name__ == '__main__':

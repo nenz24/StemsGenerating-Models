@@ -1,0 +1,63 @@
+{
+  "checkpoint_sha256": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+  "reference_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+  "Mac_PCM_sha256": "88b0464a83f5ddb662589ab7180ad32b9a305bfa02cbcc66f167463879fe9ac7",
+  "reference_source48_sha256": "9d62d4eccd36188a4170a08ee6a22fcc66b5ad8af3b0753dc6b021a7f507f4a8",
+  "Mac_source48_sha256": "75cb2e952c7634c4a4be4b97a7d1b465f16826533521cc6d8e0783d253491ca2",
+  "resampled_PCM_metrics": {
+    "finite": true,
+    "max_absolute_error": 4.217028617858887e-05,
+    "rmse": 2.0934936078233844e-05,
+    "normalized_rmse": 0.00029473816720107244,
+    "elementwise_fraction_over_bound": 0.0,
+    "parity_passed": true
+  },
+  "CPU_epsilon_identical": true,
+  "source_component_metrics": {
+    "source-mean": {
+      "finite": true,
+      "max_absolute_error": 1.3429582118988037,
+      "rmse": 0.020796046860556017,
+      "normalized_rmse": 0.021365405491037427,
+      "elementwise_fraction_over_bound": 0.9245208333333333,
+      "parity_passed": false
+    },
+    "source-std": {
+      "finite": true,
+      "max_absolute_error": 0.0016195739153772593,
+      "rmse": 1.4124215738051774e-05,
+      "normalized_rmse": 0.04752071568429837,
+      "elementwise_fraction_over_bound": 0.0021666666666666666,
+      "parity_passed": false
+    },
+    "source-latent": {
+      "finite": true,
+      "max_absolute_error": 1.342956304550171,
+      "rmse": 0.020796589650581315,
+      "normalized_rmse": 0.02136595571040532,
+      "elementwise_fraction_over_bound": 0.9244791666666666,
+      "parity_passed": false
+    },
+    "source-context": {
+      "finite": true,
+      "max_absolute_error": 1.342956304550171,
+      "rmse": 0.01470540956748002,
+      "normalized_rmse": 0.014902633721141584,
+      "elementwise_fraction_over_bound": 0.4622395833333333,
+      "parity_passed": false
+    }
+  },
+  "new_VAE_encoder_calls": 1,
+  "DiT_steps": 0,
+  "decoder_calls": 0,
+  "source_bytes_preserved": true,
+  "scope": "Offline sensitivity probe on different input bytes with same pinned weights/CPU epsilon. Not a numerical implementation regression on identical inputs, and not source admission or model/quality acceptance. No generation ran from the mismatched input.",
+  "reference_tensor_sha256": {
+    "source-epsilon": "f48bd6b011c8de0917fc6f27147335518f6f5895224f7252826b90751062e37a",
+    "source-mask": "c406cfb0db9850c7d09ce01cb226445fe75e8c02ee71962f316805446bb01114",
+    "source-mean": "ba60512f5559e9bc6f577c88f383b07f4d57cf715e2603ac9c98ebc70c6aa836",
+    "source-std": "84b266178b525e06f7ae5362b47f4a75e834acda49a7f551a94403b26c639e9e",
+    "source-latent": "84e6d8b4243afe5aaf6f957cf5c09b2b825fac20868e9f24b7575fb70cf885c8",
+    "source-context": "ef8f7168bd4a9fe816b971e90d9e5a1f5042b79aee7404c9e864086326e13ddc"
+  }
+}

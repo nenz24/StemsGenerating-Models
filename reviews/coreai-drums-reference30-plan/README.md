@@ -7,6 +7,12 @@ rerun it or infer a new listening result. The active request is to package the
 existing failed report/source32WAV for sample comparison. Error reporting now
 retains actual/expected digests and decoder/platform context; admission is unchanged.
 
+**Current recovery:** the [actual Mac PCM comparison](../coreai-drums-reference30-pcm-review/README.md)
+is complete. An explicit Float32→nearest-even PCM16 path now reproduces frozen
+WAV/PCM/input48 hashes in the actual-source test here. No tolerance/hash override
+was added. Use the updated Mac command/new output folder; input collection is
+complete and automatic diagnostics handle any further preparation mismatch.
+
 The [source-gain-only result](../coreai-drums-source-gain-result/README.md)
 completed50steps with nine exact-zero control replays; hit-transition glitches
 remain. Together with the failed lyric-only test and partial APG result, this

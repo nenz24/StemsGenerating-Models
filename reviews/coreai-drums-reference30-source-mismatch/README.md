@@ -1,5 +1,13 @@
 # Mac30s reference stopped before inference at source PCM checksum
 
+**Subsequent uploaded PCM review:** the [two-file ZIP](../coreai-drums-reference30-pcm-review/README.md)
+has arrived. Input differs by at most1LSB and passes original input bounds,
+but a same-epsilon VAE probe amplifies that perturbation and fails component
+comparison. No source-hash exception is added. Explicit nearest-even PCM16
+preparation reproduces the exact frozen WAV/PCM/input48 bytes here; the Mac
+retry uses a new folder and retains strict checks. Pending-file requests below
+describe the earlier log-only stage and should not be repeated.
+
 [User Terminal log](terminal.txt),5050bytes, is preserved unchanged. The first
 Git fetch timed out on GitHub443; retry succeeded, and the project updater
 fast-forwarded3ca8ca7→ff54b24 with its normal project/signing backup. That network

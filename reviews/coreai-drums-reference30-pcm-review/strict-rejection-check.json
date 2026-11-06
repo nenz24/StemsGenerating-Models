@@ -1,0 +1,23 @@
+{
+  "actual_uploaded_Mac_PCM_still_rejected": true,
+  "reference_PCM_SHA_unchanged": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+  "diagnostic": {
+    "input_mode": "existing_prepared_WAV_no_second_gain",
+    "source32_WAV_sha256": "06c258af20bb7abe4619ccbe40ac2ea5fae075f57c47b6c5d50e1249d673c4fe",
+    "expected_source32_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "actual_source32_PCM_sha256": "88b0464a83f5ddb662589ab7180ad32b9a305bfa02cbcc66f167463879fe9ac7",
+    "accepted_PCM_exact": false,
+    "sample_rate": 32000,
+    "channels": 2,
+    "sample_width_bytes": 2,
+    "frames": 960000,
+    "ffmpeg_version": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+    "platform_system": "Linux",
+    "platform_machine": "x86_64",
+    "scope": "Input checksum diagnostic only; no numerical comparison without original PCM arrays, no permission to bypass gate"
+  },
+  "error": "Prepared PCM differs from accepted baseline; see source-preparation.json; no inference or reference replacement",
+  "source48_not_written": true,
+  "neural_calls": 0,
+  "no_checksum_exception_or_allowlist": true
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "host_regression": {
+    "run": 181,
+    "passed": 179,
+    "skipped": 2,
+    "reference_tests": 12,
+    "new_tests": 2,
+    "command": "python -m unittest discover -s Tests/StemEvaluationPython -p test_coreai*.py"
+  },
+  "actual_measurements": {
+    "Mac_PCM_vs_reference_all1920000_samples": "Input bounds PASS; max1LSB; exact hash differs",
+    "Mac_PCM_sensitivity_probe": {
+      "new_source_encoder_calls": 1,
+      "same_CPU_epsilon_as_original": true,
+      "all_four_source_component_comparisons": "NOT PASSED; intentionally different inputs",
+      "DiT_steps": 0,
+      "decoder_calls": 0
+    },
+    "explicit_nearest_source_preparation": {
+      "original_MP3_actually_decoded": true,
+      "full_WAV_and_PCM_reference_hashes": "BIT EXACT",
+      "source48_bytes_vs_existing_original_encoder_input": "BIT EXACT",
+      "new_neural_calls": 0
+    },
+    "actual_uploaded_Mac_PCM_after_code_change": "Still strictly REJECTED; no exception/allowlist",
+    "Mac_original_MP3_Float32_new_path": "NOT EXECUTED HERE; requires Mac run"
+  },
+  "original_reference_hash_and_thresholds_unchanged": true,
+  "BF16_native_or_model_weights_cache_changed": false,
+  "full_host50step_or_Apple_execution_performed": false,
+  "audio_tensors_weights_committed": false,
+  "checks": {
+    "Python_syntax": "PASS",
+    "JSON_and_doc_links": "PASS",
+    "uploaded_failed_report_bytes_preserved": "PASS",
+    "explicit_code_scope": "Host reference source preparation and failure packaging only"
+  }
+}

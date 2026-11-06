@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "status": "failed",
+  "experiment": "drums-host30s-reference-reproduction",
+  "scope": "One captured original-FP32 host reference with accepted input/settings. Not a duration-only ablation, exact CUDA replay, native numerical PASS or adopted fix.",
+  "duration_seconds": 30,
+  "latent_frames": 750,
+  "steps_requested": 50,
+  "guidance_scale": 7,
+  "APG_norm_threshold": 2.5,
+  "APG_momentum": -0.75,
+  "APG_projection_dimensions": [
+    1
+  ],
+  "cache_policy": "Publisher EncoderDecoderCache retained across steps; layer self-attention cache disabled by original source, cross-attention reused",
+  "source_epsilon_CPU_seed": 31,
+  "diffusion_noise_CPU_seed": 0,
+  "RNG_limit": "Actual tensors saved; same seed does not establish original CUDA RNG/source posterior parity",
+  "prompts": {
+    "instruction": "Generate the drums track based on the audio context:",
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.",
+    "metadata": "- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 30 seconds\n",
+    "text_prompt": "# Instruction\nGenerate the drums track based on the audio context:\n\n# Caption\nIsolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 30 seconds\n<|endoftext|>\n",
+    "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n[Instrumental]<|endoftext|>",
+    "lyrics": "[Instrumental]",
+    "vocal_language": "unknown",
+    "preset_sha256": "bcfd73641fddbda1fb0975febfe28cccb3a3121ec48cec1d877933e64a6d70ca",
+    "audio_seconds": 30.0
+  },
+  "source_encoder_calls": 0,
+  "decoder_calls": 0,
+  "steps_completed": 0,
+  "numeric_parity": "NOT EVALUATED; original CUDA intermediate tensors absent",
+  "existing_preview_provenance": "bounded_diagnostic; original full trajectory gate unchanged, no new PASS",
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "musical_acceptance": "NOT EVALUATED",
+  "baseline_modified": false,
+  "native_exports": 0,
+  "versions": {
+    "torch": "2.8.0",
+    "transformers": "4.57.3",
+    "diffusers": "0.37.0",
+    "tokenizers": "0.22.2"
+  },
+  "phase": "prepare exact accepted30s PCM; apply source gain0.7 once",
+  "checkpoint_sha256": {
+    "base": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b",
+    "silence": "a778e9dd942f5e8b2c09c55370782d318834432b03dabbcdf70e6ed49ad6358b",
+    "qwen": "0437e45c94563b09e13cb7a64478fc406947a93cb34a7e05870fc8dcd48e23fd",
+    "vae": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0"
+  },
+  "error": "ValueError: Prepared PCM differs from accepted baseline; keep report, do not replace reference"
+}

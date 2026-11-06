@@ -1,0 +1,42 @@
+{
+  "reference_PCM_SHA256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+  "Mac_PCM_SHA256": "88b0464a83f5ddb662589ab7180ad32b9a305bfa02cbcc66f167463879fe9ac7",
+  "Mac_WAV_SHA256": "06c258af20bb7abe4619ccbe40ac2ea5fae075f57c47b6c5d50e1249d673c4fe",
+  "format": [
+    2,
+    2,
+    32000,
+    960000
+  ],
+  "nonzero_difference_samples": 939512,
+  "interleaved_samples": 1920000,
+  "max_pcm16_difference": 1,
+  "max_absolute_error": 3.0517578125e-05,
+  "rmse": 2.1347676672988246e-05,
+  "normalized_rmse": 0.0003006349684032016,
+  "pointwise_failed_elements": 0,
+  "numerical_bounds_passed": true,
+  "delta_counts": {
+    "-1": 939505,
+    "0": 980488,
+    "1": 7
+  },
+  "peak_reference": 0.499786376953125,
+  "peak_actual": 0.499755859375,
+  "rms_reference": 0.07100862812591201,
+  "rms_actual": 0.07100859361517489,
+  "fitted_linear_gain": 0.9999994688017673,
+  "channel_correlations": [
+    0.9999999653920748,
+    0.9999999826892098
+  ],
+  "official_precision_metrics": {
+    "finite": true,
+    "max_absolute_error": 3.0517578125e-05,
+    "rmse": 2.1347676672988246e-05,
+    "normalized_rmse": 0.0003006349684032016,
+    "elementwise_fraction_over_bound": 0.0,
+    "parity_passed": true
+  },
+  "scope": "Actual uploaded Mac PCM16/32768 vs unchanged accepted reference, all1920000 interleaved samples. Input closeness does not imply VAE or complete pipeline equivalence."
+}

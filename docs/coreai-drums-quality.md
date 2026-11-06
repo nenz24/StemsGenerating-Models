@@ -16,7 +16,49 @@ Jadi clipping drum solo belum menjelaskan glitch mix. Sebanyak 87,54% energi
 drum berada di 20–150 Hz. Ini pengukuran spektrum, bukan bukti audibilitas,
 kesalahan instrumen atau penyebab glitch. Belum ada diagnosis penyebab pasti.
 
-## Hasil terbaru: acuan30s berhenti pada pemeriksaan input
+## Hasil terbaru: selisih PCM terukur, pembulatan dibuat eksplisit
+
+[ZIP Mac sudah diperiksa](../reviews/coreai-drums-reference30-pcm-review/README.md).
+Selisih maksimum32kHz PCM16 adalah **1LSB** (`3,05176e-5`), normalizedRMSE
+`3,00635e-4`, nol sampel melanggar batas titik asli. Akan tetapi probe VAE
+dengan epsilon CPU identik menghasilkan selisih latent sekitar **2,14%** dan
+tidak lolos batas komponen. Input yang dekat tidak membuktikan conditioning
+hasil encoder sama. Tidak ada pengecualian hash atau perluasan toleransi yang
+ditambahkan; acuan PCM asli tetap.
+
+Persiapan kini memakai FFmpeg untuk **Float32**, lalu pembulatan PCM16
+nearest-even secara eksplisit. Pada rekaman asli di cloud, jalur ini
+mereproduksi **hash WAV dan PCM acuan persis**, serta byte input48kHz VAE yang
+sama. Jalur Float32 Mac belum dijalankan; gate tetap menghentikan input yang
+belum cocok sebelum source encoder. Bass/BF16/checkpoint/cache/native tidak berubah.
+
+### Langkah aktif: ulang tahap acuan dengan konversi yang diperbaiki
+
+Tutup Xcode. Dari folder repo Mac:
+
+```bash
+git fetch origin main &&
+python3 scripts/update_coreai_project.py &&
+.runtime-cache/coreai-decoder-venv/bin/python \
+  scripts/generate_coreai_drum_reference.py --execute \
+  --out .runtime-cache/drums-reference30-v2 &&
+open .runtime-cache/drums-reference30-v2
+```
+
+Pilih **`piano.mp3` asli lagi**. Float32 diperlukan sebelum pembulatan; gunakan
+rekaman asli untuk perbaikan konversi ini. Folder `drums-reference30-v1` lama
+dipertahankan. Tidak ada penimpaan output, reset model atau download checkpoint.
+Sesudah input cocok persis, satu generasi30s/50langkah CPU berjalan sesuai
+rencana. Kirim report dan hasil dengar file02/03 saat selesai. Ini masih uji
+host; full numerical/native parity dan kualitas generasi belum diterima.
+
+Jika konversi Mac masih belum cocok, proses berhenti sebelum model. Script
+otomatis membuat `source-preparation-review.zip` di folder hasil baru dan
+menampilkannya di Finder. Isinya hanya report, diagnosticJSON, WAV dan raw
+Float32 persiapan untuk mengukur decoder sebelum pembulatan. Unggah ZIP itu;
+tidak perlu menjalankan ulang atau merakit command pengumpulan lain.
+
+## Riwayat: acuan30s berhenti pada pemeriksaan input
 
 [Log Mac](../reviews/coreai-drums-reference30-source-mismatch/README.md)
 menunjukkan update `ff54b24` berhasil setelah satu timeout GitHub. Empat
@@ -31,7 +73,9 @@ hash acuan atau melonggarkan batas. Pelaporan sekarang mencatat digest aktual,
 digest acuan, format, versi FFmpeg dan platform sebelum berhenti. Tidak perlu
 mengulang generasi untuk mengumpulkan kasus yang sudah ada.
 
-### Langkah aktif: kirim hasil persiapan yang sudah tersimpan
+### Riwayat pengumpulan hasil persiapan (sudah diterima)
+
+ZIP ini sudah diterima dan diukur. Command berikut hanya catatan reproduksi.
 
 Dari folder repo Mac, buat ZIP baru berisi dua file dari percobaan gagal:
 
@@ -42,11 +86,11 @@ zip -j .runtime-cache/drums-source-prep-review-v1.zip \
 open -R .runtime-cache/drums-source-prep-review-v1.zip
 ```
 
-Unggah `drums-source-prep-review-v1.zip`. Ini hanya membaca hasil lama dan
+Ini hanya membaca hasil lama dan
 membuat arsip baru, tanpa model, unduhan checkpoint, inference atau perubahan
 audio asal. Pertahankan folder hasil gagal. PCM akan dibandingkan terhadap
 acuan tetap dengan batas asli abs `1e-4`, rel `1e-3`, normalizedRMSE `1e-3`;
-belum ada keputusan apakah selisih dapat diterima atau cara melanjutkannya.
+hasilnya telah menunjukkan sensitivitas VAE sehingga checksum ketat dipertahankan.
 Tidak perlu update/build app atau menekan Generate iPhone saat ini.
 
 ## Riwayat: gain source0,7 belum menghilangkan glitch
