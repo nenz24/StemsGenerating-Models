@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "capture_report_sha256": "f5f84314fa37f49f73502a77f7e3364b31450898231731d64e216bf1b606bfdf",
+  "scope": "Saved-input component audit only; no DiT/full-trajectory/native/full-song parity claim",
+  "tensor_count": 43,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "random_tensors_regenerated": 0,
+  "DiT_calls": 0,
+  "native_exports": 0,
+  "native_parity": "NOT EVALUATED",
+  "full_trajectory_parity": "NOT EVALUATED",
+  "component_checks": {
+    "captured_posterior_to_source": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "captured_source_mask_to_context": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "full_range_mask": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "final_latent_equals_step50": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "native_APG_step1_momentum": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "native_APG_step1_guided": {
+      "finite": true,
+      "max_absolute_error": 1.430511474609375e-06,
+      "rmse": 1.3027408850229913e-07,
+      "normalized_rmse": 1.0383353552023192e-07,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "native_APG_step1_Euler": {
+      "finite": true,
+      "max_absolute_error": 2.384185791015625e-07,
+      "rmse": 1.0480395452122228e-08,
+      "normalized_rmse": 1.068175412185587e-08,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "native_APG_projection_step1": {
+      "finite": true,
+      "max_absolute_error": 1.430511474609375e-06,
+      "rmse": 1.3027408850229913e-07,
+      "normalized_rmse": 1.0383353552023192e-07,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "native_APG_projection_step5": {
+      "finite": true,
+      "max_absolute_error": 9.5367431640625e-07,
+      "rmse": 9.519235672940987e-08,
+      "normalized_rmse": 7.734016159096891e-08,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "native_APG_projection_step10": {
+      "finite": true,
+      "max_absolute_error": 4.76837158203125e-07,
+      "rmse": 2.7465018023321458e-08,
+      "normalized_rmse": 2.2394742061479954e-08,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "native_APG_projection_step25": {
+      "finite": true,
+      "max_absolute_error": 4.76837158203125e-07,
+      "rmse": 3.0852760781756884e-08,
+      "normalized_rmse": 2.5325344978001774e-08,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "native_APG_projection_step50": {
+      "finite": true,
+      "max_absolute_error": 9.5367431640625e-07,
+      "rmse": 2.868887405189235e-08,
+      "normalized_rmse": 2.894681888771392e-08,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "VAE_source_mean": {
+      "finite": true,
+      "max_absolute_error": 0.00025385618209838867,
+      "rmse": 1.160080704611476e-05,
+      "normalized_rmse": 1.1918406808814208e-05,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "VAE_source_std": {
+      "finite": true,
+      "max_absolute_error": 1.0896474123001099e-07,
+      "rmse": 2.077047404551156e-09,
+      "normalized_rmse": 6.988211740975945e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "VAE_source_latent": {
+      "finite": true,
+      "max_absolute_error": 0.00025385618209838867,
+      "rmse": 1.1600751990288372e-05,
+      "normalized_rmse": 1.1918346101482189e-05,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "VAE_source_context": {
+      "finite": true,
+      "max_absolute_error": 0.00025385618209838867,
+      "rmse": 8.202970399196246e-06,
+      "normalized_rmse": 8.312982696886068e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "VAE_final_audio": {
+      "finite": true,
+      "max_absolute_error": 3.36766242980957e-05,
+      "rmse": 3.4991498124394507e-07,
+      "normalized_rmse": 2.008617854966749e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    }
+  },
+  "source_encoder_calls": 1,
+  "decoder_calls": 1,
+  "vae_checkpoint_sha256": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+  "all_component_checks_passed": true,
+  "vae_replayed": true,
+  "versions": {
+    "torch": "2.8.0+cpu"
+  }
+}

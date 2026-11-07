@@ -31,38 +31,45 @@ bass/drum/gitar belum diterima. BF16/checkpoint/baseline dan toleransi
 abs 1e-4 / rel 1e-3 / nRMSE 1e-3 tetap. Hasil ini tidak membuktikan bahwa durasi saja
 menyebabkan glitch; beberapa perbedaan konfigurasi dipulihkan bersama.
 
-### Langkah aktif: kemas capture yang sudah diterima untuk pembandingan native
+### Langkah aktif: siapkan asset native 30s di Mac dari capture yang sudah diverifikasi
 
-Tidak perlu mengulang pemulihan input atau generasi v3, maupun mendengarkan
-ulang kontrol codec. Pertahankan seluruh `.runtime-cache/drums-reference30-v3`.
-Dari folder repo Mac:
+[ZIP dan replay komponen sudah diperiksa](../reviews/coreai-drums-reference30-native-preparation/README.md):
+43 tensor utuh dan 17 pemeriksaan komponen lolos batas asli, termasuk satu source
+encoder dengan epsilon tersimpan serta satu full decoder 30s. Nilai epsilon Mac
+berbeda dari hasil seed yang sama di cloud, sehingga input/noise tersimpan
+akan dipakai langsung. Tidak perlu ZIP/generasi/dengar kontrol diulang.
+
+Tutup Xcode. Dari folder repo Mac:
 
 ```bash
 git fetch origin main &&
 python3 scripts/update_coreai_project.py &&
-python3 scripts/package_coreai_drum_reference.py \
-  --source .runtime-cache/drums-reference30-v3 \
-  --out .runtime-cache/drums-reference30-native-review-v1.zip &&
-open -R .runtime-cache/drums-reference30-native-review-v1.zip
+.runtime-cache/coreai-decoder-venv/bin/python \
+  scripts/prepare_coreai_drum_reference30.py --execute \
+  --capture .runtime-cache/drums-reference30-v3 \
+  --out .runtime-cache/drums-reference30-native-v1
 ```
 
-Kirim ZIP yang dipilih Finder melalui chat. Script hanya membaca capture yang
-sudah ada, memverifikasi report hasil yang diterima, 43 hash tensor, ukuran dan
-nilai finite. Tidak ada inference, download bobot, export/aktivasi native atau
-penimpaan output. ZIP menyertakan input 48 kHz, conditioning, noise, posterior,
-capture langkah 1/5/10/25/50 dan output raw; WAV dengar tidak disalin lagi.
-Jumlah tensor mentah sekitar 30 MiB; ZIP dibatasi 32 MiB. Audio/tensor privat tetap
-di cache dan chat, tidak dipush ke Git.
+Setelah selesai atau berhenti, Finder memilih **`reference.json`** di folder
+hasil baru. Kirim file itu melalui chat. Folder v3 dan seluruh hasil lama
+dipertahankan. Jika folder native-v1 sudah ada, kirim `reference.json` yang
+sudah ada; jangan hapus atau mengulanginya dengan nama baru sebelum diperiksa.
 
-Native saat ini hanya menerima 128/256 frame. Port 750 frame perlu kontrak terpisah,
-asset terpartisi dan pemeriksaan numerik terhadap capture FP32 ini sebelum uji
-dengar iPhone. Jangan mengaktifkan kembali preset native 10.24s yang masih
-glitch atau memuat DiT monolitik di iPhone. Ambil `null_condition_emb` yang belum
-tersimpan di capture dari checkpoint base yang sama pada tahap export; jangan
-mengganti dengan tensor nol. Source, initial noise dan conditioning yang sudah
-disimpan dipakai langsung agar seed lintas lingkungan tidak menjadi pembanding
-palsu. Pembandingan native tetap memakai gate asli; kualitas dengar tidak
-mengubah hasil gate menjadi PASS.
+Ini persiapan asset di Mac; belum mengaktifkan profil baru atau menjalankan
+Generate iPhone. Jalur baru khusus 750 frame/127 condition token, terpisah dari
+kontrak native 128/256 frame yang ada. Script memakai checkpoint lokal yang sama,
+conditioning/source/noise tersimpan, 14 shard DiT BF16 dengan komputasi FP32,
+APG FP32 dan decoder FP32. `null_condition_emb` berasal dari checkpoint base,
+bukan tensor nol. Tidak ada Qwen/conditioning baru, download bobot atau generasi
+host 50 langkah. Satu pemeriksaan prediksi langkah 1 FP32 dan BF16 serta APG/
+decoder harus lolos gate asli; bila gagal, report mempertahankan kegagalan.
+
+Asset ditulis ke cache baru yang tidak aktif; selector/resource Xcode, baseline,
+mix dan toleransi tetap. Pembandingan numerik native, live trajectory 50 langkah,
+uji memori/performa dan dengar iPhone menyusul setelah manifest export diperiksa.
+`native_parity`/`full_trajectory_parity` tetap `NOT EVALUATED`. Eksperimen ini
+menggunakan input beku yang sudah diterima, belum import piano bebas atau lagu
+penuh. Tidak ada pemuatan DiT monolitik di iPhone.
 
 ### Riwayat: pemulihan input v2 berhasil sebelum generasi v3
 

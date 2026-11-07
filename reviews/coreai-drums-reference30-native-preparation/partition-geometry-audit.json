@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "scope": "Pinned publisher, random16dim24-layer model: geometry/control only, no music.",
+  "latent_frames": 750,
+  "hidden_tokens": 375,
+  "condition_tokens": 127,
+  "layers": 24,
+  "alternating_sliding_and_full_attention": true,
+  "hidden_size": 16,
+  "head_dim": 8,
+  "output_shape": [
+    2,
+    750,
+    64
+  ],
+  "comparisons": {
+    "FP32_same_weights_partition_vs_full": {
+      "finite": true,
+      "max_absolute_error": 4.76837158203125e-07,
+      "rmse": 6.045899066972166e-08,
+      "normalized_rmse": 2.162714465317973e-07,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "BF16_same_weights_partition_vs_full": {
+      "finite": true,
+      "max_absolute_error": 3.725290298461914e-07,
+      "rmse": 5.955075947860475e-08,
+      "normalized_rmse": 2.1302595654456745e-07,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    }
+  },
+  "all_checks_passed": true,
+  "original_cache_scope": "Fresh first-step cross-attention cache vs uncached partitions",
+  "learned_checkpoint_used": false,
+  "Apple_exports": 0,
+  "device_runs": 0,
+  "native_parity": "NOT EVALUATED",
+  "full_trajectory_parity": "NOT EVALUATED"
+}

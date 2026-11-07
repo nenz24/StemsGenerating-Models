@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "tests": {
+    "command": "python -m unittest discover -s Tests/StemEvaluationPython -p 'test_coreai*.py'",
+    "run": 200,
+    "passed": 198,
+    "skipped": 2,
+    "failed": 0
+  },
+  "new_native_tests": 7,
+  "actual_capture_verified": true,
+  "actual_component_checks": 17,
+  "component_checks_passed": 17,
+  "source_encoder_calls": 1,
+  "decoder_calls": 1,
+  "DiT_learned_inference_calls": 0,
+  "geometry_control": "Synthetic random16dim24-layer publisher model; FP32/BF16 same-weight partition vs full comparisons only",
+  "geometry_checks_passed": 2,
+  "native_export_platform_guard_tested": true,
+  "native_exports": 0,
+  "apple_builds": 0,
+  "device_runs": 0,
+  "native_parity": "NOT EVALUATED",
+  "full_trajectory_parity": "NOT EVALUATED",
+  "baseline_modified": false,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "private_arrays_audio_ZIP_weights_committed": false
+}

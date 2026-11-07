@@ -1,0 +1,482 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "84be4cec14c37cda1c4dfc5f1c901d11e9f1e65b1332a6cfa81a083303e909f2",
+  "archive_bytes": 28297085,
+  "crc_pass": true,
+  "report_sha256": "f5f84314fa37f49f73502a77f7e3364b31450898231731d64e216bf1b606bfdf",
+  "tensor_count": 43,
+  "raw_tensor_bytes": 31317696,
+  "tensor_checks": [
+    {
+      "file": "source48.f32le",
+      "shape": [
+        1,
+        2,
+        1440000
+      ],
+      "bytes": 11520000,
+      "sha256": "9d62d4eccd36188a4170a08ee6a22fcc66b5ad8af3b0753dc6b021a7f507f4a8",
+      "finite": true
+    },
+    {
+      "file": "source-epsilon.f32le",
+      "shape": [
+        1,
+        64,
+        750
+      ],
+      "bytes": 192000,
+      "sha256": "067db2fcfcb150e4a944d290873ca42768babba2d76d155cfa111b92bb1da622",
+      "finite": true
+    },
+    {
+      "file": "source-mean.f32le",
+      "shape": [
+        1,
+        64,
+        750
+      ],
+      "bytes": 192000,
+      "sha256": "5a043c801ee4ac3a0dee608760a44961d33f383c27a1b1f4a6f359d28959b928",
+      "finite": true
+    },
+    {
+      "file": "source-std.f32le",
+      "shape": [
+        1,
+        64,
+        750
+      ],
+      "bytes": 192000,
+      "sha256": "9c442648386491c729355e20951186ec98ff1951ad394b770df94cc784789382",
+      "finite": true
+    },
+    {
+      "file": "source-mask.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "c406cfb0db9850c7d09ce01cb226445fe75e8c02ee71962f316805446bb01114",
+      "finite": true
+    },
+    {
+      "file": "source-latent.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "61b0ac4c44d807f86ea7f0c58a055eefe147efc200050d1e5baee6f7c802846e",
+      "finite": true
+    },
+    {
+      "file": "source-context.f32le",
+      "shape": [
+        1,
+        750,
+        128
+      ],
+      "bytes": 384000,
+      "sha256": "023ba8d088ed12b35d96d8a896b4f665d90716dfaf0e0ec1960aeb1a6c4ed9c4",
+      "finite": true
+    },
+    {
+      "file": "text-ids.f32le",
+      "shape": [
+        1,
+        111
+      ],
+      "bytes": 444,
+      "sha256": "ed40dfa5aa8fa9431a4cb0937bef355d15ce5fc49837e9296a06d2effc74da4a",
+      "finite": true
+    },
+    {
+      "file": "lyric-ids.f32le",
+      "shape": [
+        1,
+        15
+      ],
+      "bytes": 60,
+      "sha256": "b50fc202282a11b8ae2314b3533daaf20d917c6c77b753d4ad8b0c588fa5fad7",
+      "finite": true
+    },
+    {
+      "file": "text-embeddings.f32le",
+      "shape": [
+        1,
+        111,
+        1024
+      ],
+      "bytes": 454656,
+      "sha256": "bd4553b52966ff78250a05c3b33fa503aa4e1b9fe1181eabdd8d5721117ba26c",
+      "finite": true
+    },
+    {
+      "file": "lyric-embeddings.f32le",
+      "shape": [
+        1,
+        15,
+        1024
+      ],
+      "bytes": 61440,
+      "sha256": "27fa894531c1d15bf6a8487a5e1f9f52ddc9bcb317e60c4a93551244cf07072a",
+      "finite": true
+    },
+    {
+      "file": "reference-audio.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "4d0f3fc0ab3dc55080ad274e5c666c93b7ee3f94a12dd16b0e48b62edf7bb02e",
+      "finite": true
+    },
+    {
+      "file": "condition.f32le",
+      "shape": [
+        1,
+        127,
+        2048
+      ],
+      "bytes": 1040384,
+      "sha256": "01666f5a27bb5b339d2d7858c0187441b84f6d951c08d38abccb0577f5d5c485",
+      "finite": true
+    },
+    {
+      "file": "condition-mask.f32le",
+      "shape": [
+        1,
+        127
+      ],
+      "bytes": 508,
+      "sha256": "694d59a726638da688bfc143f6084259ae3fb6e82dd59ab39ee48ac945b8e075",
+      "finite": true
+    },
+    {
+      "file": "initial-noise.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "35c3a8553516c7327f57c11642a7ce703de2a073cbfd36fdad9708e6445c7c39",
+      "finite": true
+    },
+    {
+      "file": "timesteps.f32le",
+      "shape": [
+        51
+      ],
+      "bytes": 204,
+      "sha256": "09729a1334019659e12364e904d240c1266f2f3af1982e51a8b06570a2256195",
+      "finite": true
+    },
+    {
+      "file": "final-latent.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "54c574fbcec00d7404d5072258d738b3de5e167728e707a2b271264733d5740c",
+      "finite": true
+    },
+    {
+      "file": "final-audio.f32le",
+      "shape": [
+        1,
+        2,
+        1440000
+      ],
+      "bytes": 11520000,
+      "sha256": "5f81f20205c39fbba6418f95d5d42d8346fe48f457c8c455c77958c98fabd615",
+      "finite": true
+    },
+    {
+      "file": "step-01-conditional.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "4767f96fd98ba928ceeca65e346b6043111528c73ba1460394815e5a286dcffb",
+      "finite": true
+    },
+    {
+      "file": "step-01-unconditional.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "b114a6ab2ce5ddf38f82f761f89375293fad50f1299b5799a8f1dd841e54bf21",
+      "finite": true
+    },
+    {
+      "file": "step-01-guided.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "9523fce5a1cb3e622a94da8ab02071aa5d820a660e01115f31b34ba9b9307d6e",
+      "finite": true
+    },
+    {
+      "file": "step-01-momentum.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "1fdca4c6a95cc92f4c37b0f291629601e6098e527f39e3a7c36a652dda246922",
+      "finite": true
+    },
+    {
+      "file": "step-01-latent.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "427b4b2edb312d18789dd412ab7c7944fd78e937cedaedc014c740a1a26e06e2",
+      "finite": true
+    },
+    {
+      "file": "step-05-conditional.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "2d553c9b6101670c0a5961f746724db61d55c4215eed613dc472767817973bc1",
+      "finite": true
+    },
+    {
+      "file": "step-05-unconditional.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "2860475673278f7b738e8bdad4226c7742376077f0b02cc6afb5fd993aa7871d",
+      "finite": true
+    },
+    {
+      "file": "step-05-guided.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "8a8e834f67114c9d90491343898b6ff16e19555f679787ffb4d4226238822edf",
+      "finite": true
+    },
+    {
+      "file": "step-05-momentum.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "dda669704a366f6fb99d8c042184e51621bc0342c694f47c2f80b8cb90256527",
+      "finite": true
+    },
+    {
+      "file": "step-05-latent.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "836be73c3a561ac2bfae434b566be09b8408de93fd89adf7571fb876c66856f7",
+      "finite": true
+    },
+    {
+      "file": "step-10-conditional.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "7514d70b861d145db71d983f417eefe023545a90bf62aaa47a2a5a63e3803c1e",
+      "finite": true
+    },
+    {
+      "file": "step-10-unconditional.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "4b0870f49d82ce7110c6aa05df00cbee70ca972b89b52714ce6e802eca701217",
+      "finite": true
+    },
+    {
+      "file": "step-10-guided.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "1276fa23eb07ad82d48c8ec4a3866695622b20c765248bb7057851bcee05e658",
+      "finite": true
+    },
+    {
+      "file": "step-10-momentum.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "c05b15e8acd667b2003fbb91a3678442e91494c76a01508640f979f41f7687c9",
+      "finite": true
+    },
+    {
+      "file": "step-10-latent.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "1604a9dd063c8b8b6146fcf6829613ba3354188fe7a2b3ed618c2e06c93d4a45",
+      "finite": true
+    },
+    {
+      "file": "step-25-conditional.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "8d30c5cc3c45a9ce9cb9e1ceec85ec2291afa67b9e42f21c75b195f3a41a195d",
+      "finite": true
+    },
+    {
+      "file": "step-25-unconditional.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "870f0a93ac8693f9d8959a0effe4077017eb89be5128d2f8a947f4a4cf3b575c",
+      "finite": true
+    },
+    {
+      "file": "step-25-guided.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "4420e543458984d37ce0633a3fa71c7d578b2f7446c26d14669ec145258771f1",
+      "finite": true
+    },
+    {
+      "file": "step-25-momentum.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "209d0e1c728a6f7ca6ef24d92ca0a1e6928d0d3dd4cd446c1076fb1e2ce0e708",
+      "finite": true
+    },
+    {
+      "file": "step-25-latent.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "87ebd2eed926af22120290c5a3feb5c067f486d912a46083b24cad017cd21618",
+      "finite": true
+    },
+    {
+      "file": "step-50-conditional.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "cba211f14dc3d9143c30044d7f8344ecdbbbc59260c90359502ee506d2401ac1",
+      "finite": true
+    },
+    {
+      "file": "step-50-unconditional.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "869927a70115b2d088703f90a18c6005a9d3ea47e0ce5e5cbe2d233194446d92",
+      "finite": true
+    },
+    {
+      "file": "step-50-guided.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "f43491a7facf17581b3e04091d3ff167ce332a3143d0639143bafe61c0c1686d",
+      "finite": true
+    },
+    {
+      "file": "step-50-momentum.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "4d1a399b7b253e566d8d4b407a973814d68e53afe70d3787ce192af106f6d0ec",
+      "finite": true
+    },
+    {
+      "file": "step-50-latent.f32le",
+      "shape": [
+        1,
+        750,
+        64
+      ],
+      "bytes": 192000,
+      "sha256": "54c574fbcec00d7404d5072258d738b3de5e167728e707a2b271264733d5740c",
+      "finite": true
+    }
+  ],
+  "status": "VERIFIED_CAPTURE_TRANSPORT",
+  "numerical_model_parity": "NOT EVALUATED",
+  "private_arrays_not_for_git": true
+}

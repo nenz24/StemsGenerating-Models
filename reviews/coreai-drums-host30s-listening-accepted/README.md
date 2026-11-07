@@ -26,6 +26,11 @@ iPhone mix setting.
 
 ## Next: transfer the existing numerical reference, then port in partitions
 
+**Capture received and independently checked:** [transport, actual component replay
+and inactive native preparation](../coreai-drums-reference30-native-preparation/README.md).
+Do not repeat packaging; the next action is the current Mac export command.
+The transport instructions below describe the already completed transfer.
+
 [`package_coreai_drum_reference.py`](../../scripts/package_coreai_drum_reference.py)
 requires the exact uploaded completed report and packages only its 43 existing
 Float32 captures. Hashes, byte sizes/shapes and finite values are checked on the
