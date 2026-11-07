@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "tests": {
+    "command": "/workspace/work/iphone-instrument-previews/work/tokenizer-venv/bin/python -m unittest discover -s Tests/StemEvaluationPython -p 'test_coreai*.py'",
+    "run": 193,
+    "passed": 191,
+    "skipped": 2,
+    "failed": 0
+  },
+  "new_transport_tests": 6,
+  "coverage": [
+    "Byte-preserved original report and whitelisted capture bytes only",
+    "Wrong report, missing/truncated/linked capture rejection before publication",
+    "Same-length changed tensor rejected by SHA256 while temporary ZIP is cleaned",
+    "Nonfinite values rejected in the actual archived byte stream",
+    "Existing and protected outputs preserved",
+    "32MiB limit and racing output reject without partial archive"
+  ],
+  "report_audit": {
+    "original_report_sha256": "f5f84314fa37f49f73502a77f7e3364b31450898231731d64e216bf1b606bfdf",
+    "source32_PCM_exact": true,
+    "source48_sha_matches_previous_frontend": true,
+    "step_rows": 50,
+    "step_numbers_contiguous": true,
+    "saved_capture_names_match_all_reported_f32le": true,
+    "tensor_count": 43,
+    "raw_tensor_bytes": 31317696,
+    "final_latent_sha_matches_step50": true,
+    "tolerances_unchanged": true
+  },
+  "test_scope": "Transport fixtures are synthetic small Float32 arrays, not generated music or numerical parity evidence",
+  "actual_user_tensor_archive_created_here": false,
+  "reason": "Only report and human feedback uploaded in this turn; real existing captures remain on user Mac",
+  "host_generation_runs": 0,
+  "native_exports": 0,
+  "apple_builds": 0,
+  "device_runs": 0,
+  "baseline_modified": false
+}

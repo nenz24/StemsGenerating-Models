@@ -1,24 +1,30 @@
 # One captured host30s reference after failed source-gain isolation
 
-**Active recovery:** both v1/direct-PCM and v2/explicit-nearest Mac attempts
+**Completed and heard:** the [accepted host30s result](../coreai-drums-host30s-listening-accepted/README.md)
+finished 50/50 steps with exact prepared source. The user accepted files 01/02/03.
+Preserve the capture and package it with the current docs command; do not repeat
+source recovery or generation. Native BF16 750-frame parity and full-song quality
+remain unevaluated. The preparation attempts below are historical.
+
+**Historical recovery:** both v1/direct-PCM and v2/explicit-nearest Mac attempts
 stopped before neural generation. [Measured v2 input reconstruction](../coreai-drums-reference30-exact-recovery/README.md)
 now produces the original WAV/PCM hashes exactly without decoding again or
 relaxing gates. Private correction data is returned only to the user in chat;
-generic code plus measurement metadata are committed. Use the latest command
-to restore the input and start v3, preserving all prior results.
+generic code plus measurement metadata were committed. The recovery command
+then restored the input and started v3, preserving all prior results.
 
-**Subsequent Mac execution:** the [Terminal log](../coreai-drums-reference30-source-mismatch/README.md)
+**Earlier Mac execution:** the [Terminal log](../coreai-drums-reference30-source-mismatch/README.md)
 shows that source MP3/checkpoint gates passed but prepared PCM did not match the
 frozen reference hash. The run stopped before encoder/Qwen/DiT/decoder. Do not
-rerun it or infer a new listening result. The active request is to package the
-existing failed report/source32WAV for sample comparison. Error reporting now
+rerun it or infer a listening result from that failure. At that stage the request
+was to package the failed report/source32WAV for sample comparison. Error reporting now
 retains actual/expected digests and decoder/platform context; admission is unchanged.
 
-**Current recovery:** the [actual Mac PCM comparison](../coreai-drums-reference30-pcm-review/README.md)
+**Earlier recovery:** the [actual Mac PCM comparison](../coreai-drums-reference30-pcm-review/README.md)
 is complete. An explicit Float32→nearest-even PCM16 path now reproduces frozen
 WAV/PCM/input48 hashes in the actual-source test here. No tolerance/hash override
-was added. Use the updated Mac command/new output folder; input collection is
-complete and automatic diagnostics handle any further preparation mismatch.
+was added. That change preceded the v2 mismatch and successful integer recovery;
+input collection is complete. The current completed result is linked above.
 
 The [source-gain-only result](../coreai-drums-source-gain-result/README.md)
 completed50steps with nine exact-zero control replays; hit-transition glitches
@@ -49,7 +55,7 @@ Small verified publisher/config sources may be fetched as in existing helpers.
 The script saves source48PCM, posterior mean/std, explicit source epsilon/mask,
 source latent/context, text/lyric token IDs and embeddings, packed condition/mask,
 silence reference, initial noise and timesteps. A fresh momentum buffer feeds
-one live50-step trajectory without gold resets. The publisher's cross-attention
+one live 50-step trajectory without gold resets. The publisher's cross-attention
 KV cache is retained across steps with one fresh EncoderDecoderCache per run;
 the original layer explicitly disables self-attention caching. Steps1/5/10/25/50 save actual
 conditional/unconditional/guided velocities, momentum and resulting latent;
@@ -99,7 +105,7 @@ on the Mac where those verified caches already exist.
 new guards/capture tests. Tests cover pinned metadata/lyrics, impulse time/stereo
 and duration through input resampling, wrong-source rejection before inference,
 read-only planning, protected/existing outputs, retained failures/incomplete
-execution, live50-step analytic feedback/capture, nonfinite stop and independent
+execution, live 50-step analytic feedback/capture, nonfinite stop and independent
 cache lifetime. A [tiny attention mechanism check](cache-mechanism-audit.json)
 also compares cached/uncached queries with the pinned attention class and actual
 Transformers cache API, using8dim random synthetic weights, not learned model
@@ -109,12 +115,8 @@ test velocities are control-flow oracles, not fake musical/model acceptance.
 No Apple build/device execution was performed here. Only source/tests/docs and
 metadata are committed, excluding all audio/tensors/weights/user ZIPs.
 
-## User action
+## Current user action
 
-[Mac command](../../docs/coreai-drums-quality.md) opens a file chooser for the
-original accepted `piano.mp3`, computes one30s/50-step CPU candidate and opens
-the local folder. Compare01approved and02new host drum WAVs at the same output
-and volume;03mix helps assess groove. They share attenuation. The diagnostic
-mix uses Colab's0.5piano+0.5drum; production iPhone gains stay untouched.
-Return `report.json` and listening feedback for02/03. No iPhone rebuild/Generate,
-codec listening repeat or second source-gain trial is requested.
+The [current Mac command](../../docs/coreai-drums-quality.md) packages the existing
+accepted v3 capture for native-port comparison. There is no new generation,
+codec listening repeat, gain/cap sweep or iPhone Generate request.

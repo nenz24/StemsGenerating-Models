@@ -1,0 +1,398 @@
+{
+  "schema_version": 1,
+  "status": "completed_reference_generation",
+  "experiment": "drums-host30s-reference-reproduction",
+  "scope": "One captured original-FP32 host reference with accepted input/settings. Not a duration-only ablation, exact CUDA replay, native numerical PASS or adopted fix.",
+  "duration_seconds": 30,
+  "latent_frames": 750,
+  "steps_requested": 50,
+  "guidance_scale": 7,
+  "APG_norm_threshold": 2.5,
+  "APG_momentum": -0.75,
+  "APG_projection_dimensions": [
+    1
+  ],
+  "cache_policy": "Publisher EncoderDecoderCache retained across steps; layer self-attention cache disabled by original source, cross-attention reused",
+  "source_epsilon_CPU_seed": 31,
+  "diffusion_noise_CPU_seed": 0,
+  "RNG_limit": "Actual tensors saved; same seed does not establish original CUDA RNG/source posterior parity",
+  "prompts": {
+    "instruction": "Generate the drums track based on the audio context:",
+    "caption": "Isolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.",
+    "metadata": "- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 30 seconds\n",
+    "text_prompt": "# Instruction\nGenerate the drums track based on the audio context:\n\n# Caption\nIsolated acoustic drum kit accompaniment. A restrained, natural groove with kick, snare and closed hi-hat, following the piano performance timing, phrasing and dynamics. Clear drum hits, tasteful fills and space between phrases. Drums only, no vocals or melodic instruments.\n\n# Metas\n- bpm: N/A\n- timesignature: N/A\n- keyscale: N/A\n- duration: 30 seconds\n<|endoftext|>\n",
+    "lyric_prompt": "# Languages\nunknown\n\n# Lyric\n[Instrumental]<|endoftext|>",
+    "lyrics": "[Instrumental]",
+    "vocal_language": "unknown",
+    "preset_sha256": "bcfd73641fddbda1fb0975febfe28cccb3a3121ec48cec1d877933e64a6d70ca",
+    "audio_seconds": 30.0
+  },
+  "source_encoder_calls": 1,
+  "decoder_calls": 1,
+  "steps_completed": 50,
+  "numeric_parity": "NOT EVALUATED; original CUDA intermediate tensors absent",
+  "existing_preview_provenance": "bounded_diagnostic; original full trajectory gate unchanged, no new PASS",
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "musical_acceptance": "NOT EVALUATED",
+  "baseline_modified": false,
+  "native_exports": 0,
+  "versions": {
+    "torch": "2.8.0",
+    "transformers": "4.57.3",
+    "diffusers": "0.37.0",
+    "tokenizers": "0.22.2"
+  },
+  "phase": "decode full30s final latent once; no song stitching",
+  "checkpoint_sha256": {
+    "base": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b",
+    "silence": "a778e9dd942f5e8b2c09c55370782d318834432b03dabbcdf70e6ed49ad6358b",
+    "qwen": "0437e45c94563b09e13cb7a64478fc406947a93cb34a7e05870fc8dcd48e23fd",
+    "vae": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0"
+  },
+  "source_preparation_diagnostic": {
+    "input_mode": "existing_prepared_WAV_no_second_gain",
+    "source32_WAV_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+    "expected_source32_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "actual_source32_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "accepted_PCM_exact": true,
+    "sample_rate": 32000,
+    "channels": 2,
+    "sample_width_bytes": 2,
+    "frames": 960000,
+    "ffmpeg_version": "ffmpeg version 9.0.2 Copyright (c) 2000-2026 the FFmpeg developers",
+    "platform_system": "Darwin",
+    "platform_machine": "arm64",
+    "scope": "Input checksum diagnostic only; no numerical comparison without original PCM arrays, no permission to bypass gate"
+  },
+  "source_preparation": {
+    "source32_WAV_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+    "source32_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "accepted_PCM_exact": true,
+    "source48_planar_sha256": "9d62d4eccd36188a4170a08ee6a22fcc66b5ad8af3b0753dc6b021a7f507f4a8",
+    "source_gain_already_applied": 0.7,
+    "additional_gain": 1.0,
+    "resampling": "Pinned TorchAudio2.10 transforms.Resample defaults; CPU torch implementation; clamp[-1,1] as handler",
+    "resampler_source_sha256": "84781e763405e636585c5cdd7303680c9d43d96e3ff32b05ac301ce6c66ea6e0"
+  },
+  "publisher_source_sha256": {
+    "modeling_acestep_v15_base.py": "d5f67ca269f8b854a86e203b843534ab62728193e45277115f667b00ab5aa2b6",
+    "configuration_acestep_v15.py": "b89870c5c7a7ce060eb0bcdbb5ffc86b0b1a324ca325a26be552ea1b42496dc5",
+    "config.json": "9bb4f832f2e5e6c8bf7bddab3c6a6da1b13c01d072efbf0ed3c830536c473359",
+    "apg_guidance.py": "0c0ce9755952c99307ecad2fac67863d43258e34541cd37ce2f2221f59e76b15"
+  },
+  "token_geometry": {
+    "text": 111,
+    "lyric": 15,
+    "packed": 127
+  },
+  "step_metrics": [
+    {
+      "step": 1,
+      "latent_rms": 0.9811492562294006,
+      "guided_rms": 1.2546436786651611
+    },
+    {
+      "step": 2,
+      "latent_rms": 0.9598680734634399,
+      "guided_rms": 1.2162219285964966
+    },
+    {
+      "step": 3,
+      "latent_rms": 0.9425190687179565,
+      "guided_rms": 1.2280925512313843
+    },
+    {
+      "step": 4,
+      "latent_rms": 0.9219963550567627,
+      "guided_rms": 1.241992712020874
+    },
+    {
+      "step": 5,
+      "latent_rms": 0.905413031578064,
+      "guided_rms": 1.2308269739151
+    },
+    {
+      "step": 6,
+      "latent_rms": 0.8864493370056152,
+      "guided_rms": 1.2447682619094849
+    },
+    {
+      "step": 7,
+      "latent_rms": 0.8701918721199036,
+      "guided_rms": 1.2500851154327393
+    },
+    {
+      "step": 8,
+      "latent_rms": 0.8528974056243896,
+      "guided_rms": 1.2414453029632568
+    },
+    {
+      "step": 9,
+      "latent_rms": 0.8373882174491882,
+      "guided_rms": 1.2328864336013794
+    },
+    {
+      "step": 10,
+      "latent_rms": 0.821610152721405,
+      "guided_rms": 1.2264047861099243
+    },
+    {
+      "step": 11,
+      "latent_rms": 0.8072235584259033,
+      "guided_rms": 1.2245903015136719
+    },
+    {
+      "step": 12,
+      "latent_rms": 0.7930405735969543,
+      "guided_rms": 1.2231413125991821
+    },
+    {
+      "step": 13,
+      "latent_rms": 0.7800039052963257,
+      "guided_rms": 1.2255176305770874
+    },
+    {
+      "step": 14,
+      "latent_rms": 0.7674133777618408,
+      "guided_rms": 1.222946047782898
+    },
+    {
+      "step": 15,
+      "latent_rms": 0.755850076675415,
+      "guided_rms": 1.2240793704986572
+    },
+    {
+      "step": 16,
+      "latent_rms": 0.7449204921722412,
+      "guided_rms": 1.2237749099731445
+    },
+    {
+      "step": 17,
+      "latent_rms": 0.7349761128425598,
+      "guided_rms": 1.2251505851745605
+    },
+    {
+      "step": 18,
+      "latent_rms": 0.7258292436599731,
+      "guided_rms": 1.2246770858764648
+    },
+    {
+      "step": 19,
+      "latent_rms": 0.7177169322967529,
+      "guided_rms": 1.2255747318267822
+    },
+    {
+      "step": 20,
+      "latent_rms": 0.7104865908622742,
+      "guided_rms": 1.2237259149551392
+    },
+    {
+      "step": 21,
+      "latent_rms": 0.7043236494064331,
+      "guided_rms": 1.2239432334899902
+    },
+    {
+      "step": 22,
+      "latent_rms": 0.6991052627563477,
+      "guided_rms": 1.223164677619934
+    },
+    {
+      "step": 23,
+      "latent_rms": 0.6949908137321472,
+      "guided_rms": 1.2217055559158325
+    },
+    {
+      "step": 24,
+      "latent_rms": 0.6918774247169495,
+      "guided_rms": 1.2209928035736084
+    },
+    {
+      "step": 25,
+      "latent_rms": 0.6898777484893799,
+      "guided_rms": 1.2182562351226807
+    },
+    {
+      "step": 26,
+      "latent_rms": 0.6889525651931763,
+      "guided_rms": 1.2153288125991821
+    },
+    {
+      "step": 27,
+      "latent_rms": 0.6891220211982727,
+      "guided_rms": 1.2140638828277588
+    },
+    {
+      "step": 28,
+      "latent_rms": 0.6903846859931946,
+      "guided_rms": 1.2103642225265503
+    },
+    {
+      "step": 29,
+      "latent_rms": 0.6926712393760681,
+      "guided_rms": 1.2086772918701172
+    },
+    {
+      "step": 30,
+      "latent_rms": 0.6960775852203369,
+      "guided_rms": 1.2037932872772217
+    },
+    {
+      "step": 31,
+      "latent_rms": 0.7005352973937988,
+      "guided_rms": 1.1985876560211182
+    },
+    {
+      "step": 32,
+      "latent_rms": 0.7059977650642395,
+      "guided_rms": 1.1939159631729126
+    },
+    {
+      "step": 33,
+      "latent_rms": 0.7125659584999084,
+      "guided_rms": 1.1871389150619507
+    },
+    {
+      "step": 34,
+      "latent_rms": 0.7200322151184082,
+      "guided_rms": 1.1826046705245972
+    },
+    {
+      "step": 35,
+      "latent_rms": 0.728556752204895,
+      "guided_rms": 1.1745015382766724
+    },
+    {
+      "step": 36,
+      "latent_rms": 0.7379793524742126,
+      "guided_rms": 1.164512038230896
+    },
+    {
+      "step": 37,
+      "latent_rms": 0.7483951449394226,
+      "guided_rms": 1.155637502670288
+    },
+    {
+      "step": 38,
+      "latent_rms": 0.7596428990364075,
+      "guided_rms": 1.1447921991348267
+    },
+    {
+      "step": 39,
+      "latent_rms": 0.77186518907547,
+      "guided_rms": 1.1326085329055786
+    },
+    {
+      "step": 40,
+      "latent_rms": 0.7849328517913818,
+      "guided_rms": 1.1188318729400635
+    },
+    {
+      "step": 41,
+      "latent_rms": 0.7988300323486328,
+      "guided_rms": 1.1033133268356323
+    },
+    {
+      "step": 42,
+      "latent_rms": 0.8134567141532898,
+      "guided_rms": 1.0883070230484009
+    },
+    {
+      "step": 43,
+      "latent_rms": 0.8287439942359924,
+      "guided_rms": 1.06911039352417
+    },
+    {
+      "step": 44,
+      "latent_rms": 0.8446546792984009,
+      "guided_rms": 1.0491423606872559
+    },
+    {
+      "step": 45,
+      "latent_rms": 0.8610280752182007,
+      "guided_rms": 1.0273908376693726
+    },
+    {
+      "step": 46,
+      "latent_rms": 0.8778544068336487,
+      "guided_rms": 1.0078637599945068
+    },
+    {
+      "step": 47,
+      "latent_rms": 0.8951000571250916,
+      "guided_rms": 0.9899997115135193
+    },
+    {
+      "step": 48,
+      "latent_rms": 0.9128193259239197,
+      "guided_rms": 0.9773273468017578
+    },
+    {
+      "step": 49,
+      "latent_rms": 0.9310042858123779,
+      "guided_rms": 0.9700197577476501
+    },
+    {
+      "step": 50,
+      "latent_rms": 0.9494818449020386,
+      "guided_rms": 0.9910889863967896
+    }
+  ],
+  "common_listening_gain": 0.36943485303214846,
+  "raw_sample_peaks": {
+    "approved": 0.9467875361442566,
+    "generated": 1.916293978691101
+  },
+  "reference_mix": "0.5 prepared piano +0.5 generated drums; production iPhone mix unchanged",
+  "artifact_sha256": {
+    "source48.f32le": "9d62d4eccd36188a4170a08ee6a22fcc66b5ad8af3b0753dc6b021a7f507f4a8",
+    "step-50-unconditional.f32le": "869927a70115b2d088703f90a18c6005a9d3ea47e0ce5e5cbe2d233194446d92",
+    "step-01-unconditional.f32le": "b114a6ab2ce5ddf38f82f761f89375293fad50f1299b5799a8f1dd841e54bf21",
+    "step-05-unconditional.f32le": "2860475673278f7b738e8bdad4226c7742376077f0b02cc6afb5fd993aa7871d",
+    "final-latent.f32le": "54c574fbcec00d7404d5072258d738b3de5e167728e707a2b271264733d5740c",
+    "step-01-latent.f32le": "427b4b2edb312d18789dd412ab7c7944fd78e937cedaedc014c740a1a26e06e2",
+    "text-embeddings.f32le": "bd4553b52966ff78250a05c3b33fa503aa4e1b9fe1181eabdd8d5721117ba26c",
+    "source-context.f32le": "023ba8d088ed12b35d96d8a896b4f665d90716dfaf0e0ec1960aeb1a6c4ed9c4",
+    "step-25-latent.f32le": "87ebd2eed926af22120290c5a3feb5c067f486d912a46083b24cad017cd21618",
+    "step-05-momentum.f32le": "dda669704a366f6fb99d8c042184e51621bc0342c694f47c2f80b8cb90256527",
+    "step-10-momentum.f32le": "c05b15e8acd667b2003fbb91a3678442e91494c76a01508640f979f41f7687c9",
+    "source-epsilon.f32le": "067db2fcfcb150e4a944d290873ca42768babba2d76d155cfa111b92bb1da622",
+    "step-25-guided.f32le": "4420e543458984d37ce0633a3fa71c7d578b2f7446c26d14669ec145258771f1",
+    "step-10-conditional.f32le": "7514d70b861d145db71d983f417eefe023545a90bf62aaa47a2a5a63e3803c1e",
+    "step-10-unconditional.f32le": "4b0870f49d82ce7110c6aa05df00cbee70ca972b89b52714ce6e802eca701217",
+    "step-01-guided.f32le": "9523fce5a1cb3e622a94da8ab02071aa5d820a660e01115f31b34ba9b9307d6e",
+    "source-mean.f32le": "5a043c801ee4ac3a0dee608760a44961d33f383c27a1b1f4a6f359d28959b928",
+    "source-std.f32le": "9c442648386491c729355e20951186ec98ff1951ad394b770df94cc784789382",
+    "condition.f32le": "01666f5a27bb5b339d2d7858c0187441b84f6d951c08d38abccb0577f5d5c485",
+    "reference-audio.f32le": "4d0f3fc0ab3dc55080ad274e5c666c93b7ee3f94a12dd16b0e48b62edf7bb02e",
+    "step-01-momentum.f32le": "1fdca4c6a95cc92f4c37b0f291629601e6098e527f39e3a7c36a652dda246922",
+    "source-latent.f32le": "61b0ac4c44d807f86ea7f0c58a055eefe147efc200050d1e5baee6f7c802846e",
+    "step-25-conditional.f32le": "8d30c5cc3c45a9ce9cb9e1ceec85ec2291afa67b9e42f21c75b195f3a41a195d",
+    "initial-noise.f32le": "35c3a8553516c7327f57c11642a7ce703de2a073cbfd36fdad9708e6445c7c39",
+    "step-25-unconditional.f32le": "870f0a93ac8693f9d8959a0effe4077017eb89be5128d2f8a947f4a4cf3b575c",
+    "lyric-embeddings.f32le": "27fa894531c1d15bf6a8487a5e1f9f52ddc9bcb317e60c4a93551244cf07072a",
+    "final-audio.f32le": "5f81f20205c39fbba6418f95d5d42d8346fe48f457c8c455c77958c98fabd615",
+    "step-05-guided.f32le": "8a8e834f67114c9d90491343898b6ff16e19555f679787ffb4d4226238822edf",
+    "step-50-guided.f32le": "f43491a7facf17581b3e04091d3ff167ce332a3143d0639143bafe61c0c1686d",
+    "source32.wav": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+    "step-01-conditional.f32le": "4767f96fd98ba928ceeca65e346b6043111528c73ba1460394815e5a286dcffb",
+    "step-10-guided.f32le": "1276fa23eb07ad82d48c8ec4a3866695622b20c765248bb7057851bcee05e658",
+    "step-05-conditional.f32le": "2d553c9b6101670c0a5961f746724db61d55c4215eed613dc472767817973bc1",
+    "step-50-momentum.f32le": "4d1a399b7b253e566d8d4b407a973814d68e53afe70d3787ce192af106f6d0ec",
+    "source-mask.f32le": "c406cfb0db9850c7d09ce01cb226445fe75e8c02ee71962f316805446bb01114",
+    "source-preparation.json": "e553de5127fbfb0b7d4f726595c0ba50418278afa537e34e9138093df1dffe99",
+    "03-host-piano-drums-headroom.wav": "802d7d53ff532830a50f90d88361c34919a3df398262cd1b5172e8f9b04da73e",
+    "text-ids.f32le": "ed40dfa5aa8fa9431a4cb0937bef355d15ce5fc49837e9296a06d2effc74da4a",
+    "01-colab-reference-headroom.wav": "9857c2567505b3b6a99a6464c218a565f81928b1e62d62df0dda96e819704cb6",
+    "lyric-ids.f32le": "b50fc202282a11b8ae2314b3533daaf20d917c6c77b753d4ad8b0c588fa5fad7",
+    "step-05-latent.f32le": "836be73c3a561ac2bfae434b566be09b8408de93fd89adf7571fb876c66856f7",
+    "step-50-latent.f32le": "54c574fbcec00d7404d5072258d738b3de5e167728e707a2b271264733d5740c",
+    "condition-mask.f32le": "694d59a726638da688bfc143f6084259ae3fb6e82dd59ab39ee48ac945b8e075",
+    "step-10-latent.f32le": "1604a9dd063c8b8b6146fcf6829613ba3354188fe7a2b3ed618c2e06c93d4a45",
+    "step-25-momentum.f32le": "209d0e1c728a6f7ca6ef24d92ca0a1e6928d0d3dd4cd446c1076fb1e2ce0e708",
+    "step-50-conditional.f32le": "cba211f14dc3d9143c30044d7f8344ecdbbbc59260c90359502ee506d2401ac1",
+    "02-host-reference-headroom.wav": "fcb48469f65b834ee38bbf68d020274613687ca434aaadfa9394a79ec7357e59",
+    "timesteps.f32le": "09729a1334019659e12364e904d240c1266f2f3af1982e51a8b06570a2256195"
+  }
+}

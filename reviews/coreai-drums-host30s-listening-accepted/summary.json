@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "scope": "Human listening acceptance of one completed host FP32 30s reference; not native BF16/full-song acceptance",
+  "user_feedback_verbatim": "Saya dengarkan 1, 2, dan 3 semuanya bagus",
+  "report_sha256": "f5f84314fa37f49f73502a77f7e3364b31450898231731d64e216bf1b606bfdf",
+  "human_listening_acceptance": "ACCEPTED for files01/02/03",
+  "files": {
+    "01-colab-reference-headroom.wav": {
+      "user_verdict": "bagus",
+      "reported_sha256": "9857c2567505b3b6a99a6464c218a565f81928b1e62d62df0dda96e819704cb6"
+    },
+    "02-host-reference-headroom.wav": {
+      "user_verdict": "bagus",
+      "reported_sha256": "fcb48469f65b834ee38bbf68d020274613687ca434aaadfa9394a79ec7357e59"
+    },
+    "03-host-piano-drums-headroom.wav": {
+      "user_verdict": "bagus",
+      "reported_sha256": "802d7d53ff532830a50f90d88361c34919a3df398262cd1b5172e8f9b04da73e"
+    }
+  },
+  "execution": {
+    "reported_status": "completed_reference_generation",
+    "steps_completed": 50,
+    "duration_seconds": 30,
+    "latent_frames": 750,
+    "source_encoder_calls": 1,
+    "decoder_calls": 1,
+    "token_geometry": {
+      "text": 111,
+      "lyric": 15,
+      "packed": 127
+    }
+  },
+  "source32_PCM_exact": true,
+  "source48_planar_sha256": "9d62d4eccd36188a4170a08ee6a22fcc66b5ad8af3b0753dc6b021a7f507f4a8",
+  "original_report_musical_acceptance": "NOT EVALUATED",
+  "original_report_preserved": true,
+  "numeric_parity": "NOT EVALUATED; original CUDA intermediate tensors absent",
+  "native_parity": "NOT EVALUATED",
+  "full_song_three_instrument_acceptance": "NOT EVALUATED",
+  "existing_preview_provenance": "bounded_diagnostic; original full trajectory gate unchanged, no new PASS",
+  "baseline_modified": false,
+  "native_exports": 0,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "verification_limit": "Uploaded report and user listening feedback only; output WAVs/tensors not uploaded or independently verified in this review",
+  "next_step": "Package the existing accepted capture with checksum/shape/finite validation, then examine native750-frame partitioned BF16 port against this FP32 reference. No repeat generation or activation of existing glitchy10.24s native preset.",
+  "causality_limit": "Duration, lyric metadata, source preparation and other reference differences were changed together; no unique glitch cause established"
+}
