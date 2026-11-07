@@ -1,0 +1,18 @@
+{
+  "source32_float_sha256": "d38cd9033995ef87274c7c9b8262de983dfa12f4266a10f015405265c38261ed",
+  "source32_quantization": "Explicit nearest-even PCM16: np.rint(Float64(Float32)*32768), clip[-32768,32767]",
+  "source_gain_before_quantization": 0.7,
+  "input_mode": "original_MP3_float32_explicit_nearest_PCM16",
+  "source32_WAV_sha256": "028a0fdf8c55f9901455c7651c8403d2b9da47e2bdc218afc459f52dfb2f6a2e",
+  "expected_source32_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+  "actual_source32_PCM_sha256": "010b0a35cd0c5f1c6205cd813477cebb0d703487834e70aaae02d393d7b840d7",
+  "accepted_PCM_exact": false,
+  "sample_rate": 32000,
+  "channels": 2,
+  "sample_width_bytes": 2,
+  "frames": 960000,
+  "ffmpeg_version": "ffmpeg version 9.0.2 Copyright (c) 2000-2026 the FFmpeg developers",
+  "platform_system": "Darwin",
+  "platform_machine": "arm64",
+  "scope": "Input checksum diagnostic only; no numerical comparison without original PCM arrays, no permission to bypass gate"
+}

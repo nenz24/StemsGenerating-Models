@@ -1,0 +1,42 @@
+{
+  "restoration": {
+    "schema_version": 1,
+    "mode": "Exact frozen-reference input reconstruction; not output audio processing",
+    "input_WAV_sha256": "028a0fdf8c55f9901455c7651c8403d2b9da47e2bdc218afc459f52dfb2f6a2e",
+    "input_PCM_sha256": "010b0a35cd0c5f1c6205cd813477cebb0d703487834e70aaae02d393d7b840d7",
+    "output_WAV_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+    "output_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "correction_count": 1785,
+    "correction_unit_PCM16": 1,
+    "compressed_delta_sha256": "807311914bc59917eb3031e3f22e03ac3f150c86d88b2570c413a43405cc3c66",
+    "original_input_bytes_preserved": true,
+    "reference_hashes_unchanged": true,
+    "neural_calls_during_reconstruction": 0,
+    "model_exports": 0
+  },
+  "full_WAV_bytes_match_frozen_reference": true,
+  "original_source_PCM_hash_unchanged": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+  "existing_strict_prepared_source_gate": "PASS_EXACT",
+  "source_preparation": {
+    "source32_WAV_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+    "source32_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+    "accepted_PCM_exact": true,
+    "source48_planar_sha256": "9d62d4eccd36188a4170a08ee6a22fcc66b5ad8af3b0753dc6b021a7f507f4a8",
+    "source_gain_already_applied": 0.7,
+    "additional_gain": 1.0,
+    "resampling": "Pinned TorchAudio2.10 transforms.Resample defaults; CPU torch implementation; clamp[-1,1] as handler",
+    "resampler_source_sha256": "84781e763405e636585c5cdd7303680c9d43d96e3ff32b05ac301ce6c66ea6e0"
+  },
+  "source48_bytes_match_original_CPU_encoder_input": true,
+  "new_neural_calls": 0,
+  "private_delta_or_audio_in_Git": false,
+  "Mac_vs_reference_Float32_metrics": {
+    "finite": true,
+    "max_absolute_error": 7.450580596923828e-07,
+    "rmse": 4.527008566195352e-08,
+    "normalized_rmse": 6.375294470758951e-07,
+    "elementwise_fraction_over_bound": 0.0,
+    "parity_passed": true
+  },
+  "Mac_explicit_nearest_matches_uploaded_PCM_bytes": true
+}

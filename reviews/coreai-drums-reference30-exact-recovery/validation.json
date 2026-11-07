@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "host_regression": {
+    "run": 187,
+    "passed": 185,
+    "skipped": 2,
+    "new_tests": 6,
+    "command": "python -m unittest discover -s Tests/StemEvaluationPython -p test_coreai*.py"
+  },
+  "actual_private_data_checks": {
+    "ZIP_members_and_separate_report": "PASS byte identity",
+    "Mac_float_requantization_matches_uploaded_PCM": "PASS",
+    "reconstructed_WAV_matches_original_frozen_bytes": "PASS",
+    "existing_generator_source_gate": "PASS_EXACT",
+    "source48_matches_original_CPU_encoder_input_bytes": "PASS",
+    "CLI_delta_file_and_stdin_delivery": "PASS",
+    "new_neural_calls": 0
+  },
+  "models_and_numeric": {
+    "BF16_native_assets_or_weights_changed": false,
+    "original_reference_hashes_or_thresholds_changed": false,
+    "full50step_generation_here": false,
+    "Mac_or_CUDA_or_Apple_execution_here": false,
+    "musical_acceptance": "NOT EVALUATED"
+  },
+  "privacy": {
+    "audio_tensors_checkpoint_committed": false,
+    "correction_indices_sign_map_or_base64_committed": false,
+    "private_payload_delivery": "Same owner chat only"
+  },
+  "checks": {
+    "Python_syntax": "PASS",
+    "JSON_links_whitespace": "PASS",
+    "explicit_publish_list_excludes_private_payload": "PASS"
+  }
+}

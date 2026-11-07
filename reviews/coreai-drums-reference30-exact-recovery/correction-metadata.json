@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "encoding": "unit-delta-varint-zlib-v1",
+  "input_PCM_sha256": "010b0a35cd0c5f1c6205cd813477cebb0d703487834e70aaae02d393d7b840d7",
+  "target_PCM_sha256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+  "target_WAV_sha256": "1f68460c7cf73acd4ad9ae7ef9632c269e18517ac0046a2f177be18ccdd66b54",
+  "correction_count": 1785,
+  "compressed_delta_sha256": "807311914bc59917eb3031e3f22e03ac3f150c86d88b2570c413a43405cc3c66",
+  "private_data_committed": false,
+  "delivery": "Private correction document returned only in the same user chat",
+  "compressed_bytes": 3234,
+  "document_bytes": 5087
+}

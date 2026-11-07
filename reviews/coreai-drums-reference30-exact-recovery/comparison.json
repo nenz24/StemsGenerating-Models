@@ -1,0 +1,25 @@
+{
+  "ZIP_SHA256": "18f2b6b17e176a69fc22f2933c59f5dfae4a4db17d318daa28befeac71a0f85b",
+  "Mac_WAV_SHA256": "028a0fdf8c55f9901455c7651c8403d2b9da47e2bdc218afc459f52dfb2f6a2e",
+  "Mac_PCM_SHA256": "010b0a35cd0c5f1c6205cd813477cebb0d703487834e70aaae02d393d7b840d7",
+  "reference_PCM_SHA256": "1d57ce145dcf66d30762d81b2ca26df4798f3b0b0a5d36b303a53b7db7baaf23",
+  "differences": 1785,
+  "max_pcm16_delta": 1,
+  "counts": {
+    "-1": 883,
+    "0": 1918215,
+    "1": 902
+  },
+  "float_error": {
+    "max": 7.450580596923828e-07,
+    "rms": 4.527008566195352e-08,
+    "normalized_rms": 6.37529447075895e-07,
+    "bias": 4.947145007960203e-11
+  },
+  "private_patch_sizes": {
+    "raw": 3451,
+    "compressed": 3234,
+    "base64": 4312
+  },
+  "scope": "Aggregate measured v2 Mac input differences only; raw samples, edit indices and private correction data excluded from Git."
+}

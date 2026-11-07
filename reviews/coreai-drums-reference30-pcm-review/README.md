@@ -1,5 +1,13 @@
 # Measured PCM rounding difference; recover exact reference preparation
 
+**Subsequent Mac v2 result:** Float32/explicit-nearest preparation still fails
+the unchanged source checksum before neural execution. The [new actual-data
+review and exact recovery](../coreai-drums-reference30-exact-recovery/README.md)
+measures1785 remaining1LSB differences and reconstructs the original reference
+bit-exact from the measured cache. Its private correction data is not committed.
+Do not repeat the v2 decode command; the new wrapper restores input and starts
+one v3 reference run. Earlier Mac-execution/pending statements below are historical.
+
 The requested two-file ZIP is received and verified. [Archive review](archive-review.json)
 records ZIP/member hashes and format. The3147-byte [failed report](failed-report.json)
 is preserved unchanged: no encoder, decoder or diffusion steps ran on Mac.

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-11-07",
+  "timezone": "Asia/Jakarta",
+  "ZIP_sha256": "18f2b6b17e176a69fc22f2933c59f5dfae4a4db17d318daa28befeac71a0f85b",
+  "ZIP_bytes": 10414751,
+  "members": {
+    "report.json": {
+      "bytes": 4280,
+      "sha256": "1b96f0c5117e347a429bf172a486a081ed9b8bb01b2f79554738e4666a4f9488"
+    },
+    "source-preparation.json": {
+      "bytes": 1008,
+      "sha256": "2ce623fe213796f420bdbff634b938bde4a3b70a867494306b8ffe27bd2e8d96"
+    },
+    "source32.wav": {
+      "bytes": 3840044,
+      "sha256": "028a0fdf8c55f9901455c7651c8403d2b9da47e2bdc218afc459f52dfb2f6a2e"
+    },
+    "source32-float.f32le": {
+      "bytes": 7680000,
+      "sha256": "d38cd9033995ef87274c7c9b8262de983dfa12f4266a10f015405265c38261ed"
+    }
+  },
+  "separately_uploaded_report_byte_identical": true,
+  "failed_Mac_source_encoder_calls": 0,
+  "failed_Mac_steps_completed": 0,
+  "failure_phase": "Source PCM checksum, before neural generation",
+  "generated_drum_audio_present": false,
+  "source_piano_WAV_present": true
+}

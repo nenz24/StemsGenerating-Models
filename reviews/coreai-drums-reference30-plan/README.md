@@ -1,5 +1,12 @@
 # One captured host30s reference after failed source-gain isolation
 
+**Active recovery:** both v1/direct-PCM and v2/explicit-nearest Mac attempts
+stopped before neural generation. [Measured v2 input reconstruction](../coreai-drums-reference30-exact-recovery/README.md)
+now produces the original WAV/PCM hashes exactly without decoding again or
+relaxing gates. Private correction data is returned only to the user in chat;
+generic code plus measurement metadata are committed. Use the latest command
+to restore the input and start v3, preserving all prior results.
+
 **Subsequent Mac execution:** the [Terminal log](../coreai-drums-reference30-source-mismatch/README.md)
 shows that source MP3/checkpoint gates passed but prepared PCM did not match the
 frozen reference hash. The run stopped before encoder/Qwen/DiT/decoder. Do not

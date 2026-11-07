@@ -16,7 +16,48 @@ Jadi clipping drum solo belum menjelaskan glitch mix. Sebanyak 87,54% energi
 drum berada di 20–150 Hz. Ini pengukuran spektrum, bukan bukti audibilitas,
 kesalahan instrumen atau penyebab glitch. Belum ada diagnosis penyebab pasti.
 
-## Hasil terbaru: selisih PCM terukur, pembulatan dibuat eksplisit
+## Hasil terbaru: v2 masih berhenti sebelum model; pemulihan acuan bit-exact
+
+[Report dan ZIP v2](../reviews/coreai-drums-reference30-exact-recovery/README.md)
+menunjukkan **0/50langkah**, source encoder/decoder0. File drum02/03 belum dibuat;
+WAV di ZIP adalah input piano. Pembulatan nearest-even yang baru cocok dengan
+Float32 Mac yang diunggah, tetapi Float32 decode Mac sendiri masih berbeda dari
+acuan. Akibatnya tinggal1785 dari1920000 sampel PCM16 berbeda1LSB; bukan lagi
+939512 sampel seperti v1. Model/cache/BF16/toleransi tetap.
+
+### Langkah aktif: pulihkan input acuan dari cache v2, lalu jalankan v3
+
+[`recover_coreai_reference_source.py`](../scripts/recover_coreai_reference_source.py)
+memakai file cache v2 dan dokumen koreksi privat yang dikirim melalui chat.
+Hanya1785 edit integer±1LSB pada posisi terukur diperlukan untuk merekonstruksi
+**WAV dan PCM acuan asli persis**. Hash sumber harus cocok dengan dokumen, dan
+hash hasil harus sama dengan acuan tetap sebelum file baru ditulis/generasi
+dijalankan. Ini pemulihan fixture input uji, bukan pemrosesan output drum atau
+perbaikan import umum untuk semua lagu. MP3/cache asli tidak ditimpa.
+
+Data koreksi tidak dipush ke Git karena berasal dari audio pengguna. Gunakan
+**blok Terminal lengkap di chat** yang menyertakan dokumen koreksi; tidak perlu
+memilih/decode MP3 atau mengunduh file cloud lagi. Setelah update, blok itu
+membaca `.runtime-cache/drums-reference30-v2/source32.wav`, membuat
+`.runtime-cache/drums-reference30-source-exact-v1.wav`, memverifikasi dua hash
+acuan, lalu menjalankan satu generasi30s/50langkah ke folder baru
+`.runtime-cache/drums-reference30-v3` dengan `--prepared-source`.
+
+Semua folder gagal v1/v2 dipertahankan. Tidak ada pelonggaran gate, penggantian
+hash acuan, download bobot, export native atau Generate iPhone. Pemulihan integer
+sudah diuji pada ZIP yang diunggah: seluruh WAV cocok byte-for-byte dengan
+acuan dan lolos gate generator asli. Input48kHz di cloud juga cocok dengan
+input encoder yang sebelumnya diverifikasi. Full30s Qwen/DiT/generasi belum
+dijalankan di cloud karena bobot lengkap berada di Mac; belum ada hasil dengar
+baru atau full numerical/native PASS.
+
+Setelah v3 selesai, dengarkan `02-host-reference-headroom.wav` dan
+`03-host-piano-drums-headroom.wav`, lalu kirim report dan penilaian glitch/groove.
+Data pemulihan hanya berlaku untuk snapshot input v2 yang terukur ini, bukan
+rekaman lain. Helper menolak file sumber/payload/target yang tidak cocok serta
+tidak menimpa file atau folder lama.
+
+## Riwayat: selisih PCM terukur, pembulatan dibuat eksplisit
 
 [ZIP Mac sudah diperiksa](../reviews/coreai-drums-reference30-pcm-review/README.md).
 Selisih maksimum32kHz PCM16 adalah **1LSB** (`3,05176e-5`), normalizedRMSE
@@ -32,7 +73,10 @@ mereproduksi **hash WAV dan PCM acuan persis**, serta byte input48kHz VAE yang
 sama. Jalur Float32 Mac belum dijalankan; gate tetap menghentikan input yang
 belum cocok sebelum source encoder. Bass/BF16/checkpoint/cache/native tidak berubah.
 
-### Langkah aktif: ulang tahap acuan dengan konversi yang diperbaiki
+### Riwayat uji v2 (sudah gagal pada PCM; jangan ulang)
+
+Command berikut disimpan sebagai catatan. Langkah aktif sekarang adalah
+pemulihan cache yang terukur, bukan decode ulang lewat jalur ini.
 
 Tutup Xcode. Dari folder repo Mac:
 
