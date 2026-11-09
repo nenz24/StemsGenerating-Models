@@ -128,7 +128,8 @@
 			buildActionMask = 2147483647;
 			files = ();
 			inputPaths = ("$(SRCROOT)/ModelCandidates", "$(SRCROOT)/../../scripts/stage_coreai_app_models.py",
-				"$(SRCROOT)/../../scripts/coreai_preview_window.py",);
+				"$(SRCROOT)/../../scripts/coreai_preview_window.py",
+				"$(SRCROOT)/../../scripts/coreai_drum_reference30_contract.py",);
 			name = "Stage active CoreAI models";
 			outputPaths = ("$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ModelCandidates",);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -31,13 +31,12 @@ bass/drum/gitar belum diterima. BF16/checkpoint/baseline dan toleransi
 abs 1e-4 / rel 1e-3 / nRMSE 1e-3 tetap. Hasil ini tidak membuktikan bahwa durasi saja
 menyebabkan glitch; beberapa perbedaan konfigurasi dipulihkan bersama.
 
-### Langkah aktif: siapkan asset native 30s di Mac dari capture yang sudah diverifikasi
+### Langkah aktif: uji komponen native 30s di iPhone
 
-[ZIP dan replay komponen sudah diperiksa](../reviews/coreai-drums-reference30-native-preparation/README.md):
-43 tensor utuh dan 17 pemeriksaan komponen lolos batas asli, termasuk satu source
-encoder dengan epsilon tersimpan serta satu full decoder 30s. Nilai epsilon Mac
-berbeda dari hasil seed yang sama di cloud, sehingga input/noise tersimpan
-akan dipakai langsung. Tidak perlu ZIP/generasi/dengar kontrol diulang.
+[Export Mac selesai](../reviews/coreai-drums-reference30-export-completed/README.md):
+16 aset lengkap dan keenam gate host lolos pada batas asli. Semua hash capture
+sesuai ZIP yang sudah diperiksa. Pembandingan native iPhone dan live trajectory
+50 langkah tetap belum dievaluasi. Tidak perlu export atau generasi host diulang.
 
 Tutup Xcode. Dari folder repo Mac:
 
@@ -45,31 +44,46 @@ Tutup Xcode. Dari folder repo Mac:
 git fetch origin main &&
 python3 scripts/update_coreai_project.py &&
 .runtime-cache/coreai-decoder-venv/bin/python \
-  scripts/prepare_coreai_drum_reference30.py --execute \
-  --capture .runtime-cache/drums-reference30-v3 \
-  --out .runtime-cache/drums-reference30-native-v1
+  scripts/activate_coreai_drum_reference30.py \
+  --source .runtime-cache/drums-reference30-native-v1 &&
+open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
 ```
 
-Setelah selesai atau berhenti, Finder memilih **`reference.json`** di folder
-hasil baru. Kirim file itu melalui chat. Folder v3 dan seluruh hasil lama
-dipertahankan. Jika folder native-v1 sudah ada, kirim `reference.json` yang
-sudah ada; jangan hapus atau mengulanginya dengan nama baru sebelum diperiksa.
+Script memverifikasi export yang ada, menyalinnya ke bundle diagnostik terpisah,
+menyimpan backup selector build lama dan memilih hanya resource uji komponen.
+Aset lama dan folder export tetap. Copy yang sudah lengkap dipakai ulang setelah
+verifikasi. Tidak ada download bobot, export ulang, Qwen/conditioning baru atau
+perubahan preset/mix/baseline BF16/toleransi.
 
-Ini persiapan asset di Mac; belum mengaktifkan profil baru atau menjalankan
-Generate iPhone. Jalur baru khusus 750 frame/127 condition token, terpisah dari
-kontrak native 128/256 frame yang ada. Script memakai checkpoint lokal yang sama,
-conditioning/source/noise tersimpan, 14 shard DiT BF16 dengan komputasi FP32,
-APG FP32 dan decoder FP32. `null_condition_emb` berasal dari checkpoint base,
-bukan tensor nol. Tidak ada Qwen/conditioning baru, download bobot atau generasi
-host 50 langkah. Satu pemeriksaan prediksi langkah 1 FP32 dan BF16 serta APG/
-decoder harus lolos gate asli; bila gagal, report mempertahankan kegagalan.
+Di Xcode pilih **CoreAIProbe Reuse**, target iPhone, lalu **Cmd+R**. Pada proses
+app baru tekan **Uji komponen drum 30 detik** sekali. Setelah selesai, tekan
+**Bagikan laporan** di bawah hasil dan kirim ke chat. Tidak perlu memilih piano.
+Uji ini tidak menghasilkan WAV atau menjalankan Generate 50 langkah.
 
-Asset ditulis ke cache baru yang tidak aktif; selector/resource Xcode, baseline,
-mix dan toleransi tetap. Pembandingan numerik native, live trajectory 50 langkah,
-uji memori/performa dan dengar iPhone menyusul setelah manifest export diperiksa.
-`native_parity`/`full_trajectory_parity` tetap `NOT EVALUATED`. Eksperimen ini
-menggunakan input beku yang sudah diterima, belum import piano bebas atau lagu
-penuh. Tidak ada pemuatan DiT monolitik di iPhone.
+Ada 16 panggilan serial dan 6 pembandingan: conditional/unconditional DiT langkah 1,
+APG dengan input acuan tersimpan, serta decoder 30s dari final latent acuan.
+Seluruh hash asset/input diperiksa sebelum model pertama dibuka. Selisih finite
+melewati batas tetap ditandai `NOT PASSED`; komponen independen lain dikumpulkan.
+Error native/type/shape/nonfinite/memori menghentikan uji. Toleransi tetap
+abs 1e-4 / rel 1e-3 / nRMSE 1e-3. Tidak ada reset gold untuk generasi karena belum ada
+feedback trajectory native dalam uji komponen ini.
+
+Laporan tersimpan terpisah per-run dan tidak menimpa laporan baseline. Jika app
+berhenti, buka kembali lalu bagikan laporan yang dipulihkan; fase native terakhir
+untuk run yang sama ikut ditampilkan. Uji memori/performa dan penerimaan musik
+native memerlukan hasil perangkat; host PASS bukan full numerical/native PASS.
+Target akhir lagu penuh dengan bass/drum/gitar tetap.
+
+### Riwayat: source dan persiapan native 30s sudah selesai
+
+[Capture/replay CPU](../reviews/coreai-drums-reference30-native-preparation/README.md)
+sebelumnya lolos 17 gate komponen, termasuk encoder dengan epsilon tersimpan dan
+full decoder. Epsilon dari seed yang sama berbeda lintas CPU; source, conditioning
+serta noise asli tersimpan dipakai langsung. Export terpartisi 750 frame/127 token
+kemudian selesai pada Mac. `reference.json` yang diunggah mencatat 16 aset BF16
+DiT/FP32-compute dan APG/decoder FP32, seluruh gate host lolos. Status
+`native_parity`/`full_trajectory_parity` di manifest asli tetap `NOT EVALUATED`.
+Ini memakai input beku yang diterima, belum import piano bebas atau lagu penuh.
 
 ### Riwayat: pemulihan input v2 berhasil sebelum generasi v3
 

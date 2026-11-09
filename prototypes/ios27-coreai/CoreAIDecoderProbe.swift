@@ -3004,6 +3004,236 @@ enum CoreAIDecoderProbe {
     }
 }
 
+// Fixed accepted-input component test, separate from production previews.
+extension CoreAIDecoderProbe {
+    private struct Drum30Contract: Decodable {
+        struct Component: Decodable {
+            let assetFile: String
+            let inputShapes: [String: [Int]]
+            let outputShapes: [String: [Int]]
+        }
+        let profile: String
+        let status: String
+        let latentFrames: Int
+        let conditionTokens: Int
+        let weightStorageDtype: String
+        let computeDtype: String
+        let nativeExports: Int
+        let nativeParity: String
+        let fullTrajectoryParity: String
+        let acceptedReportSha256: String
+        let stages: [Contract.Stage]
+        let apg: Component
+        let decoder: Component
+        let artifactSha256: [String: String]
+        let absoluteTolerance: Double
+        let relativeTolerance: Double
+        let relativeRmseTolerance: Double
+    }
+
+    static func savedDrumReference30Report() -> String? {
+        guard let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
+        guard let text = try? String(contentsOf: root.appendingPathComponent("last-drums-reference30-report.txt"), encoding: .utf8) else { return nil }
+        guard !text.contains("Component collection: COMPLETED"),
+              let first = text.components(separatedBy: "\n").first,
+              let runID = first.components(separatedBy: "; run ").last, UUID(uuidString: runID) != nil,
+              let phase = try? String(contentsOf: root.appendingPathComponent("drum-reference30-\(runID)-phase.txt"), encoding: .utf8) else { return text }
+        return text + "\nLast persisted native phase for this run:\n" + phase
+    }
+
+    private static func saveDrum30(_ lines: [String], runID: String) {
+        guard let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        let directory = root.appendingPathComponent("DrumReference30Reports/" + runID, isDirectory: true)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let text = lines.joined(separator: "\n")
+        try? text.write(to: directory.appendingPathComponent("report.txt"), atomically: true, encoding: .utf8)
+        try? text.write(to: root.appendingPathComponent("last-drums-reference30-report.txt"), atomically: true, encoding: .utf8)
+    }
+
+    private static func drum30Comparison(_ label: String, actual: [Float], expected: [Float],
+                                         comparisons: inout Int, passed: inout Int, lines: inout [String]) throws {
+        let metric = try compare(actual: actual, expected: expected, absoluteTolerance: 1e-4,
+                                 relativeTolerance: 1e-3, relativeRmseTolerance: 1e-3)
+        var failures = 0, worstIndex = 0
+        var worstRatio = -Double.infinity
+        for i in actual.indices {
+            guard expected[i].isFinite else { throw ProbeError.invalidFloatData }
+            let bound = 1e-4 + 1e-3 * abs(Double(expected[i]))
+            let error = abs(Double(actual[i]) - Double(expected[i]))
+            if error > bound { failures += 1 }
+            if error / bound > worstRatio { worstRatio = error / bound; worstIndex = i }
+        }
+        comparisons += 1
+        if metric.passed { passed += 1 }
+        lines.append("Component \(label): \(metric.passed ? "PASS" : "NOT PASSED"); max abs \(metric.maxError); RMSE \(metric.rmse); normalized RMSE \(metric.normalizedRmse)")
+        lines.append("Pointwise violations \(failures)/\(actual.count); worst bound ratio \(worstRatio), flat index \(worstIndex); actual \(actual[worstIndex]); reference \(expected[worstIndex]); original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3")
+    }
+
+    private static func drum30Stage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray],
+                                     index: Int, runID: String, stats: inout RetentionStats,
+                                     repairs: inout CacheRepairStats,
+                                     progress: @escaping @MainActor @Sendable (String) -> Void) async throws -> StageResult {
+        try requirePreviewMemoryBudget()
+        let phase = "Drum30 component \(index)/16: \(stage.assetFile)"
+        await progress("Memeriksa komponen drum 30 detik: \(index)/16…")
+        let breadcrumbs = interleavingPhaseProgress(prefix: "Drum30 run \(runID)\n" + phase,
+                                                     fileName: "drum-reference30-\(runID)-phase.txt")
+        breadcrumbs("Before native call; original fixed inputs; cpuOnly requested")
+        var unusedPool: [String: RetainedStage] = [:]
+        defer { unusedPool.removeAll() }
+        return try await runPreviewSamplingStage(stage, folder: folder, inputs: inputs,
+            aot: nil, reuseStages: false, pool: &unusedPool, stats: &stats,
+            allowCacheRepair: true, cacheRepair: &repairs, phaseProgress: breadcrumbs)
+    }
+
+    static func runDrumReference30Components(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        let clock = ContinuousClock(), start = ContinuousClock().now
+        let runID = UUID().uuidString
+        let memory = CoreAIProcessFootprintSampler()
+        var stats = RetentionStats(), repairs = CacheRepairStats()
+        var comparisons = 0, passed = 0, completed = false
+        var lines = ["Runtime: CoreAI drums30 fixed-input component diagnostic; run \(runID)",
+            "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+            "Revision: drums30-components-v1; 16 serial component calls, no generation or WAV",
+            "BF16 learned DiT storage, FP32 compute/I/O; VAE FP32; original bounds unchanged",
+            "cpuOnly requested; actual placement unmeasured; Swift scopes released per asset, native eviction not guaranteed",
+            "APG receives captured gold velocities and decoder receives captured final latent: independent component checks, not native feedback trajectory",
+            "Finite strict failures remain NOT PASSED while other independent components are collected. Nonfinite/native/type/memory errors stop.",
+            "Native full 50-step trajectory: NOT EVALUATED; full-song bass/drums/guitar: NOT EVALUATED",
+            "Thermal start: \(ProcessInfo.processInfo.thermalState.rawValue); low power: \(ProcessInfo.processInfo.isLowPowerModeEnabled)"]
+        saveDrum30(lines, runID: runID)
+        do {
+            guard let root = Bundle.main.resourceURL else { throw ShardError.missingPreparedBundle }
+            let folder = root.appendingPathComponent("ModelCandidates/drums-reference30-frozen-diagnostic", isDirectory: true)
+            try verifyReferenceIdentity(folder.appendingPathComponent("reference.json"),
+                expected: "f2f84e6c34b2fe42678dc38a48d9ca35b20c14ba53f10843aee8b218a24d53ed")
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let ref = try decoder.decode(Drum30Contract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
+            try checkManifest(ref.profile, "drums-reference30-frozen-diagnostic", "drum30.profile")
+            try checkManifest(ref.status, "prepared_inactive_component_diagnostic", "drum30.status")
+            try checkManifest(ref.latentFrames, 750, "drum30.frames")
+            try checkManifest(ref.conditionTokens, 127, "drum30.tokens")
+            try checkManifest(ref.weightStorageDtype, "bfloat16", "drum30.storage")
+            try checkManifest(ref.computeDtype, "float32", "drum30.compute")
+            try checkManifest(ref.nativeExports, 16, "drum30.exports")
+            try checkManifest(ref.nativeParity, "NOT EVALUATED", "drum30.native")
+            try checkManifest(ref.fullTrajectoryParity, "NOT EVALUATED", "drum30.trajectory")
+            try checkManifest(ref.absoluteTolerance, 1e-4, "drum30.atol")
+            try checkManifest(ref.relativeTolerance, 1e-3, "drum30.rtol")
+            try checkManifest(ref.relativeRmseTolerance, 1e-3, "drum30.nrmse")
+            try verifyReferenceIdentity(folder.appendingPathComponent("capture/report.json"), expected: ref.acceptedReportSha256)
+            try checkManifest(ref.stages.count, 14, "drum30.stages")
+            let assets = ref.stages.map { $0.assetFile } + [ref.apg.assetFile, ref.decoder.assetFile]
+            try checkManifest(Set(assets).count, 16, "drum30.unique_assets")
+            await progress("Memverifikasi asset dan input drum 30 detik…")
+            for asset in assets {
+                for file in ["main.hash", "main.mlirb", "metadata.json"] {
+                    let name = asset + "/" + file
+                    guard let expected = ref.artifactSha256[name] else { throw ShardError.invalidManifest }
+                    try checkManifest(try streamingSHA256(folder.appendingPathComponent(name)), expected, "drum30.asset_sha256")
+                }
+            }
+            let fixtureNames = ["initial-noise", "condition", "source-context", "timesteps", "final-latent", "final-audio",
+                                "step-01-conditional", "step-01-unconditional", "step-01-latent", "step-01-momentum", "step-01-guided"]
+            for file in fixtureNames {
+                let name = "capture/" + file + ".f32le"
+                guard let expected = ref.artifactSha256[name] else { throw ShardError.invalidManifest }
+                try checkManifest(try streamingSHA256(folder.appendingPathComponent(name)), expected, "drum30.capture_sha256")
+            }
+            lines.append("Reviewed export manifest, all 16 native payloads and all 11 captured tensor hashes: VERIFIED before model open")
+            let count = 750 * 64
+            func floats(_ name: String, _ size: Int) throws -> [Float] {
+                try readFloats(folder: folder, name: "capture/" + name + ".f32le", count: size, hashes: ref.artifactSha256)
+            }
+            let times = try floats("timesteps", 51)
+            guard times[0] == 1, times[50] == 0,
+                  zip(times, times.dropFirst()).allSatisfy({ pair in pair.0 > pair.1 }) else { throw ShardError.invalidManifest }
+            let noise = try floats("initial-noise", count)
+            let cond = try floats("condition", 127 * 2048)
+            let context = try floats("source-context", 750 * 128)
+            let goldConditional = try floats("step-01-conditional", count)
+            let goldUnconditional = try floats("step-01-unconditional", count)
+            var state: [String: NDArray] = [
+                "noise": NDArray(scalars: noise, shape: [1,750,64]),
+                "condition": NDArray(scalars: cond, shape: [1,127,2048]),
+                "context": NDArray(scalars: context, shape: [1,750,128]),
+                "timestep": NDArray(scalars: [times[0]], shape: [1])]
+            for (i, stage) in ref.stages.enumerated() {
+                var inputs: [String: NDArray] = [:]
+                for (name, shape) in stage.inputShapes {
+                    guard let value = state[name], value.shape == shape else { throw ProbeError.invalidOutputTensor }
+                    inputs[name] = value
+                }
+                lines.append("Phase: component \(i+1)/16 \(stage.assetFile)")
+                saveDrum30(lines, runID: runID)
+                let result = try await drum30Stage(stage, folder: folder, inputs: inputs, index: i+1,
+                    runID: runID, stats: &stats, repairs: &repairs, progress: progress)
+                for (name, value) in result.values {
+                    guard let binding = stage.outputBindings?[name] else { throw ShardError.invalidManifest }
+                    state[binding] = value
+                }
+                lines.append("Completed \(stage.assetFile); backend-await ms \(result.phases.backendAwaitMs)")
+            }
+            guard let velocity = state["velocity"] else { throw ProbeError.invalidOutputTensor }
+            let values = try copiedValues(velocity, shape: [2,750,64])
+            try drum30Comparison("DiT conditional step1", actual: Array(values.prefix(count)), expected: goldConditional,
+                                 comparisons: &comparisons, passed: &passed, lines: &lines)
+            try drum30Comparison("DiT unconditional step1", actual: Array(values.suffix(count)), expected: goldUnconditional,
+                                 comparisons: &comparisons, passed: &passed, lines: &lines)
+            state.removeAll()
+            // Isolate APG from any DiT rounding difference: actual captured velocity inputs.
+            let update = Contract.Stage(assetFile: ref.apg.assetFile, layerIndices: [],
+                inputShapes: ref.apg.inputShapes, outputShapes: ref.apg.outputShapes, outputBindings: nil)
+            let updateInputs: [String: NDArray] = [
+                "velocity": NDArray(scalars: goldConditional + goldUnconditional, shape: [2,750,64]),
+                "latent": NDArray(scalars: noise, shape: [1,750,64]),
+                "momentum": NDArray(scalars: [Float](repeating: 0, count: count), shape: [1,750,64]),
+                "dt": NDArray(scalars: [times[0]-times[1]], shape: [1])]
+            lines.append("Phase: component 15/16 APG on saved gold velocities, initial latent and zero prior momentum")
+            saveDrum30(lines, runID: runID)
+            let updated = try await drum30Stage(update, folder: folder, inputs: updateInputs, index: 15,
+                runID: runID, stats: &stats, repairs: &repairs, progress: progress)
+            for (name, gold) in [("latent_next", "latent"), ("momentum_next", "momentum"), ("guided_velocity", "guided")] {
+                guard let tensor = updated.values[name] else { throw ProbeError.invalidOutputTensor }
+                try drum30Comparison("APG " + name, actual: try copiedValues(tensor, shape: [1,750,64]),
+                    expected: try floats("step-01-" + gold, count), comparisons: &comparisons, passed: &passed, lines: &lines)
+            }
+            let final = try floats("final-latent", count)
+            var planar = [Float](repeating: 0, count: count)
+            for channel in 0..<64 { for frame in 0..<750 { planar[channel*750+frame] = final[frame*64+channel] } }
+            let vae = Contract.Stage(assetFile: ref.decoder.assetFile, layerIndices: [],
+                inputShapes: ref.decoder.inputShapes, outputShapes: ref.decoder.outputShapes, outputBindings: nil)
+            lines.append("Phase: component 16/16 full 30s decoder from saved final latent; no generated trajectory")
+            saveDrum30(lines, runID: runID)
+            let decoded = try await drum30Stage(vae, folder: folder,
+                inputs: ["latent": NDArray(scalars: planar, shape: [1,64,750])], index: 16,
+                runID: runID, stats: &stats, repairs: &repairs, progress: progress)
+            guard let audio = decoded.values["audio"] else { throw ProbeError.invalidOutputTensor }
+            try drum30Comparison("VAE full30s audio", actual: try copiedValues(audio, shape: [1,2,1440000]),
+                expected: try floats("final-audio", 2880000), comparisons: &comparisons, passed: &passed, lines: &lines)
+            try checkManifest(stats.completedCalls, 16, "drum30.calls")
+            try checkManifest(comparisons, 6, "drum30.comparisons")
+            completed = true
+        } catch {
+            lines.append("Drum30 component collection: NOT COMPLETED")
+            if let failure = error as? StageExecutionFailure {
+                lines.append("Failing asset: \(failure.asset); operation: \(failure.operation)")
+                lines.append(contentsOf: failure.details)
+            } else { lines.append(contentsOf: modelErrorDetails(error)) }
+        }
+        lines.append(contentsOf: repairs.events)
+        lines.append("Targeted initial-bind repair: \(repairs.attempts)/1; successful retries \(repairs.successfulRetries)")
+        lines.append("Component collection: \(completed ? "COMPLETED" : "NOT COMPLETED"); calls \(stats.completedCalls)/16, opens \(stats.modelOpens), binds \(stats.functionBinds)")
+        lines.append("Drum30 component strict parity: \(completed && passed == 6 ? "PASS" : "NOT PASSED"); \(passed)/\(comparisons) comparisons passed; target 6")
+        lines.append("Native full 50-step trajectory: NOT EVALUATED; musical listening: NOT EVALUATED; baseline/mix/bounds unchanged")
+        let usage = memory.finish()
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10ms): \(Double(peak)/1048576); not exact transient/native memory peak") }
+        lines.append("Thermal end: \(ProcessInfo.processInfo.thermalState.rawValue); total component test ms \(ms(start.duration(to: clock.now)))")
+        saveDrum30(lines, runID: runID)
+        return lines.joined(separator: "\n")
+    }
+}
+
 // Timer state lives on one serial queue. The owning task starts/stops the timer;
 // it returns only numeric snapshots, never the timer or mutable state.
 private final class CoreAIProcessFootprintSampler: @unchecked Sendable {

@@ -1,0 +1,1117 @@
+{
+  "schema_version": 1,
+  "profile": "drums-reference30-frozen-diagnostic",
+  "latent_frames": 750,
+  "condition_tokens": 127,
+  "text_tokens": 111,
+  "lyric_tokens": 15,
+  "sample_rate": 48000,
+  "audio_seconds": 30.0,
+  "weight_storage_dtype": "bfloat16",
+  "compute_dtype": "float32",
+  "scalar_type": "float32",
+  "byte_order": "little",
+  "function_name": "main",
+  "VAE_dtype": "float32",
+  "stages": [
+    {
+      "asset_file": "front.aimodel",
+      "layer_indices": [],
+      "input_shapes": {
+        "noise": [
+          1,
+          750,
+          64
+        ],
+        "condition": [
+          1,
+          127,
+          2048
+        ],
+        "context": [
+          1,
+          750,
+          128
+        ],
+        "timestep": [
+          1
+        ]
+      },
+      "output_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition_projected": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ],
+        "final_temb": [
+          2,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden": "hidden",
+        "condition_projected": "condition",
+        "temb": "temb",
+        "rope_cos": "rope_cos",
+        "rope_sin": "rope_sin",
+        "self_mask": "self_mask",
+        "local_mask": "local_mask",
+        "cross_mask": "cross_mask",
+        "final_temb": "final_temb"
+      }
+    },
+    {
+      "asset_file": "blocks-00-01.aimodel",
+      "layer_indices": [
+        0,
+        1
+      ],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          2,
+          375,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-02-03.aimodel",
+      "layer_indices": [
+        2,
+        3
+      ],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          2,
+          375,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-04-05.aimodel",
+      "layer_indices": [
+        4,
+        5
+      ],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          2,
+          375,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-06-07.aimodel",
+      "layer_indices": [
+        6,
+        7
+      ],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          2,
+          375,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-08-09.aimodel",
+      "layer_indices": [
+        8,
+        9
+      ],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          2,
+          375,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-10-11.aimodel",
+      "layer_indices": [
+        10,
+        11
+      ],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          2,
+          375,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-12-13.aimodel",
+      "layer_indices": [
+        12,
+        13
+      ],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          2,
+          375,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-14-15.aimodel",
+      "layer_indices": [
+        14,
+        15
+      ],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          2,
+          375,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-16-17.aimodel",
+      "layer_indices": [
+        16,
+        17
+      ],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          2,
+          375,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-18-19.aimodel",
+      "layer_indices": [
+        18,
+        19
+      ],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          2,
+          375,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-20-21.aimodel",
+      "layer_indices": [
+        20,
+        21
+      ],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          2,
+          375,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "blocks-22-23.aimodel",
+      "layer_indices": [
+        22,
+        23
+      ],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "condition": [
+          2,
+          127,
+          2048
+        ],
+        "temb": [
+          2,
+          6,
+          2048
+        ],
+        "rope_cos": [
+          1,
+          375,
+          128
+        ],
+        "rope_sin": [
+          1,
+          375,
+          128
+        ],
+        "self_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "local_mask": [
+          1,
+          1,
+          375,
+          375
+        ],
+        "cross_mask": [
+          1,
+          1,
+          375,
+          127
+        ]
+      },
+      "output_shapes": {
+        "hidden_out": [
+          2,
+          375,
+          2048
+        ]
+      },
+      "output_bindings": {
+        "hidden_out": "hidden"
+      }
+    },
+    {
+      "asset_file": "tail.aimodel",
+      "layer_indices": [],
+      "input_shapes": {
+        "hidden": [
+          2,
+          375,
+          2048
+        ],
+        "final_temb": [
+          2,
+          2048
+        ]
+      },
+      "output_shapes": {
+        "velocity": [
+          2,
+          750,
+          64
+        ]
+      },
+      "output_bindings": {
+        "velocity": "velocity"
+      }
+    }
+  ],
+  "apg": {
+    "asset_file": "apg-euler.aimodel",
+    "input_shapes": {
+      "velocity": [
+        2,
+        750,
+        64
+      ],
+      "latent": [
+        1,
+        750,
+        64
+      ],
+      "momentum": [
+        1,
+        750,
+        64
+      ],
+      "dt": [
+        1
+      ]
+    },
+    "output_shapes": {
+      "latent_next": [
+        1,
+        750,
+        64
+      ],
+      "momentum_next": [
+        1,
+        750,
+        64
+      ],
+      "guided_velocity": [
+        1,
+        750,
+        64
+      ]
+    }
+  },
+  "decoder": {
+    "asset_file": "decoder.aimodel",
+    "input_shapes": {
+      "latent": [
+        1,
+        64,
+        750
+      ]
+    },
+    "output_shapes": {
+      "audio": [
+        1,
+        2,
+        1440000
+      ]
+    }
+  },
+  "asset_count": 16,
+  "sampling_assets": 15,
+  "inference_steps": 50,
+  "checkpoints": [
+    1,
+    5,
+    10,
+    25,
+    50
+  ],
+  "guidance_scale": 7.0,
+  "shift": 1.0,
+  "method": "euler_ode_apg",
+  "apg_momentum": -0.75,
+  "apg_norm_threshold": 2.5,
+  "apg_projection_dims": [
+    1
+  ],
+  "apg_projection_precision": "float32_validated_against_original_float64",
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "activation": "NONE; no selector, Xcode resources or baseline changed",
+  "input_scope": "Exact frozen accepted host inputs; no source/Qwen/conditioning export",
+  "native_parity": "NOT EVALUATED",
+  "full_trajectory_parity": "NOT EVALUATED",
+  "scope": "Inactive native component diagnostic; not production generation or full-song support",
+  "status": "prepared_inactive_component_diagnostic",
+  "accepted_report_sha256": "f5f84314fa37f49f73502a77f7e3364b31450898231731d64e216bf1b606bfdf",
+  "native_exports": 16,
+  "DiT_partition_passes": 3,
+  "host_decoder_calls": 1,
+  "host_checks": {
+    "FP32_partitions_step1": {
+      "finite": true,
+      "max_absolute_error": 1.9073486328125e-05,
+      "rmse": 8.833258238517551e-07,
+      "normalized_rmse": 7.856761435224268e-07,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "BF16_partitions_step1": {
+      "finite": true,
+      "max_absolute_error": 1.9073486328125e-05,
+      "rmse": 8.833258238517551e-07,
+      "normalized_rmse": 7.856761435224268e-07,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "APG_step1_latent": {
+      "finite": true,
+      "max_absolute_error": 2.384185791015625e-07,
+      "rmse": 1.0416443898654337e-08,
+      "normalized_rmse": 1.0616573874318896e-08,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "APG_step1_momentum": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "APG_step1_guided": {
+      "finite": true,
+      "max_absolute_error": 1.9073486328125e-06,
+      "rmse": 1.29331376460924e-07,
+      "normalized_rmse": 1.0308215721193737e-07,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "FP32_decoder_saved_final_latent": {
+      "finite": true,
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    }
+  },
+  "baseline_modified": false,
+  "phase": "export decoder.aimodel",
+  "versions": {
+    "torch": "2.8.0",
+    "transformers": "4.57.3",
+    "diffusers": "0.37.0",
+    "coreai-torch": "0.4.3",
+    "coreai-core": "1.0.0b3"
+  },
+  "checkpoint_sha256": {
+    "base": "4177f600501a6d4bd81cadaa0abac557ffd15c54e5c8cb52053cdb24a0844d6b",
+    "vae": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0"
+  },
+  "artifact_sha256": {
+    "front.aimodel/metadata.json": "6464ff44039dc9b8303fe2c72554b0497e17e0217289052c3af1a649e6d8111f",
+    "front.aimodel/main.mlirb": "9fe4a98215ea86ddc7c544479c3f185e477ac9d3c8df76383f52b05f63f64ed7",
+    "front.aimodel/main.hash": "770b7c36b00e18f8c015007a4a4c97e46a1dad097edac2032682b92aef03ba9f",
+    "tail.aimodel/metadata.json": "9cf39cc00a6059cfcd7568a073e609106b92203aaae0a99e9c2878b845690f61",
+    "tail.aimodel/main.mlirb": "ca915709524e09c96291cc5676c9bcc7844e5b86c1d45d96e6e22eef1d04caf2",
+    "tail.aimodel/main.hash": "beb7022ff732e26e74d78b8624886c3c843ef9397022426c241193304023e984",
+    "capture/source48.f32le": "9d62d4eccd36188a4170a08ee6a22fcc66b5ad8af3b0753dc6b021a7f507f4a8",
+    "capture/step-50-unconditional.f32le": "869927a70115b2d088703f90a18c6005a9d3ea47e0ce5e5cbe2d233194446d92",
+    "capture/step-01-unconditional.f32le": "b114a6ab2ce5ddf38f82f761f89375293fad50f1299b5799a8f1dd841e54bf21",
+    "capture/step-05-unconditional.f32le": "2860475673278f7b738e8bdad4226c7742376077f0b02cc6afb5fd993aa7871d",
+    "capture/final-latent.f32le": "54c574fbcec00d7404d5072258d738b3de5e167728e707a2b271264733d5740c",
+    "capture/step-01-latent.f32le": "427b4b2edb312d18789dd412ab7c7944fd78e937cedaedc014c740a1a26e06e2",
+    "capture/report.json": "f5f84314fa37f49f73502a77f7e3364b31450898231731d64e216bf1b606bfdf",
+    "capture/text-embeddings.f32le": "bd4553b52966ff78250a05c3b33fa503aa4e1b9fe1181eabdd8d5721117ba26c",
+    "capture/source-context.f32le": "023ba8d088ed12b35d96d8a896b4f665d90716dfaf0e0ec1960aeb1a6c4ed9c4",
+    "capture/step-25-latent.f32le": "87ebd2eed926af22120290c5a3feb5c067f486d912a46083b24cad017cd21618",
+    "capture/step-05-momentum.f32le": "dda669704a366f6fb99d8c042184e51621bc0342c694f47c2f80b8cb90256527",
+    "capture/step-10-momentum.f32le": "c05b15e8acd667b2003fbb91a3678442e91494c76a01508640f979f41f7687c9",
+    "capture/source-epsilon.f32le": "067db2fcfcb150e4a944d290873ca42768babba2d76d155cfa111b92bb1da622",
+    "capture/step-25-guided.f32le": "4420e543458984d37ce0633a3fa71c7d578b2f7446c26d14669ec145258771f1",
+    "capture/step-10-conditional.f32le": "7514d70b861d145db71d983f417eefe023545a90bf62aaa47a2a5a63e3803c1e",
+    "capture/step-10-unconditional.f32le": "4b0870f49d82ce7110c6aa05df00cbee70ca972b89b52714ce6e802eca701217",
+    "capture/step-01-guided.f32le": "9523fce5a1cb3e622a94da8ab02071aa5d820a660e01115f31b34ba9b9307d6e",
+    "capture/source-mean.f32le": "5a043c801ee4ac3a0dee608760a44961d33f383c27a1b1f4a6f359d28959b928",
+    "capture/source-std.f32le": "9c442648386491c729355e20951186ec98ff1951ad394b770df94cc784789382",
+    "capture/condition.f32le": "01666f5a27bb5b339d2d7858c0187441b84f6d951c08d38abccb0577f5d5c485",
+    "capture/reference-audio.f32le": "4d0f3fc0ab3dc55080ad274e5c666c93b7ee3f94a12dd16b0e48b62edf7bb02e",
+    "capture/step-01-momentum.f32le": "1fdca4c6a95cc92f4c37b0f291629601e6098e527f39e3a7c36a652dda246922",
+    "capture/source-latent.f32le": "61b0ac4c44d807f86ea7f0c58a055eefe147efc200050d1e5baee6f7c802846e",
+    "capture/step-25-conditional.f32le": "8d30c5cc3c45a9ce9cb9e1ceec85ec2291afa67b9e42f21c75b195f3a41a195d",
+    "capture/initial-noise.f32le": "35c3a8553516c7327f57c11642a7ce703de2a073cbfd36fdad9708e6445c7c39",
+    "capture/step-25-unconditional.f32le": "870f0a93ac8693f9d8959a0effe4077017eb89be5128d2f8a947f4a4cf3b575c",
+    "capture/lyric-embeddings.f32le": "27fa894531c1d15bf6a8487a5e1f9f52ddc9bcb317e60c4a93551244cf07072a",
+    "capture/final-audio.f32le": "5f81f20205c39fbba6418f95d5d42d8346fe48f457c8c455c77958c98fabd615",
+    "capture/step-05-guided.f32le": "8a8e834f67114c9d90491343898b6ff16e19555f679787ffb4d4226238822edf",
+    "capture/step-50-guided.f32le": "f43491a7facf17581b3e04091d3ff167ce332a3143d0639143bafe61c0c1686d",
+    "capture/step-01-conditional.f32le": "4767f96fd98ba928ceeca65e346b6043111528c73ba1460394815e5a286dcffb",
+    "capture/step-10-guided.f32le": "1276fa23eb07ad82d48c8ec4a3866695622b20c765248bb7057851bcee05e658",
+    "capture/step-05-conditional.f32le": "2d553c9b6101670c0a5961f746724db61d55c4215eed613dc472767817973bc1",
+    "capture/step-50-momentum.f32le": "4d1a399b7b253e566d8d4b407a973814d68e53afe70d3787ce192af106f6d0ec",
+    "capture/source-mask.f32le": "c406cfb0db9850c7d09ce01cb226445fe75e8c02ee71962f316805446bb01114",
+    "capture/text-ids.f32le": "ed40dfa5aa8fa9431a4cb0937bef355d15ce5fc49837e9296a06d2effc74da4a",
+    "capture/lyric-ids.f32le": "b50fc202282a11b8ae2314b3533daaf20d917c6c77b753d4ad8b0c588fa5fad7",
+    "capture/step-05-latent.f32le": "836be73c3a561ac2bfae434b566be09b8408de93fd89adf7571fb876c66856f7",
+    "capture/step-50-latent.f32le": "54c574fbcec00d7404d5072258d738b3de5e167728e707a2b271264733d5740c",
+    "capture/condition-mask.f32le": "694d59a726638da688bfc143f6084259ae3fb6e82dd59ab39ee48ac945b8e075",
+    "capture/step-10-latent.f32le": "1604a9dd063c8b8b6146fcf6829613ba3354188fe7a2b3ed618c2e06c93d4a45",
+    "capture/step-25-momentum.f32le": "209d0e1c728a6f7ca6ef24d92ca0a1e6928d0d3dd4cd446c1076fb1e2ce0e708",
+    "capture/step-50-conditional.f32le": "cba211f14dc3d9143c30044d7f8344ecdbbbc59260c90359502ee506d2401ac1",
+    "capture/timesteps.f32le": "09729a1334019659e12364e904d240c1266f2f3af1982e51a8b06570a2256195",
+    "blocks-14-15.aimodel/metadata.json": "c1cf4df3e9f15718d95f334b47de730c6c064d637ac9eace62de689bd508db92",
+    "blocks-14-15.aimodel/main.mlirb": "4f0b6cea5c2286754ae08d42b6e198cb5eb5e834b642b00975a684bee07215e9",
+    "blocks-14-15.aimodel/main.hash": "534fdc0f76113ff652f9b0c26593468b1bdd7c7ab175be7b3b3a2c88585e2c52",
+    "blocks-16-17.aimodel/metadata.json": "7d8364747e179bcf5bd33cdf072a7a5f85762ef428afa12cae0a297bde3e59ef",
+    "blocks-16-17.aimodel/main.mlirb": "07b5103f0613ddcbec784a667e3f52cd4ac6f1e27e1cdbf4711005f08022e205",
+    "blocks-16-17.aimodel/main.hash": "7e6da7285af22b590dab48c134a2b400ee5ea60a1f3180625ce0a4df9fa51f4f",
+    "blocks-18-19.aimodel/metadata.json": "a8b6d074ae42eae9b4cfb9e5823e46d0bf4f3bb229fd9ca06faf0e3e507e725e",
+    "blocks-18-19.aimodel/main.mlirb": "f55d3a6a94ec5daad0f7933c9295f214d9ff8eba9e1a4be60b1d8f5ca876aa5a",
+    "blocks-18-19.aimodel/main.hash": "fbde33bbdffdb7191791ea8841539cd89c7d63d99342be702164c1d1ed58e7dc",
+    "blocks-10-11.aimodel/metadata.json": "1289a99c95d355ea0294aeda1b71c7ee92aeb645f6b43ec03ee271649986ba8b",
+    "blocks-10-11.aimodel/main.mlirb": "383c8662bae4fa8ed1f89d10bb1dfee30b5a7579c004dfafa773a2fbdf5a0286",
+    "blocks-10-11.aimodel/main.hash": "1aeb76e465fd235ad859999cdc9a74bec91a675e8beaeffb3666f7ecda853668",
+    "blocks-12-13.aimodel/metadata.json": "005032e3c26a1cd4f2f4ae7a301b8c719c12d4c4bc9bf86cc38d9346b9199ab7",
+    "blocks-12-13.aimodel/main.mlirb": "d255e6f76ec59f84e987de6224125e06b60af97d0ba0b32351e16cc74509e71c",
+    "blocks-12-13.aimodel/main.hash": "8604853e7ccc3837203fef43eda7d227c029e28075c36a87794f46c3109f7a01",
+    "apg-euler.aimodel/metadata.json": "9cf39cc00a6059cfcd7568a073e609106b92203aaae0a99e9c2878b845690f61",
+    "apg-euler.aimodel/main.mlirb": "b16d2639cf1d1aa747791aad417772ce4cf69401c922f08b0744beaad3a21294",
+    "apg-euler.aimodel/main.hash": "bf361235c32f8ccf5b2687933ca1d065e7bc749f831ba52e181dd24e976c65c3",
+    "blocks-20-21.aimodel/metadata.json": "d2b76dcf370f976df4ee736accc939e98986ef87523ce901cf2c0f7524e85505",
+    "blocks-20-21.aimodel/main.mlirb": "62fc0994ddddb4680d4c14c1dd3ffeef8f5b19a87fa845ce088943e6128687f1",
+    "blocks-20-21.aimodel/main.hash": "881a900f6c11a164e11097a282b3cd5d76e2482a4e6c270865941836a82d5344",
+    "blocks-06-07.aimodel/metadata.json": "c722f99fc31ae6a0b110d5b39207d12ae7b9b64922c5da50cbca02b5dd052d36",
+    "blocks-06-07.aimodel/main.mlirb": "f79c7c64b70c50c5ab42dc7a6d8043cc299f8cc650374d82119c435a0641471a",
+    "blocks-06-07.aimodel/main.hash": "090d380843689c761b817edb8b736d8fbc780cfa1d6dcb6ac7f0dade952b7370",
+    "blocks-22-23.aimodel/metadata.json": "d2b76dcf370f976df4ee736accc939e98986ef87523ce901cf2c0f7524e85505",
+    "blocks-22-23.aimodel/main.mlirb": "4a2f586e679544a14ac8282ea2a8b68d20350a398bae9cfd5258d0971b799277",
+    "blocks-22-23.aimodel/main.hash": "b254fa46ed6af9bf98637ce8dedb1a51d5551ddb29450d688648260287af32e6",
+    "blocks-04-05.aimodel/metadata.json": "36e24bc4218a715ab391d337995e1b5f8c7e3a6425bf6501db762be14a12308d",
+    "blocks-04-05.aimodel/main.mlirb": "8b96269fef69c4db830e7a018f6973f0c7736de160266e57ab6e4c5ed07aba7b",
+    "blocks-04-05.aimodel/main.hash": "9e3ba382ad4a8bb023d649985f80b2244d69c627bc5dd26950a85addc14b32e0",
+    "blocks-02-03.aimodel/metadata.json": "36e24bc4218a715ab391d337995e1b5f8c7e3a6425bf6501db762be14a12308d",
+    "blocks-02-03.aimodel/main.mlirb": "1b3439627fdd1691a7fac876dee4253fb7cdce120021a06d8dbea962531ca351",
+    "blocks-02-03.aimodel/main.hash": "c472358ef475d9a0d38460756338bf3e8377a8365b6304dd6b5e7c09e8ac88b6",
+    "decoder.aimodel/metadata.json": "988f3fb3a6df0ea0c851ea2460981a3f7ff02d8b01208e0eefa4208e0b29f8ea",
+    "decoder.aimodel/main.mlirb": "ee3a1aaf26854af3a6f5e808e025c7afbeeca6949731ee42add8e540f023c8c5",
+    "decoder.aimodel/main.hash": "3a0e291999730a6bf1f53810192944c6e59749bb4bc1c84146d892e0a0fc47cd",
+    "blocks-08-09.aimodel/metadata.json": "fce60f823981a82c62eb62352919a597b1c7b620938abe06fc00949cb4fd3c7d",
+    "blocks-08-09.aimodel/main.mlirb": "cbd19bcd79da3bf1d612f6b39cf51f60d47bd774e85fab2b1c849ba438df2f8f",
+    "blocks-08-09.aimodel/main.hash": "1072b7577cff4aad8967eae2d8fe9b26adc770401c8f2a290b2ff8a468d87db9",
+    "blocks-00-01.aimodel/metadata.json": "adea43a9786419f331c46a1c78dfcc95606c575c18ec4fb127e079b534590566",
+    "blocks-00-01.aimodel/main.mlirb": "0699dd67860a5fe12b92cce604668035da76b2e79e84514528668c1a4a98da44",
+    "blocks-00-01.aimodel/main.hash": "4cd8c4a4919013ab50fd7f2740684f635ef3583f132238abcd59b8f56f44627c"
+  }
+}

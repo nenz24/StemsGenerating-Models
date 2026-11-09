@@ -1,5 +1,9 @@
 # Verified accepted capture; isolated native30s preparation
 
+**Mac export completed:** [reviewed 16-asset manifest and next device component test](../coreai-drums-reference30-export-completed/README.md).
+Do not repeat export; the current command activates an isolated component-only
+build. The preparation details below describe the completed host stage.
+
 The uploaded `drums-reference30-native-review-v1.zip` is complete: 28,297,085 bytes,
 45 unique members, CRC valid and all 43 Float32 tensors have the accepted report's
 hashes, expected byte sizes/shapes and finite values. [Transport receipt](transport-audit.json)

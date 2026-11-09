@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "uploaded_manifest_sha256": "f2f84e6c34b2fe42678dc38a48d9ca35b20c14ba53f10843aee8b218a24d53ed",
+  "status_reported": "prepared_inactive_component_diagnostic",
+  "native_exports_reported": 16,
+  "stage_contract_matches_preparation": true,
+  "host_checks_strict_passed": 6,
+  "native_binary_files_reported": 48,
+  "capture_hashes_match_received_vectors": 43,
+  "reported_total_artifacts": 92,
+  "component_build_files": 61,
+  "component_float_fixture_count": 11,
+  "device_calls_planned": 16,
+  "device_comparisons_planned": 6,
+  "native_parity": "NOT EVALUATED",
+  "full_trajectory_parity": "NOT EVALUATED",
+  "verification_limit": "Uploaded manifest reviewed; native binary bytes remain on Mac, checked before activation and rehashed on iPhone. Actual vectors43 were independently verified in the prior uploaded ZIP.",
+  "baseline_modified": false,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "tests": {
+    "command": "python -m unittest discover -s Tests/StemEvaluationPython -p 'test_coreai*.py'",
+    "run": 207,
+    "passed": 205,
+    "skipped": 2,
+    "failed": 0
+  },
+  "new_device_packaging_tests": 7,
+  "coverage": [
+    "Pinned actual reviewed Mac manifest and complete61-file whitelist",
+    "Selected app resources only; baseline/source unchanged; unchanged-file reuse",
+    "Bad report/missing/truncated fixture fails before app output pruning",
+    "Wrong duration/production diagnostic selector flag rejected",
+    "Old selector byte-preserved backup and idempotent activation",
+    "Invalid source, invalid existing target and interrupted copy preserve old selection",
+    "Xcode build stager CLI runs with site packages disabled (stdlib only)"
+  ],
+  "swift_syntax_files_checked": 3,
+  "swift_parser_scope": "Grammar only; not Apple SDK typechecking/build",
+  "actual_host_manifest_reviewed": true,
+  "reported_host_checks_passed": 6,
+  "copied_capture_hashes_matched_prior_actual_vectors": 43,
+  "native_exports_here": 0,
+  "apple_builds_here": 0,
+  "device_runs_here": 0,
+  "device_calls_planned": 16,
+  "device_comparisons_planned": 6,
+  "native_parity": "NOT EVALUATED",
+  "full_trajectory_parity": "NOT EVALUATED",
+  "native_music_acceptance": "NOT EVALUATED",
+  "baseline_modified": false,
+  "native_weight_storage": "bfloat16",
+  "compute_dtype": "float32",
+  "VAE_dtype": "float32",
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "raw_audio_arrays_weights_native_binaries_committed": false
+}
