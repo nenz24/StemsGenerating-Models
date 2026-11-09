@@ -1,0 +1,17 @@
+Runtime: CoreAI drums30 decoder-only diagnostic; run 22991DB1-37E9-4C2D-A5C5-078EC409CE0E
+OS: Version 27.0.1 (Build 24A446)
+Revision: drums30-decoder-isolation-v1; one unchanged full750-frame decoder call; no DiT/APG models in this process
+Exact original exported decoder, saved final latent and raw host audio; FP32; bounds abs1e-4/rel1e-3/nRMSE1e-3
+cpuOnly requested; actual placement unmeasured. Native cache state is not controlled. No retry/cache deletion in this isolation test.
+Native full50-step trajectory and music listening: NOT EVALUATED; baseline unchanged
+Thermal start: 1; low power: false
+Original manifest, unchanged decoder payload and all captured inputs/references: SHA256 VERIFIED
+Phase: isolated decoder model open/bind/run; planned calls1, prior DiT/APG opens0
+Component Isolated full30s decoder: PASS; max abs 5.453824996948242e-05; RMSE 3.769026351511356e-07; normalized RMSE 2.1635351531882464e-06
+Pointwise violations 0/2880000; worst bound ratio 0.3668507020921195, flat index 594860; actual -0.0037355407; reference -0.0036974992; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Backend-await ms 7869.881625; model-open ms 532.92375; bind ms 51.037375
+Decoder isolation: COMPLETED; calls 1/1, opens 1, binds 1
+Decoder-only strict parity: PASS; 1/1 comparisons passed; target1
+Cache repair/deletion: DISABLED; retries0; full native trajectory: NOT EVALUATED; baseline/mix/bounds unchanged
+Sampled process maximum MiB (10ms): 2696.7698287963867; not exact transient/native memory peak
+Thermal end: 1; total isolated decoder ms 8889.973333

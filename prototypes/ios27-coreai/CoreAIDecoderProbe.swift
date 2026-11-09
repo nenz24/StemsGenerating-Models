@@ -3311,6 +3311,185 @@ extension CoreAIDecoderProbe {
     }
 }
 
+extension CoreAIDecoderProbe {
+    private struct WindowDecoderContract: Decodable {
+        struct Tile: Decodable {
+            let windowStart: Int; let windowFrames: Int; let coreStart: Int; let coreEnd: Int; let cropStart: Int
+        }
+        struct Metric: Decodable {
+            let finite: Bool; let parityPassed: Bool; let maxAbsoluteError: Double
+            let rmse: Double; let normalizedRmse: Double; let elementwiseFractionOverBound: Double
+        }
+        let schemaVersion: Int; let profile: String; let status: String; let assetFile: String; let functionName: String
+        let inputShapes: [String:[Int]]; let outputShapes: [String:[Int]]
+        let weightStorageDtype: String; let computeDtype: String; let scalarType: String; let byteOrder: String
+        let vaeCheckpointSha256: String; let captureReportSha256: String
+        let absoluteTolerance: Double; let relativeTolerance: Double; let relativeRmseTolerance: Double
+        let windowPlan: [Tile]; let tileInputSha256: [String]; let hostChecks: [String:Metric]
+        let hostNumericalGatePassed: Bool; let architectureGuardPassed: Bool; let coverageExactlyOnce: Bool
+        let crossfade: Bool; let extraLatentPadding: Bool; let nativeParity: String; let fullTrajectoryParity: String
+        let artifactSha256: [String:String]
+    }
+
+    static func savedDrumWindowReport() -> String? {
+        guard let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+              let text = try? String(contentsOf: root.appendingPathComponent("last-drums-reference30-window-report.txt"), encoding: .utf8) else { return nil }
+        guard !text.contains("Window decoder collection: COMPLETED"),
+              let first = text.components(separatedBy: "\n").first,
+              let id = first.components(separatedBy: "; run ").last, UUID(uuidString: id) != nil,
+              let phase = try? String(contentsOf: root.appendingPathComponent("drum-reference30-window-\(id)-phase.txt"), encoding: .utf8) else { return text }
+        return text + "\nLast persisted native phase for this run:\n" + phase
+    }
+
+    private static func saveDrumWindow(_ lines: [String], runID: String) {
+        guard let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        let folder = root.appendingPathComponent("DrumReference30WindowReports/" + runID, isDirectory: true)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let text = lines.joined(separator: "\n")
+        try? text.write(to: folder.appendingPathComponent("report.txt"), atomically: true, encoding: .utf8)
+        try? text.write(to: root.appendingPathComponent("last-drums-reference30-window-report.txt"), atomically: true, encoding: .utf8)
+    }
+
+    static func runDrumReference30WindowDecoder(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        let clock = ContinuousClock(), start = ContinuousClock().now, runID = UUID().uuidString
+        let memory = CoreAIProcessFootprintSampler()
+        var pool: [String:RetainedStage] = [:], stats = RetentionStats(), repairs = CacheRepairStats()
+        defer { pool.removeAll() }
+        var comparisons = 0, passed = 0, completed = false
+        var lines = ["Runtime: CoreAI drums30 window decoder diagnostic; run \(runID)",
+            "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+            "Revision: drums30-window256-v1; six decoder calls, one retained model/function; no DiT/APG/generation/WAV",
+            "FP32 VAE, fixed accepted full750-frame final latent; window256, core128, halo64; no extra latent padding/crossfade/filter",
+            "Original abs1e-4/rel1e-3/nRMSE1e-3; compare six retained cores, five seam regions and full30s assembled audio",
+            "cpuOnly requested; placement/cache residency unmeasured; no retry/cache deletion",
+            "Memory readiness requires sampled process peak below the existing2000MiB budget; sampled peak is not exact transient/native peak",
+            "Thermal start: \(ProcessInfo.processInfo.thermalState.rawValue); low power: \(ProcessInfo.processInfo.isLowPowerModeEnabled)"]
+        saveDrumWindow(lines, runID: runID)
+        do {
+            guard CoreAIPreviewWindow.drumReference30WindowEnabled, let root = Bundle.main.resourceURL else { throw ShardError.missingPreparedBundle }
+            let relative = "drums-reference30-window-decoder-256/reference.json"
+            let base = root.appendingPathComponent("ModelCandidates", isDirectory: true)
+            guard let stamp = try JSONSerialization.jsonObject(with: Data(contentsOf: base.appendingPathComponent("app-resource-manifest.json"))) as? [String:Any],
+                  stamp["selected_profile"] as? String == "drums-reference30-window-decoder",
+                  let files = stamp["files"] as? [String:[String:Any]], let identity = files[relative]?["sha256"] as? String else { throw ShardError.invalidManifest }
+            try verifyReferenceIdentity(base.appendingPathComponent(relative), expected: identity)
+            let folder = base.appendingPathComponent("drums-reference30-window-decoder-256", isDirectory: true)
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let ref = try decoder.decode(WindowDecoderContract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
+            try checkManifest(ref.schemaVersion, 1, "window.schema")
+            try checkManifest(ref.profile, "drums-reference30-window-decoder", "window.profile")
+            try checkManifest(ref.status, "prepared_window_decoder", "window.status")
+            try checkManifest(ref.assetFile, "decoder.aimodel", "window.asset")
+            try checkManifest(ref.functionName, "main", "window.function")
+            try checkManifest(ref.inputShapes, ["latent":[1,64,256]], "window.input")
+            try checkManifest(ref.outputShapes, ["audio":[1,2,491520]], "window.output")
+            for value in [ref.weightStorageDtype, ref.computeDtype, ref.scalarType] { try checkManifest(value, "float32", "window.dtype") }
+            try checkManifest(ref.byteOrder, "little", "window.byte_order")
+            try checkManifest(ref.vaeCheckpointSha256, "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0", "window.checkpoint")
+            try checkManifest(ref.captureReportSha256, "f5f84314fa37f49f73502a77f7e3364b31450898231731d64e216bf1b606bfdf", "window.capture")
+            try checkManifest(ref.absoluteTolerance, 1e-4, "window.atol")
+            try checkManifest(ref.relativeTolerance, 1e-3, "window.rtol")
+            try checkManifest(ref.relativeRmseTolerance, 1e-3, "window.nrmse")
+            guard ref.hostNumericalGatePassed, ref.architectureGuardPassed, ref.coverageExactlyOnce,
+                  !ref.crossfade, !ref.extraLatentPadding, ref.hostChecks.count == 12,
+                  ref.windowPlan.count == 6, ref.tileInputSha256.count == 6 else { throw ShardError.invalidManifest }
+            try checkManifest(ref.nativeParity, "NOT EVALUATED", "window.native")
+            try checkManifest(ref.fullTrajectoryParity, "NOT EVALUATED", "window.trajectory")
+            let requiredChecks = Set(["overall"] + (0..<6).map { "tile-\($0)" } + (1...5).map { "seam-\($0)" })
+            try checkManifest(Set(ref.hostChecks.keys), requiredChecks, "window.host_checks")
+            for m in ref.hostChecks.values {
+                guard m.finite, m.parityPassed, m.elementwiseFractionOverBound == 0, m.normalizedRmse <= 1e-3,
+                      [m.maxAbsoluteError,m.rmse,m.normalizedRmse].allSatisfy({ $0.isFinite && $0 >= 0 }) else { throw ShardError.invalidManifest }
+            }
+            let starts = [0,64,192,320,448,494]
+            for (i,t) in ref.windowPlan.enumerated() {
+                guard t.windowFrames == 256, t.windowStart == starts[i], t.coreStart == i*128,
+                      t.coreEnd == min(i*128+128,750), t.cropStart == t.coreStart-t.windowStart else { throw ShardError.invalidManifest }
+            }
+            let names: Set<String> = ["decoder.aimodel/main.hash","decoder.aimodel/main.mlirb","decoder.aimodel/metadata.json",
+                                     "final-latent.f32le","final-audio.f32le","capture-report.json"]
+            try checkManifest(Set(ref.artifactSha256.keys), names, "window.files")
+            try checkManifest(ref.artifactSha256["final-latent.f32le"], "54c574fbcec00d7404d5072258d738b3de5e167728e707a2b271264733d5740c", "window.latent_identity")
+            try checkManifest(ref.artifactSha256["final-audio.f32le"], "5f81f20205c39fbba6418f95d5d42d8346fe48f457c8c455c77958c98fabd615", "window.audio_identity")
+            try checkManifest(ref.artifactSha256["capture-report.json"], ref.captureReportSha256, "window.report_identity")
+            await progress("Memverifikasi decoder berjendela dan acuan 30 detik…")
+            for n in names {
+                guard let expected = ref.artifactSha256[n] else { throw ShardError.invalidManifest }
+                try checkManifest(try streamingSHA256(folder.appendingPathComponent(n)), expected, "window.payload_sha256")
+            }
+            let latent = try readFloats(folder: folder, name: "final-latent.f32le", count: 48000, hashes: ref.artifactSha256)
+            let gold = try readFloats(folder: folder, name: "final-audio.f32le", count: 2880000, hashes: ref.artifactSha256)
+            var assembled = [Float](repeating: 0, count: 2880000)
+            let stage = Contract.Stage(assetFile: ref.assetFile, layerIndices: [], inputShapes: ref.inputShapes,
+                                       outputShapes: ref.outputShapes, outputBindings: nil)
+            for (i,t) in ref.windowPlan.enumerated() {
+                try requirePreviewMemoryBudget()
+                var input = [Float](repeating: 0, count: 16384)
+                for c in 0..<64 { for f in 0..<256 { input[c*256+f] = latent[(t.windowStart+f)*64+c] } }
+                let inputHash = input.withUnsafeBufferPointer { SHA256.hash(data: Data(buffer: $0)).map { String(format: "%02x", $0) }.joined() }
+                try checkManifest(inputHash, ref.tileInputSha256[i], "window.exact_saved_input")
+                let phase = "Window\(i+1)/6 start\(t.windowStart), keep\(t.coreStart):\(t.coreEnd); one retained decoder"
+                lines.append("Phase: " + phase); saveDrumWindow(lines, runID: runID)
+                await progress("Memeriksa decoder berjendela: \(i+1)/6…")
+                let breadcrumbs = interleavingPhaseProgress(prefix: "Window decoder run \(runID)\n" + phase,
+                    fileName: "drum-reference30-window-\(runID)-phase.txt")
+                breadcrumbs("Before native call; fixed input SHA verified; no retry/cache deletion")
+                let result = try await runPreviewSamplingStage(stage, folder: folder,
+                    inputs: ["latent": NDArray(scalars: input, shape: [1,64,256])], aot: nil, reuseStages: true,
+                    pool: &pool, stats: &stats, allowCacheRepair: false, cacheRepair: &repairs, phaseProgress: breadcrumbs)
+                guard let tensor = result.values["audio"] else { throw ProbeError.invalidOutputTensor }
+                let values = try copiedValues(tensor, shape: [1,2,491520])
+                let count = (t.coreEnd-t.coreStart)*1920
+                var kept = [Float](repeating: 0, count: count*2), expected = kept
+                for c in 0..<2 { for j in 0..<count {
+                    let value = values[c*491520+t.cropStart*1920+j], global = c*1440000+t.coreStart*1920+j
+                    kept[c*count+j] = value; expected[c*count+j] = gold[global]; assembled[global] = value
+                } }
+                try drum30Comparison("Window core\(i+1)", actual: kept, expected: expected,
+                    comparisons: &comparisons, passed: &passed, lines: &lines)
+                lines.append("Window\(i+1) backend-await ms \(result.phases.backendAwaitMs)")
+                try requirePreviewMemoryBudget()
+            }
+            pool.removeAll()
+            for (i,t) in ref.windowPlan.dropFirst().enumerated() {
+                let center = t.coreStart*1920
+                var actual: [Float] = [], expected: [Float] = []
+                for c in 0..<2 {
+                    let a = c*1440000+center-3840, b = c*1440000+center+3840
+                    actual.append(contentsOf: assembled[a..<b]); expected.append(contentsOf: gold[a..<b])
+                }
+                try drum30Comparison("Window seam\(i+1)", actual: actual, expected: expected,
+                    comparisons: &comparisons, passed: &passed, lines: &lines)
+            }
+            try drum30Comparison("Window full30s assembled audio", actual: assembled, expected: gold,
+                comparisons: &comparisons, passed: &passed, lines: &lines)
+            try checkManifest(stats.completedCalls, 6, "window.calls")
+            try checkManifest(stats.modelOpens, 1, "window.opens")
+            try checkManifest(stats.functionBinds, 1, "window.binds")
+            try checkManifest(stats.cacheHits, 5, "window.hits")
+            try checkManifest(comparisons, 12, "window.comparisons")
+            completed = true
+        } catch {
+            pool.removeAll()
+            if let failure = error as? StageExecutionFailure {
+                lines.append("Failing asset: \(failure.asset); operation: \(failure.operation)"); lines.append(contentsOf: failure.details)
+            } else { lines.append(contentsOf: modelErrorDetails(error)) }
+        }
+        let usage = memory.finish()
+        let memoryPassed = usage.peak.map { $0 < 2000*1048576 } ?? false
+        let verdict = completed ? (passed == 12 ? "PASS" : "NOT PASSED") : "NOT EVALUATED"
+        lines.append("Window decoder collection: \(completed ? "COMPLETED" : "NOT COMPLETED"); calls \(stats.completedCalls)/6; opens \(stats.modelOpens), binds \(stats.functionBinds), reuse hits \(stats.cacheHits)")
+        lines.append("Window decoder strict parity: \(verdict); \(passed)/\(comparisons) comparisons passed; target12")
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10ms): \(Double(peak)/1048576); sampled budget <2000MiB: \(memoryPassed ? "PASS" : "NOT PASSED")") }
+        else { lines.append("Sampled memory readiness: NOT EVALUATED; footprint unavailable") }
+        lines.append("Window decoder readiness: \(completed && passed == 12 && memoryPassed ? "PASS" : "NOT PASSED"); sampled memory is not exact peak or combined-pipeline residency evidence")
+        lines.append("Native full50-step trajectory/music listening: NOT EVALUATED; retries0, cache deletions0; BF16 baseline/FP32 VAE/bounds unchanged")
+        lines.append("Thermal end: \(ProcessInfo.processInfo.thermalState.rawValue); total window decoder ms \(ms(start.duration(to: clock.now)))")
+        saveDrumWindow(lines, runID: runID)
+        return lines.joined(separator: "\n")
+    }
+}
+
 // Timer state lives on one serial queue. The owning task starts/stops the timer;
 // it returns only numeric snapshots, never the timer or mutable state.
 private final class CoreAIProcessFootprintSampler: @unchecked Sendable {

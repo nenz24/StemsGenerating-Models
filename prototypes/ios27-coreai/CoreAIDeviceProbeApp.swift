@@ -25,13 +25,16 @@ struct CoreAIDeviceProbeApp: App {
     init() {
         let active = CoreAIPreviewWindow.bundled
         let decoderOnly = CoreAIPreviewWindow.drumReference30DecoderOnlyEnabled
-        let drum30 = CoreAIPreviewWindow.drumReference30ComponentsEnabled || decoderOnly
+        let windowDecoder = CoreAIPreviewWindow.drumReference30WindowEnabled
+        let drum30 = CoreAIPreviewWindow.drumReference30ComponentsEnabled || decoderOnly || windowDecoder
         let saved = drum30 ? nil : CoreAIDecoderProbe.latestSavedBassPreview(window: active)
         let prior = CoreAIDecoderProbe.savedDenoiserReport()
         let matchingPrior: String? = prior.flatMap { text in
             text.contains("Selected instrument: \(active.stemID);") || (active.stemID == "bass" && !text.contains("Selected instrument:")) ? text : nil
         }
-        _report = State(initialValue: drum30
+        _report = State(initialValue: windowDecoder
+            ? (CoreAIDecoderProbe.savedDrumWindowReport() ?? "Pemeriksaan decoder berjendela belum dijalankan.")
+            : drum30
             ? (CoreAIDecoderProbe.savedDrumReference30Report(decoderOnly: decoderOnly) ?? "Pemeriksaan drum 30 detik belum dijalankan.")
             : (matchingPrior ?? saved?.report ?? "Preset \(active.instrumentLabel): belum dijalankan."))
         _generatedBass = State(initialValue: saved?.bassURL)
@@ -44,6 +47,24 @@ struct CoreAIDeviceProbeApp: App {
             NavigationStack {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
+                        if CoreAIPreviewWindow.drumReference30WindowEnabled {
+                            Text("Pemeriksaan decoder berjendela").font(.headline)
+                            Text("Memeriksa kesamaan audio 30 detik dan penggunaan memori. Setelah selesai, bagikan laporannya.")
+                            Button("Uji decoder berjendela 30 detik") {
+                                audioPlayer?.stop()
+                                runningModel = true
+                                report = "Memverifikasi decoder berjendela dan acuan…"
+                                Task {
+                                    let update: @MainActor @Sendable (String) -> Void = { text in self.report = text }
+                                    report = await Task.detached(priority: .userInitiated) {
+                                        await CoreAIDecoderProbe.runDrumReference30WindowDecoder(progress: update)
+                                    }.value
+                                    runningModel = false
+                                }
+                            }
+                            .disabled(runningModel || workStartedInProcess)
+                            Divider()
+                        }
                         if CoreAIPreviewWindow.drumReference30DecoderOnlyEnabled {
                             Text("Pemeriksaan decoder 30 detik").font(.headline)
                             Text("Memeriksa decoder sendiri memakai acuan yang sudah diterima. Setelah selesai, bagikan laporannya.")
@@ -120,7 +141,7 @@ struct CoreAIDeviceProbeApp: App {
                             }
                             Divider()
                         }
-                        if !CoreAIPreviewWindow.drumReference30ComponentsEnabled && !CoreAIPreviewWindow.drumReference30DecoderOnlyEnabled {
+                        if !CoreAIPreviewWindow.drumReference30ComponentsEnabled && !CoreAIPreviewWindow.drumReference30DecoderOnlyEnabled && !CoreAIPreviewWindow.drumReference30WindowEnabled {
                             Text("Preset aktif: \(window.instrumentLabel)")
                                 .font(.headline)
                             Text("Pemeriksaan dan baseline")

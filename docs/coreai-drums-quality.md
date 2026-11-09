@@ -31,52 +31,55 @@ bass/drum/gitar belum diterima. BF16/checkpoint/baseline dan toleransi
 abs 1e-4 / rel 1e-3 / nRMSE 1e-3 tetap. Hasil ini tidak membuktikan bahwa durasi saja
 menyebabkan glitch; beberapa perbedaan konfigurasi dipulihkan bersama.
 
-### Langkah aktif: uji decoder 30 detik sendiri pada proses iPhone baru
+### Langkah aktif: uji decoder berjendela dengan acuan 30 detik
 
-[Run 6F079DC7](../reviews/coreai-drums-reference30-decoder-specialization/README.md)
-menyelesaikan 15/16 panggilan. **DiT dan APG lolos 5/5 pembandingan**, tanpa
-pelanggaran pointwise. Decoder belum menghasilkan audio: initial bind gagal
-`graphLoadFailed`, satu perbaikan cache terarah diikuti retry yang gagal pada
-`failedToSpecialize`. Numerical parity decoder belum dievaluasi. Sampel memori
-maksimum 954,867 MiB tidak membuktikan penyebabnya; efek 15 model sebelumnya dan
-bentuk decoder 750 frame belum terpisah.
+[Decoder asli berhasil sendiri pada run 22991DB1](../reviews/coreai-drums-reference30-window-decoder/README.md).
+Seluruh 2,88 juta sampel lolos gate asli, tanpa retry/cache deletion. Puncak proses
+tersampel 2696,770 MiB melebihi budget proses 2000 MiB; check sebelum/sesudah bind
+belum membatasi alokasi saat backend berjalan. Keberhasilan numerik dipertahankan,
+sementara lifecycle gabungan dan trajectory 50 langkah belum diterima.
 
-Berikutnya periksa **aset decoder asli yang sama**, sendirian. Tutup Xcode,
-lalu dari folder repo Mac:
+Berikutnya siapkan graph decoder 256 frame, dengan bobot VAE FP32 yang sama.
+Potongan dengan konteks tumpang tindih dipangkas ke area inti lalu disalin,
+tanpa fade/padding tambahan; keseluruhan output harus cocok dengan acuan penuh.
+Jalur produksi ini sudah lolos 12 gate CPU pada data asli.
+
+Tutup Xcode, lalu dari folder repo Mac:
 
 ```bash
 git fetch origin main &&
 python3 scripts/update_coreai_project.py &&
 .runtime-cache/coreai-decoder-venv/bin/python \
-  scripts/activate_coreai_drum_reference30.py \
-  --source .runtime-cache/drums-reference30-native-v1 \
-  --decoder-only &&
+  scripts/prepare_coreai_drum_reference30_window_decoder.py \
+  --capture .runtime-cache/drums-reference30-v3 \
+  --execute --activate &&
 open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
 ```
 
-Script memakai export yang sudah ada dan menyimpan backup selector lama. Build
-baru hanya menyertakan satu decoder dan input/acuan yang diperlukan: 7 file.
-Semua aset lama tetap di Mac. Tidak ada export/generasi ulang, penggantian bobot,
-perubahan BF16/toleransi atau penghapusan cache untuk uji ini.
+Script menjalankan enam decode host dari final latent tersimpan dan memverifikasi
+12 pembandingan asli: enam inti, lima daerah sambungan dan waveform 30s utuh.
+Aset decoder 256 lama dipakai ulang hanya bila provenance/shape/folding/hash cocok;
+jika tidak tersedia, hanya satu graph VAE kecil diexport dari checkpoint lokal.
+Tidak ada bobot baru atau generasi 50 langkah. Folder baru terpisah dan selector
+lama dibackup; semua hasil sebelumnya dipertahankan. Output lengkap yang sudah
+ada diverifikasi/dipakai ulang, bukan ditimpa.
 
-Pilih **CoreAIProbe Reuse**, target iPhone, lalu **Cmd+R** agar proses baru dibuka.
-Tekan **Uji decoder 30 detik saja** sekali. Setelah selesai atau muncul error,
+Pilih **CoreAIProbe Reuse**, target iPhone, lalu **Cmd+R**. Tekan
+**Uji decoder berjendela 30 detik** sekali. Setelah selesai atau muncul error,
 tekan **Bagikan laporan** dan kirim ke chat. Jika app berhenti, buka kembali dan
-bagikan laporan yang dipulihkan beserta fase terakhir; jangan mengulang uji dulu.
+bagikan laporan yang dipulihkan; jangan mengulang uji dulu.
 
-Uji ini hanya satu panggilan decoder FP32 dengan saved final latent yang sama,
-tanpa membuka model DiT/APG sebelumnya. Hash model/input diperiksa sebelum
-model dibuka, guard proses tetap, dan tidak ada retry/perbaikan cache tambahan.
-Cache native tetap tidak dikendalikan sebagai cold-cache benchmark. Spesialisasi
-gagal berarti decoder numerical parity `NOT EVALUATED`; output finite melewati
-batas tetap `NOT PASSED`. Keberhasilan satu decoder tidak otomatis membuktikan
-lifecycle gabungan atau trajectory 50 langkah.
+Build hanya memuat satu decoder 256 dan acuan yang diperlukan (7 file). Enam
+panggilan memakai satu model/fungsi dengan lima reuse hits. Semua hash model,
+input dan per-window diverifikasi. Tidak ada retry atau penghapusan cache.
+Laporan memisahkan 12 gate numerik asli dari gate memori: sampled peak harus
+di bawah budget 2000 MiB yang sama. Guard sebelum/sesudah bind dan setelah tiap
+window tetap. Ini belum bukti residency pipeline gabungan atau peak eksak.
 
-Decode berjendela 256 frame juga sudah diperiksa pada CPU terhadap audio acuan
-penuh 30s: enam area inti, lima daerah sambungan dan waveform keseluruhan lolos
-batas asli tanpa padding latent/fade/smoothing. Ini kandidat yang sudah diuji,
-belum dipilih untuk perangkat; uji berikutnya tetap mengisolasi decoder 750 frame
-asli sebelum mengganti graph. Tidak perlu mengulang uji CPU itu.
+BF16 sampler, VAE FP32, preset/mix dan toleransi abs 1e-4 / rel 1e-3 / nRMSE 1e-3 tetap.
+Uji ini tidak menjalankan sampler atau membuat WAV. Generasi 30 detik dan uji
+dengar iPhone menyusul setelah hasil decoder/memori diperiksa; target akhir lagu
+penuh bass/drum/gitar tetap.
 
 ### Riwayat: source dan persiapan native 30s sudah selesai
 

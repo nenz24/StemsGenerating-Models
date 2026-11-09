@@ -1,5 +1,9 @@
 # Native DiT/APG pass; full 750 decoder specialization remains blocked
 
+**Isolation result received:** [the unchanged 750 decoder passes alone with high sampled memory](../coreai-drums-reference30-window-decoder/README.md).
+The next device action measures the bounded 256 decoder; do not repeat the
+original 16-call test or standalone 750 run. The investigation below is historical.
+
 [Original device report](device-report.txt), run `6F079DC7`, completes 15/16 calls.
 All five completed strict comparisons pass at original abs 1e-4 / rel 1e-3 / nRMSE 1e-3:
 conditional/unconditional step 1 velocities and three isolated APG outputs.

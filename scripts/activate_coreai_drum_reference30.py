@@ -43,16 +43,24 @@ def activate(source, candidates=None, backup_root=None, decoder_only=False):
         if target.exists():
             raise FileExistsError('Diagnostic target appeared during copy; both results preserved')
         staging.rename(target)
+    profile = DECODER_PROFILE if decoder_only else PROFILE
+    select_profile(candidates, profile, backup_root)
+    return target
+
+
+def select_profile(candidates, profile, backup_root=None):
+    """Back up only the old selector; callers first verify their full bundle."""
+    candidates = Path(candidates)
+    backup_root = Path(backup_root) if backup_root is not None else ROOT / '.runtime-cache/drums-reference30-selector-backups'
     selector = candidates / 'active-preview.json'
     if selector.is_symlink():
         raise ValueError('Selector must not be a symlink; preserved')
-    profile = DECODER_PROFILE if decoder_only else PROFILE
     payload = {'schema_version': 1, 'resource_profile': profile, 'audio_seconds': 30.}
     encoded = (json.dumps(payload, indent=2) + '\n').encode()
     previous = selector.read_bytes() if selector.exists() else None
     if previous == encoded:
         print('Diagnostic build already selected:', profile, flush=True)
-        return target
+        return
     backup_root.mkdir(parents=True, exist_ok=True)
     backup = Path(tempfile.mkdtemp(prefix='selector-', dir=backup_root))
     if previous is not None:
@@ -68,7 +76,6 @@ def activate(source, candidates=None, backup_root=None, decoder_only=False):
         Path(temporary).unlink(missing_ok=True)
     print('Prior build selection backup:', backup, flush=True)
     print('Selected diagnostic:', profile, '; baseline assets/source/cache retained.', flush=True)
-    return target
 
 
 def main():

@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "profile": "drums-reference30-window-decoder",
+  "status": "host_controls_complete",
+  "asset_file": "decoder.aimodel",
+  "function_name": "main",
+  "input_shapes": {
+    "latent": [
+      1,
+      64,
+      256
+    ]
+  },
+  "output_shapes": {
+    "audio": [
+      1,
+      2,
+      491520
+    ]
+  },
+  "sample_rate": 48000,
+  "audio_seconds": 30.0,
+  "latent_frames": 750,
+  "window_frames": 256,
+  "core_frames": 128,
+  "halo_frames": 64,
+  "window_plan": [
+    {
+      "window_start": 0,
+      "window_frames": 256,
+      "core_start": 0,
+      "core_end": 128,
+      "crop_start": 0
+    },
+    {
+      "window_start": 64,
+      "window_frames": 256,
+      "core_start": 128,
+      "core_end": 256,
+      "crop_start": 64
+    },
+    {
+      "window_start": 192,
+      "window_frames": 256,
+      "core_start": 256,
+      "core_end": 384,
+      "crop_start": 64
+    },
+    {
+      "window_start": 320,
+      "window_frames": 256,
+      "core_start": 384,
+      "core_end": 512,
+      "crop_start": 64
+    },
+    {
+      "window_start": 448,
+      "window_frames": 256,
+      "core_start": 512,
+      "core_end": 640,
+      "crop_start": 64
+    },
+    {
+      "window_start": 494,
+      "window_frames": 256,
+      "core_start": 640,
+      "core_end": 750,
+      "crop_start": 146
+    }
+  ],
+  "weight_storage_dtype": "float32",
+  "compute_dtype": "float32",
+  "scalar_type": "float32",
+  "byte_order": "little",
+  "vae_checkpoint_sha256": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+  "capture_report_sha256": "f5f84314fa37f49f73502a77f7e3364b31450898231731d64e216bf1b606bfdf",
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "crossfade": false,
+  "extra_latent_padding": false,
+  "native_exports": 0,
+  "host_window_decodes": 6,
+  "native_parity": "NOT EVALUATED",
+  "native_memory_gate": "NOT EVALUATED",
+  "full_trajectory_parity": "NOT EVALUATED",
+  "baseline_modified": false,
+  "phase": "host decode window6/6; compare retained core to original full30s",
+  "host_checks": {
+    "tile-0": {
+      "finite": true,
+      "max_absolute_error": 2.002716064453125e-05,
+      "rmse": 3.672794307405432e-07,
+      "normalized_rmse": 2.160167233331093e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "tile-1": {
+      "finite": true,
+      "max_absolute_error": 1.7344951629638672e-05,
+      "rmse": 3.5365120540233623e-07,
+      "normalized_rmse": 2.093543729882548e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "tile-2": {
+      "finite": true,
+      "max_absolute_error": 1.1980533599853516e-05,
+      "rmse": 3.1784807565738376e-07,
+      "normalized_rmse": 1.8487189054321031e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "tile-3": {
+      "finite": true,
+      "max_absolute_error": 2.9712915420532227e-05,
+      "rmse": 3.814443779988952e-07,
+      "normalized_rmse": 2.2908191682104354e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "tile-4": {
+      "finite": true,
+      "max_absolute_error": 1.1563301086425781e-05,
+      "rmse": 3.450610828275144e-07,
+      "normalized_rmse": 1.536184460408639e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "tile-5": {
+      "finite": true,
+      "max_absolute_error": 2.5644898414611816e-05,
+      "rmse": 3.1422380808755135e-07,
+      "normalized_rmse": 2.5912804389808113e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "seam-1": {
+      "finite": true,
+      "max_absolute_error": 3.110617399215698e-07,
+      "rmse": 6.727693176308133e-08,
+      "normalized_rmse": 7.376542516266277e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "seam-2": {
+      "finite": true,
+      "max_absolute_error": 3.6135315895080566e-07,
+      "rmse": 9.479605470806645e-08,
+      "normalized_rmse": 4.517370377699507e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "seam-3": {
+      "finite": true,
+      "max_absolute_error": 5.289912223815918e-07,
+      "rmse": 1.0828973863502371e-07,
+      "normalized_rmse": 4.399760744673648e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "seam-4": {
+      "finite": true,
+      "max_absolute_error": 7.301568984985352e-07,
+      "rmse": 1.6583186763279287e-07,
+      "normalized_rmse": 2.553717483203636e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "seam-5": {
+      "finite": true,
+      "max_absolute_error": 7.748603820800781e-07,
+      "rmse": 2.0090536768286755e-07,
+      "normalized_rmse": 1.1864496475902602e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    },
+    "overall": {
+      "finite": true,
+      "max_absolute_error": 2.9712915420532227e-05,
+      "rmse": 3.481999697373435e-07,
+      "normalized_rmse": 1.99877317006247e-06,
+      "elementwise_fraction_over_bound": 0.0,
+      "parity_passed": true
+    }
+  },
+  "tile_input_sha256": [
+    "2a49af24c5f83f294ed6ee8b10fa8b9b64e9d801093d9cbaeddc9fe26f690b0b",
+    "f8be3951e5b8e27ab889ee844aba0857ea2c5d4d7edcea8d63c22b98b15611ff",
+    "6bbf037f5663f62c708d0a060bc8cae87276ec4243201be326e9c4e2961aedbc",
+    "b30bb365652d18342f256a2f151ac7bc300395cabbbabd50aaa3319a620348e5",
+    "16e8971f314e2ecf0ab6983a4cabc1a49b3733f6e2e6cef0221e9b68428ca420",
+    "f7cf778aeefffb2a90a3fc13cf243fdabf07009774d87b4dfb8e7fb3b80d6f26"
+  ],
+  "dependency_bounds": [
+    [
+      0,
+      136
+    ],
+    [
+      119,
+      264
+    ],
+    [
+      247,
+      392
+    ],
+    [
+      375,
+      520
+    ],
+    [
+      503,
+      648
+    ],
+    [
+      631,
+      749
+    ]
+  ],
+  "architecture_guard_passed": true,
+  "coverage_exactly_once": true,
+  "host_numerical_gate_passed": true,
+  "versions": {
+    "torch": "2.8.0+cpu",
+    "diffusers": "0.37.0"
+  }
+}
