@@ -47,6 +47,8 @@ class Drum30DeviceResourceTests(unittest.TestCase):
         self.assertEqual(len(C.KEEP), 60)
         self.assertEqual(len(C.FIXTURES), 11)
         self.assertEqual(len(C.ASSETS), 16)
+        self.assertEqual(len(C.DECODER_KEEP), 6)
+        self.assertTrue(C.DECODER_KEEP.issubset(C.KEEP))
         self.assertEqual(len(self.reference['host_checks']), 6)
         self.assertTrue(all(m['parity_passed'] for m in self.reference['host_checks'].values()))
         self.assertNotIn('capture/source48.f32le', C.KEEP)
@@ -83,20 +85,40 @@ class Drum30DeviceResourceTests(unittest.TestCase):
     def test_build_cli_runs_without_site_packages_or_export_dependencies(self):
         self.component_fixture()
         destination = self.root / 'build/Probe.app/ModelCandidates'
-        result = subprocess.run([sys.executable, '-S', str(ROOT / 'scripts/stage_coreai_app_models.py'),
-            '--source', str(self.candidates), '--destination', str(destination), '--dry-run'],
-            check=True, capture_output=True, text=True)
-        self.assertIn(C.PROFILE, result.stdout)
-        self.assertIn('61 files', result.stdout)
-        self.assertFalse(destination.exists())
+        for profile, count in [(C.PROFILE, 61), (C.DECODER_PROFILE, 7)]:
+            (self.candidates / 'active-preview.json').write_text(json.dumps(
+                {'schema_version': 1, 'resource_profile': profile, 'audio_seconds': 30.}))
+            result = subprocess.run([sys.executable, '-S', str(ROOT / 'scripts/stage_coreai_app_models.py'),
+                '--source', str(self.candidates), '--destination', str(destination), '--dry-run'],
+                check=True, capture_output=True, text=True)
+            self.assertIn(profile, result.stdout)
+            self.assertIn(f'{count} files', result.stdout)
+            self.assertFalse(destination.exists())
+
+    def test_decoder_isolation_app_omits_all_DiT_APG_but_preserves_original_assets(self):
+        folder = self.component_fixture()
+        destination = self.root / 'build/Probe.app/ModelCandidates'
+        S.stage_resources(self.candidates, destination)
+        (self.candidates / 'active-preview.json').write_text(json.dumps(
+            {'schema_version': 1, 'resource_profile': C.DECODER_PROFILE, 'audio_seconds': 30.}))
+        plan = S.stage_resources(self.candidates, destination)
+        self.assertEqual(len(plan['files']), 7)
+        self.assertEqual(plan['removed_files'], 54)
+        self.assertEqual(set(plan['files']), {C.BUNDLE + '/' + n for n in C.DECODER_KEEP | {'reference.json'}})
+        self.assertFalse((destination / C.BUNDLE / 'front.aimodel').exists())
+        self.assertFalse((destination / C.BUNDLE / 'apg-euler.aimodel').exists())
+        self.assertTrue((folder / 'front.aimodel/main.mlirb').exists())
+        self.assertTrue((folder / 'apg-euler.aimodel/main.mlirb').exists())
+        self.assertEqual((destination / C.BUNDLE / 'reference.json').read_bytes(), self.raw)
 
     def test_selector_rejects_wrong_duration_or_generation_diagnostic_flag(self):
         self.component_fixture()
         path = self.candidates / 'active-preview.json'
-        for duration, flag in [(10.24, False), (30., True)]:
-            path.write_text(json.dumps({'schema_version': 1, 'resource_profile': C.PROFILE,
-                                        'audio_seconds': duration, 'diagnostic_trajectory': flag}))
-            with self.assertRaisesRegex(ValueError, 'selector'): S.plan_resources(self.candidates)
+        for profile in [C.PROFILE, C.DECODER_PROFILE]:
+            for duration, flag in [(10.24, False), (30., True)]:
+                path.write_text(json.dumps({'schema_version': 1, 'resource_profile': profile,
+                                            'audio_seconds': duration, 'diagnostic_trajectory': flag}))
+                with self.assertRaisesRegex(ValueError, 'selector'): S.plan_resources(self.candidates)
 
     def test_activation_backs_up_selector_preserves_source_and_is_idempotent(self):
         source = self.root / 'original-native'; source.mkdir()
@@ -134,6 +156,23 @@ class Drum30DeviceResourceTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError): A.activate(source, self.candidates, self.root / 'backups')
         self.assertEqual(selector.read_bytes(), b'old selection')
         self.assertEqual((target / 'keep').read_text(), 'original')
+
+    def test_decoder_selection_preserves_component_selector_and_can_switch_back(self):
+        source = self.root / 'native'; source.mkdir()
+        (source / 'reference.json').write_bytes(self.raw)
+        selector = self.candidates / 'active-preview.json'
+        component = json.dumps({'schema_version': 1, 'resource_profile': C.PROFILE, 'audio_seconds': 30.}).encode()
+        selector.write_bytes(component)
+        backups = self.root / 'backups'
+        with patch.object(A, 'ROOT', self.root), patch.object(A, 'verify_bundle'):
+            A.activate(source, self.candidates, backups, decoder_only=True)
+            self.assertEqual(json.loads(selector.read_bytes())['resource_profile'], C.DECODER_PROFILE)
+            saved = list(backups.glob('selector-*/active-preview.json'))
+            self.assertEqual(len(saved), 1)
+            self.assertEqual(saved[0].read_bytes(), component)
+            A.activate(source, self.candidates, backups)
+            self.assertEqual(json.loads(selector.read_bytes())['resource_profile'], C.PROFILE)
+            self.assertEqual((source / 'reference.json').read_bytes(), self.raw)
 
 
 if __name__ == '__main__':

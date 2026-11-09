@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "tests": {
+    "command": "python -m unittest discover -s Tests/StemEvaluationPython -p 'test_coreai*.py'",
+    "run": 209,
+    "passed": 207,
+    "skipped": 2,
+    "failed": 0
+  },
+  "new_packaging_cases": [
+    "Decoder-only7-file app excludes DiT/APG and prunes only54 generated-app files, preserving source",
+    "Decoder selector backs up old component selection and can switch back",
+    "Both resource profiles run build CLI with site packages disabled",
+    "Both profiles reject wrong duration or generation diagnostic flag"
+  ],
+  "actual_host_VAE_decoder_calls": 6,
+  "host_window_comparisons_passed": 12,
+  "host_artificial_padding_proof": "Inverse convolution dependency bounds plus actual architecture guard; all retained outputs exclude artificial padding",
+  "window_native_exported": false,
+  "window_selected_for_device": false,
+  "current_device_action": "One unchanged750-frame decoder in fresh process; no retry/cache deletion, same weights/input/reference/bounds",
+  "apple_builds_here": 0,
+  "device_runs_here": 0,
+  "full_native_trajectory": "NOT EVALUATED",
+  "baseline_modified": false,
+  "weight_storage_BF16_preserved": true,
+  "VAE_FP32_preserved": true,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "raw_audio_arrays_weights_native_binaries_committed": false
+}

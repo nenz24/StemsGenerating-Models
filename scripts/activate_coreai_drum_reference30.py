@@ -11,11 +11,11 @@ import shutil
 import tempfile
 
 from export_coreai_decoder import ROOT
-from coreai_drum_reference30_contract import PROFILE, BUNDLE, validate_reference
+from coreai_drum_reference30_contract import PROFILE, DECODER_PROFILE, BUNDLE, validate_reference
 from prepare_coreai_drum_reference30 import verify_bundle
 
 
-def activate(source, candidates=None, backup_root=None):
+def activate(source, candidates=None, backup_root=None, decoder_only=False):
     source = Path(source).resolve()
     candidates = Path(candidates) if candidates is not None else ROOT / 'prototypes/ios27-coreai/ModelCandidates'
     backup_root = Path(backup_root) if backup_root is not None else ROOT / '.runtime-cache/drums-reference30-selector-backups'
@@ -46,11 +46,12 @@ def activate(source, candidates=None, backup_root=None):
     selector = candidates / 'active-preview.json'
     if selector.is_symlink():
         raise ValueError('Selector must not be a symlink; preserved')
-    payload = {'schema_version': 1, 'resource_profile': PROFILE, 'audio_seconds': 30.}
+    profile = DECODER_PROFILE if decoder_only else PROFILE
+    payload = {'schema_version': 1, 'resource_profile': profile, 'audio_seconds': 30.}
     encoded = (json.dumps(payload, indent=2) + '\n').encode()
     previous = selector.read_bytes() if selector.exists() else None
     if previous == encoded:
-        print('Component-only build already selected.', flush=True)
+        print('Diagnostic build already selected:', profile, flush=True)
         return target
     backup_root.mkdir(parents=True, exist_ok=True)
     backup = Path(tempfile.mkdtemp(prefix='selector-', dir=backup_root))
@@ -66,15 +67,16 @@ def activate(source, candidates=None, backup_root=None):
     finally:
         Path(temporary).unlink(missing_ok=True)
     print('Prior build selection backup:', backup, flush=True)
-    print('Selected component-only native30 test. Baseline assets/source/cache retained.', flush=True)
+    print('Selected diagnostic:', profile, '; baseline assets/source/cache retained.', flush=True)
     return target
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, required=True)
+    parser.add_argument('--decoder-only', action='store_true', help='Isolate unchanged full30s decoder in a fresh process; no DiT/APG')
     args = parser.parse_args()
-    activate(args.source)
+    activate(args.source, decoder_only=args.decoder_only)
 
 
 if __name__ == '__main__':

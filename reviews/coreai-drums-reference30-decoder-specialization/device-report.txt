@@ -1,0 +1,70 @@
+Runtime: CoreAI drums30 fixed-input component diagnostic; run 6F079DC7-13AC-4556-81F0-2A27D25FAC12
+OS: Version 27.0.1 (Build 24A446)
+Revision: drums30-components-v1; 16 serial component calls, no generation or WAV
+BF16 learned DiT storage, FP32 compute/I/O; VAE FP32; original bounds unchanged
+cpuOnly requested; actual placement unmeasured; Swift scopes released per asset, native eviction not guaranteed
+APG receives captured gold velocities and decoder receives captured final latent: independent component checks, not native feedback trajectory
+Finite strict failures remain NOT PASSED while other independent components are collected. Nonfinite/native/type/memory errors stop.
+Native full 50-step trajectory: NOT EVALUATED; full-song bass/drums/guitar: NOT EVALUATED
+Thermal start: 0; low power: false
+Reviewed export manifest, all 16 native payloads and all 11 captured tensor hashes: VERIFIED before model open
+Phase: component 1/16 front.aimodel
+Completed front.aimodel; backend-await ms 26.757375
+Phase: component 2/16 blocks-00-01.aimodel
+Completed blocks-00-01.aimodel; backend-await ms 163.56275
+Phase: component 3/16 blocks-02-03.aimodel
+Completed blocks-02-03.aimodel; backend-await ms 182.367209
+Phase: component 4/16 blocks-04-05.aimodel
+Completed blocks-04-05.aimodel; backend-await ms 159.247167
+Phase: component 5/16 blocks-06-07.aimodel
+Completed blocks-06-07.aimodel; backend-await ms 167.832916
+Phase: component 6/16 blocks-08-09.aimodel
+Completed blocks-08-09.aimodel; backend-await ms 172.997333
+Phase: component 7/16 blocks-10-11.aimodel
+Completed blocks-10-11.aimodel; backend-await ms 172.725667
+Phase: component 8/16 blocks-12-13.aimodel
+Completed blocks-12-13.aimodel; backend-await ms 173.694208
+Phase: component 9/16 blocks-14-15.aimodel
+Completed blocks-14-15.aimodel; backend-await ms 183.578959
+Phase: component 10/16 blocks-16-17.aimodel
+Completed blocks-16-17.aimodel; backend-await ms 167.516375
+Phase: component 11/16 blocks-18-19.aimodel
+Completed blocks-18-19.aimodel; backend-await ms 171.418917
+Phase: component 12/16 blocks-20-21.aimodel
+Completed blocks-20-21.aimodel; backend-await ms 167.8545
+Phase: component 13/16 blocks-22-23.aimodel
+Completed blocks-22-23.aimodel; backend-await ms 171.658667
+Phase: component 14/16 tail.aimodel
+Completed tail.aimodel; backend-await ms 4.292375
+Component DiT conditional step1: PASS; max abs 3.24249267578125e-05; RMSE 1.9783578888960043e-06; normalized RMSE 1.7360669341977408e-06
+Pointwise violations 0/48000; worst bound ratio 0.06674100055006063, flat index 44942; actual 0.022024363; reference 0.02201622; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Component DiT unconditional step1: PASS; max abs 3.528594970703125e-05; RMSE 1.8574631575236136e-06; normalized RMSE 1.6751992680985387e-06
+Pointwise violations 0/48000; worst bound ratio 0.05763709975368838, flat index 47321; actual -0.02591341; reference -0.025906153; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Phase: component 15/16 APG on saved gold velocities, initial latent and zero prior momentum
+Component APG latent_next: PASS; max abs 2.384185791015625e-07; RMSE 1.06172215790086e-08; normalized RMSE 1.0821209073867949e-08
+Pointwise violations 0/48000; worst bound ratio 0.0001626276393869571, flat index 2929; actual -0.037441246; reference -0.037441224; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Component APG momentum_next: PASS; max abs 0.0; RMSE 0.0; normalized RMSE 0.0
+Pointwise violations 0/48000; worst bound ratio 0.0, flat index 0; actual 0.057652354; reference 0.057652354; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Component APG guided_velocity: PASS; max abs 1.430511474609375e-06; RMSE 1.289525564576085e-07; normalized RMSE 1.0278022287700883e-07
+Pointwise violations 0/48000; worst bound ratio 0.004800162053470925, flat index 27297; actual 0.049005866; reference 0.04900658; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Phase: component 16/16 full 30s decoder from saved final latent; no generated trajectory
+Drum30 component collection: NOT COMPLETED
+Failing asset: decoder.aimodel; operation: model-open/specialization
+Requested model resource: decoder.aimodel
+Requested policy cpuOnly: true
+Error: CoreAIDelegates.AIModelError.failedToSpecialize
+Error domain/code: CoreAIDelegates.AIModelError / 1
+Error description: The operation couldn’t be completed. (CoreAIDelegates.AIModelError error 1.)
+Targeted CPU cache repair 1/1: decoder.aimodel; BNNS graphLoadFailed during initial bind; no inference executed for this attempt
+Requested model resource: decoder.aimodel
+Requested policy cpuOnly: true
+Error: BNNSCoreAIDelegate.BNNSDelegate.BNNSError.graphLoadFailed(file:///private/var/mobile/Containers/Data/Application/42C96ED9-86AF-4016-A7A5-FC951A2102A8/Library/Caches/coreai-cache/24A446/com.nenz24.CoreAIProbe/ee3a1aaf26854af3a6f5e808e025c7afbeeca6949731ee42add8e540f023c8c5/5EAD63D13736453D6D5163D60336CC215843CF81F5BDB388C11A42F88A57786C/model.aimodelx/main-this-delegates/BNNS/bnns.ir)
+Error domain/code: BNNSCoreAIDelegate.BNNSDelegate.BNNSError / 1
+Error description: The operation couldn’t be completed. (BNNSCoreAIDelegate.BNNSDelegate.BNNSError error 1.)
+Targeted CPU cache deletion returned for decoder.aimodel; native eviction not independently verified; retrying this stage once with unchanged inputs
+Targeted initial-bind repair: 1/1; successful retries 0
+Component collection: NOT COMPLETED; calls 15/16, opens 16, binds 15
+Drum30 component strict parity: NOT PASSED; 5/5 comparisons passed; target 6
+Native full 50-step trajectory: NOT EVALUATED; musical listening: NOT EVALUATED; baseline/mix/bounds unchanged
+Sampled process maximum MiB (10ms): 954.8666915893555; not exact transient/native memory peak
+Thermal end: 0; total component test ms 18606.224583

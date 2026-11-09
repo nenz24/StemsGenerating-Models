@@ -1,5 +1,9 @@
 # Mac native30s export completed; component-only device test prepared
 
+**Device result received:** [DiT/APG pass; decoder specialization blocked](../coreai-drums-reference30-decoder-specialization/README.md).
+The next action isolates the unchanged decoder in a fresh process; do not repeat
+the full component run or export. Details below describe the preceding setup.
+
 The uploaded [original manifest](reference.json), SHA256 `f2f84e6c…24d53ed`,
 reports all 16 assets exported successfully: 14 partitioned DiT assets plus APG
 and full-window decoder. Its complete contract matches the reviewed 750-frame,

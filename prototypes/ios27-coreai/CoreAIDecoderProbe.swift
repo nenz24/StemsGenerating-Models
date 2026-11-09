@@ -3031,23 +3031,28 @@ extension CoreAIDecoderProbe {
         let relativeRmseTolerance: Double
     }
 
-    static func savedDrumReference30Report() -> String? {
+    static func savedDrumReference30Report(decoderOnly: Bool = false) -> String? {
         guard let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
-        guard let text = try? String(contentsOf: root.appendingPathComponent("last-drums-reference30-report.txt"), encoding: .utf8) else { return nil }
-        guard !text.contains("Component collection: COMPLETED"),
+        let kind = decoderOnly ? "drums-reference30-decoder" : "drums-reference30"
+        let phaseKind = decoderOnly ? "drum-reference30-decoder" : "drum-reference30"
+        let completion = decoderOnly ? "Decoder isolation: COMPLETED" : "Component collection: COMPLETED"
+        guard let text = try? String(contentsOf: root.appendingPathComponent("last-\(kind)-report.txt"), encoding: .utf8) else { return nil }
+        guard !text.contains(completion),
               let first = text.components(separatedBy: "\n").first,
               let runID = first.components(separatedBy: "; run ").last, UUID(uuidString: runID) != nil,
-              let phase = try? String(contentsOf: root.appendingPathComponent("drum-reference30-\(runID)-phase.txt"), encoding: .utf8) else { return text }
+              let phase = try? String(contentsOf: root.appendingPathComponent("\(phaseKind)-\(runID)-phase.txt"), encoding: .utf8) else { return text }
         return text + "\nLast persisted native phase for this run:\n" + phase
     }
 
-    private static func saveDrum30(_ lines: [String], runID: String) {
+    private static func saveDrum30(_ lines: [String], runID: String, decoderOnly: Bool = false) {
         guard let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        let directory = root.appendingPathComponent("DrumReference30Reports/" + runID, isDirectory: true)
+        let group = decoderOnly ? "DrumReference30DecoderReports" : "DrumReference30Reports"
+        let kind = decoderOnly ? "drums-reference30-decoder" : "drums-reference30"
+        let directory = root.appendingPathComponent(group + "/" + runID, isDirectory: true)
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let text = lines.joined(separator: "\n")
         try? text.write(to: directory.appendingPathComponent("report.txt"), atomically: true, encoding: .utf8)
-        try? text.write(to: root.appendingPathComponent("last-drums-reference30-report.txt"), atomically: true, encoding: .utf8)
+        try? text.write(to: root.appendingPathComponent("last-\(kind)-report.txt"), atomically: true, encoding: .utf8)
     }
 
     private static func drum30Comparison(_ label: String, actual: [Float], expected: [Float],
@@ -3072,18 +3077,90 @@ extension CoreAIDecoderProbe {
     private static func drum30Stage(_ stage: Contract.Stage, folder: URL, inputs: [String: NDArray],
                                      index: Int, runID: String, stats: inout RetentionStats,
                                      repairs: inout CacheRepairStats,
+                                     expectedCalls: Int = 16, allowCacheRepair: Bool = true, decoderOnly: Bool = false,
                                      progress: @escaping @MainActor @Sendable (String) -> Void) async throws -> StageResult {
         try requirePreviewMemoryBudget()
-        let phase = "Drum30 component \(index)/16: \(stage.assetFile)"
-        await progress("Memeriksa komponen drum 30 detik: \(index)/16…")
+        let phase = "Drum30 component \(index)/\(expectedCalls): \(stage.assetFile); decoder-only: \(decoderOnly)"
+        await progress(decoderOnly ? "Memeriksa decoder 30 detik saja…" : "Memeriksa komponen drum 30 detik: \(index)/\(expectedCalls)…")
+        let phaseKind = decoderOnly ? "drum-reference30-decoder" : "drum-reference30"
         let breadcrumbs = interleavingPhaseProgress(prefix: "Drum30 run \(runID)\n" + phase,
-                                                     fileName: "drum-reference30-\(runID)-phase.txt")
+                                                     fileName: "\(phaseKind)-\(runID)-phase.txt")
         breadcrumbs("Before native call; original fixed inputs; cpuOnly requested")
         var unusedPool: [String: RetainedStage] = [:]
         defer { unusedPool.removeAll() }
         return try await runPreviewSamplingStage(stage, folder: folder, inputs: inputs,
             aot: nil, reuseStages: false, pool: &unusedPool, stats: &stats,
-            allowCacheRepair: true, cacheRepair: &repairs, phaseProgress: breadcrumbs)
+            allowCacheRepair: allowCacheRepair, cacheRepair: &repairs, phaseProgress: breadcrumbs)
+    }
+
+    static func runDrumReference30DecoderOnly(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        let clock = ContinuousClock(), start = ContinuousClock().now
+        let runID = UUID().uuidString
+        let memory = CoreAIProcessFootprintSampler()
+        var stats = RetentionStats(), repairs = CacheRepairStats()
+        var comparisons = 0, passed = 0, completed = false
+        var lines = ["Runtime: CoreAI drums30 decoder-only diagnostic; run \(runID)",
+            "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+            "Revision: drums30-decoder-isolation-v1; one unchanged full750-frame decoder call; no DiT/APG models in this process",
+            "Exact original exported decoder, saved final latent and raw host audio; FP32; bounds abs1e-4/rel1e-3/nRMSE1e-3",
+            "cpuOnly requested; actual placement unmeasured. Native cache state is not controlled. No retry/cache deletion in this isolation test.",
+            "Native full50-step trajectory and music listening: NOT EVALUATED; baseline unchanged",
+            "Thermal start: \(ProcessInfo.processInfo.thermalState.rawValue); low power: \(ProcessInfo.processInfo.isLowPowerModeEnabled)"]
+        saveDrum30(lines, runID: runID, decoderOnly: true)
+        do {
+            guard CoreAIPreviewWindow.drumReference30DecoderOnlyEnabled,
+                  let root = Bundle.main.resourceURL else { throw ShardError.missingPreparedBundle }
+            let folder = root.appendingPathComponent("ModelCandidates/drums-reference30-frozen-diagnostic", isDirectory: true)
+            try verifyReferenceIdentity(folder.appendingPathComponent("reference.json"),
+                expected: "f2f84e6c34b2fe42678dc38a48d9ca35b20c14ba53f10843aee8b218a24d53ed")
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let ref = try decoder.decode(Drum30Contract.self, from: Data(contentsOf: folder.appendingPathComponent("reference.json")))
+            try checkManifest(ref.decoder.inputShapes, ["latent":[1,64,750]], "decoder-isolation.input")
+            try checkManifest(ref.decoder.outputShapes, ["audio":[1,2,1440000]], "decoder-isolation.output")
+            try checkManifest(ref.absoluteTolerance, 1e-4, "decoder-isolation.atol")
+            try checkManifest(ref.relativeTolerance, 1e-3, "decoder-isolation.rtol")
+            try checkManifest(ref.relativeRmseTolerance, 1e-3, "decoder-isolation.nrmse")
+            let files = ["decoder.aimodel/main.hash", "decoder.aimodel/main.mlirb", "decoder.aimodel/metadata.json",
+                         "capture/final-latent.f32le", "capture/final-audio.f32le", "capture/report.json"]
+            await progress("Memverifikasi decoder 30 detik dan input acuan…")
+            for name in files {
+                guard let expected = ref.artifactSha256[name] else { throw ShardError.invalidManifest }
+                try checkManifest(try streamingSHA256(folder.appendingPathComponent(name)), expected, "decoder-isolation.hash")
+            }
+            lines.append("Original manifest, unchanged decoder payload and all captured inputs/references: SHA256 VERIFIED")
+            let final = try readFloats(folder: folder, name: "capture/final-latent.f32le", count: 48000, hashes: ref.artifactSha256)
+            var planar = [Float](repeating: 0, count: 48000)
+            for channel in 0..<64 { for frame in 0..<750 { planar[channel*750+frame] = final[frame*64+channel] } }
+            let stage = Contract.Stage(assetFile: ref.decoder.assetFile, layerIndices: [],
+                inputShapes: ref.decoder.inputShapes, outputShapes: ref.decoder.outputShapes, outputBindings: nil)
+            lines.append("Phase: isolated decoder model open/bind/run; planned calls1, prior DiT/APG opens0")
+            saveDrum30(lines, runID: runID, decoderOnly: true)
+            let result = try await drum30Stage(stage, folder: folder,
+                inputs: ["latent": NDArray(scalars: planar, shape: [1,64,750])], index: 1,
+                runID: runID, stats: &stats, repairs: &repairs,
+                expectedCalls: 1, allowCacheRepair: false, decoderOnly: true, progress: progress)
+            guard let audio = result.values["audio"] else { throw ProbeError.invalidOutputTensor }
+            try drum30Comparison("Isolated full30s decoder", actual: try copiedValues(audio, shape: [1,2,1440000]),
+                expected: try readFloats(folder: folder, name: "capture/final-audio.f32le", count: 2880000, hashes: ref.artifactSha256),
+                comparisons: &comparisons, passed: &passed, lines: &lines)
+            lines.append("Backend-await ms \(result.phases.backendAwaitMs); model-open ms \(result.phases.modelOpenMs); bind ms \(result.phases.functionBindMs)")
+            try checkManifest(stats.completedCalls, 1, "decoder-isolation.calls")
+            completed = true
+        } catch {
+            if let failure = error as? StageExecutionFailure {
+                lines.append("Failing asset: \(failure.asset); operation: \(failure.operation)")
+                lines.append(contentsOf: failure.details)
+            } else { lines.append(contentsOf: modelErrorDetails(error)) }
+        }
+        lines.append("Decoder isolation: \(completed ? "COMPLETED" : "NOT COMPLETED"); calls \(stats.completedCalls)/1, opens \(stats.modelOpens), binds \(stats.functionBinds)")
+        let verdict = completed ? (passed == 1 ? "PASS" : "NOT PASSED") : "NOT EVALUATED"
+        lines.append("Decoder-only strict parity: \(verdict); \(passed)/\(comparisons) comparisons passed; target1")
+        lines.append("Cache repair/deletion: DISABLED; retries0; full native trajectory: NOT EVALUATED; baseline/mix/bounds unchanged")
+        let usage = memory.finish()
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10ms): \(Double(peak)/1048576); not exact transient/native memory peak") }
+        lines.append("Thermal end: \(ProcessInfo.processInfo.thermalState.rawValue); total isolated decoder ms \(ms(start.duration(to: clock.now)))")
+        saveDrum30(lines, runID: runID, decoderOnly: true)
+        return lines.joined(separator: "\n")
     }
 
     static func runDrumReference30Components(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {

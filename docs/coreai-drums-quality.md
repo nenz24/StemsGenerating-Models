@@ -31,48 +31,52 @@ bass/drum/gitar belum diterima. BF16/checkpoint/baseline dan toleransi
 abs 1e-4 / rel 1e-3 / nRMSE 1e-3 tetap. Hasil ini tidak membuktikan bahwa durasi saja
 menyebabkan glitch; beberapa perbedaan konfigurasi dipulihkan bersama.
 
-### Langkah aktif: uji komponen native 30s di iPhone
+### Langkah aktif: uji decoder 30 detik sendiri pada proses iPhone baru
 
-[Export Mac selesai](../reviews/coreai-drums-reference30-export-completed/README.md):
-16 aset lengkap dan keenam gate host lolos pada batas asli. Semua hash capture
-sesuai ZIP yang sudah diperiksa. Pembandingan native iPhone dan live trajectory
-50 langkah tetap belum dievaluasi. Tidak perlu export atau generasi host diulang.
+[Run 6F079DC7](../reviews/coreai-drums-reference30-decoder-specialization/README.md)
+menyelesaikan 15/16 panggilan. **DiT dan APG lolos 5/5 pembandingan**, tanpa
+pelanggaran pointwise. Decoder belum menghasilkan audio: initial bind gagal
+`graphLoadFailed`, satu perbaikan cache terarah diikuti retry yang gagal pada
+`failedToSpecialize`. Numerical parity decoder belum dievaluasi. Sampel memori
+maksimum 954,867 MiB tidak membuktikan penyebabnya; efek 15 model sebelumnya dan
+bentuk decoder 750 frame belum terpisah.
 
-Tutup Xcode. Dari folder repo Mac:
+Berikutnya periksa **aset decoder asli yang sama**, sendirian. Tutup Xcode,
+lalu dari folder repo Mac:
 
 ```bash
 git fetch origin main &&
 python3 scripts/update_coreai_project.py &&
 .runtime-cache/coreai-decoder-venv/bin/python \
   scripts/activate_coreai_drum_reference30.py \
-  --source .runtime-cache/drums-reference30-native-v1 &&
+  --source .runtime-cache/drums-reference30-native-v1 \
+  --decoder-only &&
 open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
 ```
 
-Script memverifikasi export yang ada, menyalinnya ke bundle diagnostik terpisah,
-menyimpan backup selector build lama dan memilih hanya resource uji komponen.
-Aset lama dan folder export tetap. Copy yang sudah lengkap dipakai ulang setelah
-verifikasi. Tidak ada download bobot, export ulang, Qwen/conditioning baru atau
-perubahan preset/mix/baseline BF16/toleransi.
+Script memakai export yang sudah ada dan menyimpan backup selector lama. Build
+baru hanya menyertakan satu decoder dan input/acuan yang diperlukan: 7 file.
+Semua aset lama tetap di Mac. Tidak ada export/generasi ulang, penggantian bobot,
+perubahan BF16/toleransi atau penghapusan cache untuk uji ini.
 
-Di Xcode pilih **CoreAIProbe Reuse**, target iPhone, lalu **Cmd+R**. Pada proses
-app baru tekan **Uji komponen drum 30 detik** sekali. Setelah selesai, tekan
-**Bagikan laporan** di bawah hasil dan kirim ke chat. Tidak perlu memilih piano.
-Uji ini tidak menghasilkan WAV atau menjalankan Generate 50 langkah.
+Pilih **CoreAIProbe Reuse**, target iPhone, lalu **Cmd+R** agar proses baru dibuka.
+Tekan **Uji decoder 30 detik saja** sekali. Setelah selesai atau muncul error,
+tekan **Bagikan laporan** dan kirim ke chat. Jika app berhenti, buka kembali dan
+bagikan laporan yang dipulihkan beserta fase terakhir; jangan mengulang uji dulu.
 
-Ada 16 panggilan serial dan 6 pembandingan: conditional/unconditional DiT langkah 1,
-APG dengan input acuan tersimpan, serta decoder 30s dari final latent acuan.
-Seluruh hash asset/input diperiksa sebelum model pertama dibuka. Selisih finite
-melewati batas tetap ditandai `NOT PASSED`; komponen independen lain dikumpulkan.
-Error native/type/shape/nonfinite/memori menghentikan uji. Toleransi tetap
-abs 1e-4 / rel 1e-3 / nRMSE 1e-3. Tidak ada reset gold untuk generasi karena belum ada
-feedback trajectory native dalam uji komponen ini.
+Uji ini hanya satu panggilan decoder FP32 dengan saved final latent yang sama,
+tanpa membuka model DiT/APG sebelumnya. Hash model/input diperiksa sebelum
+model dibuka, guard proses tetap, dan tidak ada retry/perbaikan cache tambahan.
+Cache native tetap tidak dikendalikan sebagai cold-cache benchmark. Spesialisasi
+gagal berarti decoder numerical parity `NOT EVALUATED`; output finite melewati
+batas tetap `NOT PASSED`. Keberhasilan satu decoder tidak otomatis membuktikan
+lifecycle gabungan atau trajectory 50 langkah.
 
-Laporan tersimpan terpisah per-run dan tidak menimpa laporan baseline. Jika app
-berhenti, buka kembali lalu bagikan laporan yang dipulihkan; fase native terakhir
-untuk run yang sama ikut ditampilkan. Uji memori/performa dan penerimaan musik
-native memerlukan hasil perangkat; host PASS bukan full numerical/native PASS.
-Target akhir lagu penuh dengan bass/drum/gitar tetap.
+Decode berjendela 256 frame juga sudah diperiksa pada CPU terhadap audio acuan
+penuh 30s: enam area inti, lima daerah sambungan dan waveform keseluruhan lolos
+batas asli tanpa padding latent/fade/smoothing. Ini kandidat yang sudah diuji,
+belum dipilih untuk perangkat; uji berikutnya tetap mengisolasi decoder 750 frame
+asli sebelum mengganti graph. Tidak perlu mengulang uji CPU itu.
 
 ### Riwayat: source dan persiapan native 30s sudah selesai
 

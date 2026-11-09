@@ -3,6 +3,7 @@ import hashlib
 import json
 
 PROFILE = 'drums-reference30-components'
+DECODER_PROFILE = 'drums-reference30-decoder'
 BUNDLE = 'drums-reference30-frozen-diagnostic'
 REFERENCE_SHA256 = 'f2f84e6c34b2fe42678dc38a48d9ca35b20c14ba53f10843aee8b218a24d53ed'
 CAPTURE_REPORT_SHA256 = 'f5f84314fa37f49f73502a77f7e3364b31450898231731d64e216bf1b606bfdf'
@@ -17,6 +18,8 @@ FIXTURES = {'capture/' + name: shape for name, shape in {
 }.items()}
 KEEP = set(FIXTURES) | {'capture/report.json'} | {
     asset + '/' + name for asset in ASSETS for name in ('main.hash', 'main.mlirb', 'metadata.json')}
+DECODER_KEEP = {'capture/final-latent.f32le', 'capture/final-audio.f32le', 'capture/report.json'} | {
+    'decoder.aimodel/' + name for name in ('main.hash', 'main.mlirb', 'metadata.json')}
 
 
 def validate_reference(raw):

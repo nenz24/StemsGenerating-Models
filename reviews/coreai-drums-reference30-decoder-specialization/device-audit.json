@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "run_id": "6F079DC7-13AC-4556-81F0-2A27D25FAC12",
+  "report_sha256": "ce88ce4d69b8902673ef5a17e83bfe45a911ff48b10389dc39252fc90e16bf1b",
+  "reported_os": "27.0.1 (24A446)",
+  "status": "BLOCKED_DECODER_SPECIALIZATION",
+  "completed_calls": 15,
+  "requested_calls": 16,
+  "model_opens_recorded": 16,
+  "function_binds_recorded": 15,
+  "comparisons_completed": 5,
+  "comparisons_passed": 5,
+  "comparisons_target": 6,
+  "component_metrics": [
+    {
+      "component": "DiT conditional step1",
+      "status": "PASS",
+      "max_absolute_error": 3.24249267578125e-05,
+      "rmse": 1.9783578888960043e-06,
+      "normalized_rmse": 1.7360669341977408e-06
+    },
+    {
+      "component": "DiT unconditional step1",
+      "status": "PASS",
+      "max_absolute_error": 3.528594970703125e-05,
+      "rmse": 1.8574631575236136e-06,
+      "normalized_rmse": 1.6751992680985387e-06
+    },
+    {
+      "component": "APG latent_next",
+      "status": "PASS",
+      "max_absolute_error": 2.384185791015625e-07,
+      "rmse": 1.06172215790086e-08,
+      "normalized_rmse": 1.0821209073867949e-08
+    },
+    {
+      "component": "APG momentum_next",
+      "status": "PASS",
+      "max_absolute_error": 0.0,
+      "rmse": 0.0,
+      "normalized_rmse": 0.0
+    },
+    {
+      "component": "APG guided_velocity",
+      "status": "PASS",
+      "max_absolute_error": 1.430511474609375e-06,
+      "rmse": 1.289525564576085e-07,
+      "normalized_rmse": 1.0278022287700883e-07
+    }
+  ],
+  "reported_pointwise_violation_counts": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "decoder_inferences_completed": 0,
+  "first_decoder_failure": "Initial bind: BNNS graphLoadFailed",
+  "targeted_cache_repairs": 1,
+  "successful_retries": 0,
+  "retry_decoder_failure": "Model-open/specialization: CoreAIDelegates.AIModelError.failedToSpecialize",
+  "process_guard_triggered": false,
+  "sampled_process_maximum_mib": 954.8666915893555,
+  "sample_interval_ms": 10,
+  "total_test_ms": 18606.224583,
+  "reported_DiT_backend_ms_sum": 2085.504418,
+  "reported_DiT_backend_call_count": 14,
+  "thermal_start": 0,
+  "thermal_end": 0,
+  "low_power": false,
+  "cause_limit": "Cause unresolved: long decoder shape/compiler, cache state and preceding-model process context are not isolated by this run. Sampled footprint does not establish transient peak.",
+  "decoder_numerical_parity": "NOT EVALUATED",
+  "overall_original_component_test": "NOT COMPLETED / NOT PASSED",
+  "full_native_trajectory": "NOT EVALUATED",
+  "native_musical_acceptance": "NOT EVALUATED",
+  "baseline_modified": false,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "next_action": "Fresh-process decoder-only run of the exact same750-frame asset/input/reference; one call, no retry/cache deletion, no DiT/APG resources",
+  "unchanged_native_manifest_sha256": "f2f84e6c34b2fe42678dc38a48d9ca35b20c14ba53f10843aee8b218a24d53ed",
+  "decoder_artifact_sha256": {
+    "decoder.aimodel/metadata.json": "988f3fb3a6df0ea0c851ea2460981a3f7ff02d8b01208e0eefa4208e0b29f8ea",
+    "decoder.aimodel/main.mlirb": "ee3a1aaf26854af3a6f5e808e025c7afbeeca6949731ee42add8e540f023c8c5",
+    "decoder.aimodel/main.hash": "3a0e291999730a6bf1f53810192944c6e59749bb4bc1c84146d892e0a0fc47cd"
+  }
+}

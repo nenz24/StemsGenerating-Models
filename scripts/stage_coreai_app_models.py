@@ -14,11 +14,12 @@ import re
 import shutil
 from coreai_preview_window import SHORT, LONG
 from coreai_drum_reference30_contract import PROFILE as DRUM30_PROFILE, BUNDLE as DRUM30_BUNDLE, FIXTURES as DRUM30_FIXTURES, KEEP as DRUM30_KEEP, validate_reference as validate_drum30
+from coreai_drum_reference30_contract import DECODER_PROFILE as DRUM30_DECODER_PROFILE, DECODER_KEEP as DRUM30_DECODER_KEEP
 
 PROFILES = ('auto', 'bass-aot', 'bass-source', 'bass-source-1024', 'dit-precision-1024', 'dit-interleaving-1024', 'runtime', 'all')
 INSTRUMENT_PROFILES = tuple(i+'-source-1024' for i in ('drums','guitar-strum','guitar-pick'))
 PROFILES += INSTRUMENT_PROFILES
-PROFILES += (DRUM30_PROFILE,)
+PROFILES += (DRUM30_PROFILE, DRUM30_DECODER_PROFILE)
 STAMP = 'app-resource-manifest.json'
 PREVIEW_FIXTURES = {'initial-noise.f32le', 'timesteps.f32le',
                     'audio-reference.f32le', 'audio-fp32-reference.f32le'} | {
@@ -83,6 +84,7 @@ def plan_resources(source, profile='auto'):
                                         {'schema_version':1,'resource_profile':'dit-precision-1024','audio_seconds':10.24},
                                         {'schema_version':1,'resource_profile':'dit-interleaving-1024','audio_seconds':10.24},
                                         {'schema_version':1,'resource_profile':DRUM30_PROFILE,'audio_seconds':30.},
+                                        {'schema_version':1,'resource_profile':DRUM30_DECODER_PROFILE,'audio_seconds':30.},
                                         *({'schema_version':1,'resource_profile':p,'audio_seconds':10.24} for p in INSTRUMENT_PROFILES))
                     or chosen.get('schema_version')!=1
                     or (diagnostic_trajectory and chosen.get('resource_profile') not in ('bass-source-1024',*INSTRUMENT_PROFILES))):
@@ -117,11 +119,12 @@ def plan_resources(source, profile='auto'):
                 raise ValueError(f'Directory symlink is unsupported: {path}')
             if path.is_file() and path.name != '.DS_Store' and path != source / STAMP:
                 add(path.relative_to(source).as_posix())
-    elif profile == DRUM30_PROFILE:
+    elif profile in (DRUM30_PROFILE, DRUM30_DECODER_PROFILE):
         validate_drum30(relative_file(source, DRUM30_BUNDLE + '/reference.json').read_bytes())
-        bundle(DRUM30_BUNDLE, DRUM30_KEEP)
+        keep = DRUM30_DECODER_KEEP if profile == DRUM30_DECODER_PROFILE else DRUM30_KEEP
+        bundle(DRUM30_BUNDLE, keep)
         for name, shape in DRUM30_FIXTURES.items():
-            if planned[DRUM30_BUNDLE + '/' + name]['size'] != math.prod(shape) * 4:
+            if name in keep and planned[DRUM30_BUNDLE + '/' + name]['size'] != math.prod(shape) * 4:
                 raise ValueError('Native30 component fixture size mismatch; build output preserved')
     elif profile == 'dit-interleaving-1024':
         from coreai_interleaving_contract import validate
