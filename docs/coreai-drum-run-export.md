@@ -41,3 +41,7 @@ feedback and numerical/resource acceptance must be assessed separately. A CPU
 decoder replay using the actual native final latent can distinguish effects of
 trajectory drift from same-input decoder differences; export alone does not
 establish their cause. There is no need to press Generate again for this export.
+
+After the same-input decoder evidence is reviewed, the next diagnostic is the
+[CPU sampler replay](coreai-drum-sampler-replay.md). It uses the existing capture
+and exported ZIP, without another iPhone run or native model export.
