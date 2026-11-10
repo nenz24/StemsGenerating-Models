@@ -3556,11 +3556,13 @@ extension CoreAIDecoderProbe {
         var sampling = RetentionStats(), decoding = RetentionStats(), repairs = CacheRepairStats()
         defer { samplingPool.removeAll(); decodingPool.removeAll() }
         var steps = 0, comparisons = 0, passed = 0, completed = false
+        var velocityTraceHashes: [String:String] = [:]
         var drumURL: URL?, mixURL: URL?, pianoURL: URL?
         let output = reference30Directory(runID)
         var lines = ["Runtime: CoreAI frozen drums30 generation; run \(runID)",
             "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
-            "Revision: reference30-live50-window256-v1; frozen accepted piano/condition/noise; no source/Qwen recomputation",
+            "Revision: reference30-live50-window256-v2; frozen accepted piano/condition/noise; no source/Qwen recomputation",
+            "Diagnostic capture: all50 actual DiT velocity outputs before APG; CPU copies only, no feedback substitution",
             "BF16 learned DiT storage, FP32 compute/APG/I/O, FP32 VAE; original abs1e-4/rel1e-3/nRMSE1e-3",
             "50 live Euler/APG updates; guidance7, shift1, momentum-0.75, cap2.5, time projection dim1",
             "Actual step1 serial scopes then max15 retained sampling handles; release before one retained window decoder",
@@ -3662,6 +3664,10 @@ extension CoreAIDecoderProbe {
                     guard samplingPool.count <= 15 else { throw ShardError.invalidManifest }
                 }
                 guard let velocity = state["velocity"] else { throw ProbeError.invalidOutputTensor }
+                let traceName = String(format:"native-step-%02d-velocity.f32le",i+1)
+                let traceURL = output.appendingPathComponent(traceName)
+                try writeReference30Floats(try copiedValues(velocity,shape:[2,750,64]),to:traceURL)
+                velocityTraceHashes[traceName] = try streamingSHA256(traceURL)
                 let breadcrumbs = interleavingPhaseProgress(prefix:"Run \(runID); step\(i+1)/50 APG live feedback",fileName:"drum-reference30-generation-\(runID)-phase.txt")
                 let next = try await runPreviewSamplingStage(update,folder:sampler,
                     inputs:["velocity":velocity,"latent":latent,"momentum":momentum,"dt":NDArray(scalars:[times[i]-times[i+1]],shape:[1])],
@@ -3681,6 +3687,16 @@ extension CoreAIDecoderProbe {
             try checkManifest(sampling.modelOpens,30+repairs.attempts,"reference30.sampling_opens")
             try checkManifest(sampling.functionBinds,30,"reference30.sampling_binds")
             try checkManifest(sampling.cacheHits,720,"reference30.sampling_hits")
+            try checkManifest(velocityTraceHashes.count,50,"reference30.velocity_trace_count")
+            let traceURL = output.appendingPathComponent("velocity-trace.json")
+            let traceMetadata: [String:Any] = [
+                "schema_version":1,"profile":"native-frozen30-velocity-trace","run_id":runID,
+                "steps":50,"shape":[2,750,64],"dtype":"float32_le",
+                "semantics":"Actual conditional/unconditional DiT outputs before APG; diagnostic copies, no feedback reset",
+                "artifact_sha256":velocityTraceHashes]
+            let traceData = try JSONSerialization.data(withJSONObject:traceMetadata,options:[.sortedKeys])
+            try traceData.write(to:traceURL,options:.atomic)
+            lines.append("Velocity trace SHA256: \(try streamingSHA256(traceURL)); tensors50/50; no feedback substitution")
             samplingPool.removeAll()
             lines.append("Sampling handles released before window decode; native eviction unverified")
             saveReference30(lines,runID:runID)

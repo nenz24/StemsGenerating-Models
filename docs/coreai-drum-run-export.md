@@ -25,6 +25,9 @@ UUID is the `run` identifier on the first line of the device report. The helper
 also accepts the exact run folder or its Documents directory as `--source`.
 
 The ZIP contains the unchanged report, eight tensors and a transport manifest.
+Revisionv2 additionally requires all50 actual native velocity tensors and a
+device report-bound `velocity-trace.json`; the ZIP then has58 tensors and three
+metadata files. See the [velocity trace guide](coreai-drum-velocity-trace.md).
 Model weights, unrelated Documents and listening WAV copies are excluded. The
 raw audio included in the ZIP is private user-derived audio; share the archive
 privately for diagnosis and never commit it or its contents to GitHub.

@@ -47,6 +47,9 @@ tanpa bobot, source context atau WAV. Jangan commit ZIP atau isinya ke GitHub.
 Report mencatat tepat 50 langkah dan 700 panggilan partisi CPU (14 per langkah),
 terpisah dari hitungan runtime native. `host_vs_gold` mempertahankan acuan asli;
 `host_vs_native` membandingkan sparse checkpoint terhadap run iPhone tersimpan.
+`host_vs_*_strict_verdict` pada format lama hanya menilai lima latent, bukan
+momentum atau audio. Field `*_acceptance` baru memisahkan kedua verdict state;
+decoded audio tetap `NOT EVALUATED`. Latent PASS tidak mewariskan PASS ke audio.
 Selisih finite dicatat sebagai `NOT PASSED` sambil loop independen dilanjutkan;
 nonfinite atau kontrak input salah menghentikan replay.
 
@@ -61,3 +64,7 @@ Empat test baru memeriksa mode tanpa dependency, feedback independen, isolasi
 observer, penolakan schedule salah dan penghentian pada nonfinite. Test memakai
 nilai sintetis dan tidak membuktikan parity learned model. Replay sampler penuh
 memerlukan bobot base lokal; belum diuji di cloud yang hanya memiliki VAE.
+
+Untuk memisahkan DiT dari kontribusi aritmetika APG pada run native, lanjutkan
+dengan [rekaman velocity](coreai-drum-velocity-trace.md). Run lama tanpa50 velocity
+tidak menyediakan data yang cukup untuk replay APG pada trace native yang sama.

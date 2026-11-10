@@ -17,36 +17,70 @@ ROOT = Path(__file__).resolve().parents[1]
 STEPS = (1, 5, 10, 25, 50)
 
 
+def replay_verdicts(latent_checks, momentum_check):
+    """Sparse latent acceptance cannot imply momentum or decoded-audio acceptance."""
+    def passes(metric):
+        return (metric.get('finite') is True and metric.get('parity_passed') is True
+                and metric.get('elementwise_fraction_over_bound') == 0
+                and isinstance(metric.get('normalized_rmse'), (int, float))
+                and 0 <= metric['normalized_rmse'] <= 1e-3)
+    latent_ok = set(latent_checks) == {str(s) for s in STEPS} and all(passes(m) for m in latent_checks.values())
+    momentum_ok = passes(momentum_check)
+    return {'latent_checkpoint_verdict': 'PASS' if latent_ok else 'NOT PASSED',
+            'final_momentum_verdict': 'PASS' if momentum_ok else 'NOT PASSED',
+            'sampled_state_verdict': 'PASS' if latent_ok and momentum_ok else 'NOT PASSED',
+            'waveform_verdict': 'NOT EVALUATED',
+            'scope': 'Five sparse latent checkpoints plus final momentum only; not every intermediate or decoded audio'}
+
+
 def native_capture(archive_path):
     import numpy as np
     import torch
-    from package_coreai_drum_reference30_run import SHAPES
+    from package_coreai_drum_reference30_run import SHAPES, VELOCITY_SHAPES, validate_velocity_trace
     path = Path(archive_path)
     if path.stat().st_size > 32 * 1024 * 1024:
         raise ValueError('Native archive exceeds32MiB')
     with zipfile.ZipFile(path) as archive:
-        names = set(SHAPES) | {'report.txt', 'run-manifest.json'}
-        if set(archive.namelist()) != names or len(archive.infolist()) != len(names):
-            raise ValueError('Unexpected/duplicated native archive entries')
         for name in ('report.txt', 'run-manifest.json'):
             if archive.getinfo(name).file_size > 1024 * 1024:
                 raise ValueError('Native metadata exceeds1MiB')
         manifest = json.loads(archive.read('run-manifest.json'))
         raw_report = archive.read('report.txt')
+        shapes = dict(SHAPES)
+        trace_steps = manifest.get('velocity_trace_steps', 0)
+        if trace_steps not in (0, 50):
+            raise ValueError('Incomplete native velocity trace')
+        if trace_steps == 50:
+            shapes.update(VELOCITY_SHAPES)
+        names = set(shapes) | {'report.txt', 'run-manifest.json'}
+        if trace_steps:
+            names.add('velocity-trace.json')
+        if set(archive.namelist()) != names or len(archive.infolist()) != len(names):
+            raise ValueError('Unexpected/duplicated native archive entries')
         if (manifest.get('schema_version') != 1 or manifest.get('profile') != 'private-coreai-frozen30-live-run'
-                or set(manifest.get('artifacts', {})) != set(SHAPES)
+                or set(manifest.get('artifacts', {})) != set(shapes)
                 or hashlib.sha256(raw_report).hexdigest() != manifest.get('report_sha256')):
             raise ValueError('Native archive manifest/report mismatch')
         import uuid
         run_id = str(uuid.UUID(manifest['run_id'])).upper()
         report = raw_report.decode('utf-8')
         for line in (f'Runtime: CoreAI frozen drums30 generation; run {run_id}',
-                     'Revision: reference30-live50-window256-v1;',
                      'Reference30 execution: COMPLETED; steps50/50; sampling calls750/750; decoder calls6/6'):
             if line not in report:
                 raise ValueError('Not a matching completed native frozen30 run')
+        revision = 2 if trace_steps else 1
+        if f'Revision: reference30-live50-window256-v{revision};' not in report:
+            raise ValueError('Native revision/trace mismatch')
+        trace = None
+        if trace_steps:
+            if archive.getinfo('velocity-trace.json').file_size > 1024 * 1024:
+                raise ValueError('Velocity metadata exceeds1MiB')
+            raw = archive.read('velocity-trace.json')
+            if hashlib.sha256(raw).hexdigest() != manifest.get('velocity_trace_sha256'):
+                raise ValueError('Velocity metadata checksum mismatch')
+            trace = validate_velocity_trace(raw, report, run_id)
         values = {}
-        for name, shape in SHAPES.items():
+        for name, shape in shapes.items():
             entry = manifest['artifacts'][name]
             if (entry.get('shape') != shape or entry.get('dtype') != 'float32_le'
                     or entry.get('bytes') != math.prod(shape)*4
@@ -55,6 +89,8 @@ def native_capture(archive_path):
             raw = archive.read(name)
             if hashlib.sha256(raw).hexdigest() != entry['sha256']:
                 raise ValueError('Native tensor checksum mismatch: ' + name)
+            if trace and name in VELOCITY_SHAPES and entry['sha256'] != trace['artifact_sha256'][name]:
+                raise ValueError('Velocity tensor/device metadata mismatch')
             array = np.frombuffer(raw, dtype='<f4').copy().reshape(shape)
             if not np.isfinite(array).all():
                 raise ValueError('Nonfinite native tensor: ' + name)
@@ -187,6 +223,8 @@ def execute(args):
         report['status'] = 'completed'
         for key in ('host_vs_gold', 'host_vs_native'):
             report[key+'_strict_verdict'] = 'PASS' if all(m['parity_passed'] for m in report[key].values()) else 'NOT PASSED'
+            report[key+'_acceptance'] = replay_verdicts(report[key], report['final_momentum_vs_'+key.removeprefix('host_vs_')])
+        report['legacy_strict_verdict_scope'] = 'host_vs_*_strict_verdict covers only the five latent checkpoints; see *_acceptance for momentum. Waveform not evaluated.'
         report['artifact_sha256'] = {p.name: sha256(p) for p in out.glob('*.f32le')}
         report['full_native_trajectory_parity'] = 'NOT EVALUATED; CPU replay does not accept native intermediates'
         save()
@@ -199,8 +237,10 @@ def execute(args):
             with (out/'sampler-replay-review.zip').open('xb') as destination:
                 import shutil
                 shutil.copyfileobj(temp, destination)
-        print('Complete. Original strict verdicts:', report['host_vs_gold_strict_verdict'],
+        print('Complete. Sparse latent verdicts:', report['host_vs_gold_strict_verdict'],
               '(gold),', report['host_vs_native_strict_verdict'], '(native).', flush=True)
+        print('Final momentum verdicts:', report['host_vs_gold_acceptance']['final_momentum_verdict'],
+              '(gold),', report['host_vs_native_acceptance']['final_momentum_verdict'], '(native). No waveform test.', flush=True)
         print('Private review ZIP:', out/'sampler-replay-review.zip', flush=True)
     except BaseException as error:
         report.update(status='failed', error_type=type(error).__name__, error=str(error))

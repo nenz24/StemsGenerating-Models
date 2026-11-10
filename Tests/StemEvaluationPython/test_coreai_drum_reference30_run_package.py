@@ -1,5 +1,6 @@
 """Transport tests using synthetic zero tensors, never learned-model evidence."""
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import struct
@@ -88,6 +89,64 @@ class RunPackageTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'outside'):
             module.package(self.container, self.container / 'new.zip', RUN)
         self.assertEqual((self.run / 'report.txt').read_text(), self.report)
+
+    def add_trace(self):
+        hashes = {}
+        for name in module.VELOCITY_SHAPES:
+            raw = bytes(2*750*64*4)
+            (self.run/name).write_bytes(raw)
+            hashes[name] = hashlib.sha256(raw).hexdigest()
+        raw = json.dumps({'schema_version':1,'profile':'native-frozen30-velocity-trace',
+                          'run_id':RUN,'steps':50,'shape':[2,750,64],'dtype':'float32_le',
+                          'artifact_sha256':hashes}).encode()
+        (self.run/'velocity-trace.json').write_bytes(raw)
+        self.report = self.report.replace('window256-v1;', 'window256-v2;')
+        self.report += 'Velocity trace SHA256: '+hashlib.sha256(raw).hexdigest()+'; tensors50/50; no feedback substitution\n'
+        (self.run/'report.txt').write_text(self.report)
+
+    def test_v2_trace_binds_all50_velocities_to_device_report(self):
+        self.add_trace()
+        manifest = module.package(self.container,self.out,RUN)
+        self.assertEqual(manifest['velocity_trace_steps'],50)
+        self.assertEqual(len(manifest['artifacts']),58)
+        with zipfile.ZipFile(self.out) as archive:
+            self.assertEqual(len(archive.namelist()),61)
+            raw=archive.read('velocity-trace.json')
+            self.assertEqual(hashlib.sha256(raw).hexdigest(),manifest['velocity_trace_sha256'])
+
+    @unittest.skipUnless(importlib.util.find_spec('torch'), 'Optional Torch environment')
+    def test_cpu_reader_accepts_v2_and_rejects_missing_velocity(self):
+        from replay_coreai_drum_reference30_sampler import native_capture
+        self.add_trace()
+        module.package(self.container,self.out,RUN)
+        values,manifest=native_capture(self.out)
+        self.assertEqual(len(values),58)
+        self.assertEqual(manifest['velocity_trace_steps'],50)
+        broken=self.root/'broken.zip'
+        with zipfile.ZipFile(self.out) as source,zipfile.ZipFile(broken,'w') as dest:
+            for name in source.namelist():
+                if name!='native-step-50-velocity.f32le':
+                    dest.writestr(name,source.read(name))
+        with self.assertRaisesRegex(ValueError,'archive entries'):
+            native_capture(broken)
+
+    def test_incomplete_or_altered_trace_cannot_publish(self):
+        self.add_trace()
+        path=self.run/'native-step-50-velocity.f32le'
+        raw=path.read_bytes()
+        path.write_bytes(struct.pack('<f',1)+raw[4:])
+        with self.assertRaisesRegex(ValueError,'differs from device'):
+            module.package(self.container,self.out,RUN)
+        path.unlink()
+        with self.assertRaisesRegex(ValueError,'Missing'):
+            module.package(self.container,self.out,RUN)
+        self.assertFalse(self.out.exists())
+
+    def test_latest_pointer_selects_exact_matching_run(self):
+        pointer=self.run.parent.parent/'last-drums-reference30-generation.json'
+        pointer.write_text(json.dumps({'run_id':RUN}))
+        manifest=module.package(self.container,self.out,'latest')
+        self.assertEqual(manifest['run_id'],RUN)
 
 
 if __name__ == '__main__':
