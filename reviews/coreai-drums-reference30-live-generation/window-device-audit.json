@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "run_id": "54FC8924-CB96-4C75-B9A0-3B22FB1783DD",
+  "report_sha256": "84cf722df731a75cb01faca4f2c3769c0360b4ebe08b1bf43df0c615440c7d90",
+  "os": "27.0.1 (24A446)",
+  "component_strict_parity": "PASS",
+  "comparisons_passed": 12,
+  "comparisons_total": 12,
+  "pointwise_violation_counts": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "component_metrics": [
+    {
+      "component": "Window core1",
+      "status": "PASS",
+      "max_absolute_error": 4.4405460357666016e-05,
+      "rmse": 4.6789399610858733e-07,
+      "normalized_rmse": 2.751935432453048e-06
+    },
+    {
+      "component": "Window core2",
+      "status": "PASS",
+      "max_absolute_error": 3.173947334289551e-05,
+      "rmse": 3.6648184149917445e-07,
+      "normalized_rmse": 2.1694985049280544e-06
+    },
+    {
+      "component": "Window core3",
+      "status": "PASS",
+      "max_absolute_error": 5.453824996948242e-05,
+      "rmse": 4.703316345255779e-07,
+      "normalized_rmse": 2.7356182124804173e-06
+    },
+    {
+      "component": "Window core4",
+      "status": "PASS",
+      "max_absolute_error": 1.6003847122192383e-05,
+      "rmse": 3.125325099022592e-07,
+      "normalized_rmse": 1.8769590159618687e-06
+    },
+    {
+      "component": "Window core5",
+      "status": "PASS",
+      "max_absolute_error": 2.282857894897461e-05,
+      "rmse": 3.2522576467235347e-07,
+      "normalized_rmse": 1.4478792036478576e-06
+    },
+    {
+      "component": "Window core6",
+      "status": "PASS",
+      "max_absolute_error": 8.046627044677734e-06,
+      "rmse": 2.517443185009158e-07,
+      "normalized_rmse": 2.0760366062847497e-06
+    },
+    {
+      "component": "Window seam1",
+      "status": "PASS",
+      "max_absolute_error": 2.086162567138672e-07,
+      "rmse": 4.170409636626674e-08,
+      "normalized_rmse": 4.5726229167461045e-06
+    },
+    {
+      "component": "Window seam2",
+      "status": "PASS",
+      "max_absolute_error": 1.862645149230957e-07,
+      "rmse": 4.490333180577166e-08,
+      "normalized_rmse": 2.1398040412555536e-06
+    },
+    {
+      "component": "Window seam3",
+      "status": "PASS",
+      "max_absolute_error": 3.855675458908081e-07,
+      "rmse": 6.689503856634448e-08,
+      "normalized_rmse": 2.7179137045440975e-06
+    },
+    {
+      "component": "Window seam4",
+      "status": "PASS",
+      "max_absolute_error": 4.600733518600464e-07,
+      "rmse": 8.032271917441995e-08,
+      "normalized_rmse": 1.236924694766018e-06
+    },
+    {
+      "component": "Window seam5",
+      "status": "PASS",
+      "max_absolute_error": 5.364418029785156e-07,
+      "rmse": 1.1135716488520463e-07,
+      "normalized_rmse": 6.576213993607837e-07
+    },
+    {
+      "component": "Window full30s assembled audio",
+      "status": "PASS",
+      "max_absolute_error": 5.453824996948242e-05,
+      "rmse": 3.769026351511356e-07,
+      "normalized_rmse": 2.1635351531882464e-06
+    }
+  ],
+  "native_calls": 6,
+  "opens": 1,
+  "binds": 1,
+  "reuse_hits": 5,
+  "sampled_process_maximum_mib": 775.2525787353516,
+  "existing_budget_mib": 2000,
+  "sampled_memory_gate": "PASS",
+  "decoder_readiness": "PASS for isolated saved-input window decoder",
+  "backend_ms": [
+    2641.305291,
+    2352.994417,
+    2359.43825,
+    2409.958667,
+    2472.437709,
+    2522.430417
+  ],
+  "backend_sum_ms": 14758.564751,
+  "total_ms": 15370.753958,
+  "thermal_start": 0,
+  "thermal_end": 0,
+  "low_power": false,
+  "retries": 0,
+  "cache_deletions": 0,
+  "full_native_trajectory": "NOT EVALUATED",
+  "native_music_listening": "NOT EVALUATED",
+  "baseline_modified": false,
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "comparison_limit": "Separate runs, thermal/cache conditions uncontrolled; previous standalone750 sampled peak2696.770MiB cannot be added or directly interpreted as combined residency. Equal aggregate waveform error statistics are not a byte-identity proof."
+}

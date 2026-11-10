@@ -60,6 +60,13 @@ enum CoreAIPreviewWindow: String, Sendable {
         return object["selected_profile"] as? String == "drums-reference30-window-decoder"
     }
 
+    static var drumReference30GenerationEnabled: Bool {
+        guard let root = Bundle.main.resourceURL,
+              let data = try? Data(contentsOf: root.appendingPathComponent("ModelCandidates/app-resource-manifest.json")),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return false }
+        return object["selected_profile"] as? String == "drums-reference30-generation"
+    }
+
     static var bundled: Self {
         guard let root = Bundle.main.resourceURL,
               let data = try? Data(contentsOf: root.appendingPathComponent("ModelCandidates/app-resource-manifest.json")),

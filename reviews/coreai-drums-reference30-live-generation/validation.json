@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "tests": {
+    "command": "python -m unittest discover -s Tests/StemEvaluationPython -p 'test_coreai*.py'",
+    "run": 227,
+    "passed": 225,
+    "skipped": 2,
+    "failed": 0
+  },
+  "new_generation_tests": 7,
+  "coverage": [
+    "Original50-step settings/BF16/FP32/gains/gates and live-feedback contract fixed",
+    "65-file generation view excludes full750 decoder and unrelated models",
+    "Missing/truncated checkpoint or changed decoder identity rejects before app pruning",
+    "Build stager CLI with site packages disabled",
+    "Both prepared bundles verified before generation selection and old selector backed up",
+    "Different existing configuration and changed/missing bundles preserved/rejected",
+    "Activation --help is read-only and works without site packages"
+  ],
+  "actual_device_component_evidence": "54FC8924 window decoder12/12 strict and sampled-memory PASS; earlier DiT/APG5/5 strict PASS",
+  "native_generation_here": 0,
+  "apple_sdk_builds_here": 0,
+  "device_generation_runs_here": 0,
+  "expected_sampling_calls": 750,
+  "expected_decoder_calls": 6,
+  "expected_normal_opens": 31,
+  "expected_normal_binds": 31,
+  "expected_normal_reuse_hits": 725,
+  "comparison_scope": "Five saved live-latent checkpoints plus final raw waveform; not every unsaved intermediate",
+  "live_gold_resets": false,
+  "baseline_modified": false,
+  "full_native_trajectory": "NOT EVALUATED",
+  "native_music_acceptance": "NOT EVALUATED",
+  "full_song_three_instrument_acceptance": "NOT EVALUATED",
+  "absolute_tolerance": 0.0001,
+  "relative_tolerance": 0.001,
+  "relative_rmse_tolerance": 0.001,
+  "private_audio_vectors_weights_native_assets_committed": false
+}

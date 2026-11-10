@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "parser_versions": {
+    "tree-sitter": "0.26.0",
+    "tree-sitter-swift": "0.7.4"
+  },
+  "scope": "Swift grammar only; not Apple SDK typecheck/build/device execution",
+  "files": [
+    {
+      "file": "prototypes/ios27-coreai/CoreAIDecoderProbe.swift",
+      "sha256": "d9308823a3ced868dffab06285051d747e26474e977d7d57670f7a13b4f75d40",
+      "syntax_errors": false
+    },
+    {
+      "file": "prototypes/ios27-coreai/CoreAIDeviceProbeApp.swift",
+      "sha256": "aeadddc3fd1d938bcfd4614f569d993fa786066446bb50a5d3e5496fa2404cc6",
+      "syntax_errors": false
+    },
+    {
+      "file": "prototypes/ios27-coreai/CoreAIPreviewWindow.swift",
+      "sha256": "9268a7ec488618ed8e5098b9427d5d0b84c4439e3b1411ca603ac7e1e459bed3",
+      "syntax_errors": false
+    }
+  ],
+  "all_syntax_passed": true,
+  "apple_builds_here": 0,
+  "device_runs_here": 0
+}

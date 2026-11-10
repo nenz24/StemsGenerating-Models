@@ -1,0 +1,50 @@
+Runtime: CoreAI drums30 window decoder diagnostic; run 54FC8924-CB96-4C75-B9A0-3B22FB1783DD
+OS: Version 27.0.1 (Build 24A446)
+Revision: drums30-window256-v1; six decoder calls, one retained model/function; no DiT/APG/generation/WAV
+FP32 VAE, fixed accepted full750-frame final latent; window256, core128, halo64; no extra latent padding/crossfade/filter
+Original abs1e-4/rel1e-3/nRMSE1e-3; compare six retained cores, five seam regions and full30s assembled audio
+cpuOnly requested; placement/cache residency unmeasured; no retry/cache deletion
+Memory readiness requires sampled process peak below the existing2000MiB budget; sampled peak is not exact transient/native peak
+Thermal start: 0; low power: false
+Phase: Window1/6 start0, keep0:128; one retained decoder
+Component Window core1: PASS; max abs 4.4405460357666016e-05; RMSE 4.6789399610858733e-07; normalized RMSE 2.751935432453048e-06
+Pointwise violations 0/491520; worst bound ratio 0.3148071890357861, flat index 1922; actual 0.018487642; reference 0.018524954; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Window1 backend-await ms 2641.305291
+Phase: Window2/6 start64, keep128:256; one retained decoder
+Component Window core2: PASS; max abs 3.173947334289551e-05; RMSE 3.6648184149917445e-07; normalized RMSE 2.1694985049280544e-06
+Pointwise violations 0/491520; worst bound ratio 0.15355480342082783, flat index 256067; actual -0.018772468; reference -0.018790709; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Window2 backend-await ms 2352.994417
+Phase: Window3/6 start192, keep256:384; one retained decoder
+Component Window core3: PASS; max abs 5.453824996948242e-05; RMSE 4.703316345255779e-07; normalized RMSE 2.7356182124804173e-06
+Pointwise violations 0/491520; worst bound ratio 0.3668507020921195, flat index 103340; actual -0.0037355407; reference -0.0036974992; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Window3 backend-await ms 2359.43825
+Phase: Window4/6 start320, keep384:512; one retained decoder
+Component Window core4: PASS; max abs 1.6003847122192383e-05; RMSE 3.125325099022592e-07; normalized RMSE 1.8769590159618687e-06
+Pointwise violations 0/491520; worst bound ratio 0.07746497517725666, flat index 196390; actual 0.0012733523; reference 0.0012655078; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Window4 backend-await ms 2409.958667
+Phase: Window5/6 start448, keep512:640; one retained decoder
+Component Window core5: PASS; max abs 2.282857894897461e-05; RMSE 3.2522576467235347e-07; normalized RMSE 1.4478792036478576e-06
+Pointwise violations 0/491520; worst bound ratio 0.11557267213756217, flat index 120093; actual -0.008195565; reference -0.008183062; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Window5 backend-await ms 2472.437709
+Phase: Window6/6 start494, keep640:750; one retained decoder
+Component Window core6: PASS; max abs 8.046627044677734e-06; RMSE 2.517443185009158e-07; normalized RMSE 2.0760366062847497e-06
+Pointwise violations 0/422400; worst bound ratio 0.06101410127283973, flat index 128520; actual -0.0019739224; reference -0.001967701; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Window6 backend-await ms 2522.430417
+Component Window seam1: PASS; max abs 2.086162567138672e-07; RMSE 4.170409636626674e-08; normalized RMSE 4.5726229167461045e-06
+Pointwise violations 0/15360; worst bound ratio 0.0019209058377240836, flat index 7811; actual -0.008603271; reference -0.0086030625; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Component Window seam2: PASS; max abs 1.862645149230957e-07; RMSE 4.490333180577166e-08; normalized RMSE 2.1398040412555536e-06
+Pointwise violations 0/15360; worst bound ratio 0.0016927958470838958, flat index 7967; actual -0.0017813036; reference -0.0017811313; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Component Window seam3: PASS; max abs 3.855675458908081e-07; RMSE 6.689503856634448e-08; normalized RMSE 2.7179137045440975e-06
+Pointwise violations 0/15360; worst bound ratio 0.003429493390001067, flat index 10473; actual -0.012426583; reference -0.012426969; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Component Window seam4: PASS; max abs 4.600733518600464e-07; RMSE 8.032271917441995e-08; normalized RMSE 1.236924694766018e-06
+Pointwise violations 0/15360; worst bound ratio 0.004206220676932818, flat index 388; actual -0.0070548584; reference -0.007054408; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Component Window seam5: PASS; max abs 5.364418029785156e-07; RMSE 1.1135716488520463e-07; normalized RMSE 6.576213993607837e-07
+Pointwise violations 0/15360; worst bound ratio 0.002630220556525892, flat index 784; actual 0.008349833; reference 0.008350118; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Component Window full30s assembled audio: PASS; max abs 5.453824996948242e-05; RMSE 3.769026351511356e-07; normalized RMSE 2.1635351531882464e-06
+Pointwise violations 0/2880000; worst bound ratio 0.3668507020921195, flat index 594860; actual -0.0037355407; reference -0.0036974992; original abs1e-4+rel1e-3*abs(reference), nRMSE1e-3
+Window decoder collection: COMPLETED; calls 6/6; opens 1, binds 1, reuse hits 5
+Window decoder strict parity: PASS; 12/12 comparisons passed; target12
+Sampled process maximum MiB (10ms): 775.2525787353516; sampled budget <2000MiB: PASS
+Window decoder readiness: PASS; sampled memory is not exact peak or combined-pipeline residency evidence
+Native full50-step trajectory/music listening: NOT EVALUATED; retries0, cache deletions0; BF16 baseline/FP32 VAE/bounds unchanged
+Thermal end: 0; total window decoder ms 15370.753958

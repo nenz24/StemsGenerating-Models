@@ -3490,6 +3490,267 @@ extension CoreAIDecoderProbe {
     }
 }
 
+extension CoreAIDecoderProbe {
+    struct Reference30GenerationResult: Sendable {
+        let report: String
+        let folder: URL?
+        let drumURL: URL?
+        let mixURL: URL?
+        let pianoURL: URL?
+    }
+    private struct Reference30Configuration: Decodable {
+        let schemaVersion: Int; let profile: String; let scope: String
+        let samplerBundle: String; let samplerReferenceSha256: String
+        let decoderBundle: String; let decoderReferenceSha256: String; let captureReportSha256: String; let sourceAudioSha256: String
+        let latentFrames: Int; let conditionTokens: Int; let inferenceSteps: Int; let checkpoints: [Int]
+        let referenceListeningGain: Double; let pianoMixGain: Double; let drumMixGain: Double
+        let absoluteTolerance: Double; let relativeTolerance: Double; let relativeRmseTolerance: Double
+        let feedback: String; let baselineModified: Bool
+    }
+
+    private static func reference30Directory(_ runID: String) -> URL? {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("DrumReference30Generation/" + runID, isDirectory: true)
+    }
+    private static func saveReference30(_ lines: [String], runID: String) {
+        guard let folder = reference30Directory(runID) else { return }
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try? lines.joined(separator: "\n").write(to: folder.appendingPathComponent("report.txt"), atomically: true, encoding: .utf8)
+        if let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+           let data = try? JSONSerialization.data(withJSONObject: ["run_id":runID]) {
+            try? data.write(to: root.appendingPathComponent("last-drums-reference30-generation.json"), options: .atomic)
+        }
+    }
+    static func latestReference30Generation() -> Reference30GenerationResult? {
+        guard let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+              let data = try? Data(contentsOf: root.appendingPathComponent("last-drums-reference30-generation.json")),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String:String],
+              let id = object["run_id"], UUID(uuidString: id) != nil, let folder = reference30Directory(id),
+              let folderValues = try? folder.resourceValues(forKeys: [.isDirectoryKey,.isSymbolicLinkKey]),
+              folderValues.isDirectory == true, folderValues.isSymbolicLink != true,
+              let text = try? String(contentsOf: folder.appendingPathComponent("report.txt"), encoding: .utf8) else { return nil }
+        var report = text
+        if !text.contains("Reference30 execution: COMPLETED"),
+           let phase = try? String(contentsOf: root.appendingPathComponent("drum-reference30-generation-\(id)-phase.txt"), encoding: .utf8) {
+            report += "\nLast persisted native phase for this run:\n" + phase
+        }
+        func file(_ name: String) -> URL? {
+            let url = folder.appendingPathComponent(name)
+            guard let values = try? url.resourceValues(forKeys: [.isRegularFileKey,.isSymbolicLinkKey]),
+                  values.isRegularFile == true, values.isSymbolicLink != true else { return nil }
+            return url
+        }
+        let hasAudio = text.contains("Reference30 execution: COMPLETED") && text.contains("WAV generated on device: YES")
+        return Reference30GenerationResult(report: report, folder: folder, drumURL: hasAudio ? file("drums.wav") : nil,
+            mixURL: hasAudio ? file("piano-with-drums.wav") : nil, pianoURL: hasAudio ? file("piano.wav") : nil)
+    }
+    private static func writeReference30Floats(_ values: [Float], to url: URL) throws {
+        guard values.allSatisfy({ $0.isFinite }) else { throw ProbeError.invalidFloatData }
+        try values.withUnsafeBufferPointer { try Data(buffer: $0).write(to: url, options: .atomic) }
+    }
+
+    static func generateDrumReference30(progress: @escaping @MainActor @Sendable (String) -> Void) async -> Reference30GenerationResult {
+        let clock = ContinuousClock(), start = ContinuousClock().now, runID = UUID().uuidString
+        let memory = CoreAIProcessFootprintSampler()
+        var samplingPool: [String:RetainedStage] = [:], decodingPool: [String:RetainedStage] = [:]
+        var sampling = RetentionStats(), decoding = RetentionStats(), repairs = CacheRepairStats()
+        defer { samplingPool.removeAll(); decodingPool.removeAll() }
+        var steps = 0, comparisons = 0, passed = 0, completed = false
+        var drumURL: URL?, mixURL: URL?, pianoURL: URL?
+        let output = reference30Directory(runID)
+        var lines = ["Runtime: CoreAI frozen drums30 generation; run \(runID)",
+            "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+            "Revision: reference30-live50-window256-v1; frozen accepted piano/condition/noise; no source/Qwen recomputation",
+            "BF16 learned DiT storage, FP32 compute/APG/I/O, FP32 VAE; original abs1e-4/rel1e-3/nRMSE1e-3",
+            "50 live Euler/APG updates; guidance7, shift1, momentum-0.75, cap2.5, time projection dim1",
+            "Actual step1 serial scopes then max15 retained sampling handles; release before one retained window decoder",
+            "Gold states are comparisons only at1/5/10/25/50; no state/momentum reset from gold. Numerical parity covers these checkpoints and final audio, not every unsaved intermediate.",
+            "Finite strict failures remain NOT PASSED while independent trajectory measurements continue; invalid/native/nonfinite/memory errors stop",
+            "cpuOnly requested; placement/native eviction unmeasured. No broad cache deletion or precision/tolerance changes.",
+            "Thermal start: \(ProcessInfo.processInfo.thermalState.rawValue); low power: \(ProcessInfo.processInfo.isLowPowerModeEnabled)"]
+        saveReference30(lines, runID: runID)
+        do {
+            guard CoreAIPreviewWindow.drumReference30GenerationEnabled, let root = Bundle.main.resourceURL, let output else { throw ShardError.missingPreparedBundle }
+            let base = root.appendingPathComponent("ModelCandidates", isDirectory: true)
+            guard let stamp = try JSONSerialization.jsonObject(with: Data(contentsOf: base.appendingPathComponent("app-resource-manifest.json"))) as? [String:Any],
+                  stamp["selected_profile"] as? String == "drums-reference30-generation",
+                  let files = stamp["files"] as? [String:[String:Any]],
+                  let configSHA = files["drums-reference30-generation.json"]?["sha256"] as? String else { throw ShardError.invalidManifest }
+            try verifyReferenceIdentity(base.appendingPathComponent("drums-reference30-generation.json"), expected: configSHA)
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let config = try decoder.decode(Reference30Configuration.self, from: Data(contentsOf: base.appendingPathComponent("drums-reference30-generation.json")))
+            try checkManifest(config.schemaVersion, 1, "reference30.schema")
+            try checkManifest(config.profile, "drums-reference30-generation", "reference30.profile")
+            try checkManifest(config.scope, "frozen_reference_diagnostic", "reference30.scope")
+            try checkManifest(config.samplerBundle, "drums-reference30-frozen-diagnostic", "reference30.sampler")
+            try checkManifest(config.decoderBundle, "drums-reference30-window-decoder-256", "reference30.decoder")
+            try checkManifest(config.samplerReferenceSha256, "f2f84e6c34b2fe42678dc38a48d9ca35b20c14ba53f10843aee8b218a24d53ed", "reference30.original_export")
+            try checkManifest(config.captureReportSha256, "f5f84314fa37f49f73502a77f7e3364b31450898231731d64e216bf1b606bfdf", "reference30.capture")
+            try checkManifest(config.sourceAudioSha256, "9d62d4eccd36188a4170a08ee6a22fcc66b5ad8af3b0753dc6b021a7f507f4a8", "reference30.piano")
+            try checkManifest(config.latentFrames, 750, "reference30.frames")
+            try checkManifest(config.conditionTokens, 127, "reference30.tokens")
+            try checkManifest(config.inferenceSteps, 50, "reference30.steps")
+            try checkManifest(config.checkpoints, [1,5,10,25,50], "reference30.checkpoints")
+            try checkManifest(config.absoluteTolerance, 1e-4, "reference30.atol")
+            try checkManifest(config.relativeTolerance, 1e-3, "reference30.rtol")
+            try checkManifest(config.relativeRmseTolerance, 1e-3, "reference30.nrmse")
+            try checkManifest(config.feedback, "live_native_latent_and_momentum_no_gold_resets", "reference30.feedback")
+            guard !config.baselineModified, config.referenceListeningGain == 0.36943485303214846,
+                  config.pianoMixGain == 0.5, config.drumMixGain == 0.5 else { throw ShardError.invalidManifest }
+            let sampler = base.appendingPathComponent(config.samplerBundle, isDirectory: true)
+            let codec = base.appendingPathComponent(config.decoderBundle, isDirectory: true)
+            try verifyReferenceIdentity(sampler.appendingPathComponent("reference.json"), expected: config.samplerReferenceSha256)
+            try verifyReferenceIdentity(codec.appendingPathComponent("reference.json"), expected: config.decoderReferenceSha256)
+            let ref = try decoder.decode(Drum30Contract.self, from: Data(contentsOf: sampler.appendingPathComponent("reference.json")))
+            let window = try decoder.decode(WindowDecoderContract.self, from: Data(contentsOf: codec.appendingPathComponent("reference.json")))
+            try checkManifest(ref.stages.count, 14, "reference30.stages")
+            try checkManifest(ref.weightStorageDtype, "bfloat16", "reference30.storage")
+            try checkManifest(ref.computeDtype, "float32", "reference30.compute")
+            try checkManifest(window.inputShapes, ["latent":[1,64,256]], "reference30.window_input")
+            try checkManifest(window.outputShapes, ["audio":[1,2,491520]], "reference30.window_output")
+            guard window.windowPlan.count == 6, window.hostNumericalGatePassed, window.architectureGuardPassed,
+                  window.coverageExactlyOnce, !window.crossfade, !window.extraLatentPadding,
+                  window.weightStorageDtype == "float32", window.computeDtype == "float32",
+                  window.vaeCheckpointSha256 == "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0" else { throw ShardError.invalidManifest }
+            let starts = [0,64,192,320,448,494]
+            for (i,t) in window.windowPlan.enumerated() {
+                guard t.windowStart == starts[i], t.windowFrames == 256, t.coreStart == i*128,
+                      t.coreEnd == min(i*128+128,750), t.cropStart == t.coreStart-t.windowStart else { throw ShardError.invalidManifest }
+            }
+            await progress("Memverifikasi sampler, decoder, dan input acuan…")
+            for asset in ref.stages.map({ $0.assetFile }) + [ref.apg.assetFile] {
+                for file in ["main.hash","main.mlirb","metadata.json"] {
+                    let name = asset + "/" + file
+                    guard let expected = ref.artifactSha256[name] else { throw ShardError.invalidManifest }
+                    try checkManifest(try streamingSHA256(sampler.appendingPathComponent(name)), expected, "reference30.sampler_sha256")
+                }
+            }
+            for (name,expected) in window.artifactSha256 { try checkManifest(try streamingSHA256(codec.appendingPathComponent(name)), expected, "reference30.decoder_sha256") }
+            let inputNames = ["initial-noise","condition","source-context","timesteps","source48"] + config.checkpoints.map { String(format:"step-%02d-latent",$0) }
+            for name in inputNames {
+                let file = "capture/" + name + ".f32le"
+                guard let expected = ref.artifactSha256[file] else { throw ShardError.invalidManifest }
+                try checkManifest(try streamingSHA256(sampler.appendingPathComponent(file)), expected, "reference30.input_sha256")
+            }
+            try verifyReferenceIdentity(sampler.appendingPathComponent("capture/report.json"), expected: config.captureReportSha256)
+            func input(_ name: String, _ count: Int) throws -> [Float] { try readFloats(folder: sampler, name: "capture/"+name+".f32le", count: count, hashes: ref.artifactSha256) }
+            let times = try input("timesteps",51)
+            guard times[0] == 1, times[50] == 0, zip(times,times.dropFirst()).allSatisfy({ $0.0 > $0.1 }) else { throw ShardError.invalidManifest }
+            let condition = NDArray(scalars: try input("condition",127*2048), shape:[1,127,2048])
+            let context = NDArray(scalars: try input("source-context",750*128), shape:[1,750,128])
+            var latent = NDArray(scalars: try input("initial-noise",48000), shape:[1,750,64])
+            var momentum = NDArray(scalars:[Float](repeating:0,count:48000), shape:[1,750,64])
+            let update = Contract.Stage(assetFile:ref.apg.assetFile, layerIndices:[], inputShapes:ref.apg.inputShapes, outputShapes:ref.apg.outputShapes, outputBindings:nil)
+            lines.append("SHA256: all15 sampler assets, bounded decoder, exact inputs and five gold checkpoints VERIFIED; original full750 decoder never opened")
+            saveReference30(lines, runID:runID)
+            for i in 0..<50 {
+                let stepStart = clock.now, before = sampling.phaseTotals.backendAwaitMs
+                let reuse = i > 0
+                if i == 1 { try checkManifest(samplingPool.count,0,"reference30.cold_step_handles"); lines.append("Actual step1 completed with zero retained handles; retaining from step2") }
+                await progress("Membuat drum acuan 30 detik: langkah \(i+1)/50…")
+                var state = ["noise":latent,"condition":condition,"context":context,"timestep":NDArray(scalars:[times[i]],shape:[1])]
+                for (j,stage) in ref.stages.enumerated() {
+                    try requirePreviewMemoryBudget()
+                    let phase = "Run \(runID); step\(i+1)/50 stage\(j+1)/14 \(stage.assetFile); handles\(samplingPool.count)"
+                    let breadcrumbs = interleavingPhaseProgress(prefix:phase,fileName:"drum-reference30-generation-\(runID)-phase.txt")
+                    breadcrumbs("Before native sampler call")
+                    var inputs: [String:NDArray] = [:]
+                    for (name,shape) in stage.inputShapes { guard let value = state[name], value.shape == shape else { throw ShardError.invalidManifest }; inputs[name] = value }
+                    let result = try await runPreviewSamplingStage(stage,folder:sampler,inputs:inputs,aot:nil,reuseStages:reuse,
+                        pool:&samplingPool,stats:&sampling,allowCacheRepair:true,cacheRepair:&repairs,phaseProgress:breadcrumbs)
+                    for (name,value) in result.values { guard let binding = stage.outputBindings?[name] else { throw ShardError.invalidManifest };state[binding] = value }
+                    guard samplingPool.count <= 15 else { throw ShardError.invalidManifest }
+                }
+                guard let velocity = state["velocity"] else { throw ProbeError.invalidOutputTensor }
+                let breadcrumbs = interleavingPhaseProgress(prefix:"Run \(runID); step\(i+1)/50 APG live feedback",fileName:"drum-reference30-generation-\(runID)-phase.txt")
+                let next = try await runPreviewSamplingStage(update,folder:sampler,
+                    inputs:["velocity":velocity,"latent":latent,"momentum":momentum,"dt":NDArray(scalars:[times[i]-times[i+1]],shape:[1])],
+                    aot:nil,reuseStages:reuse,pool:&samplingPool,stats:&sampling,allowCacheRepair:true,cacheRepair:&repairs,phaseProgress:breadcrumbs)
+                guard let x = next.values["latent_next"], let m = next.values["momentum_next"] else { throw ProbeError.invalidOutputTensor }
+                latent = x; momentum = m; steps = i+1
+                lines.append("Step\(steps)/50: total ms \(ms(stepStart.duration(to:clock.now))); backend delta ms \(sampling.phaseTotals.backendAwaitMs-before)")
+                if config.checkpoints.contains(steps) {
+                    let actual = try copiedValues(latent,shape:[1,750,64])
+                    try writeReference30Floats(actual,to:output.appendingPathComponent(String(format:"native-step-%02d-latent.f32le",steps)))
+                    try drum30Comparison("Live latent step\(steps)",actual:actual,expected:try input(String(format:"step-%02d-latent",steps),48000),
+                        comparisons:&comparisons,passed:&passed,lines:&lines)
+                }
+                if config.checkpoints.contains(steps) || steps % 5 == 0 { saveReference30(lines,runID:runID) }
+            }
+            try checkManifest(sampling.completedCalls,750,"reference30.sampling_calls")
+            try checkManifest(sampling.modelOpens,30+repairs.attempts,"reference30.sampling_opens")
+            try checkManifest(sampling.functionBinds,30,"reference30.sampling_binds")
+            try checkManifest(sampling.cacheHits,720,"reference30.sampling_hits")
+            samplingPool.removeAll()
+            lines.append("Sampling handles released before window decode; native eviction unverified")
+            saveReference30(lines,runID:runID)
+            let final = try copiedValues(latent,shape:[1,750,64])
+            try writeReference30Floats(final,to:output.appendingPathComponent("final-latent.f32le"))
+            try writeReference30Floats(try copiedValues(momentum,shape:[1,750,64]),to:output.appendingPathComponent("final-momentum.f32le"))
+            lines.append("LIVE final latent SHA256: \(try streamingSHA256(output.appendingPathComponent("final-latent.f32le")))")
+            let codecStage = Contract.Stage(assetFile:window.assetFile,layerIndices:[],inputShapes:window.inputShapes,outputShapes:window.outputShapes,outputBindings:nil)
+            var audio = [Float](repeating:0,count:2880000)
+            for (i,t) in window.windowPlan.enumerated() {
+                try requirePreviewMemoryBudget()
+                await progress("Mendekode drum hasil 50 langkah: \(i+1)/6…")
+                var data = [Float](repeating:0,count:16384)
+                for c in 0..<64 { for f in 0..<256 { data[c*256+f] = final[(t.windowStart+f)*64+c] } }
+                let hash = data.withUnsafeBufferPointer { SHA256.hash(data:Data(buffer:$0)).map { String(format:"%02x",$0) }.joined() }
+                lines.append("Decode window\(i+1): LIVE final-latent slice SHA256 \(hash); gold tile input is not substituted")
+                saveReference30(lines,runID:runID)
+                let breadcrumbs = interleavingPhaseProgress(prefix:"Run \(runID); live decoder window\(i+1)/6",fileName:"drum-reference30-generation-\(runID)-phase.txt")
+                let result = try await runPreviewSamplingStage(codecStage,folder:codec,inputs:["latent":NDArray(scalars:data,shape:[1,64,256])],
+                    aot:nil,reuseStages:true,pool:&decodingPool,stats:&decoding,allowCacheRepair:false,cacheRepair:&repairs,phaseProgress:breadcrumbs)
+                guard let tensor = result.values["audio"] else { throw ProbeError.invalidOutputTensor }
+                let values = try copiedValues(tensor,shape:[1,2,491520])
+                for c in 0..<2 { for j in 0..<((t.coreEnd-t.coreStart)*1920) { audio[c*1440000+t.coreStart*1920+j] = values[c*491520+t.cropStart*1920+j] } }
+                try requirePreviewMemoryBudget()
+                lines.append("Decode window\(i+1) backend-await ms \(result.phases.backendAwaitMs)")
+            }
+            decodingPool.removeAll()
+            try checkManifest(decoding.completedCalls,6,"reference30.decode_calls")
+            try checkManifest(decoding.modelOpens,1,"reference30.decode_opens")
+            try checkManifest(decoding.functionBinds,1,"reference30.decode_binds")
+            try checkManifest(decoding.cacheHits,5,"reference30.decode_hits")
+            let expected = try readFloats(folder:codec,name:"final-audio.f32le",count:2880000,hashes:window.artifactSha256)
+            try drum30Comparison("LIVE full30s decoded audio",actual:audio,expected:expected,comparisons:&comparisons,passed:&passed,lines:&lines)
+            try checkManifest(comparisons,6,"reference30.checkpoint_audio_comparisons")
+            try writeReference30Floats(audio,to:output.appendingPathComponent("raw-drums.f32le"))
+            let piano = try input("source48",2880000)
+            var mix = zip(piano,audio).map { Float(config.pianoMixGain)*$0.0+Float(config.drumMixGain)*$0.1 }
+            let drumPeak = audio.reduce(Float(0)){max($0,abs($1))}
+            let pianoPeak = piano.reduce(Float(0)){max($0,abs($1))}
+            let mixPeak = mix.reduce(Float(0)){max($0,abs($1))}
+            let peak = max(drumPeak,max(pianoPeak,mixPeak))
+            let gain = min(Float(config.referenceListeningGain),Float(pow(10.0,-3.0/20.0))/max(peak,1e-12))
+            let drum = output.appendingPathComponent("drums.wav"), mixed = output.appendingPathComponent("piano-with-drums.wav"), source = output.appendingPathComponent("piano.wav")
+            try writeStereoFloatWAV(audio.map{$0*gain},frames:1440000,to:drum)
+            try writeStereoFloatWAV(piano.map{$0*gain},frames:1440000,to:source)
+            for i in mix.indices { mix[i] *= gain }; try writeStereoFloatWAV(mix,frames:1440000,to:mixed)
+            drumURL = drum; mixURL = mixed; pianoURL = source; completed = true
+            lines.append("Listening copies: shared gain\(gain), diagnostic0.5piano+0.5drum; no second source gain; production mix unchanged. Raw comparisons precede attenuation.")
+            lines.append("Artifact SHA256: drums \(try streamingSHA256(drum)); mix \(try streamingSHA256(mixed)); piano \(try streamingSHA256(source))")
+        } catch {
+            samplingPool.removeAll(); decodingPool.removeAll()
+            if let failure = error as? StageExecutionFailure { lines.append("Failing asset: \(failure.asset); operation: \(failure.operation)"); lines.append(contentsOf:failure.details) }
+            else { lines.append(contentsOf:modelErrorDetails(error)) }
+        }
+        let usage = memory.finish(), numerical = completed && passed == 6
+        let memoryPassed = usage.peak.map{$0 < 2000*1048576} ?? false
+        lines.append(contentsOf:repairs.events)
+        lines.append("Reference30 execution: \(completed ? "COMPLETED" : "NOT COMPLETED"); steps\(steps)/50; sampling calls\(sampling.completedCalls)/750; decoder calls\(decoding.completedCalls)/6")
+        lines.append("Sampling opens\(sampling.modelOpens), binds\(sampling.functionBinds), hits\(sampling.cacheHits); decoder opens\(decoding.modelOpens), binds\(decoding.functionBinds), hits\(decoding.cacheHits)")
+        lines.append("Original checkpoint/audio strict parity: \(completed ? (numerical ? "PASS" : "NOT PASSED") : "NOT EVALUATED"); \(passed)/\(comparisons) comparisons passed; target6. Sparse checkpoints are not every intermediate latent.")
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10ms): \(Double(peak)/1048576); sampled budget <2000MiB: \(memoryPassed ? "PASS" : "NOT PASSED")") }
+        else { lines.append("Sampled memory readiness: NOT EVALUATED; footprint unavailable") }
+        lines.append("Reference30 numerical/resource readiness: \(numerical && memoryPassed ? "PASS" : "NOT PASSED"); native music listening/full-song bass-drums-guitar: NOT EVALUATED")
+        lines.append("WAV generated on device: \(completed ? "YES; diagnostic listening copies" : "NO"); targeted initial-bind repair\(repairs.attempts)/1, successful retries\(repairs.successfulRetries); no inference retry or baseline replacement")
+        lines.append("Thermal end: \(ProcessInfo.processInfo.thermalState.rawValue); total reference30 ms \(ms(start.duration(to:clock.now)))")
+        saveReference30(lines,runID:runID)
+        return Reference30GenerationResult(report:lines.joined(separator:"\n"),folder:output,drumURL:drumURL,mixURL:mixURL,pianoURL:pianoURL)
+    }
+}
+
 // Timer state lives on one serial queue. The owning task starts/stops the timer;
 // it returns only numeric snapshots, never the timer or mutable state.
 private final class CoreAIProcessFootprintSampler: @unchecked Sendable {

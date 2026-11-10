@@ -1,5 +1,10 @@
 # Standalone full30s decoder passes, with a high sampled footprint
 
+**Device window test completed:** [12 strict comparisons and sampled-memory gate pass](../coreai-drums-reference30-live-generation/README.md).
+The next action is one independent 50-step native reference generation; do not
+repeat standalone decoder/component tests or model export. Details below describe
+the completed decoder preparation stage.
+
 [Device report](decoder-isolation-report.txt), run `22991DB1`, successfully opens,
 binds and runs the original 750-frame decoder alone. All 2,880,000 waveform values
 pass original abs 1e-4 / rel 1e-3 / nRMSE 1e-3 bounds: max abs `5.453825e-5`, nRMSE
