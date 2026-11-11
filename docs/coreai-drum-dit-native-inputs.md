@@ -51,3 +51,8 @@ Pengujian unit memakai nilai sintetis untuk alignment, mode plan dan penolakan
 mutasi input; tidak membuktikan parity learned DiT. Uji learned memerlukan
 checkpoint base lokal yang tidak tersedia di cloud. Baseline BF16 dan semua
 gate native sebelumnya tetap; kelulusan APG tidak menggantikan gate trajectory.
+
+Jika semua kasus input identik lolos, gunakan [dekomposisi efek input](coreai-drum-feedback-decomposition.md)
+untuk mengukur selisih komputasi terhadap respons model pada drift latent yang
+sudah teramati. Mode itu hanya menjalankan sembilan evaluasi publisher CPU dan
+tidak memerlukan run iPhone baru.

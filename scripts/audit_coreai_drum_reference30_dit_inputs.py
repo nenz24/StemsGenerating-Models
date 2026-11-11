@@ -56,6 +56,31 @@ def measure_cases(predict, cases):
     return outputs
 
 
+def decompose_velocity_error(native_velocity, cpu_native_input, cpu_reference_input):
+    """Additive error identity; component RMSE values are not additive."""
+    import numpy as np
+    tensors=(native_velocity,cpu_native_input,cpu_reference_input)
+    if any(t.shape!=tensors[0].shape for t in tensors):
+        raise ValueError('Velocity decomposition shapes differ')
+    native,same,reference=(t.detach().double().numpy() for t in tensors)
+    if not all(np.isfinite(t).all() for t in (native,same,reference)):
+        raise ValueError('Nonfinite velocity decomposition')
+    operator=native-same
+    feedback=same-reference
+    total=native-reference
+    rms=lambda a:float(np.sqrt(np.mean(a*a)))
+    operator_rms,feedback_rms,total_rms=map(rms,(operator,feedback,total))
+    dot=float(np.mean(operator*feedback))
+    return {'same_input_operator_rmse':operator_rms,'observed_input_drift_effect_rmse':feedback_rms,
+            'total_rmse':total_rms,
+            'input_drift_to_operator_rmse_ratio':feedback_rms/operator_rms if operator_rms else None,
+            'operator_feedback_error_cosine':dot/(operator_rms*feedback_rms) if operator_rms and feedback_rms else None,
+            'cross_term_mean':2*dot,
+            'reconstruction_max_absolute_error':float(np.max(np.abs(total-(operator+feedback)))),
+            'identity':'native-CPU(reference_input) = [native-CPU(native_input)] + [CPU(native_input)-CPU(reference_input)]',
+            'scope':'One observed DiT input perturbation, not a global stability bound or full50-step counterfactual. RMSE terms do not add linearly.'}
+
+
 def execute(args):
     import torch
     from safetensors import safe_open
@@ -99,6 +124,8 @@ def execute(args):
     out.mkdir(parents=True)
     report = {'schema_version':1,'profile':'frozen30-dit-exact-native-inputs','status':'loading',
               'native_archive_sha256':sha256(args.native_archive),'native_run_id':manifest['run_id'],
+              'original_native_strict_verdict':manifest['original_strict_parity'],
+              'original_native_comparisons_passed':manifest['original_comparisons_passed'],
               'velocity_trace_sha256':manifest['velocity_trace_sha256'],'native_report_sha256':manifest['report_sha256'],
               'capture_report_sha256':sha256(args.capture/'report.json'),'base_checkpoint_sha256':base_record['digest'],
               'absolute_tolerance':1e-4,'relative_tolerance':1e-3,'relative_rmse_tolerance':1e-3,
@@ -107,6 +134,10 @@ def execute(args):
               'publisher_control_dtype':'float32 with original learned values',
               'full_publisher_calls':0,'partition_calls':0,'APG_calls':0,'VAE_calls':0,'native_calls':0,'native_exports':0,
               'baseline_modified':False,'cases':{},'torch':torch.__version__}
+    if args.input_drift_only:
+        report.update(profile='frozen30-dit-observed-feedback-decomposition',
+                      scope='Five native-input CPU evaluations plus four accepted-reference-input CPU evaluations. No partition replay or independent50-step trajectory.',
+                      partition_weight_storage_dtype='NOT USED; existing BF16 baseline unchanged')
     def save():
         temp=out/'report.json.tmp';temp.write_text(json.dumps(report,indent=2)+'\n');temp.replace(out/'report.json')
     save()
@@ -125,9 +156,53 @@ def execute(args):
         def full_predict(x,t):
             value=publisher_predict(x,t)
             report['full_publisher_calls']+=1
-            print(f'Publisher CPU same-input case{report["full_publisher_calls"]}/5',flush=True)
+            target=9 if args.input_drift_only else 5
+            print(f'Publisher CPU evaluation{report["full_publisher_calls"]}/{target}',flush=True)
             return value
         full=measure_cases(full_predict,cases)
+        if args.input_drift_only:
+            # The initial noise is identical. Only the other four reference
+            # inputs need new CPU evaluations, using the same model/cache/math.
+            reference_cases=[dict(case,latent=read_tensor(args.capture,
+                              f'step-{case["input_post_step"]:02d}-latent.f32le'))
+                             for case in cases if case['step']!=1]
+            reference={1:full[1],**measure_cases(full_predict,reference_cases)}
+            reference_inputs={c['step']:c['latent'] for c in reference_cases}
+            reference_inputs[1]=cases[0]['latent']
+            for case in cases:
+                step=case['step'];native_velocity=case['native_velocity']
+                views=[('combined',slice(None)),('conditional',slice(0,1)),('unconditional',slice(1,2))]
+                report['cases'][str(step)]={
+                    'input_post_step':case['input_post_step'],'timestep':float(case['timestep'][0]),
+                    'native_input_sha256':tensor_sha(case['latent']),
+                    'reference_input_sha256':tensor_sha(reference_inputs[step]),
+                    'native_velocity_sha256':tensor_sha(native_velocity),
+                    'input_difference':precision_metrics(case['latent'],reference_inputs[step]),
+                    'velocity_comparisons':{
+                        label:{name:precision_metrics(a[sl],b[sl]) for name,sl in views}
+                        for label,a,b in [('native_vs_cpu_same_input',native_velocity,full[step]),
+                                         ('native_vs_cpu_reference_input',native_velocity,reference[step]),
+                                         ('cpu_native_vs_reference_input',full[step],reference[step])]},
+                    'decomposition':{name:decompose_velocity_error(native_velocity[sl],full[step][sl],reference[step][sl])
+                                     for name,sl in views}}
+                for label,value in [('cpu-native-input',full[step]),('cpu-reference-input',reference[step])]:
+                    value.numpy().astype('<f4').tofile(out/f'{label}-step-{step:02d}-velocity.f32le')
+            if report['full_publisher_calls']!=9 or report['partition_calls']!=0:
+                raise ValueError('Incomplete9-evaluation feedback decomposition')
+            report.update(status='completed',
+                          full_native_trajectory_parity='NOT EVALUATED; original native full-trajectory failures remain unchanged',
+                          reference_velocity_scope='CPU evaluated on accepted original checkpoint inputs; not claimed to be unsaved original trajectory outputs')
+            report['artifact_sha256']={p.name:sha256(p) for p in out.glob('*.f32le')}
+            save()
+            with tempfile.TemporaryFile() as temp:
+                with zipfile.ZipFile(temp,'w',compression=zipfile.ZIP_DEFLATED) as archive:
+                    for name in ['report.json',*report['artifact_sha256']]:archive.write(out/name,name)
+                temp.seek(0)
+                with (out/'feedback-decomposition-review.zip').open('xb') as destination:
+                    import shutil
+                    shutil.copyfileobj(temp,destination)
+            print('Private review ZIP:',out/'feedback-decomposition-review.zip',flush=True)
+            return
         # Release the publisher KV cache before replacing learned storage wrappers.
         del publisher_predict,full_predict
         convert_storage16(model,'bfloat16')
@@ -175,6 +250,8 @@ def execute(args):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--execute',action='store_true')
+    parser.add_argument('--input-drift-only',action='store_true',
+                        help='Nine CPU publisher evaluations to separate same-input operator differences from observed input drift; no partition/trajectory rerun')
     parser.add_argument('--native-archive',type=Path,required=True)
     parser.add_argument('--capture',type=Path,default=ROOT/'.runtime-cache/drums-reference30-v3')
     parser.add_argument('--publisher-dir',type=Path,default=ROOT/'.runtime-cache/coreai-generator-source-publisher')
@@ -182,6 +259,10 @@ def main():
     parser.add_argument('--out',type=Path,default=ROOT/'.runtime-cache/drums-reference30-dit-inputs-v1')
     args=parser.parse_args()
     if not args.execute:
+        if args.input_drift_only:
+            print('PLAN ONLY: nine CPU publisher evaluations on saved native/reference inputs; steps1/2/6/11/26.')
+            print('Separate same-input arithmetic differences from observed input drift. No iPhone, partition replay,50-step generation, precision/tolerance or baseline changes.')
+            return
         print('PLAN ONLY: five exact native inputs, steps1/2/6/11/26; five publisher CPU controls +70 BF16-storage FP32 partition calls.')
         print('No50-step generation, missing-state reconstruction, APG/VAE/source/Qwen, download, native export or baseline change.')
         return

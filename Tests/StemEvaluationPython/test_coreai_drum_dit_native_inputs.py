@@ -12,12 +12,13 @@ import audit_coreai_drum_reference30_dit_inputs as audit
 
 class PlanTests(unittest.TestCase):
     def test_plan_does_not_import_torch_or_read_inputs(self):
-        result=subprocess.run([sys.executable,'-S',str(ROOT/'scripts/audit_coreai_drum_reference30_dit_inputs.py'),
-                               '--native-archive','/nonexistent/archive.zip','--out','/nonexistent/never-write-dit-inputs'],
-                              text=True,capture_output=True)
-        self.assertEqual(result.returncode,0,result.stderr)
-        self.assertIn('PLAN ONLY',result.stdout)
-        self.assertFalse(Path('/nonexistent/never-write-dit-inputs').exists())
+        for options in ([],['--input-drift-only']):
+            result=subprocess.run([sys.executable,'-S',str(ROOT/'scripts/audit_coreai_drum_reference30_dit_inputs.py'),
+                                   '--native-archive','/nonexistent/archive.zip','--out','/nonexistent/never-write-dit-inputs',*options],
+                                  text=True,capture_output=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertIn('PLAN ONLY',result.stdout)
+            self.assertFalse(Path('/nonexistent/never-write-dit-inputs').exists())
 
 
 @unittest.skipUnless(importlib.util.find_spec('torch'),'Optional Torch environment')
@@ -50,6 +51,30 @@ class ExactInputTests(unittest.TestCase):
             return self.torch.zeros(2,750,64)
         with self.assertRaisesRegex(ValueError,'mutated'):
             audit.measure_cases(bad,cases)
+
+    def test_decomposition_adds_vectors_and_handles_zero_control(self):
+        tensor=self.torch.tensor
+        result=audit.decompose_velocity_error(tensor([5.,5.]),tensor([3.,3.]),tensor([0.,0.]))
+        self.assertEqual(result['same_input_operator_rmse'],2)
+        self.assertEqual(result['observed_input_drift_effect_rmse'],3)
+        self.assertEqual(result['total_rmse'],5)
+        self.assertEqual(result['input_drift_to_operator_rmse_ratio'],1.5)
+        self.assertEqual(result['reconstruction_max_absolute_error'],0)
+        control=audit.decompose_velocity_error(tensor([0.]),tensor([0.]),tensor([0.]))
+        self.assertIsNone(control['input_drift_to_operator_rmse_ratio'])
+        self.assertIsNone(control['operator_feedback_error_cosine'])
+
+    def test_cancelling_errors_must_not_be_reported_as_additive_rmse(self):
+        tensor=self.torch.tensor
+        result=audit.decompose_velocity_error(tensor([0.,0.]),tensor([1.,1.]),tensor([0.,0.]))
+        self.assertEqual(result['same_input_operator_rmse'],1)
+        self.assertEqual(result['observed_input_drift_effect_rmse'],1)
+        self.assertEqual(result['total_rmse'],0)
+        self.assertEqual(result['operator_feedback_error_cosine'],-1)
+        self.assertEqual(result['cross_term_mean'],-2)
+        self.assertEqual(result['reconstruction_max_absolute_error'],0)
+        with self.assertRaisesRegex(ValueError,'shapes differ'):
+            audit.decompose_velocity_error(tensor([0.]),tensor([0.,1.]),tensor([0.]))
 
 
 if __name__=='__main__':unittest.main()
