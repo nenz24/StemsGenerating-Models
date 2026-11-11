@@ -75,7 +75,7 @@ def digest(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
-def package(source, out, run_id):
+def package(source, out, run_id, require_velocity_trace=False):
     folder, run_id = run_folder(source, run_id)
     out = Path(out).absolute()
     if out.exists() or out.is_symlink():
@@ -93,6 +93,10 @@ def package(source, out, run_id):
     revision = re.search(r'^Revision: reference30-live50-window256-v([12]);', report, re.M)
     if not revision or not all(line in report for line in required):
         raise ValueError('Not the selected completed frozen30 run; original report preserved')
+    if require_velocity_trace and revision[1] != '2':
+        raise ValueError(f'Selected run {run_id} is revisionv1 without velocity data. '
+                         'Check the latest report on iPhone and download its new completed v2 container. '
+                         'No archive created; do not repeat generation if a completed v2 run already exists.')
     parity = re.search(r'^Original checkpoint/audio strict parity: (PASS|NOT PASSED); (\d)/6 comparisons passed;', report, re.M)
     final_sha = re.search(r'^LIVE final latent SHA256: ([a-f0-9]{64})$', report, re.M)
     if not parity or not final_sha:
@@ -156,8 +160,11 @@ def main():
     parser.add_argument('--source', type=Path, required=True, help='Downloaded .xcappdata, Documents or exact run folder')
     parser.add_argument('--run-id', required=True, help='UUID from original report, or latest for the container pointer')
     parser.add_argument('--out', type=Path, required=True, help='New private ZIP outside the container')
+    parser.add_argument('--require-velocity-trace', action='store_true',
+                        help='Reject historical v1 input before writing a ZIP; require all50 report-bound velocities')
     args = parser.parse_args()
-    manifest = package(args.source, args.out, args.run_id)
+    manifest = package(args.source, args.out, args.run_id, args.require_velocity_trace)
+    print(f'Run: {manifest["run_id"]}; velocity trace {manifest.get("velocity_trace_steps", 0)}/50')
     print(f'Ready: {args.out} ({args.out.stat().st_size} bytes; {len(manifest["artifacts"])} existing tensors)')
     print(f'Original strict parity retained: {manifest["original_strict_parity"]}. No generation or baseline changes.')
 

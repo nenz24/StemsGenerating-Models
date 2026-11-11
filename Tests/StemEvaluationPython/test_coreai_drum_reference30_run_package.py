@@ -148,6 +148,16 @@ class RunPackageTests(unittest.TestCase):
         manifest=module.package(self.container,self.out,'latest')
         self.assertEqual(manifest['run_id'],RUN)
 
+    def test_required_velocity_rejects_v1_before_creating_any_archive(self):
+        before=set(self.root.iterdir())
+        with self.assertRaisesRegex(ValueError,'revisionv1 without velocity'):
+            module.package(self.container,self.out,RUN,require_velocity_trace=True)
+        self.assertEqual(set(self.root.iterdir()),before)
+        self.assertEqual((self.run/'report.txt').read_text(),self.report)
+        self.add_trace()
+        manifest=module.package(self.container,self.out,RUN,require_velocity_trace=True)
+        self.assertEqual(manifest['velocity_trace_steps'],50)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -38,6 +38,7 @@ unduhan lama tetap ada. Kemas dengan mengganti path contoh ke unduhan baru:
 python3 scripts/package_coreai_drum_reference30_run.py \
   --source "/path/to/new/CoreAIProbe-container" \
   --run-id latest \
+  --require-velocity-trace \
   --out .runtime-cache/drums-native30-velocity-review-v2.zip &&
 open -R .runtime-cache/drums-native30-velocity-review-v2.zip
 ```
@@ -48,6 +49,12 @@ raw sebelum kompresi dan tetap dibatasi32MiB. Bagikan ZIP secara privat; jangan
 commit ke GitHub. Formatv1 delapan tensor tetap didukung. `--source` menerima
 folder container, `.xcappdata`, Documents atau direktori run tertentu (untuk
 run tertentu gunakan UUID eksplisit).
+
+`--require-velocity-trace` menolak runv1 sebelum membuat ZIP. Nama ZIPv2 tidak
+membuktikan isi runv2. Jika container masih memilih v1, periksa baris Revision
+di laporan terbaru langsung dalam app: bila sudahv2 selesai, cukup unduh
+container baru; tidak perlu Generate ulang. Bila app masihv1, update/build
+terbaru dahulu. Pakai nama output baru jika ZIP lama sudah ada.
 
 ## Replay setelah trace diterima
 
