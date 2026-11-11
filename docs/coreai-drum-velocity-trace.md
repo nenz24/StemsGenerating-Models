@@ -79,3 +79,7 @@ kelulusan seluruh native sampler atau penerimaan lagu penuh bass/drum/gitar.
 Tidak ada runv2 learned/native atau Apple SDK build yang dijalankan di cloud.
 Grammar Swift dan test sintetis memeriksa integrasi/transport/control flow;
 bukti numerik native berikutnya tetap berasal dari perangkat asli.
+
+Setelah kontribusi APG pada trace yang sama diperiksa, lanjutkan ke
+[DiT pada input native identik](coreai-drum-dit-native-inputs.md). ZIP velocity
+yang sudah ada menyediakan lima pasangan exact input/output tanpa run iPhone baru.
