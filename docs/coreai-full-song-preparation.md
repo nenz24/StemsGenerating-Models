@@ -73,3 +73,8 @@ Helper tidak memberi estimasi waktu dan tidak mengubah scheme/model/baseline.
 Tahap source berikutnya adalah [encoder berjendela](coreai-source-window-encoder.md):
 proof core/halo, audit terhadap capture asli, capture context host seluruh lagu,
 dan uji satu encoder native terpisah sebelum integrasi sampling tiga instrumen.
+
+Tahap conditioning tersedia pada [cache tiga instrumen127 token](coreai-full-song-conditioning.md).
+Helper menyiapkan prompt30s bass/drum/gitar pada Mac dengan checkpoint lokal,
+memeriksa ulang conditioning drum terhadap capture asli, dan mempertahankan
+status full-song native sebagai belum dievaluasi.
