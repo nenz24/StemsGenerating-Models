@@ -17,6 +17,7 @@ from coreai_drum_reference30_contract import PROFILE as DRUM30_PROFILE, BUNDLE a
 from coreai_drum_reference30_contract import DECODER_PROFILE as DRUM30_DECODER_PROFILE, DECODER_KEEP as DRUM30_DECODER_KEEP
 from coreai_drum_reference30_window_contract import PROFILE as WINDOW_PROFILE, BUNDLE as WINDOW_BUNDLE, DATA_SHAPES as WINDOW_SHAPES, validate as validate_window
 from coreai_drum_reference30_generation_contract import PROFILE as GENERATION_PROFILE, CONFIG as GENERATION_CONFIG, KEEP as GENERATION_KEEP, SHAPES as GENERATION_SHAPES, validate as validate_generation
+from coreai_source_window_contract import PROFILE as SOURCE_WINDOW_PROFILE, BUNDLE as SOURCE_WINDOW_BUNDLE, DATA_SHAPES as SOURCE_WINDOW_SHAPES, validate_reference as validate_source_window
 
 PROFILES = ('auto', 'bass-aot', 'bass-source', 'bass-source-1024', 'dit-precision-1024', 'dit-interleaving-1024', 'runtime', 'all')
 INSTRUMENT_PROFILES = tuple(i+'-source-1024' for i in ('drums','guitar-strum','guitar-pick'))
@@ -24,6 +25,7 @@ PROFILES += INSTRUMENT_PROFILES
 PROFILES += (DRUM30_PROFILE, DRUM30_DECODER_PROFILE)
 PROFILES += (WINDOW_PROFILE,)
 PROFILES += (GENERATION_PROFILE,)
+PROFILES += (SOURCE_WINDOW_PROFILE,)
 STAMP = 'app-resource-manifest.json'
 PREVIEW_FIXTURES = {'initial-noise.f32le', 'timesteps.f32le',
                     'audio-reference.f32le', 'audio-fp32-reference.f32le'} | {
@@ -91,6 +93,7 @@ def plan_resources(source, profile='auto'):
                                         {'schema_version':1,'resource_profile':DRUM30_DECODER_PROFILE,'audio_seconds':30.},
                                         {'schema_version':1,'resource_profile':WINDOW_PROFILE,'audio_seconds':30.},
                                         {'schema_version':1,'resource_profile':GENERATION_PROFILE,'audio_seconds':30.},
+                                        {'schema_version':1,'resource_profile':SOURCE_WINDOW_PROFILE,'audio_seconds':30.},
                                         *({'schema_version':1,'resource_profile':p,'audio_seconds':10.24} for p in INSTRUMENT_PROFILES))
                     or chosen.get('schema_version')!=1
                     or (diagnostic_trajectory and chosen.get('resource_profile') not in ('bass-source-1024',*INSTRUMENT_PROFILES))):
@@ -125,6 +128,12 @@ def plan_resources(source, profile='auto'):
                 raise ValueError(f'Directory symlink is unsupported: {path}')
             if path.is_file() and path.name != '.DS_Store' and path != source / STAMP:
                 add(path.relative_to(source).as_posix())
+    elif profile == SOURCE_WINDOW_PROFILE:
+        validate_source_window(load_reference(source,SOURCE_WINDOW_BUNDLE))
+        bundle(SOURCE_WINDOW_BUNDLE)
+        for name,shape in SOURCE_WINDOW_SHAPES.items():
+            if planned[SOURCE_WINDOW_BUNDLE+'/'+name]['size']!=math.prod(shape)*4:
+                raise ValueError('Source window fixture size mismatch; build output preserved')
     elif profile == GENERATION_PROFILE:
         validate_drum30(relative_file(source, DRUM30_BUNDLE + '/reference.json').read_bytes())
         validate_window(load_reference(source, WINDOW_BUNDLE))

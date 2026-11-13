@@ -28,14 +28,17 @@ struct CoreAIDeviceProbeApp: App {
         let decoderOnly = CoreAIPreviewWindow.drumReference30DecoderOnlyEnabled
         let windowDecoder = CoreAIPreviewWindow.drumReference30WindowEnabled
         let generation = CoreAIPreviewWindow.drumReference30GenerationEnabled
+        let sourceWindow = CoreAIPreviewWindow.sourceWindowEncoderEnabled
         let reference = generation ? CoreAIDecoderProbe.latestReference30Generation() : nil
-        let drum30 = CoreAIPreviewWindow.drumReference30ComponentsEnabled || decoderOnly || windowDecoder || generation
+        let drum30 = CoreAIPreviewWindow.drumReference30ComponentsEnabled || decoderOnly || windowDecoder || generation || sourceWindow
         let saved = drum30 ? nil : CoreAIDecoderProbe.latestSavedBassPreview(window: active)
         let prior = CoreAIDecoderProbe.savedDenoiserReport()
         let matchingPrior: String? = prior.flatMap { text in
             text.contains("Selected instrument: \(active.stemID);") || (active.stemID == "bass" && !text.contains("Selected instrument:")) ? text : nil
         }
-        _report = State(initialValue: generation
+        _report = State(initialValue: sourceWindow
+            ? (CoreAIDecoderProbe.savedSourceWindowReport() ?? "Pemeriksaan source encoder belum dijalankan.")
+            : generation
             ? (reference?.report ?? "Drum acuan 30 detik belum dibuat.")
             : windowDecoder
             ? (CoreAIDecoderProbe.savedDrumWindowReport() ?? "Pemeriksaan decoder berjendela belum dijalankan.")
@@ -54,6 +57,7 @@ struct CoreAIDeviceProbeApp: App {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         if CoreAIPreviewWindow.drumReference30GenerationEnabled { reference30Controls }
+                        if CoreAIPreviewWindow.sourceWindowEncoderEnabled { sourceWindowControls }
                         if CoreAIPreviewWindow.drumReference30WindowEnabled {
                             Text("Pemeriksaan decoder berjendela").font(.headline)
                             Text("Memeriksa kesamaan audio 30 detik dan penggunaan memori. Setelah selesai, bagikan laporannya.")
@@ -148,7 +152,7 @@ struct CoreAIDeviceProbeApp: App {
                             }
                             Divider()
                         }
-                        if !CoreAIPreviewWindow.drumReference30ComponentsEnabled && !CoreAIPreviewWindow.drumReference30DecoderOnlyEnabled && !CoreAIPreviewWindow.drumReference30WindowEnabled && !CoreAIPreviewWindow.drumReference30GenerationEnabled {
+                        if !CoreAIPreviewWindow.drumReference30ComponentsEnabled && !CoreAIPreviewWindow.drumReference30DecoderOnlyEnabled && !CoreAIPreviewWindow.drumReference30WindowEnabled && !CoreAIPreviewWindow.drumReference30GenerationEnabled && !CoreAIPreviewWindow.sourceWindowEncoderEnabled {
                             Text("Preset aktif: \(window.instrumentLabel)")
                                 .font(.headline)
                             Text("Pemeriksaan dan baseline")
@@ -495,6 +499,26 @@ struct CoreAIDeviceProbeApp: App {
             generatedMix = result.mixURL
             runningModel = false
         }
+    }
+
+    @ViewBuilder
+    private var sourceWindowControls: some View {
+        Text("Persiapan input lagu penuh").font(.headline)
+        Text("Memeriksa pembacaan piano acuan. Setelah selesai, bagikan laporannya.")
+        Button("Uji input piano 30 detik") {
+            audioPlayer?.stop()
+            runningModel = true
+            report = "Memverifikasi input piano dan model…"
+            Task {
+                let update: @MainActor @Sendable (String) -> Void = { text in self.report = text }
+                report = await Task.detached(priority: .userInitiated) {
+                    await CoreAIDecoderProbe.runSourceWindowEncoder(progress: update)
+                }.value
+                runningModel = false
+            }
+        }
+        .disabled(runningModel || workStartedInProcess)
+        Divider()
     }
 
     @ViewBuilder

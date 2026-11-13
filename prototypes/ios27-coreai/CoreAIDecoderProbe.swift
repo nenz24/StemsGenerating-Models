@@ -3767,6 +3767,223 @@ extension CoreAIDecoderProbe {
     }
 }
 
+extension CoreAIDecoderProbe {
+    private struct SourceWindowContract: Decodable {
+        let schemaVersion: Int; let profile: String; let status: String; let assetFile: String; let functionName: String
+        let latentFrames: Int; let windowFrames: Int; let coreFrames: Int; let haloFrames: Int
+        let inputShapes: [String:[Int]]; let outputShapes: [String:[Int]]
+        let vaeCheckpointSha256: String; let captureReportSha256: String; let originalSourceReferenceSha256: String
+        let weightStorageDtype: String; let computeDtype: String; let scalarType: String; let byteOrder: String
+        let absoluteTolerance: Double; let relativeTolerance: Double; let relativeRmseTolerance: Double
+        let windowPlan: [WindowDecoderContract.Tile]; let dependencySampleBounds: [[Int]]
+        let tileInputSha256: [[String:String]]; let hostChecks: [String:WindowDecoderContract.Metric]
+        let hostNumericalGatePassed: Bool; let coverageExactlyOnce: Bool; let architectureGuardPassed: Bool
+        let epsilonRegenerated: Bool; let nativeExports: Int; let baselineModified: Bool
+        let nativeParity: String; let nativeMemoryGate: String; let fullSongNativeReadiness: String
+        let artifactSha256: [String:String]
+    }
+
+    static func savedSourceWindowReport() -> String? {
+        guard let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+              let text = try? String(contentsOf: root.appendingPathComponent("last-source-window-report.txt"), encoding: .utf8) else { return nil }
+        guard !text.contains("Source window collection: COMPLETED"),
+              let first = text.components(separatedBy:"\n").first,
+              let id = first.components(separatedBy:"; run ").last, UUID(uuidString:id) != nil,
+              let phase = try? String(contentsOf:root.appendingPathComponent("source-window-\(id)-phase.txt"),encoding:.utf8) else { return text }
+        return text + "\nLast persisted native phase for this run:\n" + phase
+    }
+
+    private static func saveSourceWindow(_ lines: [String], runID: String) {
+        guard let root = FileManager.default.urls(for:.documentDirectory,in:.userDomainMask).first else { return }
+        let folder = root.appendingPathComponent("SourceWindowReports/"+runID,isDirectory:true)
+        try? FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+        let text = lines.joined(separator:"\n")
+        try? text.write(to:folder.appendingPathComponent("report.txt"),atomically:true,encoding:.utf8)
+        try? text.write(to:root.appendingPathComponent("last-source-window-report.txt"),atomically:true,encoding:.utf8)
+    }
+
+    static func runSourceWindowEncoder(progress: @escaping @MainActor @Sendable (String) -> Void) async -> String {
+        let clock = ContinuousClock(), start = ContinuousClock().now, runID = UUID().uuidString
+        let memory = CoreAIProcessFootprintSampler()
+        var pool: [String:RetainedStage] = [:], stats = RetentionStats(), repairs = CacheRepairStats()
+        defer { pool.removeAll() }
+        var comparisons = 0, passed = 0, completed = false
+        var lines = ["Runtime: CoreAI source window encoder diagnostic; run \(runID)",
+            "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+            "Revision: source-window256-core224-v1; four fixed-input encoder calls; one retained model/function",
+            "FP32 source VAE, original750-frame audio/epsilon/mask; no regenerated RNG, source gain, DiT/APG/Qwen/decoder or WAV",
+            "Compare four retained cores, three seam regions and full assembled mean/std/source/context: target32 original gates",
+            "Original abs1e-4/rel1e-3/nRMSE1e-3; no retry/cache deletion; baseline unchanged",
+            "cpuOnly requested; actual placement/native eviction unmeasured; sampled process budget <2000MiB is not an exact transient peak cap",
+            "Thermal start: \(ProcessInfo.processInfo.thermalState.rawValue); low power: \(ProcessInfo.processInfo.isLowPowerModeEnabled)"]
+        saveSourceWindow(lines,runID:runID)
+        do {
+            guard CoreAIPreviewWindow.sourceWindowEncoderEnabled, let root = Bundle.main.resourceURL else { throw ShardError.missingPreparedBundle }
+            let base = root.appendingPathComponent("ModelCandidates",isDirectory:true)
+            let relative = "source-reference30-window-encoder-256/reference.json"
+            guard let stamp = try JSONSerialization.jsonObject(with:Data(contentsOf:base.appendingPathComponent("app-resource-manifest.json"))) as? [String:Any],
+                  stamp["selected_profile"] as? String == "source-reference30-window-encoder",
+                  let files = stamp["files"] as? [String:[String:Any]],let identity = files[relative]?["sha256"] as? String else { throw ShardError.invalidManifest }
+            try verifyReferenceIdentity(base.appendingPathComponent(relative),expected:identity)
+            let folder = base.appendingPathComponent("source-reference30-window-encoder-256",isDirectory:true)
+            let decoder = JSONDecoder();decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let ref = try decoder.decode(SourceWindowContract.self,from:Data(contentsOf:folder.appendingPathComponent("reference.json")))
+            try checkManifest(ref.schemaVersion,1,"source.schema")
+            try checkManifest(ref.profile,"source-reference30-window-encoder","source.profile")
+            try checkManifest(ref.status,"prepared_source_window_encoder","source.status")
+            try checkManifest(ref.assetFile,"source-context.aimodel","source.asset")
+            try checkManifest(ref.functionName,"main","source.function")
+            try checkManifest(ref.latentFrames,750,"source.frames")
+            try checkManifest(ref.windowFrames,256,"source.window")
+            try checkManifest(ref.coreFrames,224,"source.core")
+            try checkManifest(ref.haloFrames,16,"source.halo")
+            try checkManifest(ref.weightStorageDtype,"float32","source.storage")
+            try checkManifest(ref.computeDtype,"float32","source.compute")
+            try checkManifest(ref.scalarType,"float32","source.scalar")
+            try checkManifest(ref.byteOrder,"little","source.byte_order")
+            try checkManifest(ref.vaeCheckpointSha256,"da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0","source.VAE")
+            try checkManifest(ref.captureReportSha256,"f5f84314fa37f49f73502a77f7e3364b31450898231731d64e216bf1b606bfdf","source.capture")
+            try checkManifest(ref.absoluteTolerance,1e-4,"source.atol")
+            try checkManifest(ref.relativeTolerance,1e-3,"source.rtol")
+            try checkManifest(ref.relativeRmseTolerance,1e-3,"source.nrmse")
+            guard ref.hostNumericalGatePassed,ref.coverageExactlyOnce,ref.architectureGuardPassed,
+                  !ref.epsilonRegenerated,!ref.baselineModified,ref.nativeExports == 0,
+                  ref.nativeParity == "NOT EVALUATED",ref.nativeMemoryGate == "NOT EVALUATED",
+                  ref.fullSongNativeReadiness == "NOT EVALUATED",ref.windowPlan.count == 4,ref.tileInputSha256.count == 4 else { throw ShardError.invalidManifest }
+            let inputs: [String:[Int]] = ["audio":[1,2,491520],"epsilon":[1,64,256],"chunk_mask":[1,256,64]]
+            let shapes: [String:[Int]] = ["posterior_mean":[1,64,256],"posterior_std":[1,64,256],"source_latents":[1,256,64],"context_latents":[1,256,128]]
+            try checkManifest(ref.inputShapes,inputs,"source.inputs")
+            try checkManifest(ref.outputShapes,shapes,"source.outputs")
+            let goldFiles = ["posterior_mean":"source-mean.f32le","posterior_std":"source-std.f32le",
+                             "source_latents":"source-latent.f32le","context_latents":"source-context.f32le"]
+            var requiredChecks = Set<String>()
+            for name in goldFiles.keys {
+                for i in 0..<4 { requiredChecks.insert("core-\(i)-"+name) }
+                for i in 1..<4 { requiredChecks.insert("seam-\(i)-"+name) }
+                requiredChecks.insert("overall-"+name)
+            }
+            try checkManifest(Set(ref.hostChecks.keys),requiredChecks,"source.host_checks")
+            for m in ref.hostChecks.values {
+                guard m.finite,m.parityPassed,m.elementwiseFractionOverBound == 0,m.normalizedRmse <= 1e-3,
+                      [m.maxAbsoluteError,m.rmse,m.normalizedRmse].allSatisfy({$0.isFinite && $0 >= 0}) else { throw ShardError.invalidManifest }
+            }
+            try checkManifest(ref.dependencySampleBounds,[[0,442244],[417915,872324],[847995,1302404],[1278075,1439999]],"source.dependencies")
+            let starts = [0,208,432,494]
+            for (i,tile) in ref.windowPlan.enumerated() {
+                guard tile.windowStart == starts[i],tile.windowFrames == 256,tile.coreStart == i*224,
+                      tile.coreEnd == min(i*224+224,750),tile.cropStart == tile.coreStart-tile.windowStart else { throw ShardError.invalidManifest }
+            }
+            var names = Set(goldFiles.values)
+            names.formUnion(["source48.f32le","source-epsilon.f32le","source-mask.f32le","capture-report.json","original-source-reference.json"])
+            for name in ["main.hash","main.mlirb","metadata.json"] { names.insert("source-context.aimodel/"+name) }
+            try checkManifest(Set(ref.artifactSha256.keys),names,"source.files")
+            try checkManifest(ref.artifactSha256["capture-report.json"],ref.captureReportSha256,"source.report_identity")
+            try checkManifest(ref.artifactSha256["original-source-reference.json"],ref.originalSourceReferenceSha256,"source.original_identity")
+            await progress("Memverifikasi model dan input piano…")
+            for (name,hash) in ref.artifactSha256 { try checkManifest(try streamingSHA256(folder.appendingPathComponent(name)),hash,"source.sha256") }
+            guard let original = try JSONSerialization.jsonObject(with:Data(contentsOf:folder.appendingPathComponent("original-source-reference.json"))) as? [String:Any],
+                  original["checkpoint_digest"] as? String == ref.vaeCheckpointSha256,
+                  let originalHashes = original["artifact_sha256"] as? [String:String] else { throw ShardError.invalidManifest }
+            for name in ["main.hash","main.mlirb","metadata.json"] {
+                let key = "source-context.aimodel/"+name
+                try checkManifest(originalHashes[key],ref.artifactSha256[key],"source.reused_payload")
+            }
+            lines.append("Manifest, unchanged encoder payload and exact original audio/epsilon/mask/references: SHA256 VERIFIED")
+            func read(_ name: String,_ count: Int) throws -> [Float] { try readFloats(folder:folder,name:name,count:count,hashes:ref.artifactSha256) }
+            let audio = try read("source48.f32le",2880000),epsilon = try read("source-epsilon.f32le",48000),mask = try read("source-mask.f32le",48000)
+            guard mask.allSatisfy({$0 == 1}) else { throw ShardError.invalidManifest }
+            var gold: [String:[Float]] = [:],assembled: [String:[Float]] = [:]
+            for (name,file) in goldFiles {
+                let count = name == "context_latents" ? 96000 : 48000
+                gold[name] = try read(file,count);assembled[name] = [Float](repeating:0,count:count)
+            }
+            var coverage = [Int](repeating:0,count:750)
+            let stage = Contract.Stage(assetFile:ref.assetFile,layerIndices:[],inputShapes:ref.inputShapes,outputShapes:ref.outputShapes,outputBindings:nil)
+            func retained(_ values: [Float],_ name: String,_ a: Int,_ b: Int,_ frames: Int) -> [Float] {
+                if name.hasPrefix("posterior") {
+                    return (0..<64).flatMap { channel in Array(values[channel*frames+a..<channel*frames+b]) }
+                }
+                let channels = name == "context_latents" ? 128 : 64
+                return Array(values[a*channels..<b*channels])
+            }
+            for (i,tile) in ref.windowPlan.enumerated() {
+                try requirePreviewMemoryBudget()
+                let start = tile.windowStart,a = tile.coreStart,b = tile.coreEnd,c = tile.cropStart
+                let sourceAudio = (0..<2).flatMap { channel in Array(audio[channel*1440000+start*1920..<channel*1440000+(start+256)*1920]) }
+                let sourceEpsilon = (0..<64).flatMap { channel in Array(epsilon[channel*750+start..<channel*750+start+256]) }
+                let sourceMask = Array(mask[start*64..<(start+256)*64])
+                let scalarInputs = ["audio":sourceAudio,"epsilon":sourceEpsilon,"chunk_mask":sourceMask]
+                var tensors: [String:NDArray] = [:]
+                for (name,values) in scalarInputs {
+                    let hash = values.withUnsafeBufferPointer { SHA256.hash(data:Data(buffer:$0)).map{String(format:"%02x",$0)}.joined() }
+                    try checkManifest(hash,ref.tileInputSha256[i][name],"source.tile_input")
+                    guard let shape = ref.inputShapes[name] else { throw ShardError.invalidManifest }
+                    tensors[name] = NDArray(scalars:values,shape:shape)
+                }
+                await progress("Memeriksa input piano: bagian \(i+1)/4…")
+                saveSourceWindow(lines,runID:runID)
+                let phase = interleavingPhaseProgress(prefix:"Run \(runID); source window\(i+1)/4",fileName:"source-window-\(runID)-phase.txt")
+                let result = try await runPreviewSamplingStage(stage,folder:folder,inputs:tensors,aot:nil,reuseStages:true,
+                    pool:&pool,stats:&stats,allowCacheRepair:false,cacheRepair:&repairs,phaseProgress:phase)
+                for (name,shape) in ref.outputShapes {
+                    guard let tensor = result.values[name],let expected = gold[name],var full = assembled[name] else { throw ProbeError.invalidOutputTensor }
+                    let values = try copiedValues(tensor,shape:shape),kept = retained(values,name,c,c+b-a,256)
+                    try drum30Comparison("Source core\(i+1) \(name)",actual:kept,expected:retained(expected,name,a,b,750),comparisons:&comparisons,passed:&passed,lines:&lines)
+                    if name.hasPrefix("posterior") {
+                        for channel in 0..<64 { for f in 0..<(b-a) { full[channel*750+a+f] = kept[channel*(b-a)+f] } }
+                    } else {
+                        let channels = name == "context_latents" ? 128 : 64
+                        full.replaceSubrange(a*channels..<b*channels,with:kept)
+                    }
+                    assembled[name] = full
+                }
+                for f in a..<b { coverage[f] += 1 }
+                lines.append("Source window\(i+1) backend-await ms \(result.phases.backendAwaitMs)")
+                saveSourceWindow(lines,runID:runID)
+            }
+            guard coverage.allSatisfy({$0 == 1}) else { throw ShardError.invalidManifest }
+            for (i,tile) in ref.windowPlan.dropFirst().enumerated() {
+                let a = tile.coreStart-2,b = min(tile.coreStart+2,750)
+                for name in goldFiles.keys {
+                    guard let actual = assembled[name],let expected = gold[name] else { throw ShardError.invalidManifest }
+                    try drum30Comparison("Source seam\(i+1) \(name)",actual:retained(actual,name,a,b,750),expected:retained(expected,name,a,b,750),comparisons:&comparisons,passed:&passed,lines:&lines)
+                }
+            }
+            for name in goldFiles.keys {
+                guard let actual = assembled[name],let expected = gold[name] else { throw ShardError.invalidManifest }
+                try drum30Comparison("Source full750 \(name)",actual:actual,expected:expected,comparisons:&comparisons,passed:&passed,lines:&lines)
+            }
+            guard let documents = FileManager.default.urls(for:.documentDirectory,in:.userDomainMask).first else { throw ShardError.invalidManifest }
+            let captured = documents.appendingPathComponent("SourceWindowReports/"+runID,isDirectory:true)
+            try FileManager.default.createDirectory(at:captured,withIntermediateDirectories:true)
+            for (name,values) in assembled {
+                let target = captured.appendingPathComponent("native-"+name+".f32le")
+                try writeReference30Floats(values,to:target)
+                lines.append("Source artifact \(target.lastPathComponent) SHA256: \(try streamingSHA256(target))")
+            }
+            try checkManifest(stats.completedCalls,4,"source.calls")
+            try checkManifest(stats.modelOpens,1,"source.opens")
+            try checkManifest(stats.functionBinds,1,"source.binds")
+            try checkManifest(stats.cacheHits,3,"source.hits")
+            try checkManifest(comparisons,32,"source.comparisons")
+            pool.removeAll();completed = true
+        } catch {
+            if let failure = error as? StageExecutionFailure { lines.append("Failing asset: \(failure.asset); operation: \(failure.operation)");lines.append(contentsOf:failure.details) }
+            else { lines.append(contentsOf:modelErrorDetails(error)) }
+        }
+        let usage = memory.finish(),memoryPassed = usage.peak.map{$0 < 2000*1048576} ?? false
+        lines.append("Source window collection: \(completed ? "COMPLETED" : "NOT COMPLETED"); calls\(stats.completedCalls)/4, opens\(stats.modelOpens), binds\(stats.functionBinds), hits\(stats.cacheHits)")
+        lines.append("Source original strict parity: \(completed && passed == 32 ? "PASS" : "NOT PASSED"); \(passed)/\(comparisons) comparisons passed; target32")
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10ms): \(Double(peak)/1048576); sampled budget <2000MiB: \(memoryPassed ? "PASS" : "NOT PASSED")") }
+        else { lines.append("Sampled memory readiness: NOT EVALUATED; footprint unavailable") }
+        lines.append("Source component numerical/resource readiness: \(completed && passed == 32 && memoryPassed ? "PASS" : "NOT PASSED"); full-song source/generation/music: NOT EVALUATED")
+        lines.append("Cache deletion/retries: DISABLED; no DiT/APG/Qwen/decoder opened; BF16 sampler baseline and original bounds unchanged")
+        lines.append("Thermal end: \(ProcessInfo.processInfo.thermalState.rawValue); total source window ms \(ms(start.duration(to:clock.now)))")
+        saveSourceWindow(lines,runID:runID)
+        return lines.joined(separator:"\n")
+    }
+}
+
 // Timer state lives on one serial queue. The owning task starts/stops the timer;
 // it returns only numeric snapshots, never the timer or mutable state.
 private final class CoreAIProcessFootprintSampler: @unchecked Sendable {

@@ -131,7 +131,9 @@
 				"$(SRCROOT)/../../scripts/coreai_preview_window.py",
                 "$(SRCROOT)/../../scripts/coreai_drum_reference30_contract.py",
                 "$(SRCROOT)/../../scripts/coreai_drum_reference30_window_contract.py",
-                "$(SRCROOT)/../../scripts/coreai_drum_reference30_generation_contract.py",);
+                "$(SRCROOT)/../../scripts/coreai_drum_reference30_generation_contract.py",
+                "$(SRCROOT)/../../scripts/coreai_source_window_contract.py",
+                "$(SRCROOT)/../../scripts/package_coreai_drum_reference.py",);
 			name = "Stage active CoreAI models";
 			outputPaths = ("$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ModelCandidates",);
 			runOnlyForDeploymentPostprocessing = 0;
