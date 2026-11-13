@@ -85,3 +85,6 @@ lebih mendukung pemeriksaan hasil generasi/conditioning berikutnya. Jika
 berbeda, isolasi decode/backend pada input yang sama. Belum ada klaim penyebab
 atau perbaikan sebelum raw output dan uji dengar tersebut tersedia. BF16 DiT,
 50 langkah APG, source gain sekali, preset dan toleransi tetap dipertahankan.
+
+Helper siap pakai untuk pemeriksaan dan pemutar A/B lokal tersedia pada
+[decode dari latent yang sama](coreai-instrument-transition-decode.md).
