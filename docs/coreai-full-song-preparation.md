@@ -78,3 +78,8 @@ Tahap conditioning tersedia pada [cache tiga instrumen127 token](coreai-full-son
 Helper menyiapkan prompt30s bass/drum/gitar pada Mac dengan checkpoint lokal,
 memeriksa ulang conditioning drum terhadap capture asli, dan mempertahankan
 status full-song native sebagai belum dievaluasi.
+
+Persiapan gabungan tersedia pada [input global lagu penuh](coreai-full-song-inputs.md):
+reuse source proof/cache yang sudah diverifikasi, actual global noise per
+instrumen, hash setiap window dan implementasi normalized overlap-add. Ini
+persiapan inactive; belum menjalankan batch lagu penuh di iPhone.

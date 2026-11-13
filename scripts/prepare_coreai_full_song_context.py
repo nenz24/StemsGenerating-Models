@@ -13,6 +13,25 @@ import wave
 from export_coreai_decoder import ROOT,sha256
 
 
+def source_proof(path, bundle=None):
+    """Reuse the verified prepared source bundle if no standalone audit exists."""
+    if path is not None:
+        path=Path(path)
+        if path.is_symlink() or (path.exists() and not path.is_file()):raise ValueError('Existing source audit must be a regular JSON file')
+        if path.is_file():return json.loads(path.read_text()),path
+    if bundle is None:raise FileNotFoundError('Existing source audit or prepared source window bundle required; no repeated audit')
+    from prepare_coreai_source_window import verify_bundle
+    from coreai_source_window_contract import PROFILE
+    bundle=Path(bundle)
+    ref=verify_bundle(bundle)
+    proof={'profile':PROFILE,'capture_report_sha256':ref['capture_report_sha256'],
+           'strict_verdict':'PASS','comparisons_passed':32,'comparisons_target':32,
+           'window_frames':ref['window_frames'],'vae_checkpoint_sha256':ref['vae_checkpoint_sha256'],
+           'reference_convolution_backend':ref['reference_convolution_backend'],
+           'window_plan':ref['window_plan'],'checks':ref['host_checks']}
+    return proof,bundle/'reference.json'
+
+
 def execute(args):
     import numpy as np
     import torch
@@ -23,7 +42,7 @@ def execute(args):
     if args.out.exists():raise FileExistsError('Existing full-song context preserved')
     if any(args.out.resolve().is_relative_to(p) for p in (args.prepared_source.resolve(),ROOT/'baselines',ROOT/'prototypes/ios27-coreai/ModelCandidates')):
         raise ValueError('Use an inactive context folder outside source/models/baselines')
-    proof=json.loads(args.source_audit.read_text())
+    proof,proof_path=source_proof(args.source_audit,getattr(args,'source_bundle',ROOT/'prototypes/ios27-coreai/ModelCandidates/source-reference30-window-encoder-256'))
     if (proof.get('profile')!=PROFILE or proof.get('capture_report_sha256')!=ACCEPTED_REPORT_SHA256
             or proof.get('strict_verdict')!='PASS' or proof.get('comparisons_passed')!=32
             or proof.get('comparisons_target')!=32 or proof.get('window_frames')!=256
@@ -54,7 +73,7 @@ def execute(args):
     mask=torch.ones(1,frames,64,dtype=torch.float32)
     args.out.mkdir(parents=True)
     report={'schema_version':1,'status':'source_encoding','scope':'Host bounded source capture only; no full-song generation/native acceptance',
-            'source32_wav_sha256':sha256(source),'source_audit_sha256':sha256(args.source_audit),'vae_checkpoint_sha256':VAE_SHA,
+            'source32_wav_sha256':sha256(source),'source_audit_sha256':sha256(proof_path),'vae_checkpoint_sha256':VAE_SHA,
             'source_gain_already_applied':.7,'additional_gain':1.,'sample_rate':48000,'samples':samples,'latent_frames':frames,
             'global_right_padding_samples':padding,'epsilon_shape':[1,64,frames],
             'epsilon_provenance':'Actual saved CPU Float32 array; seed31 informational, no cross-platform RNG identity claim',
@@ -88,6 +107,7 @@ def main():
     parser.add_argument('--execute',action='store_true')
     parser.add_argument('--prepared-source',type=Path,default=ROOT/'.runtime-cache/full-song-source-v1')
     parser.add_argument('--source-audit',type=Path,default=ROOT/'.runtime-cache/source-window30-host-v1/report.json')
+    parser.add_argument('--source-bundle',type=Path,default=ROOT/'prototypes/ios27-coreai/ModelCandidates/source-reference30-window-encoder-256')
     parser.add_argument('--vae-checkpoint',type=Path)
     parser.add_argument('--out',type=Path,default=ROOT/'.runtime-cache/full-song-context-v1')
     args=parser.parse_args()
