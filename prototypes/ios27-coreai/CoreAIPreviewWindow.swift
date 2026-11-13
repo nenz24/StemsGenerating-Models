@@ -81,6 +81,13 @@ enum CoreAIPreviewWindow: String, Sendable {
         return object["selected_profile"] as? String == "instrument-reference30-preview"
     }
 
+    static var fullSongEnabled: Bool {
+        guard let root = Bundle.main.resourceURL,
+              let data = try? Data(contentsOf:root.appendingPathComponent("ModelCandidates/app-resource-manifest.json")),
+              let object = try? JSONSerialization.jsonObject(with:data) as? [String:Any] else { return false }
+        return object["selected_profile"] as? String == "full-song-prepared-generation"
+    }
+
     static var bundled: Self {
         guard let root = Bundle.main.resourceURL,
               let data = try? Data(contentsOf: root.appendingPathComponent("ModelCandidates/app-resource-manifest.json")),

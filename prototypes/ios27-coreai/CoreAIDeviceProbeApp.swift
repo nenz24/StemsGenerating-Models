@@ -24,6 +24,8 @@ struct CoreAIDeviceProbeApp: App {
     @State private var reference30: CoreAIDecoderProbe.Reference30GenerationResult?
     @State private var selectedInstrument30 = "bass"
     @State private var instrument30Results: [String:CoreAIDecoderProbe.Reference30GenerationResult] = [:]
+    @State private var fullSongResult: CoreAIDecoderProbe.FullSongResult?
+    @State private var pauseFullSong = false
 
     init() {
         let active = CoreAIPreviewWindow.bundled
@@ -32,6 +34,8 @@ struct CoreAIDeviceProbeApp: App {
         let generation = CoreAIPreviewWindow.drumReference30GenerationEnabled
         let sourceWindow = CoreAIPreviewWindow.sourceWindowEncoderEnabled
         let instrument30 = CoreAIPreviewWindow.instrumentReference30Enabled
+        let fullSong = CoreAIPreviewWindow.fullSongEnabled
+        let restoredFullSong = fullSong ? CoreAIDecoderProbe.latestFullSong() : nil
         var instrumentResults: [String:CoreAIDecoderProbe.Reference30GenerationResult] = [:]
         if instrument30 {
             for role in ["bass","drums","guitar"] {
@@ -39,13 +43,15 @@ struct CoreAIDeviceProbeApp: App {
             }
         }
         let reference = generation ? CoreAIDecoderProbe.latestReference30Generation() : nil
-        let drum30 = CoreAIPreviewWindow.drumReference30ComponentsEnabled || decoderOnly || windowDecoder || generation || sourceWindow || instrument30
+        let drum30 = CoreAIPreviewWindow.drumReference30ComponentsEnabled || decoderOnly || windowDecoder || generation || sourceWindow || instrument30 || fullSong
         let saved = drum30 ? nil : CoreAIDecoderProbe.latestSavedBassPreview(window: active)
         let prior = CoreAIDecoderProbe.savedDenoiserReport()
         let matchingPrior: String? = prior.flatMap { text in
             text.contains("Selected instrument: \(active.stemID);") || (active.stemID == "bass" && !text.contains("Selected instrument:")) ? text : nil
         }
-        _report = State(initialValue: instrument30
+        _report = State(initialValue: fullSong
+            ? (restoredFullSong?.report ?? "Input lagu penuh siap. Tekan Buat / lanjutkan lagu penuh.")
+            : instrument30
             ? (instrumentResults["bass"]?.report ?? "Pilih instrumen, lalu buat preview 30 detik.")
             : sourceWindow
             ? (CoreAIDecoderProbe.savedSourceWindowReport() ?? "Pemeriksaan source encoder belum dijalankan.")
@@ -61,6 +67,7 @@ struct CoreAIDeviceProbeApp: App {
         _restoredPreview = State(initialValue: saved != nil)
         _reference30 = State(initialValue: reference)
         _instrument30Results = State(initialValue: instrumentResults)
+        _fullSongResult = State(initialValue: restoredFullSong)
     }
 
     var body: some Scene {
@@ -71,6 +78,7 @@ struct CoreAIDeviceProbeApp: App {
                         if CoreAIPreviewWindow.drumReference30GenerationEnabled { reference30Controls }
                         if CoreAIPreviewWindow.sourceWindowEncoderEnabled { sourceWindowControls }
                         if CoreAIPreviewWindow.instrumentReference30Enabled { instrument30Controls }
+                        if CoreAIPreviewWindow.fullSongEnabled { fullSongControls }
                         if CoreAIPreviewWindow.drumReference30WindowEnabled {
                             Text("Pemeriksaan decoder berjendela").font(.headline)
                             Text("Memeriksa kesamaan audio 30 detik dan penggunaan memori. Setelah selesai, bagikan laporannya.")
@@ -165,7 +173,7 @@ struct CoreAIDeviceProbeApp: App {
                             }
                             Divider()
                         }
-                        if !CoreAIPreviewWindow.drumReference30ComponentsEnabled && !CoreAIPreviewWindow.drumReference30DecoderOnlyEnabled && !CoreAIPreviewWindow.drumReference30WindowEnabled && !CoreAIPreviewWindow.drumReference30GenerationEnabled && !CoreAIPreviewWindow.sourceWindowEncoderEnabled && !CoreAIPreviewWindow.instrumentReference30Enabled {
+                        if !CoreAIPreviewWindow.drumReference30ComponentsEnabled && !CoreAIPreviewWindow.drumReference30DecoderOnlyEnabled && !CoreAIPreviewWindow.drumReference30WindowEnabled && !CoreAIPreviewWindow.drumReference30GenerationEnabled && !CoreAIPreviewWindow.sourceWindowEncoderEnabled && !CoreAIPreviewWindow.instrumentReference30Enabled && !CoreAIPreviewWindow.fullSongEnabled {
                             Text("Preset aktif: \(window.instrumentLabel)")
                                 .font(.headline)
                             Text("Pemeriksaan dan baseline")
@@ -423,6 +431,7 @@ struct CoreAIDeviceProbeApp: App {
                 }
                 .onChange(of: scenePhase) { _, phase in
                     UIApplication.shared.isIdleTimerDisabled = runningModel && phase == .active
+                    if CoreAIPreviewWindow.fullSongEnabled && runningModel && phase != .active { pauseFullSong = true }
                 }
                 .fileImporter(isPresented: $showingAudioImporter, allowedContentTypes: [.audio], allowsMultipleSelection: false) { result in
                     importRecording(result)
@@ -511,6 +520,52 @@ struct CoreAIDeviceProbeApp: App {
             generatedBass = result.bassURL
             generatedMix = result.mixURL
             runningModel = false
+        }
+    }
+
+    @ViewBuilder
+    private var fullSongControls: some View {
+        Text("Lagu penuh: bass, drum dan gitar").font(.headline)
+        Text("Hasil setiap bagian disimpan. Tetap buka app selama proses; Anda dapat menjeda pada akhir bagian dan melanjutkan hasil yang sudah tersimpan.")
+        Button("Buat / lanjutkan lagu penuh") {
+            audioPlayer?.stop()
+            runningModel = true
+            pauseFullSong = false
+            report = "Memverifikasi input lagu dan progres tersimpan…"
+            Task {
+                let update: @MainActor @Sendable (String) -> Void = { self.report = $0 }
+                let pause: @MainActor @Sendable () -> Bool = { self.pauseFullSong }
+                let result = await Task.detached(priority:.userInitiated) {
+                    await CoreAIDecoderProbe.generateFullSong(progress:update,shouldPause:pause)
+                }.value
+                fullSongResult = result
+                report = result.report
+                runningModel = false
+            }
+        }
+        .disabled(runningModel)
+        if runningModel {
+            Button(pauseFullSong ? "Menunggu akhir bagian…" : "Jeda setelah bagian ini") { pauseFullSong = true }
+                .disabled(pauseFullSong)
+        }
+        if let result = fullSongResult {
+            ForEach(["piano-with-band.wav","bass.wav","drums.wav","guitar.wav","piano.wav"],id:\.self) { name in
+                if let url = result.audio[name] {
+                    Button("Dengarkan \(fullSongAudioLabel(name))") { playPreview(url) }.disabled(runningModel)
+                    ShareLink(item:url) { Label("Bagikan \(fullSongAudioLabel(name))",systemImage:"square.and.arrow.up") }.disabled(runningModel)
+                }
+            }
+        }
+        Divider()
+    }
+
+    private func fullSongAudioLabel(_ name: String) -> String {
+        switch name {
+        case "piano-with-band.wav": return "piano + band"
+        case "drums.wav": return "drum"
+        case "guitar.wav": return "gitar"
+        case "bass.wav": return "bass"
+        default: return "piano"
         }
     }
 

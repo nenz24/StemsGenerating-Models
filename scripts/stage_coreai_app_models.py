@@ -19,6 +19,7 @@ from coreai_drum_reference30_window_contract import PROFILE as WINDOW_PROFILE, B
 from coreai_drum_reference30_generation_contract import PROFILE as GENERATION_PROFILE, CONFIG as GENERATION_CONFIG, KEEP as GENERATION_KEEP, SHAPES as GENERATION_SHAPES, validate as validate_generation
 from coreai_source_window_contract import PROFILE as SOURCE_WINDOW_PROFILE, BUNDLE as SOURCE_WINDOW_BUNDLE, DATA_SHAPES as SOURCE_WINDOW_SHAPES, validate_reference as validate_source_window
 from coreai_instrument_preview30_contract import PROFILE as INSTRUMENT30_PROFILE, BUNDLE as INSTRUMENT30_BUNDLE, DATA_SHAPES as INSTRUMENT30_SHAPES, validate as validate_instrument30
+from coreai_full_song_contract import PROFILE as FULL_SONG_PROFILE, CONFIG as FULL_SONG_CONFIG, validate_config as validate_full_song_config, validate_inputs as validate_full_song_inputs
 
 PROFILES = ('auto', 'bass-aot', 'bass-source', 'bass-source-1024', 'dit-precision-1024', 'dit-interleaving-1024', 'runtime', 'all')
 INSTRUMENT_PROFILES = tuple(i+'-source-1024' for i in ('drums','guitar-strum','guitar-pick'))
@@ -28,6 +29,7 @@ PROFILES += (WINDOW_PROFILE,)
 PROFILES += (GENERATION_PROFILE,)
 PROFILES += (SOURCE_WINDOW_PROFILE,)
 PROFILES += (INSTRUMENT30_PROFILE,)
+PROFILES += (FULL_SONG_PROFILE,)
 STAMP = 'app-resource-manifest.json'
 PREVIEW_FIXTURES = {'initial-noise.f32le', 'timesteps.f32le',
                     'audio-reference.f32le', 'audio-fp32-reference.f32le'} | {
@@ -97,6 +99,7 @@ def plan_resources(source, profile='auto'):
                                         {'schema_version':1,'resource_profile':GENERATION_PROFILE,'audio_seconds':30.},
                                         {'schema_version':1,'resource_profile':SOURCE_WINDOW_PROFILE,'audio_seconds':30.},
                                         {'schema_version':1,'resource_profile':INSTRUMENT30_PROFILE,'audio_seconds':30.},
+                                        {'schema_version':1,'resource_profile':FULL_SONG_PROFILE,'audio_seconds':30.},
                                         *({'schema_version':1,'resource_profile':p,'audio_seconds':10.24} for p in INSTRUMENT_PROFILES))
                     or chosen.get('schema_version')!=1
                     or (diagnostic_trajectory and chosen.get('resource_profile') not in ('bass-source-1024',*INSTRUMENT_PROFILES))):
@@ -137,7 +140,7 @@ def plan_resources(source, profile='auto'):
         for name,shape in SOURCE_WINDOW_SHAPES.items():
             if planned[SOURCE_WINDOW_BUNDLE+'/'+name]['size']!=math.prod(shape)*4:
                 raise ValueError('Source window fixture size mismatch; build output preserved')
-    elif profile in (GENERATION_PROFILE, INSTRUMENT30_PROFILE):
+    elif profile in (GENERATION_PROFILE, INSTRUMENT30_PROFILE, FULL_SONG_PROFILE):
         validate_drum30(relative_file(source, DRUM30_BUNDLE + '/reference.json').read_bytes())
         validate_window(load_reference(source, WINDOW_BUNDLE))
         config=relative_file(source,GENERATION_CONFIG)
@@ -154,6 +157,17 @@ def plan_resources(source, profile='auto'):
             for name, shape in INSTRUMENT30_SHAPES.items():
                 if planned[INSTRUMENT30_BUNDLE+'/'+name]['size'] != math.prod(shape)*4:
                     raise ValueError('Instrument conditioning shape mismatch; build output preserved')
+        if profile == FULL_SONG_PROFILE:
+            config=relative_file(source,FULL_SONG_CONFIG)
+            execution=validate_full_song_config(json.loads(config.read_text()))
+            name=execution['job_bundle']
+            if (digest(source/name/'reference.json')!=execution['job_reference_sha256']
+                    or digest(source/WINDOW_BUNDLE/'reference.json')!=execution['decoder_reference_sha256']):
+                raise ValueError('Full-song input/decoder reference identity differs')
+            job=validate_full_song_inputs(load_reference(source,name))
+            bundle(name);add(FULL_SONG_CONFIG,digest(config))
+            for filename,shape in job['tensor_shapes'].items():
+                if planned[name+'/'+filename]['size']!=math.prod(shape)*4:raise ValueError('Full-song tensor size differs')
     elif profile == WINDOW_PROFILE:
         ref = load_reference(source, WINDOW_BUNDLE)
         validate_window(ref)

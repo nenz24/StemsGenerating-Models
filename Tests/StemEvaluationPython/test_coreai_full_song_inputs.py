@@ -125,7 +125,7 @@ class InputTests(unittest.TestCase):
         import torch
         result=self.build();self.assertEqual(J.verify_job(self.out),result)
         self.assertEqual(len(result['runs']),3);self.assertFalse(result['ready_for_native_execution'])
-        self.assertEqual(result['native_batch_runtime'],'NOT IMPLEMENTED')
+        self.assertEqual(result['native_batch_runtime'],'NOT EVALUATED')
         self.assertEqual(result['sampler_weight_storage_dtype'],'bfloat16');self.assertEqual(result['guidance_scale'],7.)
         before=J.sha256(self.out/'reference.json')
         with patch.object(torch,'randn',side_effect=AssertionError('No new RNG')):

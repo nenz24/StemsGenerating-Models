@@ -3006,6 +3006,11 @@ enum CoreAIDecoderProbe {
 
 // Fixed accepted-input component test, separate from production previews.
 extension CoreAIDecoderProbe {
+    struct FullSongWindowInput: Sendable {
+        let jobSHA: String; let run: FullSongJob.Run; let condition: [Float]
+        let context: [Float]; let noise: [Float]; let times: [Float]
+        let outputParent: URL; let staticAssetsVerified: Bool
+    }
     private struct Drum30Contract: Decodable {
         struct Component: Decodable {
             let assetFile: String
@@ -3565,12 +3570,12 @@ extension CoreAIDecoderProbe {
         try values.withUnsafeBufferPointer { try Data(buffer: $0).write(to: url, options: .atomic) }
     }
 
-    static func generateDrumReference30(instrument: String? = nil, progress: @escaping @MainActor @Sendable (String) -> Void) async -> Reference30GenerationResult {
-        if let instrument, !["bass","drums","guitar"].contains(instrument) {
+    static func generateDrumReference30(instrument: String? = nil, fullSongWindow: FullSongWindowInput? = nil, progress: @escaping @MainActor @Sendable (String) -> Void) async -> Reference30GenerationResult {
+        if (fullSongWindow != nil && instrument == nil) || (instrument.map { !["bass","drums","guitar"].contains($0) } ?? false) {
             return Reference30GenerationResult(report:"Invalid instrument; no models opened",folder:nil,drumURL:nil,mixURL:nil,pianoURL:nil)
         }
         let stem = instrument ?? "drums"
-        let compareOriginal = instrument == nil || instrument == "drums"
+        let compareOriginal = fullSongWindow == nil && (instrument == nil || instrument == "drums")
         let clock = ContinuousClock(), start = ContinuousClock().now, runID = UUID().uuidString
         let memory = CoreAIProcessFootprintSampler()
         var samplingPool: [String:RetainedStage] = [:], decodingPool: [String:RetainedStage] = [:]
@@ -3579,7 +3584,14 @@ extension CoreAIDecoderProbe {
         var steps = 0, comparisons = 0, passed = 0, completed = false
         var velocityTraceHashes: [String:String] = [:]
         var drumURL: URL?, mixURL: URL?, pianoURL: URL?
-        let output = reference30Directory(runID, instrument: instrument)
+        let output = fullSongWindow.map { $0.outputParent.appendingPathComponent("attempt-"+runID,isDirectory:true) } ?? reference30Directory(runID, instrument: instrument)
+        func persist(_ text: [String]) {
+            if fullSongWindow == nil { saveReference30(text,runID:runID,instrument:instrument) }
+            else if let output {
+                try? FileManager.default.createDirectory(at:output,withIntermediateDirectories:true)
+                try? text.joined(separator:"\n").write(to:output.appendingPathComponent("report.txt"),atomically:true,encoding:.utf8)
+            }
+        }
         var lines = ["Runtime: CoreAI frozen drums30 generation; run \(runID)",
             "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
             "Revision: reference30-live50-window256-v2; frozen accepted piano/condition/noise; no source/Qwen recomputation",
@@ -3600,10 +3612,17 @@ extension CoreAIDecoderProbe {
                 : "Bass/guitar matching host trajectory/audio: NOT AVAILABLE; numerical parity NOT EVALUATED; drum gold is never used as their reference"
             lines.append("Selected instrument: \(stem); musical listening and full-song readiness: NOT EVALUATED; original drum4/6 gate remains unchanged")
         }
-        saveReference30(lines, runID: runID, instrument: instrument)
+        if let input = fullSongWindow {
+            lines[0] = "Runtime: CoreAI full-song native window; instrument \(stem); run \(runID)"
+            lines[2] = "Revision: full-song-window-v1; actual saved global context/noise slices; no gold resets"
+            lines[3] = "Window raw output only; native full-song trajectory/music numerical acceptance: NOT EVALUATED"
+            lines[7] = "Full-song window numerical parity: NOT EVALUATED; no matching host trajectory/audio; drum gold is never substituted or compared"
+            lines.append("Job SHA256: \(input.jobSHA); window index \(input.run.windowIndex); old30s results/pointers untouched; cache repair disabled")
+        }
+        persist(lines)
         do {
-            let expectedProfile = instrument == nil ? "drums-reference30-generation" : "instrument-reference30-preview"
-            guard (instrument == nil ? CoreAIPreviewWindow.drumReference30GenerationEnabled : CoreAIPreviewWindow.instrumentReference30Enabled),
+            let expectedProfile = fullSongWindow != nil ? "full-song-prepared-generation" : (instrument == nil ? "drums-reference30-generation" : "instrument-reference30-preview")
+            guard (fullSongWindow != nil ? CoreAIPreviewWindow.fullSongEnabled : (instrument == nil ? CoreAIPreviewWindow.drumReference30GenerationEnabled : CoreAIPreviewWindow.instrumentReference30Enabled)),
                   let root = Bundle.main.resourceURL, let output else { throw ShardError.missingPreparedBundle }
             let base = root.appendingPathComponent("ModelCandidates", isDirectory: true)
             guard let stamp = try JSONSerialization.jsonObject(with: Data(contentsOf: base.appendingPathComponent("app-resource-manifest.json"))) as? [String:Any],
@@ -3652,6 +3671,7 @@ extension CoreAIDecoderProbe {
                       t.coreEnd == min(i*128+128,750), t.cropStart == t.coreStart-t.windowStart else { throw ShardError.invalidManifest }
             }
             await progress("Memverifikasi sampler, decoder, dan input acuan…")
+            if fullSongWindow?.staticAssetsVerified != true {
             for asset in ref.stages.map({ $0.assetFile }) + [ref.apg.assetFile] {
                 for file in ["main.hash","main.mlirb","metadata.json"] {
                     let name = asset + "/" + file
@@ -3667,11 +3687,19 @@ extension CoreAIDecoderProbe {
                 try checkManifest(try streamingSHA256(sampler.appendingPathComponent(file)), expected, "reference30.input_sha256")
             }
             try verifyReferenceIdentity(sampler.appendingPathComponent("capture/report.json"), expected: config.captureReportSha256)
+            }
             func input(_ name: String, _ count: Int) throws -> [Float] { try readFloats(folder: sampler, name: "capture/"+name+".f32le", count: count, hashes: ref.artifactSha256) }
-            let times = try input("timesteps",51)
-            guard times[0] == 1, times[50] == 0, zip(times,times.dropFirst()).allSatisfy({ $0.0 > $0.1 }) else { throw ShardError.invalidManifest }
-            var conditionValues = try input("condition",127*2048)
-            if instrument != nil {
+            let times = try (fullSongWindow?.times ?? input("timesteps",51))
+            guard times.count == 51, times[0] == 1, times[50] == 0, zip(times,times.dropFirst()).allSatisfy({ $0.0 > $0.1 }) else { throw ShardError.invalidManifest }
+            var conditionValues = try (fullSongWindow?.condition ?? input("condition",127*2048))
+            if let input = fullSongWindow {
+                guard input.run.instrument == stem, input.context.count == 750*128, input.noise.count == 48000,
+                      input.condition.count == 127*2048, input.times.count == 51,
+                      input.context.allSatisfy({ $0.isFinite }), input.noise.allSatisfy({ $0.isFinite }), input.condition.allSatisfy({ $0.isFinite }),
+                      FullSongIO.hash(input.context) == input.run.sourceContextSha256,
+                      FullSongIO.hash(input.noise) == input.run.initialNoiseSha256,
+                      FullSongIO.hash(input.condition) == input.run.conditionSha256 else { throw ShardError.invalidManifest }
+            } else if instrument != nil {
                 let cacheName = "instrument-reference30-conditioning-127"
                 let cache = base.appendingPathComponent(cacheName, isDirectory:true)
                 guard let referenceSHA = files[cacheName+"/reference.json"]?["sha256"] as? String else { throw ShardError.invalidManifest }
@@ -3701,12 +3729,14 @@ extension CoreAIDecoderProbe {
                 lines.append("Condition preset SHA256: \(presets[stem] ?? "missing"); condition SHA256: \(cached.artifactSha256[stem+"/condition.f32le"] ?? "missing"); all127 mask values valid")
             }
             let condition = NDArray(scalars:conditionValues, shape:[1,127,2048])
-            let context = NDArray(scalars: try input("source-context",750*128), shape:[1,750,128])
-            var latent = NDArray(scalars: try input("initial-noise",48000), shape:[1,750,64])
+            let context = NDArray(scalars: try (fullSongWindow?.context ?? input("source-context",750*128)), shape:[1,750,128])
+            var latent = NDArray(scalars: try (fullSongWindow?.noise ?? input("initial-noise",48000)), shape:[1,750,64])
             var momentum = NDArray(scalars:[Float](repeating:0,count:48000), shape:[1,750,64])
             let update = Contract.Stage(assetFile:ref.apg.assetFile, layerIndices:[], inputShapes:ref.apg.inputShapes, outputShapes:ref.apg.outputShapes, outputBindings:nil)
-            lines.append("SHA256: all15 sampler assets, bounded decoder, exact inputs and five gold checkpoints VERIFIED; original full750 decoder never opened")
-            saveReference30(lines, runID:runID)
+            lines.append(fullSongWindow == nil
+                ? "SHA256: all15 sampler assets, bounded decoder, exact inputs and five gold checkpoints VERIFIED; original full750 decoder never opened"
+                : "SHA256: shared sampler/decoder verified once per invocation; actual global window context/noise/condition verified before use; no gold comparisons; original full750 decoder never opened")
+            persist(lines)
             for i in 0..<50 {
                 let stepStart = clock.now, before = sampling.phaseTotals.backendAwaitMs
                 let reuse = i > 0
@@ -3721,7 +3751,7 @@ extension CoreAIDecoderProbe {
                     var inputs: [String:NDArray] = [:]
                     for (name,shape) in stage.inputShapes { guard let value = state[name], value.shape == shape else { throw ShardError.invalidManifest }; inputs[name] = value }
                     let result = try await runPreviewSamplingStage(stage,folder:sampler,inputs:inputs,aot:nil,reuseStages:reuse,
-                        pool:&samplingPool,stats:&sampling,allowCacheRepair:true,cacheRepair:&repairs,phaseProgress:breadcrumbs)
+                        pool:&samplingPool,stats:&sampling,allowCacheRepair:fullSongWindow == nil,cacheRepair:&repairs,phaseProgress:breadcrumbs)
                     for (name,value) in result.values { guard let binding = stage.outputBindings?[name] else { throw ShardError.invalidManifest };state[binding] = value }
                     guard samplingPool.count <= 15 else { throw ShardError.invalidManifest }
                 }
@@ -3735,11 +3765,11 @@ extension CoreAIDecoderProbe {
                 let breadcrumbs = interleavingPhaseProgress(prefix:"Run \(runID); step\(i+1)/50 APG live feedback",fileName:"drum-reference30-generation-\(runID)-phase.txt")
                 let next = try await runPreviewSamplingStage(update,folder:sampler,
                     inputs:["velocity":velocity,"latent":latent,"momentum":momentum,"dt":NDArray(scalars:[times[i]-times[i+1]],shape:[1])],
-                    aot:nil,reuseStages:reuse,pool:&samplingPool,stats:&sampling,allowCacheRepair:true,cacheRepair:&repairs,phaseProgress:breadcrumbs)
+                    aot:nil,reuseStages:reuse,pool:&samplingPool,stats:&sampling,allowCacheRepair:fullSongWindow == nil,cacheRepair:&repairs,phaseProgress:breadcrumbs)
                 guard let x = next.values["latent_next"], let m = next.values["momentum_next"] else { throw ProbeError.invalidOutputTensor }
                 latent = x; momentum = m; steps = i+1
                 lines.append("Step\(steps)/50: total ms \(ms(stepStart.duration(to:clock.now))); backend delta ms \(sampling.phaseTotals.backendAwaitMs-before)")
-                if config.checkpoints.contains(steps) {
+                if config.checkpoints.contains(steps) && fullSongWindow == nil {
                     let actual = try copiedValues(latent,shape:[1,750,64])
                     try writeReference30Floats(actual,to:output.appendingPathComponent(String(format:"native-step-%02d-latent.f32le",steps)))
                     if compareOriginal {
@@ -3747,7 +3777,7 @@ extension CoreAIDecoderProbe {
                             comparisons:&comparisons,passed:&passed,lines:&lines)
                     }
                 }
-                if config.checkpoints.contains(steps) || steps % 5 == 0 { saveReference30(lines,runID:runID,instrument:instrument) }
+                if config.checkpoints.contains(steps) || steps % 5 == 0 { persist(lines) }
             }
             try checkManifest(sampling.completedCalls,750,"reference30.sampling_calls")
             try checkManifest(sampling.modelOpens,30+repairs.attempts,"reference30.sampling_opens")
@@ -3767,7 +3797,7 @@ extension CoreAIDecoderProbe {
             }
             samplingPool.removeAll()
             lines.append("Sampling handles released before window decode; native eviction unverified")
-            saveReference30(lines,runID:runID,instrument:instrument)
+            persist(lines)
             let final = try copiedValues(latent,shape:[1,750,64])
             try writeReference30Floats(final,to:output.appendingPathComponent("final-latent.f32le"))
             try writeReference30Floats(try copiedValues(momentum,shape:[1,750,64]),to:output.appendingPathComponent("final-momentum.f32le"))
@@ -3781,7 +3811,7 @@ extension CoreAIDecoderProbe {
                 for c in 0..<64 { for f in 0..<256 { data[c*256+f] = final[(t.windowStart+f)*64+c] } }
                 let hash = data.withUnsafeBufferPointer { SHA256.hash(data:Data(buffer:$0)).map { String(format:"%02x",$0) }.joined() }
                 lines.append("Decode window\(i+1): LIVE final-latent slice SHA256 \(hash); gold tile input is not substituted")
-                saveReference30(lines,runID:runID,instrument:instrument)
+                persist(lines)
                 let breadcrumbs = interleavingPhaseProgress(prefix:"Run \(runID); live decoder window\(i+1)/6",fileName:"drum-reference30-generation-\(runID)-phase.txt")
                 let result = try await runPreviewSamplingStage(codecStage,folder:codec,inputs:["latent":NDArray(scalars:data,shape:[1,64,256])],
                     aot:nil,reuseStages:true,pool:&decodingPool,stats:&decoding,allowCacheRepair:false,cacheRepair:&repairs,phaseProgress:breadcrumbs)
@@ -3802,6 +3832,10 @@ extension CoreAIDecoderProbe {
                 try checkManifest(comparisons,6,"reference30.checkpoint_audio_comparisons")
             } else { try checkManifest(comparisons,0,"instrument30.no_unrelated_gold_comparisons") }
             try writeReference30Floats(audio,to:output.appendingPathComponent("raw-"+stem+".f32le"))
+            if fullSongWindow != nil {
+                completed = true
+                lines.append("Full-song window raw completion: YES; no per-window listening gain or crossfade")
+            } else {
             let piano = try input("source48",2880000)
             var mix = zip(piano,audio).map { Float(config.pianoMixGain)*$0.0+Float(config.drumMixGain)*$0.1 }
             let drumPeak = audio.reduce(Float(0)){max($0,abs($1))}
@@ -3816,6 +3850,7 @@ extension CoreAIDecoderProbe {
             drumURL = drum; mixURL = mixed; pianoURL = source; completed = true
             lines.append("Listening copies: shared gain\(gain), diagnostic0.5piano+0.5\(stem); no second source gain; production mix unchanged. Raw comparisons precede attenuation.")
             lines.append("Artifact SHA256: \(stem) \(try streamingSHA256(drum)); mix \(try streamingSHA256(mixed)); piano \(try streamingSHA256(source))")
+            }
         } catch {
             samplingPool.removeAll(); decodingPool.removeAll()
             if let failure = error as? StageExecutionFailure { lines.append("Failing asset: \(failure.asset); operation: \(failure.operation)"); lines.append(contentsOf:failure.details) }
@@ -3834,9 +3869,10 @@ extension CoreAIDecoderProbe {
         if let peak = usage.peak { lines.append("Sampled process maximum MiB (10ms): \(Double(peak)/1048576); sampled budget <2000MiB: \(memoryPassed ? "PASS" : "NOT PASSED")") }
         else { lines.append("Sampled memory readiness: NOT EVALUATED; footprint unavailable") }
         lines.append("Reference30 numerical/resource readiness: \(compareOriginal ? (numerical && memoryPassed ? "PASS" : "NOT PASSED") : "NOT EVALUATED"); native music listening/full-song bass-drums-guitar: NOT EVALUATED")
-        lines.append("WAV generated on device: \(completed ? "YES; diagnostic listening copies" : "NO"); targeted initial-bind repair\(repairs.attempts)/1, successful retries\(repairs.successfulRetries); no inference retry or baseline replacement")
+        if fullSongWindow == nil { lines.append("WAV generated on device: \(completed ? "YES; diagnostic listening copies" : "NO"); targeted initial-bind repair\(repairs.attempts)/1, successful retries\(repairs.successfulRetries); no inference retry or baseline replacement") }
+        else { lines.append("Raw window only; cache repair/retries0; original baseline preserved") }
         lines.append("Thermal end: \(ProcessInfo.processInfo.thermalState.rawValue); total reference30 ms \(ms(start.duration(to:clock.now)))")
-        saveReference30(lines,runID:runID,instrument:instrument)
+        persist(lines)
         return Reference30GenerationResult(report:lines.joined(separator:"\n"),folder:output,drumURL:drumURL,mixURL:mixURL,pianoURL:pianoURL)
     }
 }
@@ -4055,6 +4091,240 @@ extension CoreAIDecoderProbe {
         lines.append("Thermal end: \(ProcessInfo.processInfo.thermalState.rawValue); total source window ms \(ms(start.duration(to:clock.now)))")
         saveSourceWindow(lines,runID:runID)
         return lines.joined(separator:"\n")
+    }
+}
+
+extension CoreAIDecoderProbe {
+    struct FullSongResult: Sendable {
+        let report: String; let folder: URL?; let audio: [String:URL]
+    }
+    private struct FullSongCheckpoint: Codable {
+        let schemaVersion: Int; let executionSha256: String; let jobReferenceSha256: String
+        let instrument: String; let windowIndex: Int; let childDirectory: String
+        let rawSha256: String; let reportSha256: String
+    }
+    private struct FullSongStemCheckpoint: Codable {
+        let schemaVersion: Int; let executionSha256: String; let instrument: String
+        let targetSamples48: Int; let rawSha256: String
+    }
+    private struct FullSongCompletion: Codable {
+        let schemaVersion: Int; let executionSha256: String; let jobReferenceSha256: String
+        let targetSamples48: Int; let completedWindows: Int; let listeningGain: Float
+        let artifactSha256: [String:String]
+    }
+    private static func fullSongLocation() throws -> (URL,URL,String,FullSongExecution,URL) {
+        guard CoreAIPreviewWindow.fullSongEnabled, let root = Bundle.main.resourceURL,
+              let documents = FileManager.default.urls(for:.documentDirectory,in:.userDomainMask).first else { throw ShardError.missingPreparedBundle }
+        let base = root.appendingPathComponent("ModelCandidates",isDirectory:true)
+        let config = base.appendingPathComponent("full-song-generation.json")
+        let sha = try streamingSHA256(config)
+        let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let execution = try decoder.decode(FullSongExecution.self,from:Data(contentsOf:config))
+        guard FullSongIO.isSHA(execution.jobReferenceSha256), FullSongIO.isSHA(execution.decoderReferenceSha256),
+              execution.schemaVersion == 1, execution.profile == "full-song-prepared-generation",
+              execution.scope == "prepared-input-full-song-diagnostic", execution.nativeImplementation == "prepared-full-song-v1",
+              execution.jobBundle == "full-song-inputs-"+String(execution.jobReferenceSha256.prefix(16)),
+              execution.samplerBundle == "drums-reference30-frozen-diagnostic", execution.decoderBundle == "drums-reference30-window-decoder-256",
+              execution.samplerReferenceSha256 == "f2f84e6c34b2fe42678dc38a48d9ca35b20c14ba53f10843aee8b218a24d53ed",
+              execution.fullSongStrictParity == "NOT EVALUATED", !execution.baselineModified,
+              execution.sourceFrontend == "host-prepared context; native source NOT EVALUATED" else { throw ShardError.invalidManifest }
+        return (base,base.appendingPathComponent(execution.jobBundle,isDirectory:true),sha,execution,
+                documents.appendingPathComponent("FullSongGeneration/"+sha,isDirectory:true))
+    }
+    static func latestFullSong() -> FullSongResult? {
+        do {
+            let (_,input,sha,execution,folder) = try fullSongLocation()
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let job = try decoder.decode(FullSongJob.self,from:Data(contentsOf:input.appendingPathComponent("reference.json")))
+            try job.validate()
+            let report = (try? String(contentsOf:folder.appendingPathComponent("report.txt"),encoding:.utf8)) ?? "Lagu penuh belum dijalankan."
+            var audio: [String:URL] = [:]
+            if let data = try? Data(contentsOf:folder.appendingPathComponent("completed.json")),
+               let complete = try? decoder.decode(FullSongCompletion.self,from:data), complete.executionSha256 == sha,
+               complete.schemaVersion == 1, complete.jobReferenceSha256 == execution.jobReferenceSha256,
+               complete.targetSamples48 == job.targetSamples48, complete.completedWindows == job.runs.count,
+               complete.artifactSha256.values.allSatisfy(FullSongIO.isSHA),
+               Set(complete.artifactSha256.keys) == Set(["piano.wav","bass.wav","drums.wav","guitar.wav","piano-with-band.wav"]) {
+                for (name,hash) in complete.artifactSha256 {
+                    let file = folder.appendingPathComponent(name)
+                    try FullSongIO.regular(file,bytes:58+complete.targetSamples48*8)
+                    guard FullSongIO.isSHA(hash) else { throw FullSongFailure.invalid("Invalid saved WAV identity") }
+                    audio[name] = file
+                }
+            }
+            return FullSongResult(report:report,folder:folder,audio:audio)
+        } catch { return nil }
+    }
+
+    static func generateFullSong(progress: @escaping @MainActor @Sendable (String) -> Void,
+                                 shouldPause: @escaping @MainActor @Sendable () -> Bool) async -> FullSongResult {
+        let clock = ContinuousClock(), began = ContinuousClock().now
+        let memory = CoreAIProcessFootprintSampler()
+        var lines = ["Runtime: CoreAI full-song prepared-input diagnostic", "Revision: prepared-full-song-v1",
+            "Host source context/conditioning; native BF16 DiT, FP32 APG/decoder,50 steps/window, original bounds unchanged",
+            "Completed window SHA256 checkpoints can resume; no automatic inference retry/cache repair",
+            "Native source encoder/full-trajectory numerical/music acceptance: NOT EVALUATED; original drum4/6 retained",
+            "cpuOnly requested; placement/native eviction unmeasured; sampled process budget <2000MiB, not exact transient/native peak",
+            "Thermal start: \(ProcessInfo.processInfo.thermalState.rawValue); low power: \(ProcessInfo.processInfo.isLowPowerModeEnabled)"]
+        var folder: URL?, completed = false, paused = false, newWindows = 0, reusedWindows = 0
+        func save() { if let folder { try? lines.joined(separator:"\n").write(to:folder.appendingPathComponent("report.txt"),atomically:true,encoding:.utf8) } }
+        do {
+            let (base,input,executionSHA,execution,output) = try fullSongLocation()
+            folder = output
+            try FileManager.default.createDirectory(at:output,withIntermediateDirectories:true)
+            try FullSongIO.preserveOrphan(output.appendingPathComponent("report.txt"))
+            save()
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let encoder = JSONEncoder(); encoder.keyEncodingStrategy = .convertToSnakeCase; encoder.outputFormatting = [.sortedKeys]
+            guard let stamp = try JSONSerialization.jsonObject(with:Data(contentsOf:base.appendingPathComponent("app-resource-manifest.json"))) as? [String:Any],
+                  stamp["selected_profile"] as? String == "full-song-prepared-generation",
+                  let files = stamp["files"] as? [String:[String:Any]],
+                  files["full-song-generation.json"]?["sha256"] as? String == executionSHA else { throw ShardError.invalidManifest }
+            try verifyReferenceIdentity(input.appendingPathComponent("reference.json"),expected:execution.jobReferenceSha256)
+            let job = try decoder.decode(FullSongJob.self,from:Data(contentsOf:input.appendingPathComponent("reference.json")))
+            try job.validate()
+            for (name,expected) in job.artifactSha256 {
+                let file = input.appendingPathComponent(name)
+                try FullSongIO.regular(file,bytes:job.tensorShapes[name].map { $0.reduce(1,*)*4 })
+                try checkManifest(try streamingSHA256(file),expected,"full_song.input_sha256")
+            }
+            let original = try decoder.decode(Drum30Contract.self,from:Data(contentsOf:base.appendingPathComponent(execution.samplerBundle+"/reference.json")))
+            try verifyReferenceIdentity(base.appendingPathComponent(execution.samplerBundle+"/reference.json"),expected:execution.samplerReferenceSha256)
+            try checkManifest(job.artifactSha256["timesteps.f32le"],original.artifactSha256["capture/timesteps.f32le"],"full_song.original_timesteps")
+            try verifyReferenceIdentity(base.appendingPathComponent(execution.decoderBundle+"/reference.json"),expected:execution.decoderReferenceSha256)
+            let windowConfiguration = try decoder.decode(Reference30Configuration.self,from:Data(contentsOf:base.appendingPathComponent("drums-reference30-generation.json")))
+            try checkManifest(windowConfiguration.decoderReferenceSha256,execution.decoderReferenceSha256,"full_song.decoder_binding")
+            let times = try FullSongIO.read(input.appendingPathComponent("timesteps.f32le"),offset:0,count:51)
+            guard times[0] == 1, times[50] == 0, zip(times,times.dropFirst()).allSatisfy({ $0.0 > $0.1 }) else { throw ShardError.invalidManifest }
+            if FileManager.default.fileExists(atPath:output.appendingPathComponent("completed.json").path) {
+                let done = try decoder.decode(FullSongCompletion.self,from:Data(contentsOf:output.appendingPathComponent("completed.json")))
+                guard done.schemaVersion == 1, done.executionSha256 == executionSHA, done.jobReferenceSha256 == execution.jobReferenceSha256,
+                      done.targetSamples48 == job.targetSamples48, done.completedWindows == job.runs.count,
+                      Set(done.artifactSha256.keys) == Set(["piano.wav","bass.wav","drums.wav","guitar.wav","piano-with-band.wav"]) else { throw FullSongFailure.invalid("Saved full-song completion differs") }
+                for (name,hash) in done.artifactSha256 {
+                    try FullSongIO.regular(output.appendingPathComponent(name),bytes:58+job.targetSamples48*8)
+                    guard try streamingSHA256(output.appendingPathComponent(name)) == hash else { throw FullSongFailure.invalid("Saved full-song WAV SHA256 differs; no replacement") }
+                }
+                lines.append("Full-song collection: COMPLETED; existing final WAV hashes verified; model calls0, no rewritten audio")
+                completed = true
+            } else {
+            let globalContext = try FullSongIO.read(input.appendingPathComponent("source-context.f32le"),offset:0,count:job.latentFrames*128)
+            let globalEpsilon = try FullSongIO.read(input.appendingPathComponent("source-epsilon.f32le"),offset:0,count:job.latentFrames*64)
+            for f in 0..<job.latentFrames { for c in 64..<128 { guard globalContext[f*128+c] == 1 else { throw ShardError.invalidManifest } } }
+            lines.append("Job reference SHA256: \(execution.jobReferenceSha256); execution SHA256: \(executionSHA)")
+            lines.append("Song frames48 \(job.targetSamples48); seconds \(Double(job.frames32)/32000); planned windows \(job.runs.count), instruments3; one shared sampler")
+            lines.append("All global input SHA256/geometry verified; each consumed window context/noise/audio/epsilon checked against saved slice hashes")
+            save()
+            var staticAssetsVerified = false
+            for (roleIndex,role) in job.instruments.enumerated() {
+                let stemFile = output.appendingPathComponent("raw-"+role+".f32le"), stemPointer = output.appendingPathComponent(role+"-assembled.json")
+                let stemDone: Bool
+                if FileManager.default.fileExists(atPath:stemPointer.path) {
+                    let saved = try decoder.decode(FullSongStemCheckpoint.self,from:Data(contentsOf:stemPointer))
+                    try FullSongIO.regular(stemFile,bytes:job.targetSamples48*8)
+                    guard saved.schemaVersion == 1, saved.executionSha256 == executionSHA, saved.instrument == role,
+                          saved.targetSamples48 == job.targetSamples48, try streamingSHA256(stemFile) == saved.rawSha256 else { throw FullSongFailure.invalid("Assembled stem checkpoint differs") }
+                    stemDone = true
+                } else { stemDone = false }
+                var overlap: FullSongOverlap?
+                if !stemDone {
+                    guard let current = CoreAIProcessFootprintSampler.currentFootprint(), current+UInt64(job.targetSamples48)*24+16777216 < 2000*1048576 else { throw ShardError.memoryBudgetReached }
+                    overlap = FullSongOverlap(job)
+                }
+                let condition = try FullSongIO.read(input.appendingPathComponent(role+"/condition.f32le"),offset:0,count:127*2048)
+                let mask = try FullSongIO.read(input.appendingPathComponent(role+"/condition-mask.f32le"),offset:0,count:127)
+                guard mask.allSatisfy({ $0 == 1 }) else { throw ShardError.invalidManifest }
+                let noise = try FullSongIO.read(input.appendingPathComponent(role+"/noise-global.f32le"),offset:0,count:job.latentFrames*64)
+                for (i,w) in job.windows.enumerated() {
+                    if await shouldPause() { paused = true; throw FullSongFailure.invalid("Dijeda pada batas window; hasil selesai tetap tersimpan") }
+                    try requirePreviewMemoryBudget()
+                    let row = job.runs[roleIndex*job.windows.count+i]
+                    let checkpointFolder = output.appendingPathComponent(role+String(format:"/window-%03d",i),isDirectory:true)
+                    try FileManager.default.createDirectory(at:checkpointFolder,withIntermediateDirectories:true)
+                    let checkpoint = checkpointFolder.appendingPathComponent("completed.json")
+                    var rawURL: URL
+                    if FileManager.default.fileExists(atPath:checkpoint.path) {
+                        let saved = try decoder.decode(FullSongCheckpoint.self,from:Data(contentsOf:checkpoint))
+                        guard saved.schemaVersion == 1, saved.executionSha256 == executionSHA, saved.jobReferenceSha256 == execution.jobReferenceSha256,
+                              saved.instrument == role, saved.windowIndex == i, saved.childDirectory.hasPrefix("attempt-"),
+                              UUID(uuidString:String(saved.childDirectory.dropFirst(8))) != nil else { throw FullSongFailure.invalid("Window checkpoint identity differs") }
+                        let child = checkpointFolder.appendingPathComponent(saved.childDirectory,isDirectory:true)
+                        rawURL = child.appendingPathComponent("raw-"+role+".f32le")
+                        try FullSongIO.regular(rawURL,bytes:2880000*4)
+                        guard try streamingSHA256(rawURL) == saved.rawSha256,
+                              try streamingSHA256(child.appendingPathComponent("report.txt")) == saved.reportSha256 else { throw FullSongFailure.invalid("Saved window SHA256 differs; no automatic replacement") }
+                        reusedWindows += 1
+                        lines.append("Reused verified \(role) window\(i+1)/\(job.windows.count); raw SHA256 \(saved.rawSha256)")
+                    } else {
+                        let context = Array(globalContext[w.latentStart*128..<w.latentEnd*128])
+                        let windowNoise = Array(noise[w.latentStart*64..<w.latentEnd*64])
+                        var epsilon: [Float] = []; epsilon.reserveCapacity(48000)
+                        for c in 0..<64 { epsilon.append(contentsOf:globalEpsilon[c*job.latentFrames+w.latentStart..<c*job.latentFrames+w.latentEnd]) }
+                        guard FullSongIO.hash(epsilon) == row.sourceEpsilonSha256 else { throw ShardError.invalidManifest }
+                        do {
+                            let piano = try FullSongIO.stereo(input.appendingPathComponent("piano48.f32le"),plane:job.latentFrames*1920,start:w.sampleStart48,count:1440000)
+                            guard FullSongIO.hash(piano) == row.sourceAudioSha256 else { throw ShardError.invalidManifest }
+                        }
+                        let prefix = "\(role) — bagian \(i+1)/\(job.windows.count); selesai \(newWindows+reusedWindows)/\(job.runs.count)"
+                        lines.append("Starting \(role) window\(i+1); restarting an unfinished window, if any, starts a new visible attempt; prior files retained")
+                        save()
+                        let update: @MainActor @Sendable (String) -> Void = { text in progress(prefix+"\n"+text) }
+                        let result = await generateDrumReference30(instrument:role,fullSongWindow:FullSongWindowInput(jobSHA:execution.jobReferenceSha256,run:row,
+                            condition:condition,context:context,noise:windowNoise,times:times,outputParent:checkpointFolder,staticAssetsVerified:staticAssetsVerified),progress:update)
+                        guard result.report.contains("Full-song window raw completion: YES"), result.report.contains("Reference30 execution: COMPLETED"),
+                              result.report.contains("sampled budget <2000MiB: PASS"), let child = result.folder else {
+                            lines.append("Window incomplete; child report retained: "+(result.folder?.path ?? "unavailable"))
+                            throw FullSongFailure.invalid("Window generation/resource gate did not complete; no checkpoint committed")
+                        }
+                        rawURL = child.appendingPathComponent("raw-"+role+".f32le")
+                        try FullSongIO.regular(rawURL,bytes:2880000*4)
+                        let saved = FullSongCheckpoint(schemaVersion:1,executionSha256:executionSHA,jobReferenceSha256:execution.jobReferenceSha256,
+                            instrument:role,windowIndex:i,childDirectory:child.lastPathComponent,rawSha256:try streamingSHA256(rawURL),reportSha256:try streamingSHA256(child.appendingPathComponent("report.txt")))
+                        try encoder.encode(saved).write(to:checkpoint,options:.atomic)
+                        staticAssetsVerified = true; newWindows += 1
+                        lines.append("Completed \(role) window\(i+1)/\(job.windows.count); raw SHA256 \(saved.rawSha256)")
+                    }
+                    if let overlap { try overlap.add(try FullSongIO.read(rawURL,offset:0,count:2880000),index:i) }
+                    save()
+                    await progress("Selesai \(newWindows+reusedWindows)/\(job.runs.count) bagian; hasil tersimpan")
+                }
+                if let overlap {
+                    try requirePreviewMemoryBudget()
+                    try overlap.finish(to:stemFile)
+                    let saved = FullSongStemCheckpoint(schemaVersion:1,executionSha256:executionSHA,instrument:role,targetSamples48:job.targetSamples48,rawSha256:try streamingSHA256(stemFile))
+                    try encoder.encode(saved).write(to:stemPointer,options:.atomic)
+                }
+                overlap = nil
+                lines.append("Full raw stem assembled: \(role); frames\(job.targetSamples48); normalized overlap-add before gain")
+                save()
+            }
+            guard newWindows+reusedWindows == job.runs.count else { throw FullSongFailure.invalid("Incomplete job; no final mix") }
+            try requirePreviewMemoryBudget()
+            await progress("Menyiapkan WAV lagu penuh dengan satu gain bersama…")
+            let gain = try FullSongListening.write(job:job,input:input,output:output,progress:{ _ in })
+            var hashes: [String:String] = [:]
+            for name in ["piano.wav","bass.wav","drums.wav","guitar.wav","piano-with-band.wav"] { hashes[name] = try streamingSHA256(output.appendingPathComponent(name)) }
+            let done = FullSongCompletion(schemaVersion:1,executionSha256:executionSHA,jobReferenceSha256:execution.jobReferenceSha256,
+                targetSamples48:job.targetSamples48,completedWindows:job.runs.count,listeningGain:gain,artifactSha256:hashes)
+            try encoder.encode(done).write(to:output.appendingPathComponent("completed.json"),options:.atomic)
+            lines.append("Full-song collection: COMPLETED; frames48\(job.targetSamples48); windows\(job.runs.count)/\(job.runs.count)")
+            lines.append("Shared listening gain \(gain); band mix0.25 each piano/bass/drums/guitar; raw comparisons/data precede gain; no per-window gain")
+            for (name,sha) in hashes { lines.append("WAV \(name) SHA256: \(sha)") }
+            completed = true
+            }
+        } catch {
+            lines.append(paused ? "Full-song collection: PAUSED" : "Full-song collection: NOT COMPLETED")
+            lines.append(contentsOf:modelErrorDetails(error))
+        }
+        let usage = memory.finish()
+        lines.append("This invocation: new windows\(newWindows), reused verified windows\(reusedWindows); no inference retries/cache deletion")
+        if let peak = usage.peak { lines.append("Sampled process maximum MiB (10ms): \(Double(peak)/1048576); sampled budget <2000MiB: \(peak < 2000*1048576 ? "PASS" : "NOT PASSED")") }
+        else { lines.append("Sampled memory: NOT EVALUATED") }
+        lines.append("Full-song numerical parity/music acceptance: NOT EVALUATED; actual source encoding was host-prepared; baseline/precision/bounds unchanged")
+        lines.append("Thermal end: \(ProcessInfo.processInfo.thermalState.rawValue); invocation ms \(ms(began.duration(to:clock.now)))")
+        save()
+        let restored = completed ? latestFullSong() : nil
+        return FullSongResult(report:lines.joined(separator:"\n"),folder:folder,audio:restored?.audio ?? [:])
     }
 }
 

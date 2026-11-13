@@ -82,8 +82,11 @@ tersambung mulus. Phase/timing/harmoni di overlap tetap perlu uji dengar.
 ## Status native
 
 Job disimpan **inactive**, `ready_for_native_execution: false`; tidak mengubah
-selector/scheme/build iPhone. Native batch runner untuk seluruh job belum
-diimplementasikan pada tahap ini. Full-song source encoder/generation/musik,
+selector/scheme/build iPhone. Eksekusi memerlukan aktivasi terpisah melalui
+[runner diagnostik native](coreai-full-song-native.md). Manifest lama dengan
+`native_batch_runtime: NOT IMPLEMENTED` tetap merupakan catatan saat persiapan;
+file tersebut tidak ditulis ulang atau dipromosikan menjadi hasil uji native.
+Job baru mencatat `NOT EVALUATED`. Full-song source encoder/generation/musik,
 resource, thermal dan latency belum dievaluasi. Frontend context pada job ini
 berasal dari host, sehingga bukan bukti pipeline seluruhnya berjalan di iPhone.
 Gate sampler drum4/6 sebelumnya tetap terpisah dan belum lolos.

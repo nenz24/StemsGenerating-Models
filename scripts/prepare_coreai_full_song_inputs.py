@@ -121,13 +121,14 @@ def verify_job(folder):
                 'absolute_tolerance':1e-4,'relative_tolerance':1e-3,'relative_rmse_tolerance':1e-3,
                 'inference_steps':50,'guidance_scale':7.,'apg_momentum':-.75,'apg_norm_threshold':2.5,'apg_projection_dims':[1],
                 'baseline_modified':False,'native_exports':0,'profile_activated':False,'ready_for_native_execution':False,
-                'native_batch_runtime':'NOT IMPLEMENTED','full_song_music_acceptance':'NOT EVALUATED',
+                'full_song_music_acceptance':'NOT EVALUATED',
                 'full_song_numerical_parity':'NOT EVALUATED; new global inputs are not the frozen30s input',
                 'noise_cpu_seeds':{role:seed for seed,role in enumerate(ROLES)},
                 'source_gain_already_applied':.7,'additional_source_gain':1.,
                 'noise_policy':'Actual saved global CPU Float32 arrays; overlap uses identical slices; seeds informational only',
                 'assembly_policy':'Float64 normalized cosine overlap-add on raw outputs; crop to exact target length'}
     if any(ref.get(k) != v for k,v in expected.items()): raise ValueError('Full-song input contract differs')
+    if ref.get('native_batch_runtime') not in ('NOT IMPLEMENTED','NOT EVALUATED'):raise ValueError('Input preparation cannot accept native execution')
     frames = plan['latent_frames']
     shapes = {'piano48.f32le':[1,2,frames*1920],'source-context.f32le':[1,frames,128],
               'source-epsilon.f32le':[1,64,frames],'timesteps.f32le':[51],
@@ -205,7 +206,7 @@ def build_job(prepared,context,conditioning,capture,out):
            'assembly_policy':'Float64 normalized cosine overlap-add on raw outputs; crop to exact target length',
            'source_frontend':'Host-prepared bounded VAE context; full-song native source encoder NOT EVALUATED',
            'full_song_numerical_parity':'NOT EVALUATED; new global inputs are not the frozen30s input',
-           'full_song_music_acceptance':'NOT EVALUATED','native_batch_runtime':'NOT IMPLEMENTED',
+           'full_song_music_acceptance':'NOT EVALUATED','native_batch_runtime':'NOT EVALUATED',
            'original_sampler_gate':'NOT PASSED4/6 retained independently','artifact_sha256':{},'tensor_shapes':{}}
     def save():
         temporary=out/'reference.json.tmp';temporary.write_text(json.dumps(ref,indent=2)+'\n');temporary.replace(out/'reference.json')
@@ -236,7 +237,7 @@ def build_job(prepared,context,conditioning,capture,out):
         ref['status']='prepared_inactive_inputs';save();verify_job(out)
     except BaseException as error:
         ref.update(status='failed',error_type=type(error).__name__,error=str(error));save();raise
-    print('Prepared global inputs:',len(ref['runs']),'proposed30s generations; native batch NOT IMPLEMENTED:',out,flush=True)
+    print('Prepared global inputs:',len(ref['runs']),'proposed30s generations; native execution NOT EVALUATED:',out,flush=True)
     return ref
 
 
@@ -285,7 +286,7 @@ def main():
     parser.add_argument('--out',type=Path,default=ROOT/'.runtime-cache/full-song-inputs-v1')
     args=parser.parse_args()
     if not args.execute:
-        print('PLAN ONLY: verified full source/context/conditioning, actual global per-role noise and window hashes; zero generation/export/activation. Native full-song runtime NOT IMPLEMENTED.')
+        print('PLAN ONLY: verified full source/context/conditioning, actual global per-role noise and window hashes; zero generation/export/activation. Native execution requires separate activation and is NOT EVALUATED.')
         return
     result=execute(args)
     print('Input windows:',len(result['windows']),'per instrument; full-song native execution NOT EVALUATED')
