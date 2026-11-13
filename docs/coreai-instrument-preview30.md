@@ -66,3 +66,8 @@ Perubahan Swift perlu build/typecheck SDK Xcode dan eksekusi pada iPhone.
 Pemeriksaan grammar pada Linux tidak membuktikan kelulusan build atau runtime.
 Setelah bass/gitar didengar, integrasi context penuh/noise global,
 overlap-add serta pengukuran resource/thermal seluruh lagu masih diperlukan.
+
+Jika bass/gitar masih memiliki glitch, gunakan [ekspor hasil existing untuk
+review transisi](coreai-instrument-transition-review.md). Helper mengambil
+raw audio dan latent yang sudah tersimpan; tidak perlu generation atau build
+app baru untuk mengambil data diagnosis.
