@@ -21,11 +21,32 @@ open -R .runtime-cache/bass-guitar-transition-review-v1.zip
 ```
 
 Pilih folder container yang baru di-download ketika dialog muncul. `--source`
-juga menerima `.xcappdata`, folder container atau `Documents` sebenarnya.
+juga menerima `.xcappdata`, folder container, `Documents`, `InstrumentReference30`
+atau folder induk unduhan. Pencarian read-only dibatasi8 tingkat/4096 direktori,
+tidak mengikuti symlink dan melewati Library/cache. Folder unduhan yang memiliki
+wrapper tambahan atau beberapa container dapat diperiksa langsung:
+
+```bash
+python3 scripts/package_coreai_instrument_transition_review.py \
+  --source "$HOME/Downloads" --list-runs
+```
+
+Daftar menampilkan letak `InstrumentReference30`, UUID bass/gitar yang tersedia
+dan kelengkapan nama file, tanpa membuat ZIP atau menilai kualitas/numerik.
+Jika run tidak ditemukan saat packaging, daftar yang sama disertakan dalam
+pesan error; ini bukan bukti bahwa data sudah dihapus dari iPhone.
+Untuk packaging dari folder Downloads, ganti `--choose-container` dengan
+`--source "$HOME/Downloads"` dan sertakan UUID yang diminta.
+
 Default mengambil pointer terakhir bass dan gitar secara terpisah; untuk
 mengunci run tertentu, isi `--bass-run` serta `--guitar-run` dengan UUID dari
 laporan masing-masing. Jangan mengetik path contoh atau membuat generation
 baru hanya untuk mendapatkan file yang sebenarnya sudah tersimpan.
+
+Salinan unduhan dengan UUID sama hanya dipilih otomatis jika seluruh berkas
+yang diperlukan identik secara byte. Salinan yang berbeda/tidak lengkap atau
+pointer terbaru dengan UUID berbeda menyebabkan helper berhenti dan mencetak
+lokasinya; tidak ada pemilihan run lain sebagai pengganti.
 
 Helper hanya memakai stdlib Python. Tidak memuat model, mengekspor bobot,
 menghapus cache atau mengubah file di container. Output existing dipertahankan;

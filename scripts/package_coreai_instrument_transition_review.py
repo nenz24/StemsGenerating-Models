@@ -28,6 +28,8 @@ from package_coreai_drum_reference30_run import regular_file
 ROLES = ('bass', 'guitar')
 FRAMES = 1440000
 MAX_ZIP = 32 * 1024 * 1024
+MAX_SEARCH_DEPTH = 8
+MAX_SEARCH_DIRECTORIES = 4096
 
 
 def shapes(role):
@@ -42,27 +44,115 @@ def documents_roots(source):
     return [source, source / 'Documents', source / 'AppData/Documents']
 
 
-def run_folder(source, role, run_id):
+def discover_namespaces(source):
+    """Bounded read-only discovery inside the selected folder; no linked descent."""
+    source = Path(source).absolute()
+    if not source.is_dir(): raise ValueError('Select an existing downloaded container or Downloads folder: ' + str(source))
+    if any(p.is_symlink() for p in (source, *source.parents)): raise ValueError('Linked search directory rejected')
+    found = set()
+    count = 0
+    errors = []
+    for current, directories, _ in os.walk(source, followlinks=False, onerror=errors.append):
+        count += 1
+        if count > MAX_SEARCH_DIRECTORIES:
+            raise ValueError('Search reached4096 directories; select a smaller folder containing the CoreAIProbe download')
+        current = Path(current)
+        if current.name == 'InstrumentReference30':
+            found.add(current.resolve())
+            directories[:] = []  # Do not walk waveform/checkpoint files.
+            continue
+        if len(current.relative_to(source).parts) >= MAX_SEARCH_DEPTH:
+            directories[:] = []
+        else:
+            directories[:] = sorted(n for n in directories if n not in
+                {'.git', 'node_modules', '.Trash', 'Library', 'Caches', '__pycache__'}
+                and not (current/n).is_symlink())
+    if errors:
+        raise ValueError('Search could not read every folder; select the downloaded CoreAIProbe folder directly: ' + str(errors[0]))
+    return sorted(found)
+
+
+def discovery_summary(source, namespaces):
+    lines = ['Searched folder: ' + str(Path(source).absolute()),
+             f'InstrumentReference30 folders found: {len(namespaces)} (search depth up to8; links/cache folders skipped)']
+    for namespace in namespaces[:12]:
+        lines.append('  ' + str(namespace))
+        for role in ROLES:
+            parent = namespace/role
+            runs = []
+            if parent.is_dir() and not parent.is_symlink():
+                for path in sorted(parent.iterdir()):
+                    if path.is_symlink() or not path.is_dir(): continue
+                    try: identifier = str(uuid.UUID(path.name)).upper()
+                    except ValueError: continue
+                    missing = [n for n in [*shapes(role), role+'.wav', 'report.txt'] if not (path/n).is_file()]
+                    runs.append(identifier + (' [files present]' if not missing else ' [missing ' + ', '.join(missing[:3]) + ']'))
+            lines.append('    ' + role + ': ' + ('; '.join(runs[:8]) if runs else '(no run folders)'))
+            if len(runs) > 8: lines.append(f'    ... {len(runs)-8} more {role} runs')
+    if len(namespaces) > 12: lines.append(f'  ... {len(namespaces)-12} more namespace folders')
+    return '\n'.join(lines)
+
+
+def run_fingerprint(folder, role):
+    """Only auto-resolve duplicate downloads if all required bytes are identical."""
+    result = []
+    for name in [*shapes(role), role+'.wav', 'report.txt']:
+        expected_size = math.prod(shapes(role)[name])*4 if name in shapes(role) else (58+FRAMES*8 if name.endswith('.wav') else None)
+        path = regular_file(folder/name,expected_size)
+        if name == 'report.txt' and path.stat().st_size > 1024*1024: raise ValueError('Report exceeds1MiB')
+        if any(p.is_symlink() for p in path.parents): raise ValueError('Linked run directory rejected')
+        result.append((name, path.stat().st_size, sha256(path)))
+    return tuple(result)
+
+
+def run_folder(source, role, run_id, namespaces=None):
     if role not in ROLES: raise ValueError('Select bass or guitar')
-    roots = documents_roots(source)
+    source = Path(source).absolute()
+    namespaces = discover_namespaces(source) if namespaces is None else namespaces
     if run_id == 'latest':
-        pointers = [root / f'last-instrument-reference30-{role}.json' for root in roots
-                    if (root / f'last-instrument-reference30-{role}.json').exists()]
-        if len(pointers) != 1: raise ValueError(f'Select one fresh CoreAIProbe container with the {role} run pointer')
-        pointer = regular_file(pointers[0])
-        if pointer.stat().st_size > 4096 or any(p.is_symlink() for p in pointer.parents):
-            raise ValueError('Invalid latest pointer')
-        run_id = json.loads(pointer.read_text())['run_id']
+        roots = set(documents_roots(source)) | {ns.parent for ns in namespaces}
+        identifiers = set()
+        for root in sorted(roots):
+            pointer = root / f'last-instrument-reference30-{role}.json'
+            if not pointer.exists(): continue
+            regular_file(pointer)
+            if pointer.stat().st_size > 4096 or any(p.is_symlink() for p in pointer.parents):
+                raise ValueError('Invalid latest pointer')
+            identifiers.add(str(uuid.UUID(json.loads(pointer.read_text())['run_id'])).upper())
+        if len(identifiers) != 1:
+            raise ValueError(f'No unique latest {role} run; specify --{role}-run with the UUID from the device report.\n'
+                             + discovery_summary(source,namespaces))
+        run_id = identifiers.pop()
     run_id = str(uuid.UUID(run_id)).upper()
-    candidates = [Path(source).absolute()] + [root / 'InstrumentReference30' / role / run_id for root in roots]
+    candidates = [source] + [ns / role / run_id for ns in namespaces]
+    if source.name == role: candidates.append(source/run_id)
     matches = set()
     for path in candidates:
         if path.name == run_id and path.is_dir():
             if any(p.is_symlink() for p in (path, *path.parents)): raise ValueError('Linked run directory rejected')
             matches.add(path.resolve())
-    if len(matches) != 1:
-        raise ValueError(f'{role} run {run_id} not found. Download the current CoreAIProbe container; do not repeat generation.')
-    return matches.pop(), run_id
+    if not matches:
+        raise ValueError(f'{role} run {run_id} not found in the selected search.\n' + discovery_summary(source,namespaces)
+                         + '\nDownload the current CoreAIProbe container only if the requested run is absent; do not repeat generation.')
+    ordered = sorted(matches)
+    if len(ordered) > 1:
+        try: identical = len({run_fingerprint(path,role) for path in ordered}) == 1
+        except (OSError,ValueError): identical = False
+        if not identical:
+            raise ValueError(f'Different/incomplete copies of {role} run {run_id}; select one container with --source:\n'
+                             + '\n'.join(str(path) for path in ordered))
+    return ordered[0], run_id
+
+
+def protected_container_roots(namespaces):
+    roots = set()
+    for namespace in namespaces:
+        documents = namespace.parent
+        if documents.name == 'Documents':
+            roots.add(documents.parent.parent if documents.parent.name == 'AppData' else documents.parent)
+        else:
+            roots.add(documents)
+    return roots
 
 
 def report_metadata(report, role, run_id):
@@ -103,12 +193,17 @@ def verify_audio_binding(raw_path, wav_path, gain, expected_sha, temporary, fram
 def package(source, out, run_ids):
     source, out = Path(source).absolute(), Path(out).absolute()
     if out.exists() or out.is_symlink(): raise FileExistsError(f'Existing review preserved: {out}; choose a new --out')
-    if out.resolve().is_relative_to(source.resolve()) or any(out.resolve().is_relative_to(ROOT / p)
+    namespaces = discover_namespaces(source)
+    protected = protected_container_roots(namespaces)
+    # Direct role/run selections are themselves read-only input folders.
+    if source.name in ROLES or any(source.name == run_ids[r] for r in ROLES): protected.add(source.resolve())
+    if any(out.resolve().is_relative_to(root) for root in protected) or any(out.resolve().is_relative_to(ROOT / p)
             for p in ('baselines', 'prototypes/ios27-coreai/ModelCandidates')):
         raise ValueError('Output must be outside container, models and baselines')
     folders, metadata, reports, entries = {}, {}, {}, {}
     for role in ROLES:
-        folder, run_id = run_folder(source, role, run_ids[role])
+        folder, run_id = run_folder(source, role, run_ids[role], namespaces)
+        print(f'Found {role} run {run_id}: {folder}', flush=True)
         report_path = regular_file(folder / 'report.txt')
         if report_path.stat().st_size > 1024 * 1024: raise ValueError('Report exceeds1MiB')
         raw = report_path.read_bytes()
@@ -167,10 +262,11 @@ def package(source, out, run_ids):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--source', type=Path, help='Fresh downloaded CoreAIProbe container, .xcappdata or Documents folder')
+    group.add_argument('--source', type=Path, help='Downloaded container, .xcappdata, Documents, or folder containing downloads (bounded search)')
     group.add_argument('--choose-container', action='store_true', help='macOS folder picker for the downloaded container')
     parser.add_argument('--bass-run', default='latest')
     parser.add_argument('--guitar-run', default='latest')
+    parser.add_argument('--list-runs', action='store_true', help='List discovered run folders without creating any review ZIP')
     parser.add_argument('--out', type=Path, default=ROOT / '.runtime-cache/bass-guitar-transition-review-v1.zip')
     args = parser.parse_args()
     if args.choose_container:
@@ -179,7 +275,14 @@ def main():
                                 capture_output=True, text=True)
         if result.returncode: parser.exit(1, 'Container selection canceled; no review created.\n')
         args.source = Path(result.stdout.rstrip('\r\n'))
-    manifest = package(args.source, args.out, {'bass': args.bass_run, 'guitar': args.guitar_run})
+    print('Selected search folder:', args.source, flush=True)
+    try:
+        if args.list_runs:
+            print(discovery_summary(args.source,discover_namespaces(args.source)))
+            return
+        manifest = package(args.source, args.out, {'bass': args.bass_run, 'guitar': args.guitar_run})
+    except (ValueError,OSError) as error:
+        parser.exit(1,'Review not created: ' + str(error) + '\n')
     print('Existing bass/guitar runs packaged; raw audio bound exactly to device WAVs. No generation or baseline changes.')
     print('Private review:', args.out, '; bytes', args.out.stat().st_size, '; tensors', len(manifest['artifacts']))
 

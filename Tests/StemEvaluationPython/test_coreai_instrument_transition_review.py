@@ -4,6 +4,7 @@ import json
 import math
 from pathlib import Path
 import struct
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -94,6 +95,76 @@ class TransitionReviewTests(unittest.TestCase):
             self.assertEqual(P.run_folder(self.documents,role,RUNS[role]),(self.folders[role],RUNS[role]))
         with self.assertRaisesRegex(ValueError,'Download the current'):
             P.run_folder(self.container,'bass',RUNS['guitar'])
+
+    def test_nested_download_container_and_namespace_or_role_selection(self):
+        downloads = self.root/'Downloads'
+        target = downloads/'saved exports/com.nenz24.CoreAIProbe/latest.xcappdata'
+        target.parent.mkdir(parents=True)
+        self.container.rename(target)
+        documents = target/'AppData/Documents'
+        for role in P.ROLES:
+            expected = documents/'InstrumentReference30'/role/RUNS[role]
+            for source in (downloads, target.parent, documents/'InstrumentReference30', expected.parent):
+                self.assertEqual(P.run_folder(source,role,RUNS[role]),(expected,RUNS[role]))
+        # A search root may contain the output; actual container roots stay protected.
+        result = P.package(downloads,downloads/'review.zip',RUNS)
+        self.assertEqual(result['runs']['bass']['run_id'],RUNS['bass'])
+        with self.assertRaisesRegex(ValueError,'outside'):
+            P.package(downloads,target/'review.zip',RUNS)
+
+    def test_identical_duplicate_downloads_resolve_but_changed_copies_are_ambiguous(self):
+        copy = self.root/'second-copy'
+        shutil.copytree(self.container,copy)
+        expected = sorted([self.folders['bass'],copy/'AppData/Documents/InstrumentReference30/bass'/RUNS['bass']])[0]
+        self.assertEqual(P.run_folder(self.root,'bass',RUNS['bass']),(expected,RUNS['bass']))
+        changed = copy/'AppData/Documents/InstrumentReference30/bass'/RUNS['bass']/'final-momentum.f32le'
+        with changed.open('r+b') as stream: stream.write(struct.pack('<f',1))
+        with self.assertRaisesRegex(ValueError,'Different/incomplete copies'):
+            P.run_folder(self.root,'bass',RUNS['bass'])
+
+    def test_missing_run_lists_search_folder_and_available_ids_without_substitution(self):
+        with self.assertRaises(ValueError) as failure:
+            P.run_folder(self.container,'bass',RUNS['guitar'])
+        message = str(failure.exception)
+        self.assertIn('Searched folder: '+str(self.container),message)
+        self.assertIn(RUNS['bass'],message)
+        self.assertIn(RUNS['guitar'],message)
+        self.assertIn('files present',message)
+        self.assertFalse(self.out.exists())
+
+    def test_distinct_latest_pointers_require_explicit_uuid(self):
+        copy = self.root/'second-copy'
+        shutil.copytree(self.container,copy)
+        (copy/'AppData/Documents/last-instrument-reference30-bass.json').write_text(json.dumps({'run_id':RUNS['guitar']}))
+        with self.assertRaisesRegex(ValueError,'No unique latest bass'):
+            P.run_folder(self.root,'bass','latest')
+
+    def test_list_runs_cli_is_read_only_and_skips_linked_containers(self):
+        chosen = self.root/'chosen'
+        chosen.mkdir()
+        (chosen/'external-container').symlink_to(self.container,target_is_directory=True)
+        self.assertEqual(P.discover_namespaces(chosen),[])
+        before = {p:P.sha256(p) for p in self.container.rglob('*') if p.is_file()}
+        result = subprocess.run([sys.executable,'-S',str(ROOT/'scripts/package_coreai_instrument_transition_review.py'),
+                                 '--source',str(self.container),'--list-runs'],text=True,capture_output=True)
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertIn(RUNS['bass'],result.stdout)
+        self.assertIn(RUNS['guitar'],result.stdout)
+        self.assertFalse(self.out.exists())
+        self.assertEqual({p:P.sha256(p) for p in before},before)
+
+    def test_cli_missing_run_reports_selected_folder_without_traceback_or_output(self):
+        chosen = self.root/'empty-downloads'
+        chosen.mkdir()
+        result = subprocess.run([sys.executable,'-S',str(ROOT/'scripts/package_coreai_instrument_transition_review.py'),
+                                 '--source',str(chosen),'--bass-run',RUNS['bass'],'--guitar-run',RUNS['guitar'],
+                                 '--out',str(self.out)],text=True,capture_output=True)
+        self.assertEqual(result.returncode,1)
+        self.assertIn('Selected search folder: '+str(chosen),result.stdout)
+        self.assertIn('Review not created:',result.stderr)
+        self.assertIn('InstrumentReference30 folders found: 0',result.stderr)
+        self.assertNotIn('Traceback',result.stderr)
+        self.assertFalse(self.out.exists())
 
     def test_final_hash_mismatch_or_incomplete_run_does_not_publish(self):
         checkpoint = self.folders['bass']/'native-step-50-latent.f32le'
