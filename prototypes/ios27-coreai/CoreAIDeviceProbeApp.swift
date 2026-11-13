@@ -22,6 +22,8 @@ struct CoreAIDeviceProbeApp: App {
     @State private var showingAudioImporter = false
     @State private var importedPiano: CoreAIImportedPiano?
     @State private var reference30: CoreAIDecoderProbe.Reference30GenerationResult?
+    @State private var selectedInstrument30 = "bass"
+    @State private var instrument30Results: [String:CoreAIDecoderProbe.Reference30GenerationResult] = [:]
 
     init() {
         let active = CoreAIPreviewWindow.bundled
@@ -29,14 +31,23 @@ struct CoreAIDeviceProbeApp: App {
         let windowDecoder = CoreAIPreviewWindow.drumReference30WindowEnabled
         let generation = CoreAIPreviewWindow.drumReference30GenerationEnabled
         let sourceWindow = CoreAIPreviewWindow.sourceWindowEncoderEnabled
+        let instrument30 = CoreAIPreviewWindow.instrumentReference30Enabled
+        var instrumentResults: [String:CoreAIDecoderProbe.Reference30GenerationResult] = [:]
+        if instrument30 {
+            for role in ["bass","drums","guitar"] {
+                instrumentResults[role] = CoreAIDecoderProbe.latestReference30Generation(instrument:role)
+            }
+        }
         let reference = generation ? CoreAIDecoderProbe.latestReference30Generation() : nil
-        let drum30 = CoreAIPreviewWindow.drumReference30ComponentsEnabled || decoderOnly || windowDecoder || generation || sourceWindow
+        let drum30 = CoreAIPreviewWindow.drumReference30ComponentsEnabled || decoderOnly || windowDecoder || generation || sourceWindow || instrument30
         let saved = drum30 ? nil : CoreAIDecoderProbe.latestSavedBassPreview(window: active)
         let prior = CoreAIDecoderProbe.savedDenoiserReport()
         let matchingPrior: String? = prior.flatMap { text in
             text.contains("Selected instrument: \(active.stemID);") || (active.stemID == "bass" && !text.contains("Selected instrument:")) ? text : nil
         }
-        _report = State(initialValue: sourceWindow
+        _report = State(initialValue: instrument30
+            ? (instrumentResults["bass"]?.report ?? "Pilih instrumen, lalu buat preview 30 detik.")
+            : sourceWindow
             ? (CoreAIDecoderProbe.savedSourceWindowReport() ?? "Pemeriksaan source encoder belum dijalankan.")
             : generation
             ? (reference?.report ?? "Drum acuan 30 detik belum dibuat.")
@@ -49,6 +60,7 @@ struct CoreAIDeviceProbeApp: App {
         _generatedMix = State(initialValue: saved?.mixURL)
         _restoredPreview = State(initialValue: saved != nil)
         _reference30 = State(initialValue: reference)
+        _instrument30Results = State(initialValue: instrumentResults)
     }
 
     var body: some Scene {
@@ -58,6 +70,7 @@ struct CoreAIDeviceProbeApp: App {
                     VStack(alignment: .leading, spacing: 16) {
                         if CoreAIPreviewWindow.drumReference30GenerationEnabled { reference30Controls }
                         if CoreAIPreviewWindow.sourceWindowEncoderEnabled { sourceWindowControls }
+                        if CoreAIPreviewWindow.instrumentReference30Enabled { instrument30Controls }
                         if CoreAIPreviewWindow.drumReference30WindowEnabled {
                             Text("Pemeriksaan decoder berjendela").font(.headline)
                             Text("Memeriksa kesamaan audio 30 detik dan penggunaan memori. Setelah selesai, bagikan laporannya.")
@@ -152,7 +165,7 @@ struct CoreAIDeviceProbeApp: App {
                             }
                             Divider()
                         }
-                        if !CoreAIPreviewWindow.drumReference30ComponentsEnabled && !CoreAIPreviewWindow.drumReference30DecoderOnlyEnabled && !CoreAIPreviewWindow.drumReference30WindowEnabled && !CoreAIPreviewWindow.drumReference30GenerationEnabled && !CoreAIPreviewWindow.sourceWindowEncoderEnabled {
+                        if !CoreAIPreviewWindow.drumReference30ComponentsEnabled && !CoreAIPreviewWindow.drumReference30DecoderOnlyEnabled && !CoreAIPreviewWindow.drumReference30WindowEnabled && !CoreAIPreviewWindow.drumReference30GenerationEnabled && !CoreAIPreviewWindow.sourceWindowEncoderEnabled && !CoreAIPreviewWindow.instrumentReference30Enabled {
                             Text("Preset aktif: \(window.instrumentLabel)")
                                 .font(.headline)
                             Text("Pemeriksaan dan baseline")
@@ -499,6 +512,57 @@ struct CoreAIDeviceProbeApp: App {
             generatedMix = result.mixURL
             runningModel = false
         }
+    }
+
+    @ViewBuilder
+    private var instrument30Controls: some View {
+        Text("Bass, drum dan gitar — preview 30 detik").font(.headline)
+        Text("Pilih instrumen untuk piano acuan yang sama. Dengarkan hasil solo dan bersama piano sebelum melanjutkan ke lagu penuh.")
+        Picker("Instrumen", selection:$selectedInstrument30) {
+            Text("Bass").tag("bass")
+            Text("Drum").tag("drums")
+            Text("Gitar").tag("guitar")
+        }
+        .pickerStyle(.segmented)
+        .disabled(runningModel)
+        .onChange(of:selectedInstrument30) { _, role in
+            audioPlayer?.stop()
+            report = instrument30Results[role]?.report ?? "Preview instrumen ini belum dibuat."
+        }
+        Button("Buat \(instrument30Label) 30 detik") {
+            audioPlayer?.stop()
+            runningModel = true
+            report = "Memverifikasi piano dan preset \(instrument30Label)…"
+            let role = selectedInstrument30
+            Task {
+                let update: @MainActor @Sendable (String) -> Void = { text in self.report = text }
+                let result = await Task.detached(priority:.userInitiated) {
+                    await CoreAIDecoderProbe.generateDrumReference30(instrument:role,progress:update)
+                }.value
+                instrument30Results[role] = result
+                report = result.report
+                runningModel = false
+            }
+        }
+        .disabled(runningModel)
+        if let result = instrument30Results[selectedInstrument30] {
+            if let stem = result.drumURL {
+                Button("Dengarkan \(instrument30Label) solo") { playPreview(stem) }.disabled(runningModel)
+                ShareLink(item:stem) { Label("Bagikan WAV \(instrument30Label)",systemImage:"square.and.arrow.up") }.disabled(runningModel)
+            }
+            if let mix = result.mixURL {
+                Button("Dengarkan piano + \(instrument30Label)") { playPreview(mix) }.disabled(runningModel)
+                ShareLink(item:mix) { Label("Bagikan WAV piano + \(instrument30Label)",systemImage:"square.and.arrow.up") }.disabled(runningModel)
+            }
+            if let piano = result.pianoURL {
+                Button("Dengarkan piano acuan") { playPreview(piano) }.disabled(runningModel)
+            }
+        }
+        Divider()
+    }
+
+    private var instrument30Label: String {
+        selectedInstrument30 == "guitar" ? "gitar" : (selectedInstrument30 == "drums" ? "drum" : "bass")
     }
 
     @ViewBuilder

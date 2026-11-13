@@ -67,3 +67,7 @@ Lihat [persiapan lagu penuh](coreai-full-song-preparation.md),
 [precision A/B/A](../reviews/coreai-iphone17pro-precision-aba/README.md).
 Jangan mengekstrapolasi waktu komponen ke waktu lagu penuh atau memperbesar
 seluruh sampler menjadi FP32 berdasarkan hasil conditioning.
+
+Tahap berikutnya tersedia pada [preview tiga instrumen30s](coreai-instrument-preview30.md),
+memakai cache ini dan sampler existing yang sama di iPhone untuk uji dengar
+bass/gitar, sebelum integrasi lagu penuh.

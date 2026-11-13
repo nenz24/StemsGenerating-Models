@@ -3508,24 +3508,39 @@ extension CoreAIDecoderProbe {
         let feedback: String; let baselineModified: Bool
     }
 
-    private static func reference30Directory(_ runID: String) -> URL? {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("DrumReference30Generation/" + runID, isDirectory: true)
+    private struct Instrument30Contract: Decodable {
+        let schemaVersion: Int; let profile: String; let status: String; let roles: [String]
+        let presetSha256: [String:String]; let conditionTokens: Int; let conditionShape: [Int]; let maskShape: [Int]
+        let captureReportSha256: String; let hostDrumsControlExact: Bool
+        let absoluteTolerance: Double; let relativeTolerance: Double; let relativeRmseTolerance: Double
+        let samplerWeightStorageDtype: String; let computeDtype: String; let vaeDtype: String
+        let nativeExports: Int; let baselineModified: Bool; let paddingTokens: Int; let truncatedTokens: Int
+        let fullSongNativeReadiness: String; let bassGuitarNumericalParity: String; let artifactSha256: [String:String]
     }
-    private static func saveReference30(_ lines: [String], runID: String) {
-        guard let folder = reference30Directory(runID) else { return }
+    private static func reference30Directory(_ runID: String, instrument: String? = nil) -> URL? {
+        if let instrument, !["bass","drums","guitar"].contains(instrument) { return nil }
+        let group = instrument.map { "InstrumentReference30/" + $0 } ?? "DrumReference30Generation"
+        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
+            .appendingPathComponent(group + "/" + runID, isDirectory: true)
+    }
+    private static func reference30Pointer(_ instrument: String?) -> String {
+        instrument.map { "last-instrument-reference30-" + $0 + ".json" } ?? "last-drums-reference30-generation.json"
+    }
+    private static func saveReference30(_ lines: [String], runID: String, instrument: String? = nil) {
+        guard let folder = reference30Directory(runID, instrument: instrument) else { return }
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         try? lines.joined(separator: "\n").write(to: folder.appendingPathComponent("report.txt"), atomically: true, encoding: .utf8)
         if let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
            let data = try? JSONSerialization.data(withJSONObject: ["run_id":runID]) {
-            try? data.write(to: root.appendingPathComponent("last-drums-reference30-generation.json"), options: .atomic)
+            try? data.write(to: root.appendingPathComponent(reference30Pointer(instrument)), options: .atomic)
         }
     }
-    static func latestReference30Generation() -> Reference30GenerationResult? {
+    static func latestReference30Generation(instrument: String? = nil) -> Reference30GenerationResult? {
+        if let instrument, !["bass","drums","guitar"].contains(instrument) { return nil }
         guard let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
-              let data = try? Data(contentsOf: root.appendingPathComponent("last-drums-reference30-generation.json")),
+              let data = try? Data(contentsOf: root.appendingPathComponent(reference30Pointer(instrument))),
               let object = try? JSONSerialization.jsonObject(with: data) as? [String:String],
-              let id = object["run_id"], UUID(uuidString: id) != nil, let folder = reference30Directory(id),
+              let id = object["run_id"], UUID(uuidString: id) != nil, let folder = reference30Directory(id, instrument: instrument),
               let folderValues = try? folder.resourceValues(forKeys: [.isDirectoryKey,.isSymbolicLinkKey]),
               folderValues.isDirectory == true, folderValues.isSymbolicLink != true,
               let text = try? String(contentsOf: folder.appendingPathComponent("report.txt"), encoding: .utf8) else { return nil }
@@ -3541,15 +3556,21 @@ extension CoreAIDecoderProbe {
             return url
         }
         let hasAudio = text.contains("Reference30 execution: COMPLETED") && text.contains("WAV generated on device: YES")
-        return Reference30GenerationResult(report: report, folder: folder, drumURL: hasAudio ? file("drums.wav") : nil,
-            mixURL: hasAudio ? file("piano-with-drums.wav") : nil, pianoURL: hasAudio ? file("piano.wav") : nil)
+        let stem = instrument ?? "drums"
+        return Reference30GenerationResult(report: report, folder: folder, drumURL: hasAudio ? file(stem + ".wav") : nil,
+            mixURL: hasAudio ? file("piano-with-" + stem + ".wav") : nil, pianoURL: hasAudio ? file("piano.wav") : nil)
     }
     private static func writeReference30Floats(_ values: [Float], to url: URL) throws {
         guard values.allSatisfy({ $0.isFinite }) else { throw ProbeError.invalidFloatData }
         try values.withUnsafeBufferPointer { try Data(buffer: $0).write(to: url, options: .atomic) }
     }
 
-    static func generateDrumReference30(progress: @escaping @MainActor @Sendable (String) -> Void) async -> Reference30GenerationResult {
+    static func generateDrumReference30(instrument: String? = nil, progress: @escaping @MainActor @Sendable (String) -> Void) async -> Reference30GenerationResult {
+        if let instrument, !["bass","drums","guitar"].contains(instrument) {
+            return Reference30GenerationResult(report:"Invalid instrument; no models opened",folder:nil,drumURL:nil,mixURL:nil,pianoURL:nil)
+        }
+        let stem = instrument ?? "drums"
+        let compareOriginal = instrument == nil || instrument == "drums"
         let clock = ContinuousClock(), start = ContinuousClock().now, runID = UUID().uuidString
         let memory = CoreAIProcessFootprintSampler()
         var samplingPool: [String:RetainedStage] = [:], decodingPool: [String:RetainedStage] = [:]
@@ -3558,7 +3579,7 @@ extension CoreAIDecoderProbe {
         var steps = 0, comparisons = 0, passed = 0, completed = false
         var velocityTraceHashes: [String:String] = [:]
         var drumURL: URL?, mixURL: URL?, pianoURL: URL?
-        let output = reference30Directory(runID)
+        let output = reference30Directory(runID, instrument: instrument)
         var lines = ["Runtime: CoreAI frozen drums30 generation; run \(runID)",
             "OS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
             "Revision: reference30-live50-window256-v2; frozen accepted piano/condition/noise; no source/Qwen recomputation",
@@ -3570,12 +3591,23 @@ extension CoreAIDecoderProbe {
             "Finite strict failures remain NOT PASSED while independent trajectory measurements continue; invalid/native/nonfinite/memory errors stop",
             "cpuOnly requested; placement/native eviction unmeasured. No broad cache deletion or precision/tolerance changes.",
             "Thermal start: \(ProcessInfo.processInfo.thermalState.rawValue); low power: \(ProcessInfo.processInfo.isLowPowerModeEnabled)"]
-        saveReference30(lines, runID: runID)
+        if instrument != nil {
+            lines[0] = "Runtime: CoreAI instrument30 preview; instrument \(stem); run \(runID)"
+            lines[2] = "Revision: instrument30-shared-sampler-v1; fixed accepted30s piano/context/noise; selected cached condition; no source/Qwen recomputation"
+            lines[3] = "No all-step velocity trace in this preview; save five live latent checkpoints and final raw audio. Original drum diagnostic remains separate."
+            lines[7] = compareOriginal
+                ? "Drum control: compare original five latent checkpoints and final audio; no gold resets"
+                : "Bass/guitar matching host trajectory/audio: NOT AVAILABLE; numerical parity NOT EVALUATED; drum gold is never used as their reference"
+            lines.append("Selected instrument: \(stem); musical listening and full-song readiness: NOT EVALUATED; original drum4/6 gate remains unchanged")
+        }
+        saveReference30(lines, runID: runID, instrument: instrument)
         do {
-            guard CoreAIPreviewWindow.drumReference30GenerationEnabled, let root = Bundle.main.resourceURL, let output else { throw ShardError.missingPreparedBundle }
+            let expectedProfile = instrument == nil ? "drums-reference30-generation" : "instrument-reference30-preview"
+            guard (instrument == nil ? CoreAIPreviewWindow.drumReference30GenerationEnabled : CoreAIPreviewWindow.instrumentReference30Enabled),
+                  let root = Bundle.main.resourceURL, let output else { throw ShardError.missingPreparedBundle }
             let base = root.appendingPathComponent("ModelCandidates", isDirectory: true)
             guard let stamp = try JSONSerialization.jsonObject(with: Data(contentsOf: base.appendingPathComponent("app-resource-manifest.json"))) as? [String:Any],
-                  stamp["selected_profile"] as? String == "drums-reference30-generation",
+                  stamp["selected_profile"] as? String == expectedProfile,
                   let files = stamp["files"] as? [String:[String:Any]],
                   let configSHA = files["drums-reference30-generation.json"]?["sha256"] as? String else { throw ShardError.invalidManifest }
             try verifyReferenceIdentity(base.appendingPathComponent("drums-reference30-generation.json"), expected: configSHA)
@@ -3638,7 +3670,37 @@ extension CoreAIDecoderProbe {
             func input(_ name: String, _ count: Int) throws -> [Float] { try readFloats(folder: sampler, name: "capture/"+name+".f32le", count: count, hashes: ref.artifactSha256) }
             let times = try input("timesteps",51)
             guard times[0] == 1, times[50] == 0, zip(times,times.dropFirst()).allSatisfy({ $0.0 > $0.1 }) else { throw ShardError.invalidManifest }
-            let condition = NDArray(scalars: try input("condition",127*2048), shape:[1,127,2048])
+            var conditionValues = try input("condition",127*2048)
+            if instrument != nil {
+                let cacheName = "instrument-reference30-conditioning-127"
+                let cache = base.appendingPathComponent(cacheName, isDirectory:true)
+                guard let referenceSHA = files[cacheName+"/reference.json"]?["sha256"] as? String else { throw ShardError.invalidManifest }
+                try verifyReferenceIdentity(cache.appendingPathComponent("reference.json"), expected:referenceSHA)
+                let cached = try decoder.decode(Instrument30Contract.self,from:Data(contentsOf:cache.appendingPathComponent("reference.json")))
+                let presets = ["bass":"73177b9d57ef961a66f3df375d24d2a869ad4f27fd6f007b6641d3d58c8614a1",
+                    "drums":"bcfd73641fddbda1fb0975febfe28cccb3a3121ec48cec1d877933e64a6d70ca",
+                    "guitar":"2f49a2db3ee92b2c52418794d38e4e29312dec5219c3f4ab4c7cf571c12df389"]
+                guard cached.schemaVersion == 1, cached.profile == cacheName, cached.status == "prepared_instrument_preview30",
+                      cached.roles == ["bass","drums","guitar"], cached.presetSha256 == presets,
+                      cached.conditionTokens == 127, cached.conditionShape == [1,127,2048], cached.maskShape == [1,127],
+                      cached.captureReportSha256 == config.captureReportSha256, cached.hostDrumsControlExact,
+                      cached.absoluteTolerance == 1e-4, cached.relativeTolerance == 1e-3, cached.relativeRmseTolerance == 1e-3,
+                      cached.samplerWeightStorageDtype == "bfloat16", cached.computeDtype == "float32", cached.vaeDtype == "float32",
+                      cached.nativeExports == 0, !cached.baselineModified, cached.paddingTokens == 0, cached.truncatedTokens == 0,
+                      cached.fullSongNativeReadiness == "NOT EVALUATED", cached.bassGuitarNumericalParity == "NOT EVALUATED" else { throw ShardError.invalidManifest }
+                let required = Set(["conditioning-report.json"] + cached.roles.flatMap { [$0+"/condition.f32le", $0+"/condition-mask.f32le"] })
+                guard Set(cached.artifactSha256.keys) == required else { throw ShardError.invalidManifest }
+                for (name,expected) in cached.artifactSha256 {
+                    try checkManifest(try streamingSHA256(cache.appendingPathComponent(name)),expected,"instrument30.cache_sha256")
+                }
+                let selected = try readFloats(folder:cache,name:stem+"/condition.f32le",count:127*2048,hashes:cached.artifactSha256)
+                let mask = try readFloats(folder:cache,name:stem+"/condition-mask.f32le",count:127,hashes:cached.artifactSha256)
+                guard mask.allSatisfy({ $0 == 1 }) else { throw ShardError.invalidManifest }
+                if stem == "drums" { try checkManifest(selected,conditionValues,"instrument30.original_drum_condition") }
+                conditionValues = selected
+                lines.append("Condition preset SHA256: \(presets[stem] ?? "missing"); condition SHA256: \(cached.artifactSha256[stem+"/condition.f32le"] ?? "missing"); all127 mask values valid")
+            }
+            let condition = NDArray(scalars:conditionValues, shape:[1,127,2048])
             let context = NDArray(scalars: try input("source-context",750*128), shape:[1,750,128])
             var latent = NDArray(scalars: try input("initial-noise",48000), shape:[1,750,64])
             var momentum = NDArray(scalars:[Float](repeating:0,count:48000), shape:[1,750,64])
@@ -3649,7 +3711,7 @@ extension CoreAIDecoderProbe {
                 let stepStart = clock.now, before = sampling.phaseTotals.backendAwaitMs
                 let reuse = i > 0
                 if i == 1 { try checkManifest(samplingPool.count,0,"reference30.cold_step_handles"); lines.append("Actual step1 completed with zero retained handles; retaining from step2") }
-                await progress("Membuat drum acuan 30 detik: langkah \(i+1)/50…")
+                await progress("Membuat \(stem) 30 detik: langkah \(i+1)/50…")
                 var state = ["noise":latent,"condition":condition,"context":context,"timestep":NDArray(scalars:[times[i]],shape:[1])]
                 for (j,stage) in ref.stages.enumerated() {
                     try requirePreviewMemoryBudget()
@@ -3664,10 +3726,12 @@ extension CoreAIDecoderProbe {
                     guard samplingPool.count <= 15 else { throw ShardError.invalidManifest }
                 }
                 guard let velocity = state["velocity"] else { throw ProbeError.invalidOutputTensor }
-                let traceName = String(format:"native-step-%02d-velocity.f32le",i+1)
-                let traceURL = output.appendingPathComponent(traceName)
-                try writeReference30Floats(try copiedValues(velocity,shape:[2,750,64]),to:traceURL)
-                velocityTraceHashes[traceName] = try streamingSHA256(traceURL)
+                if instrument == nil {
+                    let traceName = String(format:"native-step-%02d-velocity.f32le",i+1)
+                    let traceURL = output.appendingPathComponent(traceName)
+                    try writeReference30Floats(try copiedValues(velocity,shape:[2,750,64]),to:traceURL)
+                    velocityTraceHashes[traceName] = try streamingSHA256(traceURL)
+                }
                 let breadcrumbs = interleavingPhaseProgress(prefix:"Run \(runID); step\(i+1)/50 APG live feedback",fileName:"drum-reference30-generation-\(runID)-phase.txt")
                 let next = try await runPreviewSamplingStage(update,folder:sampler,
                     inputs:["velocity":velocity,"latent":latent,"momentum":momentum,"dt":NDArray(scalars:[times[i]-times[i+1]],shape:[1])],
@@ -3678,15 +3742,18 @@ extension CoreAIDecoderProbe {
                 if config.checkpoints.contains(steps) {
                     let actual = try copiedValues(latent,shape:[1,750,64])
                     try writeReference30Floats(actual,to:output.appendingPathComponent(String(format:"native-step-%02d-latent.f32le",steps)))
-                    try drum30Comparison("Live latent step\(steps)",actual:actual,expected:try input(String(format:"step-%02d-latent",steps),48000),
-                        comparisons:&comparisons,passed:&passed,lines:&lines)
+                    if compareOriginal {
+                        try drum30Comparison("Live latent step\(steps)",actual:actual,expected:try input(String(format:"step-%02d-latent",steps),48000),
+                            comparisons:&comparisons,passed:&passed,lines:&lines)
+                    }
                 }
-                if config.checkpoints.contains(steps) || steps % 5 == 0 { saveReference30(lines,runID:runID) }
+                if config.checkpoints.contains(steps) || steps % 5 == 0 { saveReference30(lines,runID:runID,instrument:instrument) }
             }
             try checkManifest(sampling.completedCalls,750,"reference30.sampling_calls")
             try checkManifest(sampling.modelOpens,30+repairs.attempts,"reference30.sampling_opens")
             try checkManifest(sampling.functionBinds,30,"reference30.sampling_binds")
             try checkManifest(sampling.cacheHits,720,"reference30.sampling_hits")
+            if instrument == nil {
             try checkManifest(velocityTraceHashes.count,50,"reference30.velocity_trace_count")
             let traceURL = output.appendingPathComponent("velocity-trace.json")
             let traceMetadata: [String:Any] = [
@@ -3697,9 +3764,10 @@ extension CoreAIDecoderProbe {
             let traceData = try JSONSerialization.data(withJSONObject:traceMetadata,options:[.sortedKeys])
             try traceData.write(to:traceURL,options:.atomic)
             lines.append("Velocity trace SHA256: \(try streamingSHA256(traceURL)); tensors50/50; no feedback substitution")
+            }
             samplingPool.removeAll()
             lines.append("Sampling handles released before window decode; native eviction unverified")
-            saveReference30(lines,runID:runID)
+            saveReference30(lines,runID:runID,instrument:instrument)
             let final = try copiedValues(latent,shape:[1,750,64])
             try writeReference30Floats(final,to:output.appendingPathComponent("final-latent.f32le"))
             try writeReference30Floats(try copiedValues(momentum,shape:[1,750,64]),to:output.appendingPathComponent("final-momentum.f32le"))
@@ -3708,12 +3776,12 @@ extension CoreAIDecoderProbe {
             var audio = [Float](repeating:0,count:2880000)
             for (i,t) in window.windowPlan.enumerated() {
                 try requirePreviewMemoryBudget()
-                await progress("Mendekode drum hasil 50 langkah: \(i+1)/6…")
+                await progress("Mendekode \(stem) hasil 50 langkah: \(i+1)/6…")
                 var data = [Float](repeating:0,count:16384)
                 for c in 0..<64 { for f in 0..<256 { data[c*256+f] = final[(t.windowStart+f)*64+c] } }
                 let hash = data.withUnsafeBufferPointer { SHA256.hash(data:Data(buffer:$0)).map { String(format:"%02x",$0) }.joined() }
                 lines.append("Decode window\(i+1): LIVE final-latent slice SHA256 \(hash); gold tile input is not substituted")
-                saveReference30(lines,runID:runID)
+                saveReference30(lines,runID:runID,instrument:instrument)
                 let breadcrumbs = interleavingPhaseProgress(prefix:"Run \(runID); live decoder window\(i+1)/6",fileName:"drum-reference30-generation-\(runID)-phase.txt")
                 let result = try await runPreviewSamplingStage(codecStage,folder:codec,inputs:["latent":NDArray(scalars:data,shape:[1,64,256])],
                     aot:nil,reuseStages:true,pool:&decodingPool,stats:&decoding,allowCacheRepair:false,cacheRepair:&repairs,phaseProgress:breadcrumbs)
@@ -3728,10 +3796,12 @@ extension CoreAIDecoderProbe {
             try checkManifest(decoding.modelOpens,1,"reference30.decode_opens")
             try checkManifest(decoding.functionBinds,1,"reference30.decode_binds")
             try checkManifest(decoding.cacheHits,5,"reference30.decode_hits")
-            let expected = try readFloats(folder:codec,name:"final-audio.f32le",count:2880000,hashes:window.artifactSha256)
-            try drum30Comparison("LIVE full30s decoded audio",actual:audio,expected:expected,comparisons:&comparisons,passed:&passed,lines:&lines)
-            try checkManifest(comparisons,6,"reference30.checkpoint_audio_comparisons")
-            try writeReference30Floats(audio,to:output.appendingPathComponent("raw-drums.f32le"))
+            if compareOriginal {
+                let expected = try readFloats(folder:codec,name:"final-audio.f32le",count:2880000,hashes:window.artifactSha256)
+                try drum30Comparison("LIVE full30s decoded audio",actual:audio,expected:expected,comparisons:&comparisons,passed:&passed,lines:&lines)
+                try checkManifest(comparisons,6,"reference30.checkpoint_audio_comparisons")
+            } else { try checkManifest(comparisons,0,"instrument30.no_unrelated_gold_comparisons") }
+            try writeReference30Floats(audio,to:output.appendingPathComponent("raw-"+stem+".f32le"))
             let piano = try input("source48",2880000)
             var mix = zip(piano,audio).map { Float(config.pianoMixGain)*$0.0+Float(config.drumMixGain)*$0.1 }
             let drumPeak = audio.reduce(Float(0)){max($0,abs($1))}
@@ -3739,30 +3809,34 @@ extension CoreAIDecoderProbe {
             let mixPeak = mix.reduce(Float(0)){max($0,abs($1))}
             let peak = max(drumPeak,max(pianoPeak,mixPeak))
             let gain = min(Float(config.referenceListeningGain),Float(pow(10.0,-3.0/20.0))/max(peak,1e-12))
-            let drum = output.appendingPathComponent("drums.wav"), mixed = output.appendingPathComponent("piano-with-drums.wav"), source = output.appendingPathComponent("piano.wav")
+            let drum = output.appendingPathComponent(stem+".wav"), mixed = output.appendingPathComponent("piano-with-"+stem+".wav"), source = output.appendingPathComponent("piano.wav")
             try writeStereoFloatWAV(audio.map{$0*gain},frames:1440000,to:drum)
             try writeStereoFloatWAV(piano.map{$0*gain},frames:1440000,to:source)
             for i in mix.indices { mix[i] *= gain }; try writeStereoFloatWAV(mix,frames:1440000,to:mixed)
             drumURL = drum; mixURL = mixed; pianoURL = source; completed = true
-            lines.append("Listening copies: shared gain\(gain), diagnostic0.5piano+0.5drum; no second source gain; production mix unchanged. Raw comparisons precede attenuation.")
-            lines.append("Artifact SHA256: drums \(try streamingSHA256(drum)); mix \(try streamingSHA256(mixed)); piano \(try streamingSHA256(source))")
+            lines.append("Listening copies: shared gain\(gain), diagnostic0.5piano+0.5\(stem); no second source gain; production mix unchanged. Raw comparisons precede attenuation.")
+            lines.append("Artifact SHA256: \(stem) \(try streamingSHA256(drum)); mix \(try streamingSHA256(mixed)); piano \(try streamingSHA256(source))")
         } catch {
             samplingPool.removeAll(); decodingPool.removeAll()
             if let failure = error as? StageExecutionFailure { lines.append("Failing asset: \(failure.asset); operation: \(failure.operation)"); lines.append(contentsOf:failure.details) }
             else { lines.append(contentsOf:modelErrorDetails(error)) }
         }
-        let usage = memory.finish(), numerical = completed && passed == 6
+        let usage = memory.finish(), numerical = compareOriginal && completed && passed == 6
         let memoryPassed = usage.peak.map{$0 < 2000*1048576} ?? false
         lines.append(contentsOf:repairs.events)
         lines.append("Reference30 execution: \(completed ? "COMPLETED" : "NOT COMPLETED"); steps\(steps)/50; sampling calls\(sampling.completedCalls)/750; decoder calls\(decoding.completedCalls)/6")
         lines.append("Sampling opens\(sampling.modelOpens), binds\(sampling.functionBinds), hits\(sampling.cacheHits); decoder opens\(decoding.modelOpens), binds\(decoding.functionBinds), hits\(decoding.cacheHits)")
-        lines.append("Original checkpoint/audio strict parity: \(completed ? (numerical ? "PASS" : "NOT PASSED") : "NOT EVALUATED"); \(passed)/\(comparisons) comparisons passed; target6. Sparse checkpoints are not every intermediate latent.")
+        if compareOriginal {
+            lines.append("Original checkpoint/audio strict parity: \(completed ? (numerical ? "PASS" : "NOT PASSED") : "NOT EVALUATED"); \(passed)/\(comparisons) comparisons passed; target6. Sparse checkpoints are not every intermediate latent.")
+        } else {
+            lines.append("\(stem) numerical parity: NOT EVALUATED; no matching host trajectory/audio; no comparisons against drum gold, target0")
+        }
         if let peak = usage.peak { lines.append("Sampled process maximum MiB (10ms): \(Double(peak)/1048576); sampled budget <2000MiB: \(memoryPassed ? "PASS" : "NOT PASSED")") }
         else { lines.append("Sampled memory readiness: NOT EVALUATED; footprint unavailable") }
-        lines.append("Reference30 numerical/resource readiness: \(numerical && memoryPassed ? "PASS" : "NOT PASSED"); native music listening/full-song bass-drums-guitar: NOT EVALUATED")
+        lines.append("Reference30 numerical/resource readiness: \(compareOriginal ? (numerical && memoryPassed ? "PASS" : "NOT PASSED") : "NOT EVALUATED"); native music listening/full-song bass-drums-guitar: NOT EVALUATED")
         lines.append("WAV generated on device: \(completed ? "YES; diagnostic listening copies" : "NO"); targeted initial-bind repair\(repairs.attempts)/1, successful retries\(repairs.successfulRetries); no inference retry or baseline replacement")
         lines.append("Thermal end: \(ProcessInfo.processInfo.thermalState.rawValue); total reference30 ms \(ms(start.duration(to:clock.now)))")
-        saveReference30(lines,runID:runID)
+        saveReference30(lines,runID:runID,instrument:instrument)
         return Reference30GenerationResult(report:lines.joined(separator:"\n"),folder:output,drumURL:drumURL,mixURL:mixURL,pianoURL:pianoURL)
     }
 }
