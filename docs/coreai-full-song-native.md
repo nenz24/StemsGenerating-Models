@@ -76,3 +76,9 @@ atau penerimaan musikal. Native full-song trajectory, sumber native, glitch
 di overlap, harmoni antarbagian, memori, thermal dan latency perlu diukur dari
 run sebenarnya. Gate drum lama4/6 tetap terpisah dan belum lolos. Tidak ada
 perkiraan durasi kerja dari perkalian hasil klip pendek.
+
+Jika musik gagal uji dengar, gunakan [paket cuplikan dari hasil
+tersimpan](coreai-full-song-quality-review.md) sebelum menjalankan generasi
+lagi. Paket membandingkan awal/tengah/akhir dan, jika container tersedia, raw
+overlap terhadap hasil perakitan. Mengubah gain atau memperpanjang crossfade
+tidak membuktikan bahwa masalah harmoni/gaya telah diselesaikan.
