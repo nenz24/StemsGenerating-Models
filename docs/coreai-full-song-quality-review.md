@@ -44,6 +44,16 @@ menekan tombol generasi lagi. `--source` dapat memilih folder tersebut secara
 langsung; `--execution-sha` membatasi pencarian pada run yang ditunjuk laporan.
 Beberapa run yang berbeda harus dipilih eksplisit; helper tidak mengganti run.
 
+Jika rentang akhir didominasi fade/senyap, `--focus-seconds` menerima waktu
+global yang benar-benar perlu diperiksa. Pilihan ini mengganti cuplikan akhir
+dengan3s di sekitar waktu tersebut untuk kelima WAV, tanpa menambah jumlah
+salinan dengar. Paket juga menyertakan2s raw assembled per instrumen, receipt
+raw stem, dan final latent/report dari semua window yang berkontribusi di
+rentang itu. Tidak ada pengurangan gain atau filter. Jika raw fokus seluruhnya
+berada dalam satu window, nilai raw window dan raw assembled dibandingkan
+persis; hasilnya hanya binding perakitan, bukan parity decoder atau mutu musik.
+Waktu negatif/nonfinite/di luar lagu ditolak. Flag ini memerlukan container.
+
 Paket container memuat:
 
 - Cuplikan3s piano, bass, drum, gitar dan band pada awal/tengah/akhir lagu.

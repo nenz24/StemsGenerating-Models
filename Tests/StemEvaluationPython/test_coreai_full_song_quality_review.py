@@ -71,6 +71,17 @@ class AudioOnlyTests(unittest.TestCase):
         self.assertEqual(result.returncode,0,result.stderr);self.assertIn('audio-only',result.stdout)
         self.assertTrue(self.out.is_file())
 
+    def test_focus_geometry_distinguishes_internal_audio_from_overlap(self):
+        # A60s song has windows0..30,15..45,30..60 seconds.
+        plan=P.schedule(32000*60)
+        for seconds,expected in [(0,[0]),(20,[0,1]),(32,[1,2]),(52,[2])]:
+            self.assertEqual(P.contributors(plan['windows'],seconds*48000,8*48000),expected)
+        self.assertEqual(P.focus_range(40*48000,20.,3),(int(18.5*48000),3*48000))
+        self.assertEqual(P.focus_range(40*48000,0.,2),(0,2*48000))
+        for value in (float('nan'),float('inf'),-1.,40.):
+            with self.assertRaises(ValueError):P.focus_range(40*48000,value,3)
+        with self.assertRaisesRegex(ValueError,'container'):P.package(self.out,audio=self.audio,focus_seconds=1.)
+
 
 @unittest.skipUnless(importlib.util.find_spec('numpy'),'Optional synthetic container fixture')
 class ContainerTests(unittest.TestCase):
@@ -151,6 +162,24 @@ class ContainerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'do not repeat generation'):
             P.discover(self.root/'Downloads','c'*64)
         self.assertFalse(self.out.exists())
+
+    def test_focus_exports_same_time_stems_and_raw_without_additional_gain(self):
+        manifest=P.package(self.out,source=self.container,focus_seconds=15.)
+        self.assertEqual(len(manifest['clips']),15)
+        self.assertEqual(manifest['focus']['start_sample'],14*48000)
+        self.assertEqual(manifest['focus']['frames'],2*48000)
+        focused=[c for c in manifest['clips'] if '/focus/' in c['path']]
+        self.assertEqual(len(focused),5)
+        self.assertTrue(all(c['start_seconds']==13.5 and c['duration_seconds']==3 for c in focused))
+        self.assertFalse(any('/end/' in c['path'] for c in manifest['clips']))
+        with zipfile.ZipFile(self.out) as z:
+            for role in P.ROLES:
+                actual=P.floats(z.read(role+'/assembled-focus.f32le'))
+                expected=P.raw_range(self.folder/('raw-'+role+'.f32le'),self.plan['target_samples48'],14*48000,2*48000)
+                self.assertEqual(actual,expected)
+                entry=manifest['artifacts'][role+'/assembled-focus.f32le']
+                self.assertEqual(entry['source_file_sha256'],P.sha256(self.folder/('raw-'+role+'.f32le')))
+        self.assertTrue(all(c['passed'] for c in manifest['checks'].values()))
 
 
 if __name__=='__main__':unittest.main()

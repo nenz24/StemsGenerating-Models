@@ -108,6 +108,17 @@ def regions(frames,seconds):
     return [(name,start,count) for name,start in [('beginning',0),('middle',(frames-count)//2),('end',frames-count)]]
 
 
+def focus_range(frames,seconds,length):
+    if not isinstance(seconds,(float,int)) or not math.isfinite(seconds) or not 0<=seconds<frames/RATE:
+        raise ValueError('Focus time must lie inside the saved song')
+    count=min(frames,length*RATE);start=max(0,min(round(seconds*RATE)-count//2,frames-count))
+    return start,count
+
+
+def contributors(windows,start,count):
+    return [w['index'] for w in windows if max(start,w['sample_start48'])<min(start+count,w['sample_end48'])]
+
+
 def discover(source,execution=None):
     source=Path(source).absolute()
     if not source.is_dir() or any(p.is_symlink() for p in (source,*source.parents)):raise ValueError('Select an existing unlinked download folder')
@@ -202,10 +213,12 @@ def assembled_range(windows,parts,start,count):
     return array.array('f',(total[i]/weight[i%count] for i in range(2*count)))
 
 
-def package(out,audio=None,source=None,execution=None):
+def package(out,audio=None,source=None,execution=None,focus_seconds=None):
     out=Path(out).absolute()
     if out.exists() or out.is_symlink():raise FileExistsError('Existing output preserved: '+str(out))
     if (audio is None)==(source is None):raise ValueError('Choose one audio file or container folder')
+    if focus_seconds is not None and (source is None or not math.isfinite(focus_seconds) or focus_seconds<0):
+        raise ValueError('A finite nonnegative focus time requires a container source')
     folder=None
     if source is not None:
         folder=discover(source,execution)
@@ -240,17 +253,24 @@ def package(out,audio=None,source=None,execution=None):
             done,plan,waves,stems,captures=inspect(folder);frames=done['target_samples48'];windows=plan['windows']
             gain=struct.unpack('<f',struct.pack('<f',done['listening_gain']))[0]
             manifest.update(mode='container',completed_receipt=done,schedule=plan['windows'],listening_gain_float32=gain)
+            listening=regions(frames,3)
+            focus=None
+            if focus_seconds is not None:
+                a,n=focus_range(frames,focus_seconds,3);listening[-1]=('focus',a,n)
+                a,n=focus_range(frames,focus_seconds,2)
+                focus={'requested_seconds':focus_seconds,'start_sample':a,'frames':n,'window_indices':contributors(windows,a,n)}
+                manifest['focus']=focus
             save_bytes('device-report.txt',(folder/'report.txt').read_bytes())
             save_bytes('completed.json',(folder/'completed.json').read_bytes())
             for name,wave in waves.items():
-                for region,start,count in regions(frames,3):wav_clip(wave,'listening/'+region+'/'+name,start,count)
+                for region,start,count in listening:wav_clip(wave,'listening/'+region+'/'+name,start,count)
             previous,last=windows[-2],windows[-1]
             begin=last['sample_start48'];end=min(previous['sample_end48'],last['sample_end48']);middle=(begin+end)//2
             boundaries={begin,end,*[v for w in windows for v in (w['sample_start48'],w['sample_end48']) if begin<=v<=end]}
             left=max(v for v in boundaries if v<=middle);right=min(v for v in boundaries if v>middle)
             count=min(3*RATE,right-left);start=max(left,min(middle-count//2,right-count))
             indices=[w['index'] for w in windows if w['sample_start48']<=start and w['sample_end48']>=start+count]
-            selected=sorted({0,len(windows)//2,len(windows)-1,*indices})
+            selected=sorted({0,len(windows)//2,len(windows)-1,*indices,*(focus['window_indices'] if focus else [])})
             manifest['seam']={'start_sample':start,'frames':count,'window_indices':indices,'selected_latent_windows':selected}
             for role in ROLES:
                 parts={}
@@ -274,7 +294,20 @@ def package(out,audio=None,source=None,execution=None):
                 if sys.byteorder!='little':little.byteswap()
                 save_bytes(role+'/assembled-overlap.f32le',little.tobytes(),shape=[1,2,count],dtype='float32_le',global_start_sample=start)
                 manifest['checks'][role+'_selected_overlap_replay']=comparison(assembled_range(windows,parts,start,count),actual)
-                for region,a,n in regions(frames,3):
+                if focus:
+                    a,n=focus['start_sample'],focus['frames'];values=raw_range(stems[role],frames,a,n)
+                    little=array.array('f',values)
+                    if sys.byteorder!='little':little.byteswap()
+                    receipt=metadata(folder/(role+'-assembled.json'))
+                    save_bytes(role+'/assembled-focus.f32le',little.tobytes(),shape=[1,2,n],dtype='float32_le',
+                        global_start_sample=a,source_file_sha256=receipt['raw_sha256'])
+                    save_bytes(role+'/assembled.json',(folder/(role+'-assembled.json')).read_bytes())
+                    if len(focus['window_indices'])==1:
+                        i=focus['window_indices'][0]
+                        original=raw_range(captures[role,i]['raw'],FRAMES,a-windows[i]['sample_start48'],n)
+                        manifest['checks'][role+'_focus_single_window_binding']={'passed':values==original,
+                            'scope':'Exact raw values; focus is outside generation overlap; not decoder/trajectory parity'}
+                for region,a,n in listening:
                     raw=raw_range(stems[role],frames,a,n)
                     scaled=array.array('f',(x*gain for x in raw))
                     # Exact IEEE Float32 gain replay, bound to the receipt-verified device WAV.
@@ -298,9 +331,11 @@ def main():
     group.add_argument('--source',type=Path,help='Downloaded container, Documents, execution folder or Downloads')
     group.add_argument('--choose-container',action='store_true')
     parser.add_argument('--execution-sha',help='Exact execution SHA from the original full-song report')
+    parser.add_argument('--focus-seconds',type=float,help='Container only: replace silent tail with a3s focus and include2s raw evidence')
     parser.add_argument('--out',type=Path,help='New ZIP, outside the container; default chooses the next unused version')
     args=parser.parse_args()
     if args.execution_sha and not (args.source or args.choose_container):parser.error('--execution-sha requires a container source')
+    if args.focus_seconds is not None and not (args.source or args.choose_container):parser.error('--focus-seconds requires a container source')
     if args.choose_audio or args.choose_container:
         if sys.platform!='darwin':parser.error('Chooser requires macOS; use --audio/--source')
         command='POSIX path of (choose '+('file with prompt "Pilih WAV piano-with-band hasil yang sudah ada"' if args.choose_audio else 'folder with prompt "Pilih container CoreAIProbe yang sudah di-download"')+')'
@@ -315,7 +350,7 @@ def main():
             out=ROOT/('.runtime-cache/full-song-quality-review-v%d.zip'%version)
             if not out.exists() and not out.is_symlink():break
             version+=1
-    try:manifest=package(out,args.audio,args.source,args.execution_sha)
+    try:manifest=package(out,args.audio,args.source,args.execution_sha,args.focus_seconds)
     except (ValueError,OSError,KeyError,TypeError) as error:parser.exit(1,'Review not created: '+str(error)+'\n')
     print('Private review:',out,';',out.stat().st_size,'bytes;',manifest['mode'])
     print('Existing outputs only; no generation, export, baseline or audio repair. Send this ZIP.')
