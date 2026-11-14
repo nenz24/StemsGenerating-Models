@@ -3010,6 +3010,12 @@ extension CoreAIDecoderProbe {
         let jobSHA: String; let run: FullSongJob.Run; let condition: [Float]
         let context: [Float]; let noise: [Float]; let times: [Float]
         let outputParent: URL; let staticAssetsVerified: Bool
+        let guidanceCandidate: Float?
+        init(jobSHA: String, run: FullSongJob.Run, condition: [Float], context: [Float], noise: [Float], times: [Float],
+             outputParent: URL, staticAssetsVerified: Bool, guidanceCandidate: Float? = nil) {
+            self.jobSHA = jobSHA; self.run = run; self.condition = condition; self.context = context; self.noise = noise; self.times = times
+            self.outputParent = outputParent; self.staticAssetsVerified = staticAssetsVerified; self.guidanceCandidate = guidanceCandidate
+        }
     }
     private struct Drum30Contract: Decodable {
         struct Component: Decodable {
@@ -3574,6 +3580,9 @@ extension CoreAIDecoderProbe {
         if (fullSongWindow != nil && instrument == nil) || (instrument.map { !["bass","drums","guitar"].contains($0) } ?? false) {
             return Reference30GenerationResult(report:"Invalid instrument; no models opened",folder:nil,drumURL:nil,mixURL:nil,pianoURL:nil)
         }
+        if let guidance = fullSongWindow?.guidanceCandidate, guidance != 4 || instrument != "drums" {
+            return Reference30GenerationResult(report:"Invalid candidate; no model calls",folder:nil,drumURL:nil,mixURL:nil,pianoURL:nil)
+        }
         let stem = instrument ?? "drums"
         let compareOriginal = fullSongWindow == nil && (instrument == nil || instrument == "drums")
         let clock = ContinuousClock(), start = ContinuousClock().now, runID = UUID().uuidString
@@ -3582,6 +3591,7 @@ extension CoreAIDecoderProbe {
         var sampling = RetentionStats(), decoding = RetentionStats(), repairs = CacheRepairStats()
         defer { samplingPool.removeAll(); decodingPool.removeAll() }
         var steps = 0, comparisons = 0, passed = 0, completed = false
+        var candidateEulerChecks = 0
         var velocityTraceHashes: [String:String] = [:]
         var drumURL: URL?, mixURL: URL?, pianoURL: URL?
         let output = fullSongWindow.map { $0.outputParent.appendingPathComponent("attempt-"+runID,isDirectory:true) } ?? reference30Directory(runID, instrument: instrument)
@@ -3618,6 +3628,11 @@ extension CoreAIDecoderProbe {
             lines[3] = "Window raw output only; native full-song trajectory/music numerical acceptance: NOT EVALUATED"
             lines[7] = "Full-song window numerical parity: NOT EVALUATED; no matching host trajectory/audio; drum gold is never substituted or compared"
             lines.append("Job SHA256: \(input.jobSHA); window index \(input.run.windowIndex); old30s results/pointers untouched; cache repair disabled")
+            if input.guidanceCandidate != nil {
+                lines[2] = "Revision: full-song-guidance4-candidate-v1; separate quality experiment; baseline unchanged"
+                lines[5] = "Candidate guidance4 from native guided7 affine correction;50 Euler/APG, unchanged momentum-0.75/cap2.5/projection dim1"
+                lines.append("FP32 candidate feedback only; native guidance7 Euler arithmetic checked on every candidate state; no host/quality parity claim")
+            }
         }
         persist(lines)
         do {
@@ -3767,7 +3782,18 @@ extension CoreAIDecoderProbe {
                     inputs:["velocity":velocity,"latent":latent,"momentum":momentum,"dt":NDArray(scalars:[times[i]-times[i+1]],shape:[1])],
                     aot:nil,reuseStages:reuse,pool:&samplingPool,stats:&sampling,allowCacheRepair:fullSongWindow == nil,cacheRepair:&repairs,phaseProgress:breadcrumbs)
                 guard let x = next.values["latent_next"], let m = next.values["momentum_next"] else { throw ProbeError.invalidOutputTensor }
-                latent = x; momentum = m; steps = i+1
+                if fullSongWindow?.guidanceCandidate == 4 {
+                    guard let guided = next.values["guided_velocity"] else { throw ProbeError.invalidOutputTensor }
+                    let combined = try copiedValues(velocity,shape:[2,750,64])
+                    let update = try FullSongGuidanceCandidate.step(current:copiedValues(latent,shape:[1,750,64]),conditional:Array(combined[..<48000]),
+                        guided7:copiedValues(guided,shape:[1,750,64]),dt:times[i]-times[i+1])
+                    let check = try compare(actual:update.baselineEuler,expected:copiedValues(x,shape:[1,750,64]),
+                        absoluteTolerance:1e-4,relativeTolerance:1e-3,relativeRmseTolerance:1e-3)
+                    guard check.passed else { throw FullSongFailure.invalid("Candidate FP32 Euler control failed original bounds; no candidate feedback committed") }
+                    candidateEulerChecks += 1
+                    latent = NDArray(scalars:update.candidate,shape:[1,750,64])
+                } else { latent = x }
+                momentum = m; steps = i+1
                 lines.append("Step\(steps)/50: total ms \(ms(stepStart.duration(to:clock.now))); backend delta ms \(sampling.phaseTotals.backendAwaitMs-before)")
                 if config.checkpoints.contains(steps) && fullSongWindow == nil {
                     let actual = try copiedValues(latent,shape:[1,750,64])
@@ -3780,6 +3806,10 @@ extension CoreAIDecoderProbe {
                 if config.checkpoints.contains(steps) || steps % 5 == 0 { persist(lines) }
             }
             try checkManifest(sampling.completedCalls,750,"reference30.sampling_calls")
+            if fullSongWindow?.guidanceCandidate == 4 {
+                try checkManifest(candidateEulerChecks,50,"candidate.euler_controls")
+                lines.append("Candidate FP32 Euler control: PASS50/50; original abs1e-4/rel1e-3/nRMSE1e-3; arithmetic control only")
+            }
             try checkManifest(sampling.modelOpens,30+repairs.attempts,"reference30.sampling_opens")
             try checkManifest(sampling.functionBinds,30,"reference30.sampling_binds")
             try checkManifest(sampling.cacheHits,720,"reference30.sampling_hits")
@@ -4100,6 +4130,8 @@ extension CoreAIDecoderProbe {
     }
     struct FullSongReviewResult: Sendable {
         let report: String; let archive: URL?
+        let audio: [String:URL]
+        init(report: String, archive: URL?, audio: [String:URL] = [:]) { self.report = report; self.archive = archive; self.audio = audio }
     }
     private struct FullSongCheckpoint: Codable {
         let schemaVersion: Int; let executionSha256: String; let jobReferenceSha256: String
@@ -4159,13 +4191,19 @@ extension CoreAIDecoderProbe {
         } catch { return nil }
     }
 
-    static func repeatFullSongDrumFocus(focusSeconds: Double, freshWorkSession: Bool,
+    static func repeatFullSongDrumFocus(focusSeconds: Double, freshWorkSession: Bool, guidanceCandidate: Bool = false,
                                        progress: @escaping @MainActor @Sendable (String) -> Void) async -> FullSongReviewResult {
         var lines = ["Runtime: one-window native drum repeatability control", "Revision: fixed-input-drum-repeat-v1",
             "Compare against the captured full-song output; this is repeatability, not an accepted host/numerical/music gold",
             "One30s drum window, same saved context/noise/condition/timesteps; unchanged BF16 DiT, FP32 APG/VAE,50 steps and original bounds",
             "Fresh app work session required by UI; OS native cache/placement uncontrolled; no cache deletion or inference retry",
             "OS: \(ProcessInfo.processInfo.operatingSystemVersionString); thermal start: \(ProcessInfo.processInfo.thermalState.rawValue)"]
+        if guidanceCandidate {
+            lines[0] = "Runtime: one-window guidance4 quality candidate; separate from baseline guidance7"
+            lines[1] = "Revision: fixed-input-drum-guidance4-v1"
+            lines[2] = "Same-input quality A/B; numerical differences vs captured baseline are descriptive, not a parity acceptance gate"
+            lines[3] = "One30s drum window; only effective guidance changes7 to4; BF16 DiT, FP32 APG/VAE,50 steps, original bounds unchanged"
+        }
         do {
             guard freshWorkSession else { throw FullSongFailure.invalid("Buka ulang app sebelum uji ini; jangan jalankan generasi atau ekspor lebih dahulu") }
             guard ProcessInfo.processInfo.thermalState == .nominal else { throw FullSongFailure.invalid("Tunggu iPhone dingin, lalu buka ulang app untuk uji; belum ada model yang dijalankan") }
@@ -4215,21 +4253,35 @@ extension CoreAIDecoderProbe {
             lines.append("Job SHA256: \(execution.jobReferenceSha256); execution SHA256: \(executionSHA); selected drums window\(window.index)")
             lines.append("Exact context/noise/condition/global input hashes verified; no Qwen/source recomputation or new RNG")
             let result = await generateDrumReference30(instrument:"drums",fullSongWindow:FullSongWindowInput(jobSHA:execution.jobReferenceSha256,run:row,
-                condition:condition,context:context,noise:noise,times:times,outputParent:output,staticAssetsVerified:false),progress:progress)
+                condition:condition,context:context,noise:noise,times:times,outputParent:output,staticAssetsVerified:false,
+                guidanceCandidate:guidanceCandidate ? 4 : nil),progress:progress)
             guard result.report.contains("Full-song window raw completion: YES"), result.report.contains("Reference30 execution: COMPLETED"),
                   result.report.contains("sampled budget <2000MiB: PASS"), let repeated = result.folder else {
                 lines.append(result.report); throw FullSongFailure.invalid("Single-window repeat did not complete; no automatic retry; captured outputs retained")
             }
+            if guidanceCandidate && !result.report.contains("Candidate FP32 Euler control: PASS50/50") { throw ShardError.invalidManifest }
             try requirePreviewMemoryBudget()
             let newLatent = try FullSongIO.read(repeated.appendingPathComponent("final-latent.f32le"),offset:0,count:48000)
             let oldLatent = try FullSongIO.read(capturedLatent,offset:0,count:48000)
             var comparisons = 0, passed = 0
-            try drum30Comparison("repeat vs captured final latent",actual:newLatent,expected:oldLatent,comparisons:&comparisons,passed:&passed,lines:&lines)
+            let comparisonLabel = guidanceCandidate ? "candidate vs captured baseline" : "repeat vs captured"
+            if guidanceCandidate {
+                let difference = try compare(actual:newLatent,expected:oldLatent,absoluteTolerance:1e-4,relativeTolerance:1e-3,relativeRmseTolerance:1e-3)
+                comparisons += 1; if difference.passed { passed += 1 }
+                lines.append("Candidate latent difference: max abs \(difference.maxError); normalized RMSE \(difference.normalizedRmse); within original bounds \(difference.passed); descriptive only")
+            } else { try drum30Comparison(comparisonLabel+" final latent",actual:newLatent,expected:oldLatent,comparisons:&comparisons,passed:&passed,lines:&lines) }
             try checkManifest(try streamingSHA256(capturedRaw),saved.rawSha256,"repeat.captured_raw_still_unchanged")
             let newRaw = try FullSongIO.read(repeated.appendingPathComponent("raw-drums.f32le"),offset:0,count:2880000)
             let oldRaw = try FullSongIO.read(capturedRaw,offset:0,count:2880000)
-            try drum30Comparison("repeat vs captured full30s raw audio",actual:newRaw,expected:oldRaw,comparisons:&comparisons,passed:&passed,lines:&lines)
-            lines.append("Selected repeatability: \(passed == 2 ? "PASS" : "NOT PASSED"); \(passed)/\(comparisons); target2. Reproducing the captured artifact does not make its music acceptable.")
+            if guidanceCandidate {
+                let difference = try compare(actual:newRaw,expected:oldRaw,absoluteTolerance:1e-4,relativeTolerance:1e-3,relativeRmseTolerance:1e-3)
+                comparisons += 1; if difference.passed { passed += 1 }
+                lines.append("Candidate raw audio difference: max abs \(difference.maxError); normalized RMSE \(difference.normalizedRmse); within original bounds \(difference.passed); descriptive only")
+            } else { try drum30Comparison(comparisonLabel+" full30s raw audio",actual:newRaw,expected:oldRaw,comparisons:&comparisons,passed:&passed,lines:&lines) }
+            if guidanceCandidate {
+                lines.append("Candidate vs baseline difference: \(passed)/\(comparisons) comparisons within original bounds; differences expected; not a candidate pass/fail gate")
+                lines.append("Candidate music acceptance: NOT EVALUATED; reject if glitches/groove/harmony/timbre worsen; no full-song promotion")
+            } else { lines.append("Selected repeatability: \(passed == 2 ? "PASS" : "NOT PASSED"); \(passed)/\(comparisons); target2. Reproducing the captured artifact does not make its music acceptable.") }
             lines.append("One new generation window; sampling calls750, decoder calls6; no inference retries or baseline replacement")
             lines.append("Full-song host trajectory/music acceptance: NOT EVALUATED; original drum4/6 unchanged")
             lines.append("Thermal end: \(ProcessInfo.processInfo.thermalState.rawValue)")
@@ -4253,32 +4305,65 @@ extension CoreAIDecoderProbe {
                 try FileManager.default.createDirectory(at:file.deletingLastPathComponent(),withIntermediateDirectories:true)
                 try writeReference30Floats(values,to:file); try record(name,shape)
             }
-            for (label,folder) in [("captured",captured),("repeat",repeated)] {
+            let generatedLabel = guidanceCandidate ? "candidate" : "repeat"
+            let focusOffset = focus.start-window.sampleStart48
+            let pianoWindow = try FullSongIO.stereo(input.appendingPathComponent("piano48.f32le"),plane:job.latentFrames*1920,start:window.sampleStart48,count:1440000)
+            var focusPeak: Float = 0
+            for i in oldRaw.indices { focusPeak = max(focusPeak,max(abs(pianoWindow[i]),max(abs(newRaw[i]),abs(oldRaw[i])))) }
+            let comparisonGain = guidanceCandidate ? min(done.listeningGain,Float(pow(10.0,-3.0/20.0))/max(focusPeak,1e-12)) : done.listeningGain
+            lines.append("Diagnostic focus copies: one shared gain \(comparisonGain), baseline gain cap \(done.listeningGain); raw differences precede gain; no filtering")
+            var pianoFocus = Array(pianoWindow[focusOffset..<focusOffset+focus.count])
+            pianoFocus.append(contentsOf:pianoWindow[1440000+focusOffset..<1440000+focusOffset+focus.count])
+            try writeReference30Floats(pianoFocus,to:payload.appendingPathComponent("input/piano-focus.f32le"))
+            try record("input/piano-focus.f32le",[1,2,focus.count])
+            for (label,folder) in [("captured",captured),(generatedLabel,repeated)] {
                 try copy(folder.appendingPathComponent("final-latent.f32le"),label+"/final-latent.f32le",[1,750,64])
                 try copy(folder.appendingPathComponent("raw-drums.f32le"),label+"/raw-drums.f32le",[1,2,1440000])
                 try copy(folder.appendingPathComponent("report.txt"),label+"/report.txt")
                 let file = payload.appendingPathComponent(label+"/focus.wav")
                 let values = try FullSongIO.stereo(folder.appendingPathComponent("raw-drums.f32le"),plane:1440000,start:focus.start-window.sampleStart48,count:focus.count)
-                try writeStereoFloatWAV(values.map { $0*done.listeningGain },frames:focus.count,to:file); try record(label+"/focus.wav")
+                try writeStereoFloatWAV(values.map { $0*comparisonGain },frames:focus.count,to:file); try record(label+"/focus.wav")
+                let mix = zip(pianoFocus,values).map { ($0.0+$0.1)*Float(0.5)*comparisonGain }
+                try writeStereoFloatWAV(mix,frames:focus.count,to:payload.appendingPathComponent(label+"/piano-with-drums-focus.wav"))
+                try record(label+"/piano-with-drums-focus.wav")
             }
-            try copy(repeated.appendingPathComponent("final-momentum.f32le"),"repeat/final-momentum.f32le",[1,750,64])
+            try copy(repeated.appendingPathComponent("final-momentum.f32le"),generatedLabel+"/final-momentum.f32le",[1,750,64])
             try lines.joined(separator:"\n").write(to:payload.appendingPathComponent("comparison.txt"),atomically:true,encoding:.utf8); try record("comparison.txt")
-            let metadata: [String:Any] = ["schema_version":1,"profile":"full-song-one-window-repeatability-v1","execution_sha256":executionSHA,
+            var metadata: [String:Any] = ["schema_version":1,"profile":guidanceCandidate ? "full-song-guidance-candidate-v1" : "full-song-one-window-repeatability-v1","execution_sha256":executionSHA,
                 "job_reference_sha256":execution.jobReferenceSha256,"instrument":"drums","window_index":window.index,
                 "latent_start":window.latentStart,"latent_end":window.latentEnd,"new_generation_windows":1,
                 "new_inference_calls":756,"native_exports":0,"baseline_modified":false,"absolute_tolerance":1e-4,"relative_tolerance":1e-3,"relative_rmse_tolerance":1e-3,
                 "sampler_weight_storage_dtype":"bfloat16","compute_dtype":"float32","vae_dtype":"float32","inference_steps":50,
-                "guidance_scale":7,"apg_momentum":-0.75,"apg_norm_threshold":2.5,"apg_projection_dims":[1],
-                "focus":["global_start_sample":focus.start,"local_start_sample":focus.start-window.sampleStart48,"frames":focus.count,"listening_gain":done.listeningGain],
+                "guidance_scale":guidanceCandidate ? 4 : 7,"apg_momentum":-0.75,"apg_norm_threshold":2.5,"apg_projection_dims":[1],
+                "focus":["global_start_sample":focus.start,"local_start_sample":focus.start-window.sampleStart48,"frames":focus.count,"listening_gain":comparisonGain],
                 "original_captured_raw_sha256":saved.rawSha256,"original_captured_report_sha256":saved.reportSha256,"original_captured_latent_sha256":originalLatentSHA,
                 "used_input_sha256":["context":row.sourceContextSha256,"noise":row.initialNoiseSha256,"condition":row.conditionSha256,"timesteps":job.artifactSha256["timesteps.f32le"] ?? ""],
-                "repeatability_passed":passed == 2,"music_acceptance":"NOT EVALUATED BY TEST","scope":"Same-input one-window repeatability only; captured failed music is not host gold",
+                "music_acceptance":"NOT EVALUATED BY TEST","scope":guidanceCandidate ? "Same-input guidance4 quality A/B; difference is not failure or quality acceptance" : "Same-input one-window repeatability only; captured failed music is not host gold",
                 "artifacts":artifacts,"privacy":"Private user inputs/audio/tensors/reports; never publish this ZIP"]
+            if guidanceCandidate {
+                metadata["candidate_vs_baseline_within_bounds"] = passed == 2; metadata["baseline_guidance_scale"] = 7
+                metadata["candidate_euler_control_checks"] = 50
+                metadata["baseline_listening_gain"] = done.listeningGain
+                metadata["candidate_update"] = "Float32 c+0.5*(native_guided7-c); Float32 Euler; native momentum/cap/projection unchanged"
+            } else { metadata["repeatability_passed"] = passed == 2 }
             try JSONSerialization.data(withJSONObject:metadata,options:[.sortedKeys]).write(to:payload.appendingPathComponent("review-manifest.json"),options:.atomic)
-            let archive = output.appendingPathComponent("one-window-drum-repeat-review.zip")
+            let archive = output.appendingPathComponent(guidanceCandidate ? "one-window-drum-guidance4-review.zip" : "one-window-drum-repeat-review.zip")
             try FullSongReviewIO.archive(payload:payload,to:archive)
+            let baselineAudio = output.appendingPathComponent("captured-focus.wav"), generatedAudio = output.appendingPathComponent(generatedLabel+"-focus.wav")
+            try FileManager.default.copyItem(at:payload.appendingPathComponent("captured/focus.wav"),to:baselineAudio)
+            try FileManager.default.copyItem(at:payload.appendingPathComponent(generatedLabel+"/focus.wav"),to:generatedAudio)
+            let baselineFull = output.appendingPathComponent("captured30.wav"), generatedFull = output.appendingPathComponent(generatedLabel+"30.wav")
+            let baselineMix = output.appendingPathComponent("piano-captured30.wav"), generatedMix = output.appendingPathComponent("piano-"+generatedLabel+"30.wav")
+            try writeStereoFloatWAV(oldRaw.map { $0*comparisonGain },frames:1440000,to:baselineFull)
+            try writeStereoFloatWAV(newRaw.map { $0*comparisonGain },frames:1440000,to:generatedFull)
+            try writeStereoFloatWAV(zip(pianoWindow,oldRaw).map { ($0.0+$0.1)*Float(0.5)*comparisonGain },frames:1440000,to:baselineMix)
+            try writeStereoFloatWAV(zip(pianoWindow,newRaw).map { ($0.0+$0.1)*Float(0.5)*comparisonGain },frames:1440000,to:generatedMix)
             try? FileManager.default.removeItem(at:payload)
-            return FullSongReviewResult(report:lines.joined(separator:"\n"),archive:archive)
+            let audioLabel = guidanceCandidate ? "Drum guidance 4" : "Drum uji ulang"
+            return FullSongReviewResult(report:lines.joined(separator:"\n"),archive:archive,
+                audio:["Drum baseline (fokus)":baselineAudio,audioLabel+" (fokus)":generatedAudio,
+                       "Drum baseline (30 detik)":baselineFull,audioLabel+" (30 detik)":generatedFull,
+                       "Piano + drum baseline":baselineMix,"Piano + "+audioLabel:generatedMix])
         } catch {
             lines.append("Single-window test stopped; no automatic retry or full-song rerun")
             lines.append(contentsOf:modelErrorDetails(error))

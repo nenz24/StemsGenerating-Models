@@ -42,3 +42,8 @@ ZIP kecil memuat actual input sampler, dua raw audio/latent, laporan dan dua
 cuplikan fokus dengan gain bersama dari hasil lama. Data bersifat privat;
 jangan commit ZIP atau isi hasil perangkat ke repo. Audit stdlib tersedia
 di `scripts/audit_coreai_drum_repeat_review.py --archive` dengan path ZIP asli.
+
+Jika hasil buruk direproduksi pada input yang sama, kontrol kualitas terpisah
+tersedia melalui [kandidat guidance4 satu window](coreai-full-song-guidance-candidate.md).
+Kandidat harus dipilih eksplisit dan tidak mengganti baseline atau mengubah
+interpretasi PASS/FAIL uji keterulangan ini.

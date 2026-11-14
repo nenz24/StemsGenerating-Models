@@ -30,6 +30,7 @@ struct CoreAIDeviceProbeApp: App {
     @State private var fullSongReviewArchive: URL?
     @State private var exportingFullSongReview = false
     @State private var replayingFullSongWindow = false
+    @State private var fullSongComparisonAudio: [String:URL] = [:]
 
     init() {
         let active = CoreAIPreviewWindow.bundled
@@ -569,7 +570,7 @@ struct CoreAIDeviceProbeApp: App {
                             let review = await Task.detached(priority:.userInitiated) {
                                 await CoreAIDecoderProbe.exportFullSongReview(focusSeconds:seconds,progress:update)
                             }.value
-                            fullSongReviewArchive = review.archive; report = review.report
+                            fullSongReviewArchive = review.archive; fullSongComparisonAudio = review.audio; report = review.report
                             exportingFullSongReview = false; runningModel = false
                         }
                     }.disabled(runningModel)
@@ -585,14 +586,36 @@ struct CoreAIDeviceProbeApp: App {
                             let review = await Task.detached(priority:.userInitiated) {
                                 await CoreAIDecoderProbe.repeatFullSongDrumFocus(focusSeconds:seconds,freshWorkSession:fresh,progress:update)
                             }.value
-                            fullSongReviewArchive = review.archive; report = review.report
+                            fullSongReviewArchive = review.archive; fullSongComparisonAudio = review.audio; report = review.report
                             replayingFullSongWindow = false; runningModel = false
                         }
                     }.disabled(runningModel || workStartedInProcess)
+                    Button("Coba kandidat drum guidance 4") {
+                        guard let seconds = Double(fullSongFocusSeconds.replacingOccurrences(of:",",with:".")), seconds.isFinite else {
+                            report = "Masukkan detik fokus yang valid."; return
+                        }
+                        let fresh = !workStartedInProcess
+                        audioPlayer?.stop(); runningModel = true; replayingFullSongWindow = true
+                        fullSongReviewArchive = nil; fullSongComparisonAudio = [:]
+                        Task {
+                            let update: @MainActor @Sendable (String) -> Void = { self.report = $0 }
+                            let review = await Task.detached(priority:.userInitiated) {
+                                await CoreAIDecoderProbe.repeatFullSongDrumFocus(focusSeconds:seconds,freshWorkSession:fresh,guidanceCandidate:true,progress:update)
+                            }.value
+                            fullSongReviewArchive = review.archive; fullSongComparisonAudio = review.audio; report = review.report
+                            replayingFullSongWindow = false; runningModel = false
+                        }
+                    }.disabled(runningModel || workStartedInProcess)
+                    Text("Kandidat guidance4 adalah eksperimen satu bagian dengan input yang sama. Baseline tetap guidance7; nilai glitch, groove dan kecocokan dengan piano sebelum dipakai lebih jauh.").font(.footnote)
                     Text("Uji ulang membuat satu bagian drum30s dengan input tersimpan yang sama. Jalankan setelah membuka ulang app saat iPhone dingin.").font(.footnote)
                     Text("Siapkan paket fokus hanya mengambil cuplikan tersimpan, tanpa generasi. Uji ulang menjalankan satu bagian drum baru untuk perbandingan.").font(.footnote)
                     if let archive = fullSongReviewArchive {
                         ShareLink(item:archive) { Label("Bagikan paket fokus",systemImage:"square.and.arrow.up") }.disabled(runningModel)
+                    }
+                    ForEach(fullSongComparisonAudio.keys.sorted(),id:\.self) { label in
+                        if let url = fullSongComparisonAudio[label] {
+                            Button("Dengarkan \(label)") { playPreview(url) }.disabled(runningModel)
+                        }
                     }
                 }
             }

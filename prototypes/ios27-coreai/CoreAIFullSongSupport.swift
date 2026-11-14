@@ -287,3 +287,26 @@ enum FullSongReviewIO {
         try FullSongIO.regular(destination)
     }
 }
+
+enum FullSongGuidanceCandidate {
+    // Native APG returns c+6*u for guidance7. Its momentum, norm cap and
+    // projection are independent of guidance. c+0.5*(guided7-c) gives c+3*u.
+    // Each named operation stays Float32; the original native Euler output
+    // provides a same-input arithmetic control before candidate feedback.
+    static func step(current: [Float], conditional: [Float], guided7: [Float], dt: Float) throws -> (candidate: [Float], baselineEuler: [Float]) {
+        guard current.count == 48000, conditional.count == 48000, guided7.count == 48000,
+              dt.isFinite, dt > 0, current.allSatisfy({ $0.isFinite }), conditional.allSatisfy({ $0.isFinite }),
+              guided7.allSatisfy({ $0.isFinite }) else { throw FullSongFailure.invalid("Invalid guidance candidate inputs") }
+        var candidate = [Float](); var baseline = [Float]()
+        candidate.reserveCapacity(48000); baseline.reserveCapacity(48000)
+        for i in current.indices {
+            let correction = guided7[i]-conditional[i]
+            let halfCorrection = correction*Float(0.5)
+            let guided4 = conditional[i]+halfCorrection
+            let update4 = guided4*dt, update7 = guided7[i]*dt
+            candidate.append(current[i]-update4); baseline.append(current[i]-update7)
+        }
+        guard candidate.allSatisfy({ $0.isFinite }), baseline.allSatisfy({ $0.isFinite }) else { throw FullSongFailure.invalid("Nonfinite guidance candidate") }
+        return (candidate,baseline)
+    }
+}
