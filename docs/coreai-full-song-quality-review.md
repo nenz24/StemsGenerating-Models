@@ -55,6 +55,10 @@ terhadap WAV. PASS pada pemeriksaan tersebut bukan strict parity decoder/DiT,
 pembuktian harmoni, atau penerimaan musikal. Tidak ada inference atau perbaikan
 audio pada ekspor maupun audit.
 
+Jika pemeriksaan decoder pada actual latent lolos dan diperlukan kontrol
+reproduksi sampling, gunakan [uji satu window dengan input yang sama](coreai-full-song-repeat-control.md).
+Kontrol tersebut membuat satu bagian baru dan terpisah dari ekspor tanpa inference.
+
 ## Jika hanya WAV yang tersedia
 
 ```bash

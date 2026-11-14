@@ -4159,6 +4159,133 @@ extension CoreAIDecoderProbe {
         } catch { return nil }
     }
 
+    static func repeatFullSongDrumFocus(focusSeconds: Double, freshWorkSession: Bool,
+                                       progress: @escaping @MainActor @Sendable (String) -> Void) async -> FullSongReviewResult {
+        var lines = ["Runtime: one-window native drum repeatability control", "Revision: fixed-input-drum-repeat-v1",
+            "Compare against the captured full-song output; this is repeatability, not an accepted host/numerical/music gold",
+            "One30s drum window, same saved context/noise/condition/timesteps; unchanged BF16 DiT, FP32 APG/VAE,50 steps and original bounds",
+            "Fresh app work session required by UI; OS native cache/placement uncontrolled; no cache deletion or inference retry",
+            "OS: \(ProcessInfo.processInfo.operatingSystemVersionString); thermal start: \(ProcessInfo.processInfo.thermalState.rawValue)"]
+        do {
+            guard freshWorkSession else { throw FullSongFailure.invalid("Buka ulang app sebelum uji ini; jangan jalankan generasi atau ekspor lebih dahulu") }
+            guard ProcessInfo.processInfo.thermalState == .nominal else { throw FullSongFailure.invalid("Tunggu iPhone dingin, lalu buka ulang app untuk uji; belum ada model yang dijalankan") }
+            let (base,input,executionSHA,execution,source) = try fullSongLocation()
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            try verifyReferenceIdentity(input.appendingPathComponent("reference.json"),expected:execution.jobReferenceSha256)
+            let job = try decoder.decode(FullSongJob.self,from:Data(contentsOf:input.appendingPathComponent("reference.json")))
+            try job.validate()
+            let focus = try FullSongReviewIO.range(frames:job.targetSamples48,seconds:focusSeconds,length:2)
+            let selected = job.windows.filter { max(focus.start,$0.sampleStart48) < min(focus.start+focus.count,$0.sampleEnd48) }
+            guard selected.count == 1, let window = selected.first else { throw FullSongFailure.invalid("Pilih fokus yang seluruhnya berada dalam satu window, di luar overlap") }
+            let done = try decoder.decode(FullSongCompletion.self,from:Data(contentsOf:source.appendingPathComponent("completed.json")))
+            guard done.schemaVersion == 1, done.executionSha256 == executionSHA, done.jobReferenceSha256 == execution.jobReferenceSha256,
+                  done.targetSamples48 == job.targetSamples48, done.completedWindows == job.runs.count,
+                  done.listeningGain.isFinite, done.listeningGain > 0, done.listeningGain <= 1 else { throw ShardError.invalidManifest }
+            let parent = source.appendingPathComponent(String(format:"drums/window-%03d",window.index),isDirectory:true)
+            let saved = try decoder.decode(FullSongCheckpoint.self,from:Data(contentsOf:parent.appendingPathComponent("completed.json")))
+            guard saved.schemaVersion == 1, saved.executionSha256 == executionSHA, saved.jobReferenceSha256 == execution.jobReferenceSha256,
+                  saved.instrument == "drums", saved.windowIndex == window.index, saved.childDirectory.hasPrefix("attempt-"),
+                  UUID(uuidString:String(saved.childDirectory.dropFirst(8))) != nil else { throw ShardError.invalidManifest }
+            let captured = parent.appendingPathComponent(saved.childDirectory,isDirectory:true)
+            let capturedRaw = captured.appendingPathComponent("raw-drums.f32le"), capturedLatent = captured.appendingPathComponent("final-latent.f32le")
+            try FullSongIO.regular(capturedRaw,bytes:2880000*4); try FullSongIO.regular(capturedLatent,bytes:48000*4)
+            try checkManifest(try streamingSHA256(capturedRaw),saved.rawSha256,"repeat.captured_raw_sha256")
+            try checkManifest(try streamingSHA256(captured.appendingPathComponent("report.txt")),saved.reportSha256,"repeat.captured_report_sha256")
+            let originalLatentSHA = try streamingSHA256(capturedLatent)
+            let originalReport = try String(contentsOf:captured.appendingPathComponent("report.txt"),encoding:.utf8)
+            guard originalReport.split(separator:"\n").contains(Substring("LIVE final latent SHA256: "+originalLatentSHA)) else { throw ShardError.invalidManifest }
+            for (name,hash) in job.artifactSha256 {
+                let file = input.appendingPathComponent(name)
+                try FullSongIO.regular(file,bytes:job.tensorShapes[name].map { $0.reduce(1,*)*4 })
+                try checkManifest(try streamingSHA256(file),hash,"repeat.saved_global_input_sha256")
+            }
+            let original = try decoder.decode(Drum30Contract.self,from:Data(contentsOf:base.appendingPathComponent(execution.samplerBundle+"/reference.json")))
+            try checkManifest(job.artifactSha256["timesteps.f32le"],original.artifactSha256["capture/timesteps.f32le"],"repeat.original_timesteps")
+            let row = job.runs[job.windows.count+window.index]
+            let context = try FullSongIO.read(input.appendingPathComponent("source-context.f32le"),offset:window.latentStart*128,count:750*128)
+            let noise = try FullSongIO.read(input.appendingPathComponent("drums/noise-global.f32le"),offset:window.latentStart*64,count:48000)
+            let condition = try FullSongIO.read(input.appendingPathComponent("drums/condition.f32le"),offset:0,count:127*2048)
+            let times = try FullSongIO.read(input.appendingPathComponent("timesteps.f32le"),offset:0,count:51)
+            guard FullSongIO.hash(context) == row.sourceContextSha256, FullSongIO.hash(noise) == row.initialNoiseSha256,
+                  FullSongIO.hash(condition) == row.conditionSha256 else { throw ShardError.invalidManifest }
+            guard ProcessInfo.processInfo.thermalState == .nominal else { throw FullSongFailure.invalid("Thermal berubah sebelum sampling; buka ulang app saat dingin. Belum ada model yang dijalankan") }
+            guard let documents = FileManager.default.urls(for:.documentDirectory,in:.userDomainMask).first else { throw ShardError.missingPreparedBundle }
+            let output = documents.appendingPathComponent("FullSongRepeatReviews/"+UUID().uuidString,isDirectory:true)
+            try FileManager.default.createDirectory(at:output,withIntermediateDirectories:true)
+            lines.append("Job SHA256: \(execution.jobReferenceSha256); execution SHA256: \(executionSHA); selected drums window\(window.index)")
+            lines.append("Exact context/noise/condition/global input hashes verified; no Qwen/source recomputation or new RNG")
+            let result = await generateDrumReference30(instrument:"drums",fullSongWindow:FullSongWindowInput(jobSHA:execution.jobReferenceSha256,run:row,
+                condition:condition,context:context,noise:noise,times:times,outputParent:output,staticAssetsVerified:false),progress:progress)
+            guard result.report.contains("Full-song window raw completion: YES"), result.report.contains("Reference30 execution: COMPLETED"),
+                  result.report.contains("sampled budget <2000MiB: PASS"), let repeated = result.folder else {
+                lines.append(result.report); throw FullSongFailure.invalid("Single-window repeat did not complete; no automatic retry; captured outputs retained")
+            }
+            try requirePreviewMemoryBudget()
+            let newLatent = try FullSongIO.read(repeated.appendingPathComponent("final-latent.f32le"),offset:0,count:48000)
+            let oldLatent = try FullSongIO.read(capturedLatent,offset:0,count:48000)
+            var comparisons = 0, passed = 0
+            try drum30Comparison("repeat vs captured final latent",actual:newLatent,expected:oldLatent,comparisons:&comparisons,passed:&passed,lines:&lines)
+            try checkManifest(try streamingSHA256(capturedRaw),saved.rawSha256,"repeat.captured_raw_still_unchanged")
+            let newRaw = try FullSongIO.read(repeated.appendingPathComponent("raw-drums.f32le"),offset:0,count:2880000)
+            let oldRaw = try FullSongIO.read(capturedRaw,offset:0,count:2880000)
+            try drum30Comparison("repeat vs captured full30s raw audio",actual:newRaw,expected:oldRaw,comparisons:&comparisons,passed:&passed,lines:&lines)
+            lines.append("Selected repeatability: \(passed == 2 ? "PASS" : "NOT PASSED"); \(passed)/\(comparisons); target2. Reproducing the captured artifact does not make its music acceptable.")
+            lines.append("One new generation window; sampling calls750, decoder calls6; no inference retries or baseline replacement")
+            lines.append("Full-song host trajectory/music acceptance: NOT EVALUATED; original drum4/6 unchanged")
+            lines.append("Thermal end: \(ProcessInfo.processInfo.thermalState.rawValue)")
+            let payload = output.appendingPathComponent("payload",isDirectory:true)
+            try FileManager.default.createDirectory(at:payload,withIntermediateDirectories:true)
+            var artifacts: [String:[String:Any]] = [:]
+            func record(_ name: String,_ shape: [Int]? = nil) throws {
+                let file = payload.appendingPathComponent(name)
+                var entry: [String:Any] = ["sha256":try streamingSHA256(file),"bytes":try file.resourceValues(forKeys:[.fileSizeKey]).fileSize ?? 0]
+                if let shape { entry["shape"] = shape; entry["dtype"] = "float32_le" }; artifacts[name] = entry
+            }
+            func copy(_ original: URL,_ name: String,_ shape: [Int]? = nil) throws {
+                try FullSongIO.regular(original)
+                let destination = payload.appendingPathComponent(name)
+                try FileManager.default.createDirectory(at:destination.deletingLastPathComponent(),withIntermediateDirectories:true)
+                try FileManager.default.copyItem(at:original,to:destination); try record(name,shape)
+            }
+            for (name,values,shape) in [("input/context.f32le",context,[1,750,128]),("input/noise.f32le",noise,[1,750,64]),
+                                       ("input/condition.f32le",condition,[1,127,2048]),("input/timesteps.f32le",times,[51])] {
+                let file = payload.appendingPathComponent(name)
+                try FileManager.default.createDirectory(at:file.deletingLastPathComponent(),withIntermediateDirectories:true)
+                try writeReference30Floats(values,to:file); try record(name,shape)
+            }
+            for (label,folder) in [("captured",captured),("repeat",repeated)] {
+                try copy(folder.appendingPathComponent("final-latent.f32le"),label+"/final-latent.f32le",[1,750,64])
+                try copy(folder.appendingPathComponent("raw-drums.f32le"),label+"/raw-drums.f32le",[1,2,1440000])
+                try copy(folder.appendingPathComponent("report.txt"),label+"/report.txt")
+                let file = payload.appendingPathComponent(label+"/focus.wav")
+                let values = try FullSongIO.stereo(folder.appendingPathComponent("raw-drums.f32le"),plane:1440000,start:focus.start-window.sampleStart48,count:focus.count)
+                try writeStereoFloatWAV(values.map { $0*done.listeningGain },frames:focus.count,to:file); try record(label+"/focus.wav")
+            }
+            try copy(repeated.appendingPathComponent("final-momentum.f32le"),"repeat/final-momentum.f32le",[1,750,64])
+            try lines.joined(separator:"\n").write(to:payload.appendingPathComponent("comparison.txt"),atomically:true,encoding:.utf8); try record("comparison.txt")
+            let metadata: [String:Any] = ["schema_version":1,"profile":"full-song-one-window-repeatability-v1","execution_sha256":executionSHA,
+                "job_reference_sha256":execution.jobReferenceSha256,"instrument":"drums","window_index":window.index,
+                "latent_start":window.latentStart,"latent_end":window.latentEnd,"new_generation_windows":1,
+                "new_inference_calls":756,"native_exports":0,"baseline_modified":false,"absolute_tolerance":1e-4,"relative_tolerance":1e-3,"relative_rmse_tolerance":1e-3,
+                "sampler_weight_storage_dtype":"bfloat16","compute_dtype":"float32","vae_dtype":"float32","inference_steps":50,
+                "guidance_scale":7,"apg_momentum":-0.75,"apg_norm_threshold":2.5,"apg_projection_dims":[1],
+                "focus":["global_start_sample":focus.start,"local_start_sample":focus.start-window.sampleStart48,"frames":focus.count,"listening_gain":done.listeningGain],
+                "original_captured_raw_sha256":saved.rawSha256,"original_captured_report_sha256":saved.reportSha256,"original_captured_latent_sha256":originalLatentSHA,
+                "used_input_sha256":["context":row.sourceContextSha256,"noise":row.initialNoiseSha256,"condition":row.conditionSha256,"timesteps":job.artifactSha256["timesteps.f32le"] ?? ""],
+                "repeatability_passed":passed == 2,"music_acceptance":"NOT EVALUATED BY TEST","scope":"Same-input one-window repeatability only; captured failed music is not host gold",
+                "artifacts":artifacts,"privacy":"Private user inputs/audio/tensors/reports; never publish this ZIP"]
+            try JSONSerialization.data(withJSONObject:metadata,options:[.sortedKeys]).write(to:payload.appendingPathComponent("review-manifest.json"),options:.atomic)
+            let archive = output.appendingPathComponent("one-window-drum-repeat-review.zip")
+            try FullSongReviewIO.archive(payload:payload,to:archive)
+            try? FileManager.default.removeItem(at:payload)
+            return FullSongReviewResult(report:lines.joined(separator:"\n"),archive:archive)
+        } catch {
+            lines.append("Single-window test stopped; no automatic retry or full-song rerun")
+            lines.append(contentsOf:modelErrorDetails(error))
+            return FullSongReviewResult(report:lines.joined(separator:"\n"),archive:nil)
+        }
+    }
+
     static func exportFullSongReview(focusSeconds: Double, progress: @escaping @MainActor @Sendable (String) -> Void) async -> FullSongReviewResult {
         var lines = ["Runtime: saved full-song focus export; no model calls", "Revision: device-focus-export-v1",
             "Existing saved outputs only; BF16/FP32 baseline, raw data, precision and original bounds unchanged",

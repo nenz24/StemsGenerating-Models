@@ -29,6 +29,7 @@ struct CoreAIDeviceProbeApp: App {
     @State private var fullSongFocusSeconds = "0"
     @State private var fullSongReviewArchive: URL?
     @State private var exportingFullSongReview = false
+    @State private var replayingFullSongWindow = false
 
     init() {
         let active = CoreAIPreviewWindow.bundled
@@ -547,7 +548,7 @@ struct CoreAIDeviceProbeApp: App {
             }
         }
         .disabled(runningModel)
-        if runningModel && !exportingFullSongReview {
+        if runningModel && !exportingFullSongReview && !replayingFullSongWindow {
             Button(pauseFullSong ? "Menunggu akhir bagian…" : "Jeda setelah bagian ini") { pauseFullSong = true }
                 .disabled(pauseFullSong)
         }
@@ -572,7 +573,24 @@ struct CoreAIDeviceProbeApp: App {
                             exportingFullSongReview = false; runningModel = false
                         }
                     }.disabled(runningModel)
-                    Text("Mengambil cuplikan dan latent hasil yang sudah ada, tanpa menjalankan generasi lagi.").font(.footnote)
+                    Button("Uji ulang drum fokus saja") {
+                        guard let seconds = Double(fullSongFocusSeconds.replacingOccurrences(of:",",with:".")), seconds.isFinite else {
+                            report = "Masukkan detik fokus yang valid."; return
+                        }
+                        let fresh = !workStartedInProcess
+                        audioPlayer?.stop(); runningModel = true; replayingFullSongWindow = true
+                        fullSongReviewArchive = nil
+                        Task {
+                            let update: @MainActor @Sendable (String) -> Void = { self.report = $0 }
+                            let review = await Task.detached(priority:.userInitiated) {
+                                await CoreAIDecoderProbe.repeatFullSongDrumFocus(focusSeconds:seconds,freshWorkSession:fresh,progress:update)
+                            }.value
+                            fullSongReviewArchive = review.archive; report = review.report
+                            replayingFullSongWindow = false; runningModel = false
+                        }
+                    }.disabled(runningModel || workStartedInProcess)
+                    Text("Uji ulang membuat satu bagian drum30s dengan input tersimpan yang sama. Jalankan setelah membuka ulang app saat iPhone dingin.").font(.footnote)
+                    Text("Siapkan paket fokus hanya mengambil cuplikan tersimpan, tanpa generasi. Uji ulang menjalankan satu bagian drum baru untuk perbandingan.").font(.footnote)
                     if let archive = fullSongReviewArchive {
                         ShareLink(item:archive) { Label("Bagikan paket fokus",systemImage:"square.and.arrow.up") }.disabled(runningModel)
                     }
