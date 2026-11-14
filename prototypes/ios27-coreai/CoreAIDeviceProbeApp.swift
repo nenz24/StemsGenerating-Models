@@ -26,6 +26,9 @@ struct CoreAIDeviceProbeApp: App {
     @State private var instrument30Results: [String:CoreAIDecoderProbe.Reference30GenerationResult] = [:]
     @State private var fullSongResult: CoreAIDecoderProbe.FullSongResult?
     @State private var pauseFullSong = false
+    @State private var fullSongFocusSeconds = "0"
+    @State private var fullSongReviewArchive: URL?
+    @State private var exportingFullSongReview = false
 
     init() {
         let active = CoreAIPreviewWindow.bundled
@@ -544,11 +547,37 @@ struct CoreAIDeviceProbeApp: App {
             }
         }
         .disabled(runningModel)
-        if runningModel {
+        if runningModel && !exportingFullSongReview {
             Button(pauseFullSong ? "Menunggu akhir bagian…" : "Jeda setelah bagian ini") { pauseFullSong = true }
                 .disabled(pauseFullSong)
         }
         if let result = fullSongResult {
+            if result.audio.count == 5 {
+                VStack(alignment:.leading,spacing:10) {
+                    Text("Pemeriksaan cuplikan tersimpan").font(.headline)
+                    TextField("Detik fokus",text:$fullSongFocusSeconds).keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder).disabled(runningModel)
+                    Button("Siapkan paket fokus") {
+                        guard let seconds = Double(fullSongFocusSeconds.replacingOccurrences(of:",",with:".")), seconds.isFinite else {
+                            report = "Masukkan detik fokus yang valid."; return
+                        }
+                        audioPlayer?.stop(); runningModel = true; exportingFullSongReview = true
+                        fullSongReviewArchive = nil
+                        Task {
+                            let update: @MainActor @Sendable (String) -> Void = { self.report = $0 }
+                            let review = await Task.detached(priority:.userInitiated) {
+                                await CoreAIDecoderProbe.exportFullSongReview(focusSeconds:seconds,progress:update)
+                            }.value
+                            fullSongReviewArchive = review.archive; report = review.report
+                            exportingFullSongReview = false; runningModel = false
+                        }
+                    }.disabled(runningModel)
+                    Text("Mengambil cuplikan dan latent hasil yang sudah ada, tanpa menjalankan generasi lagi.").font(.footnote)
+                    if let archive = fullSongReviewArchive {
+                        ShareLink(item:archive) { Label("Bagikan paket fokus",systemImage:"square.and.arrow.up") }.disabled(runningModel)
+                    }
+                }
+            }
             ForEach(["piano-with-band.wav","bass.wav","drums.wav","guitar.wav","piano.wav"],id:\.self) { name in
                 if let url = result.audio[name] {
                     Button("Dengarkan \(fullSongAudioLabel(name))") { playPreview(url) }.disabled(runningModel)

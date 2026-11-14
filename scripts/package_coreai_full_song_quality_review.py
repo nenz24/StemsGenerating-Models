@@ -133,7 +133,7 @@ def discover(source,execution=None):
         if len(current.relative_to(source).parts)>=8:dirs[:]=[]
         else:dirs[:]=sorted(n for n in dirs if n not in {'.git','Library','Caches','node_modules','.Trash','__pycache__'} and not (current/n).is_symlink())
     if errors:raise ValueError('Incomplete folder search; select the downloaded container directly')
-    if not found:raise ValueError('Completed FullSongGeneration not found in '+str(source)+'. Download the current CoreAIProbe container; do not repeat generation.')
+    if not found:raise ValueError('Completed FullSongGeneration not found in '+str(source)+'. Select a complete download. If the container transfer timed out, use Siapkan paket fokus in the updated iPhone app; do not repeat generation.')
     if len(found)>1:
         # Identical downloaded receipts may resolve; verify the selected bytes below.
         identities={(p.name,sha256(regular(p/'completed.json')),sha256(regular(p/'report.txt'))) for p in found}

@@ -227,3 +227,63 @@ enum FullSongListening {
         return gain
     }
 }
+
+// This state belongs to one synchronous NSFileCoordinator operation. The
+// accessor finishes before coordinate(...) returns; no task shares this box.
+private final class FullSongArchiveOutcome: @unchecked Sendable {
+    var failure: Error?
+    var copied = false
+}
+
+enum FullSongReviewIO {
+    static let archiveLimit = 32*1024*1024
+
+    static func range(frames: Int, seconds: Double, length: Int) throws -> (start: Int,count: Int) {
+        guard seconds.isFinite, seconds >= 0, seconds < Double(frames)/48000,
+              length > 0 else { throw FullSongFailure.invalid("Waktu fokus harus berada di dalam lagu tersimpan") }
+        let count = min(frames,length*48000)
+        return (max(0,min(Int((seconds*48000).rounded(.toNearestOrEven))-count/2,frames-count)),count)
+    }
+
+    static func waveRange(_ url: URL, frames: Int, start: Int, count: Int) throws -> Data {
+        try FullSongIO.regular(url,bytes:58+frames*8)
+        guard start >= 0, count > 0, start+count <= frames else { throw FullSongFailure.invalid("Invalid saved WAV range") }
+        let file = try FileHandle(forReadingFrom:url); defer { try? file.close() }
+        guard try file.read(upToCount:58) == FullSongListening.header(frames:frames) else { throw FullSongFailure.invalid("Saved WAV header differs") }
+        try file.seek(toOffset:UInt64(58+start*8))
+        var samples = Data(); samples.reserveCapacity(count*8)
+        while samples.count < count*8 {
+            guard let block = try file.read(upToCount:min(262144,count*8-samples.count)), !block.isEmpty else { throw FullSongFailure.invalid("Incomplete saved WAV range") }
+            samples.append(block)
+        }
+        let finite = samples.withUnsafeBytes { bytes in
+            (0..<(count*2)).allSatisfy { Float(bitPattern:UInt32(littleEndian:bytes.loadUnaligned(fromByteOffset:$0*4,as:UInt32.self))).isFinite }
+        }
+        guard finite else { throw FullSongFailure.invalid("Nonfinite saved WAV range") }
+        var result = FullSongListening.header(frames:count); result.append(samples)
+        return result
+    }
+
+    static func archive(payload: URL, to destination: URL) throws {
+        guard !FileManager.default.fileExists(atPath:destination.path) else { throw FullSongFailure.invalid("Existing review archive preserved") }
+        var coordinationError: NSError?
+        let outcome = FullSongArchiveOutcome()
+        let coordinator = NSFileCoordinator(filePresenter:nil)
+        coordinator.coordinate(readingItemAt:payload,options:.forUploading,error:&coordinationError) { archive in
+            do {
+                try FullSongIO.regular(archive)
+                let size = try archive.resourceValues(forKeys:[.fileSizeKey]).fileSize ?? 0
+                guard size > 4, size <= archiveLimit else { throw FullSongFailure.invalid("Review archive exceeds32MiB") }
+                let file = try FileHandle(forReadingFrom:archive); defer { try? file.close() }
+                guard try file.read(upToCount:4) == Data([0x50,0x4b,0x03,0x04]) else { throw FullSongFailure.invalid("Coordinator did not produce a ZIP") }
+                // The coordinated ZIP is temporary and only valid in this block.
+                try FileManager.default.copyItem(at:archive,to:destination)
+                outcome.copied = true
+            } catch { outcome.failure = error }
+        }
+        if let failure = coordinationError { throw failure }
+        if let failure = outcome.failure { throw failure }
+        guard outcome.copied else { throw FullSongFailure.invalid("Review ZIP was not created") }
+        try FullSongIO.regular(destination)
+    }
+}

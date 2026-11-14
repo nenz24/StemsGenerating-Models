@@ -4098,6 +4098,9 @@ extension CoreAIDecoderProbe {
     struct FullSongResult: Sendable {
         let report: String; let folder: URL?; let audio: [String:URL]
     }
+    struct FullSongReviewResult: Sendable {
+        let report: String; let archive: URL?
+    }
     private struct FullSongCheckpoint: Codable {
         let schemaVersion: Int; let executionSha256: String; let jobReferenceSha256: String
         let instrument: String; let windowIndex: Int; let childDirectory: String
@@ -4154,6 +4157,127 @@ extension CoreAIDecoderProbe {
             }
             return FullSongResult(report:report,folder:folder,audio:audio)
         } catch { return nil }
+    }
+
+    static func exportFullSongReview(focusSeconds: Double, progress: @escaping @MainActor @Sendable (String) -> Void) async -> FullSongReviewResult {
+        var lines = ["Runtime: saved full-song focus export; no model calls", "Revision: device-focus-export-v1",
+            "Existing saved outputs only; BF16/FP32 baseline, raw data, precision and original bounds unchanged",
+            "Full-song numerical/music acceptance: NOT EVALUATED BY EXPORT; no repair or generation"]
+        do {
+            let (_,input,executionSHA,execution,source) = try fullSongLocation()
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            try verifyReferenceIdentity(input.appendingPathComponent("reference.json"),expected:execution.jobReferenceSha256)
+            let job = try decoder.decode(FullSongJob.self,from:Data(contentsOf:input.appendingPathComponent("reference.json")))
+            try job.validate()
+            let done = try decoder.decode(FullSongCompletion.self,from:Data(contentsOf:source.appendingPathComponent("completed.json")))
+            let names = ["piano.wav","bass.wav","drums.wav","guitar.wav","piano-with-band.wav"]
+            guard done.schemaVersion == 1, done.executionSha256 == executionSHA, done.jobReferenceSha256 == execution.jobReferenceSha256,
+                  done.targetSamples48 == job.targetSamples48, done.completedWindows == job.runs.count,
+                  done.listeningGain.isFinite, done.listeningGain > 0, done.listeningGain <= 1,
+                  Set(done.artifactSha256.keys) == Set(names), done.artifactSha256.values.allSatisfy(FullSongIO.isSHA) else {
+                throw FullSongFailure.invalid("Completed song receipt differs; no regeneration attempted")
+            }
+            let listening = try FullSongReviewIO.range(frames:job.targetSamples48,seconds:focusSeconds,length:3)
+            let rawFocus = try FullSongReviewIO.range(frames:job.targetSamples48,seconds:focusSeconds,length:2)
+            let selected = job.windows.filter { max(rawFocus.start,$0.sampleStart48) < min(rawFocus.start+rawFocus.count,$0.sampleEnd48) }
+            guard !selected.isEmpty, let documents = FileManager.default.urls(for:.documentDirectory,in:.userDomainMask).first else { throw ShardError.invalidManifest }
+            let output = documents.appendingPathComponent("FullSongReviews/"+UUID().uuidString,isDirectory:true)
+            let payload = output.appendingPathComponent("payload",isDirectory:true)
+            try FileManager.default.createDirectory(at:payload,withIntermediateDirectories:true)
+            var artifacts: [String:[String:Any]] = [:]
+            func add(_ name: String,_ data: Data,_ properties: [String:Any] = [:]) throws {
+                let destination = payload.appendingPathComponent(name)
+                try FileManager.default.createDirectory(at:destination.deletingLastPathComponent(),withIntermediateDirectories:true)
+                guard !FileManager.default.fileExists(atPath:destination.path) else { throw ShardError.invalidManifest }
+                try data.write(to:destination,options:.atomic)
+                var entry = properties; entry["bytes"] = data.count
+                entry["sha256"] = try streamingSHA256(destination); artifacts[name] = entry
+            }
+            func small(_ url: URL) throws -> Data {
+                try FullSongIO.regular(url)
+                guard (try url.resourceValues(forKeys:[.fileSizeKey]).fileSize ?? Int.max) <= 1048576 else { throw FullSongFailure.invalid("Metadata exceeds1MiB") }
+                return try Data(contentsOf:url)
+            }
+            func planar(_ values: [Float]) -> Data { values.withUnsafeBufferPointer { Data(buffer:$0) } }
+            try add("completed.json",small(source.appendingPathComponent("completed.json")))
+            try add("device-report.txt",small(source.appendingPathComponent("report.txt")))
+            var clips: [[String:Any]] = []
+            for (i,name) in names.enumerated() {
+                await progress("Menyiapkan cuplikan tersimpan: \(i+1)/5…")
+                let file = source.appendingPathComponent(name)
+                try FullSongIO.regular(file,bytes:58+job.targetSamples48*8)
+                try checkManifest(try streamingSHA256(file),done.artifactSha256[name],"review.saved_wav_sha256")
+                let relative = "listening/focus/"+name
+                try add(relative,FullSongReviewIO.waveRange(file,frames:job.targetSamples48,start:listening.start,count:listening.count),
+                        ["source_file_sha256":done.artifactSha256[name] ?? "", "start_sample":listening.start,"frames":listening.count])
+                clips.append(["path":relative,"start_seconds":Double(listening.start)/48000,"duration_seconds":Double(listening.count)/48000,"additional_gain":1])
+            }
+            for role in job.instruments {
+                await progress("Memeriksa raw dan latent tersimpan: \(role)…")
+                let pointer = source.appendingPathComponent(role+"-assembled.json"), receiptData = try small(pointer)
+                let stem = try decoder.decode(FullSongStemCheckpoint.self,from:receiptData)
+                let stemFile = source.appendingPathComponent("raw-"+role+".f32le")
+                try FullSongIO.regular(stemFile,bytes:job.targetSamples48*8)
+                guard stem.schemaVersion == 1, stem.executionSha256 == executionSHA, stem.instrument == role,
+                      stem.targetSamples48 == job.targetSamples48, FullSongIO.isSHA(stem.rawSha256),
+                      try streamingSHA256(stemFile) == stem.rawSha256 else { throw FullSongFailure.invalid("Saved raw stem receipt/SHA differs") }
+                try add(role+"/assembled.json",receiptData)
+                try add(role+"/assembled-focus.f32le",planar(FullSongIO.stereo(stemFile,plane:job.targetSamples48,start:rawFocus.start,count:rawFocus.count)),
+                        ["shape":[1,2,rawFocus.count],"dtype":"float32_le","global_start_sample":rawFocus.start,"source_file_sha256":stem.rawSha256])
+                for window in selected {
+                    let parent = source.appendingPathComponent(role+String(format:"/window-%03d",window.index),isDirectory:true)
+                    let savedData = try small(parent.appendingPathComponent("completed.json"))
+                    let saved = try decoder.decode(FullSongCheckpoint.self,from:savedData)
+                    guard saved.schemaVersion == 1, saved.executionSha256 == executionSHA, saved.jobReferenceSha256 == execution.jobReferenceSha256,
+                          saved.instrument == role, saved.windowIndex == window.index, saved.childDirectory.hasPrefix("attempt-"),
+                          UUID(uuidString:String(saved.childDirectory.dropFirst(8))) != nil,
+                          FullSongIO.isSHA(saved.rawSha256), FullSongIO.isSHA(saved.reportSha256) else { throw FullSongFailure.invalid("Saved window identity differs") }
+                    let child = parent.appendingPathComponent(saved.childDirectory,isDirectory:true)
+                    let reportURL = child.appendingPathComponent("report.txt"), reportData = try small(reportURL)
+                    try checkManifest(try streamingSHA256(reportURL),saved.reportSha256,"review.window_report_sha256")
+                    let rawFile = child.appendingPathComponent("raw-"+role+".f32le")
+                    try FullSongIO.regular(rawFile,bytes:2880000*4)
+                    try checkManifest(try streamingSHA256(rawFile),saved.rawSha256,"review.window_raw_sha256")
+                    let latentFile = child.appendingPathComponent("final-latent.f32le")
+                    let latent = try FullSongIO.read(latentFile,offset:0,count:48000)
+                    try FullSongIO.regular(latentFile,bytes:48000*4)
+                    let latentSHA = try streamingSHA256(latentFile)
+                    guard let text = String(data:reportData,encoding:.utf8), text.split(separator:"\n").contains(Substring("LIVE final latent SHA256: "+latentSHA)) else { throw FullSongFailure.invalid("Saved final latent/report differs") }
+                    let prefix = role+String(format:"/window-%03d/",window.index)
+                    try add(prefix+"completed.json",savedData); try add(prefix+"report.txt",reportData)
+                    try add(prefix+"final-latent.f32le",planar(latent),["shape":[1,750,64],"dtype":"float32_le"])
+                    let a = max(rawFocus.start,window.sampleStart48), b = min(rawFocus.start+rawFocus.count,window.sampleEnd48)
+                    try add(prefix+"focus.f32le",planar(FullSongIO.stereo(rawFile,plane:1440000,start:a-window.sampleStart48,count:b-a)),
+                            ["shape":[1,2,b-a],"dtype":"float32_le","global_start_sample":a,"local_start_sample":a-window.sampleStart48,"source_file_sha256":saved.rawSha256])
+                }
+            }
+            let manifest: [String:Any] = ["schema_version":1,"profile":"private-full-song-quality-review-v1","mode":"device-focus",
+                "execution_sha256":executionSHA,"job_reference_sha256":execution.jobReferenceSha256,"completed_windows":done.completedWindows,
+                "completed_receipt":["execution_sha256":done.executionSha256,"job_reference_sha256":done.jobReferenceSha256,"target_samples48":done.targetSamples48,"listening_gain":done.listeningGain],
+                "focus":["requested_seconds":focusSeconds,"start_sample":rawFocus.start,"frames":rawFocus.count,"window_indices":selected.map { $0.index }],
+                "clips":clips,"artifacts":artifacts,"schedule":job.windows.map { ["index":$0.index,"sample_start48":$0.sampleStart48,"sample_end48":$0.sampleEnd48] },
+                "new_inference_calls":0,"native_exports":0,"baseline_modified":false,"absolute_tolerance":1e-4,"relative_tolerance":1e-3,"relative_rmse_tolerance":1e-3,
+                "full_song_numerical_parity":"NOT EVALUATED","music_acceptance":"NOT EVALUATED BY EXPORT",
+                "scope":"Existing focus slices only; SHA256 verified against saved receipts/reports; no generation or repair",
+                "privacy":"Private user audio/tensors/reports; never publish this ZIP or its contents"]
+            try JSONSerialization.data(withJSONObject:manifest,options:[.sortedKeys]).write(to:payload.appendingPathComponent("review-manifest.json"),options:.atomic)
+            await progress("Membuat ZIP kecil untuk dibagikan…")
+            let temporary = output.appendingPathComponent("focus-review.partial.zip")
+            try FullSongReviewIO.archive(payload:payload,to:temporary)
+            let archive = output.appendingPathComponent("full-song-focus-review.zip")
+            try FileManager.default.moveItem(at:temporary,to:archive)
+            let bytes = try archive.resourceValues(forKeys:[.fileSizeKey]).fileSize ?? 0
+            lines.append("Saved focus export: COMPLETED; bytes\(bytes); files\(artifacts.count); model calls0")
+            lines.append("Focus seconds \(focusSeconds); raw frames \(rawFocus.start)..<\(rawFocus.start+rawFocus.count); selected windows \(selected.map { $0.index })")
+            lines.append("ZIP SHA256: \(try streamingSHA256(archive)); original full-song files/reports/pointers preserved")
+            // Only remove this export's newly created staging copies.
+            try? FileManager.default.removeItem(at:payload)
+            return FullSongReviewResult(report:lines.joined(separator:"\n"),archive:archive)
+        } catch {
+            lines.append("Saved focus export: NOT COMPLETED; no model calls or fallback regeneration")
+            lines.append(contentsOf:modelErrorDetails(error))
+            return FullSongReviewResult(report:lines.joined(separator:"\n"),archive:nil)
+        }
     }
 
     static func generateFullSong(progress: @escaping @MainActor @Sendable (String) -> Void,

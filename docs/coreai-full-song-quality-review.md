@@ -11,6 +11,50 @@ Jangan ulang33 generation untuk mengirim bukti audio. Pilih hasil yang sudah
 ada. Helper berikut memakai stdlib Python, tanpa Torch, inference atau export.
 Baseline BF16, FP32 APG/VAE,50 steps dan toleransi lama tidak diubah.
 
+## Jika download container iPhone timeout
+
+CoreDeviceError7000 dengan file-service timeout berarti salinan Mac belum
+lengkap. Itu bukan bukti hasil generasi di iPhone hilang. Folder download yang
+terputus dipertahankan; tidak perlu mengulang generasi untuk membuat review.
+
+Update app yang sama untuk memakai ekspor kecil langsung dari iPhone:
+
+```bash
+git fetch origin main &&
+python3 scripts/update_coreai_project.py &&
+open prototypes/ios27-coreai/CoreAIProbe.xcodeproj
+```
+
+Pilih **CoreAIProbe Reuse**, iPhone fisik, lalu **Cmd+R**. Gunakan bundle ID dan
+signing yang sama agar container hasil lama digunakan. Di bagian **Pemeriksaan
+cuplikan tersimpan**, masukkan **Detik fokus**, tekan **Siapkan paket fokus**,
+lalu **Bagikan paket fokus**. Simpan ZIP lewat Files/AirDrop atau share sheet.
+Tombol hanya tersedia bila receipt hasil lengkap ditemukan. Build tidak
+memerlukan aktivasi ulang, penggantian bobot atau menekan tombol generasi.
+
+Ekspor ini membaca kelima WAV dan raw stem yang SHA-nya cocok, memotong3s
+salinan dengar pada waktu yang sama tanpa mengubah sampel, serta menyertakan2s
+raw assembled, slice raw window yang berkontribusi, final latent, checkpoint
+dan laporan terkait. Payload kecil dikemas oleh Foundation dengan
+`NSFileCoordinator.forUploading` dan diperiksa batas32MiB sebelum dibagikan.
+Koordinasi ZIP hanya mencakup staging baru, bukan seluruh container. Hasil dan
+laporan generasi asli tidak diubah. Paket berada di `Documents/FullSongReviews`.
+
+Grammar Swift dan kontrak paket dapat diperiksa di cloud; build Apple SDK,
+koordinasi ZIP dan share sheet iPhone tetap memerlukan verifikasi perangkat.
+Paket iPhone dapat memiliki satu wrapper folder di dalam ZIP. Audit stdlib
+mendukung format tersebut:
+
+```bash
+python3 scripts/audit_coreai_full_song_focus_review.py --archive "$REVIEW_ZIP"
+```
+
+Set `REVIEW_ZIP` ke file ZIP yang sebenarnya. Audit memeriksa CRC, SHA, binding
+latent/report/checkpoint, replay OLA pada range terpilih dan raw*gain Float32
+terhadap WAV. PASS pada pemeriksaan tersebut bukan strict parity decoder/DiT,
+pembuktian harmoni, atau penerimaan musikal. Tidak ada inference atau perbaikan
+audio pada ekspor maupun audit.
+
 ## Jika hanya WAV yang tersedia
 
 ```bash
